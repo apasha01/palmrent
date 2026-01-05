@@ -19,7 +19,7 @@ export function ProcessingCard() {
         </CardHeader>
 
         <CardContent>
-          <div className="flex flex-col items-center justify-center py-8 space-y-4 animate-in zoom-in-95 duration-500">
+          <div className="flex flex-col items-center justify-center pb-8 space-y-4 animate-in zoom-in-95 duration-500">
             <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center">
               {/* چرخش آروم */}
               <Clock3 className="h-10 w-10 text-primary animate-spin [animation-duration:3.5s]" />

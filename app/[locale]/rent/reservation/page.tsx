@@ -11,6 +11,7 @@ import { ProcessingCard } from "@/components/rent-status/processing-card";
 import { RejectedCard } from "@/components/rent-status/rejected-card";
 import { PaymentCard } from "@/components/rent-status/payment-card";
 import { UploadCard } from "@/components/rent-status/upload-card";
+import { PaymentSuccessCard } from "@/components/rent-status/payment-success-card";
 
 export default function ReservationPage(): any {
   const searchParams = useSearchParams();
@@ -21,8 +22,16 @@ export default function ReservationPage(): any {
   const statusParam: any = searchParams.get("status"); // initialize | payment | upload | documents ...
   const rentId: any = searchParams.get("rentid");
 
-  const [loading, setLoading] = useState<any>(true);
-  const [error, setError] = useState<any>(null);
+  // ✅ پارامترهای برگشتی از زرین‌پال
+  const paidParam = searchParams.get("paid"); // "1" | "0" | null
+  const traceParam = searchParams.get("trace"); // string | null
+  const reasonParam = searchParams.get("reason"); // string | null
+
+  const paid = paidParam === "1";
+  const payFailed = paidParam === "0";
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [rentData, setRentData] = useState<any>(null);
 
   const intervalRef = useRef<any>(null);
@@ -34,23 +43,33 @@ export default function ReservationPage(): any {
     return `${pathname}?${params.toString()}`;
   };
 
+  const goUpload = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("status", "upload");
+    if (rentId) params.set("rentid", String(rentId));
+
+    // اگر می‌خوای URL تمیز شه:
+    // params.delete("paid");
+    // params.delete("trace");
+    // params.delete("reason");
+
+    router.replace(`${pathname}?${params.toString()}`);
+  };
+
   const fetchStatus = async (): Promise<any> => {
     if (!rentId) return null;
 
     try {
       setError(null);
-      const res: any = await getRentStatus(locale, rentId);
 
-      // فرض: خروجی شما { status: 200, data: {...} }
-      const data = res?.data ?? res; // اگه getRentStatus خودش data رو برگردوند
+      // ✅ getRentStatus باید خودش data را برگرداند
+      const data: any = await getRentStatus(locale, rentId);
       setRentData(data);
 
       console.log("rent status:", data);
       return data;
     } catch (e: any) {
-      setError(
-        e?.response?.data?.message || e?.message || "خطا در ارتباط با سرور"
-      );
+      setError(e?.response?.data?.message || e?.message || "خطا در ارتباط با سرور");
       return null;
     } finally {
       setLoading(false);
@@ -64,28 +83,28 @@ export default function ReservationPage(): any {
       return;
     }
 
-    // اگر initialize نیست، فقط یکبار وضعیت رو بگیر
+    // اگر initialize نیست، فقط یکبار وضعیت را بگیر
     if (statusParam !== "initialize") {
       setLoading(true);
       fetchStatus();
       return;
     }
 
-    let cancelled: any = false;
+    let cancelled = false;
 
     const start = async () => {
       setLoading(true);
       const first: any = await fetchStatus();
       if (cancelled) return;
 
-      const stillPending: any =
+      const stillPending =
         String(first?.rent_status) === "pending" && first?.is_approved === false;
 
       if (stillPending) {
         intervalRef.current = setInterval(async () => {
           const latest: any = await fetchStatus();
 
-          const still: any =
+          const still =
             String(latest?.rent_status) === "pending" &&
             latest?.is_approved === false;
 
@@ -120,15 +139,13 @@ export default function ReservationPage(): any {
     const isRejected =
       ["rejected", "cancelled", "failed"].includes(String(rentData?.rent_status));
 
-    // اگه تایید شد -> برو payment
     if (isApproved) {
       router.replace(buildUrlWithStatus("payment"));
       return;
     }
 
-    // اگه رد شد -> برو initialize همونجا میمونه، کارت rejected نمایش میده
     if (isRejected) {
-      // هیچ
+      // nothing
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rentData, statusParam]);
@@ -139,30 +156,49 @@ export default function ReservationPage(): any {
 
   if (!rentId) return <FailedCard />;
   if (error) return <FailedCard />;
-
   if (loading && !rentData) return <ProcessingCard />;
 
-  const isPending: any =
+  const isPending =
     String(rentData?.rent_status) === "pending" && rentData?.is_approved === false;
 
-  const isRejected: any =
+  const isRejected =
     ["rejected", "cancelled", "failed"].includes(String(rentData?.rent_status));
 
-  const isApproved: any =
+  const isApproved =
     rentData?.is_approved === true || String(rentData?.rent_status) === "active";
 
   // ✅ initialize
   if (statusParam === "initialize") {
     if (isPending) return <ProcessingCard />;
     if (isRejected) return <RejectedCard />;
-    if (isApproved) return <ProcessingCard />; // چون useEffect بالا سریع میبره payment
+    if (isApproved) return <ProcessingCard />; // useEffect میبره payment
     return <ProcessingCard />;
   }
 
   // ✅ payment
   if (statusParam === "payment") {
     if (isRejected) return <RejectedCard />;
-    return <PaymentCard rentData={rentData} />;
+
+    // ✅ اگر پرداخت موفق شد، کارت موفقیت + فاکتور + دکمه آپلود
+    if (paid) {
+      return (
+        <PaymentSuccessCard
+          rentData={rentData}
+          trace={traceParam}
+          onGoUpload={goUpload}
+        />
+      );
+    }
+
+    // ✅ اگر پرداخت ناموفق شد (اختیاری: میتونی کارت جدا براش بسازی)
+    // فعلاً همون PaymentCard رو میده که دوباره پرداخت کنه
+    return (
+      <PaymentCard
+        rentData={rentData}
+        payFailed={payFailed}
+        reason={reasonParam}
+      />
+    );
   }
 
   // ✅ upload/documents

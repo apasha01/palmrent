@@ -1,11 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Car as CarIcon, CalendarDays } from "lucide-react";
-import { requestZarinpalPayment } from "@/services/Zarinpal/Zarinpal";
+import {
+  CheckCircle2,
+  Car as CarIcon,
+  CalendarDays,
+  ReceiptText,
+  Upload,
+  Copy,
+} from "lucide-react";
 
 function toFaNumber(n: number | string) {
   const num = typeof n === "string" ? Number(n) : n;
@@ -18,7 +24,6 @@ function formatDateTimeFa(input?: string) {
   const iso = input.replace(" ", "T");
   const d = new Date(iso);
   if (isNaN(d.getTime())) return input.replace(" 00:00:00", "");
-
   return new Intl.DateTimeFormat("fa-IR", {
     year: "numeric",
     month: "2-digit",
@@ -28,22 +33,14 @@ function formatDateTimeFa(input?: string) {
   }).format(d);
 }
 
-export function PaymentCard({ rentData }: any) {
-  const [loadingPay, setLoadingPay] = useState(false);
-  const [payError, setPayError] = useState<string | null>(null);
-
+export function PaymentSuccessCard({
+  rentData,
+  trace,
+  onGoUpload,
+}: any) {
   const payment = rentData?.payment || {};
   const car = rentData?.car || {};
   const info = rentData?.rent_info || {};
-
-  const canPay = payment?.can_pay === true;
-
-  const rentId = Number(
-    payment?.pay_payload_example?.rent_id ?? rentData?.rent_id ?? 0
-  );
-
-  const amountToPayToman = Number(payment?.amount_to_pay ?? 0);
-  const prePay = Number(payment?.pre_pay ?? 0);
 
   const carTitle = useMemo(
     () => [car?.brand, car?.model, car?.year].filter(Boolean).join(" "),
@@ -54,46 +51,28 @@ export function PaymentCard({ rentData }: any) {
   const toText = formatDateTimeFa(info?.to_date);
   const dayRent = info?.day_rent;
 
-  const onPay = async () => {
-    if (!canPay || !rentId || rentId <= 0) return;
+  const amountPaid = Number(payment?.amount_to_pay ?? 0);
+  const rentCode = rentData?.rent_code ?? "—";
+  const traceCode = trace ?? rentData?.tracing_code ?? "—";
 
+  const copy = async (text: string) => {
     try {
-      setPayError(null);
-      setLoadingPay(true);
-
-      const res = await requestZarinpalPayment({ rent_id: rentId });
-
-      if (!res?.ok || !res?.payment_url) {
-        const msg =
-          res?.message || res?.errors?.message || "لینک پرداخت دریافت نشد";
-        setPayError(String(msg));
-        return;
-      }
-
-      window.location.href = res.payment_url;
-    } catch (e: any) {
-      setPayError(
-        e?.response?.data?.message ||
-          e?.message ||
-          "خطا در ارتباط با سرور"
-      );
-    } finally {
-      setLoadingPay(false);
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // ignore
     }
   };
-
-  const disabled = !canPay || !rentId || rentId <= 0 || loadingPay;
 
   return (
     <div className="flex items-center justify-center mt-4 px-3">
       <Card className="w-full max-w-md border border-border bg-background overflow-hidden relative">
         <div className="absolute top-0 left-0 w-full h-1.5 bg-muted">
-          <div className="h-full bg-primary w-2/3 transition-all duration-700 ease-in-out" />
+          <div className="h-full bg-emerald-600 w-full transition-all duration-700 ease-in-out" />
         </div>
 
         <CardHeader>
           <CardTitle className="text-2xl font-black text-right">
-            وضعیت سفارش شما
+            پرداخت موفق ✅
           </CardTitle>
         </CardHeader>
 
@@ -104,11 +83,14 @@ export function PaymentCard({ rentData }: any) {
             </div>
 
             <div className="text-center space-y-2 w-full">
-              <h3 className="text-xl font-bold text-foreground">تایید انجام شد</h3>
+              <h3 className="text-xl font-bold text-foreground">
+                پرداخت شما با موفقیت ثبت شد
+              </h3>
               <p className="text-sm text-muted-foreground max-w-[340px] mx-auto">
-                سفارش شما تایید شد. اکنون می‌توانید مبلغ زیر را پرداخت کنید.
+                لطفاً در مرحله بعد مدارک را آپلود کنید تا رزرو نهایی شود.
               </p>
 
+              {/* مشخصات خودرو و زمان */}
               <div className="mt-4 p-4 bg-secondary/40 rounded-xl border border-border text-right space-y-3">
                 <div className="flex items-center gap-2 justify-between">
                   <div className="text-base font-bold text-foreground">
@@ -140,31 +122,70 @@ export function PaymentCard({ rentData }: any) {
                 </div>
               </div>
 
+              {/* فاکتور */}
               <div className="mt-4 p-4 bg-secondary/50 rounded-xl border border-border text-right space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-bold text-foreground">
+                    فاکتور پرداخت
+                  </div>
+                  <ReceiptText className="h-4 w-4 text-muted-foreground" />
+                </div>
 
-                <div className="pt-3 border-t border-border/60">
+                <div className="pt-3 border-t border-border/60 space-y-2 text-xs">
                   <div className="flex items-center justify-between">
-                    <div className="text-2xl font-black text-primary">
-                      {toFaNumber(amountToPayToman)} تومان
+                    <span className="text-muted-foreground">کد رزرو</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-foreground">{rentCode}</span>
+                      <button
+                        onClick={() => copy(String(rentCode))}
+                        className="p-1 rounded-md border border-border hover:bg-secondary"
+                        aria-label="copy rent code"
+                      >
+                        <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                      </button>
                     </div>
-                    <div className="text-xs text-muted-foreground">مبلغ قابل پرداخت</div>
                   </div>
 
-                  {payError ? (
-                    <div className="mt-2 text-xs text-red-600 text-right">
-                      {payError}
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">کد رهگیری</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-foreground">{traceCode}</span>
+                      <button
+                        onClick={() => copy(String(traceCode))}
+                        className="p-1 rounded-md border border-border hover:bg-secondary"
+                        aria-label="copy trace"
+                      >
+                        <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                      </button>
                     </div>
-                  ) : null}
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">مبلغ پرداخت‌شده</span>
+                    <span className="text-base font-black text-emerald-600">
+                      {toFaNumber(amountPaid)} تومان
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">وضعیت</span>
+                    <span className="font-bold text-emerald-600">موفق</span>
+                  </div>
                 </div>
               </div>
 
+              {/* CTA */}
               <Button
-                onClick={onPay}
-                disabled={disabled}
-                className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold disabled:opacity-50"
+                onClick={onGoUpload}
+                className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
               >
-                {loadingPay ? "در حال انتقال به درگاه..." : "پرداخت آنلاین"}
+                <Upload className="h-4 w-4 ml-2" />
+                آپلود مدارک
               </Button>
+
+              <div className="text-xs text-muted-foreground text-right mt-2">
+                بعد از آپلود مدارک، پشتیبانی رزرو شما را نهایی می‌کند.
+              </div>
             </div>
           </div>
         </CardContent>
