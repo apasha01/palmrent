@@ -33,10 +33,7 @@ import {
 } from "lucide-react";
 import { IconWhatsapp } from "../Icons";
 
-const ensureLeadingSlash = (p: string) => {
-  if (!p) return "";
-  return p.startsWith("/") ? p : `/${p}`;
-};
+
 const toStorageUrl = (p: unknown) => {
   if (!p) return "";
   if (
@@ -44,7 +41,7 @@ const toStorageUrl = (p: unknown) => {
     (p.startsWith("http://") || p.startsWith("https://"))
   )
     return p;
-  return `${STORAGE_URL}${ensureLeadingSlash(String(p))}`;
+  return `${STORAGE_URL}${String(p)}`;
 };
 
 const normalizeImages = (input: unknown): string[] => {
@@ -68,11 +65,12 @@ export default function SingleCar({
 
   const car = adaptCarData(data);
   const [isHovering, setIsHovering] = useState(false);
-
+  
   const { id, title, video, price } = car || {};
 
   const images = useMemo(() => normalizeImages(car?.images), [car?.images]);
   useEffect(() => {
+    console.log(data)
     if (video) {
       const videoData = { id, title, video, price };
       dispatch(addReelItem(videoData));
