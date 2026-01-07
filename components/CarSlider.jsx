@@ -5,7 +5,7 @@ import { Navigation, Pagination  } from 'swiper/modules';
 
 import 'swiper/css';
 import { IconArrow } from './Icons';
-import SingleCar from "./SingleCar";
+import SingleCar from "../components/card/CarsCard";
 import { useSelector } from "react-redux";
 export default function CarSlider() {
     const carList = useSelector((state) => state.carList.carList)

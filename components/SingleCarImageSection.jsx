@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { SingleCarOptions } from "./SingleCar";
-import { IconCalender, IconSend, IconStickyNote, IconWhatsapp } from "./Icons";
+import { SingleCarOptions } from "../components/card/CarsCard";
+import { IconSend, IconWhatsapp } from "./Icons";
 import { useDispatch } from "react-redux";
 import { changeSingleGalleryStatus } from "@/redux/slices/globalSlice";
 import Link from "next/link";

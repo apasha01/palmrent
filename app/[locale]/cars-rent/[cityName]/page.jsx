@@ -19,10 +19,9 @@ import Header from '@/components/Header';
 import { IconArrow, IconInfoCircle, IconRefresh } from '@/components/Icons';
 import { RecentBlogPosts } from '@/components/RecentBlogPosts';
 import SearchBar from '@/components/SearchBar';
-import { SearchBox } from '@/components/SearchBox';
-import SearchFilterPopup from '@/components/SearchFilterPopup';
+
 import SearchPopup from '@/components/SearchPopup';
-import SingleCar from '@/components/SingleCar';
+import SingleCar from '@/components/card/CarsCard';
 import SkeletonSingleCar from '@/components/SkeletonSingleCar';
 
 // Redux & Utils
@@ -31,6 +30,8 @@ import { api } from '@/lib/apiClient';
 import { addCarList, clearCarList } from '@/redux/slices/carListSlice';
 import { changeHomeBlogs, changeSelectedCity } from '@/redux/slices/globalSlice';
 import { changeSearchCurrency } from '@/redux/slices/searchSlice';
+import { SerarchSection } from '@/components/search/SearchSection';
+import SearchFilterSheet from '@/components/search/SearchFilterSheet';
 
 const MAX_AUTO_SCROLL = 5;
 const CARS_PER_PAGE = 3;
@@ -218,7 +219,7 @@ export default function BranchPage() {
             <CarBrandSection />
 
             <div id="search-section" className="my-8">
-               <SearchBox />
+               <SerarchSection />
 
                <div ref={containerRef} className="flex flex-wrap gap-4 mt-6 min-h-[300px]">
                   {/* 1. Error State */}
@@ -290,7 +291,7 @@ export default function BranchPage() {
          </div>
 
          {isSearchOpen && <SearchPopup />}
-         {isFilterOpen && <SearchFilterPopup />}
+         {isFilterOpen && <SearchFilterSheet />}
 
          <Footer />
       </>

@@ -21,7 +21,7 @@ import {
 
 import InfoListPopup from './InfoListPopup';
 import LocationPopup from './LocationPopup';
-import { SingleCarOptions } from './SingleCar';
+import { SingleCarOptions } from './card/CarsCard';
 
 // Redux Actions
 import { selectCar } from '@/redux/slices/carListSlice';

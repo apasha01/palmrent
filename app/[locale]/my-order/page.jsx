@@ -1,5 +1,4 @@
 import Image from "next/image"
-import { SingleCarGallery } from "@/components/SingleCar"
 
 export default function MyOrderPage(){
     return(

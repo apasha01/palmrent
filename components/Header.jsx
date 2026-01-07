@@ -8,7 +8,6 @@ import { changeIsHeaderClose, changeIsTranslatePopupOpen } from "@/redux/slices/
 import LanguageCurrencyPopup from "./LanguageCurrencyPopup"
 import { useTranslations } from "next-intl"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
-// import { AnimatedThemeToggler } from "./ui/animated-theme-toggler"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
@@ -52,14 +51,16 @@ export default function Header({ shadowLess = false }) {
   }
   return (
     <>
-      <header className={`min-h-16 flex items-center`}>
-        <div
-          className={cn(
-            "p-4 px-3 2xl:px-6 text-xs text-muted-foreground duration-500 fixed z-50 transition-all right-0 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
-            shadowLess ? "" : "border-b shadow-sm",
-            isHeaderClose ? "-top-16" : "top-0",
-          )}
-        >
+<header className={`min-h-16 flex items-center`}>
+  <div
+    className={cn(
+      "p-4 px-3 2xl:px-6 text-xs text-muted-foreground duration-500 fixed z-50 transition-all right-0 w-full bg-white dark:bg-background",
+      shadowLess ? "" : "border-b shadow-sm",
+      isHeaderClose ? "-top-16" : "top-0",
+    )}
+  >
+
+  
           <div className="lg:w-[90vw] md:w-[90vw] max-w-300 m-auto flex justify-between">
             <div className="flex items-center gap-4">
               <Link
@@ -120,7 +121,7 @@ export default function Header({ shadowLess = false }) {
   )
 }
 
-export function HeaderMenu({ isActive, closeMenu }) {
+export function HeaderMenu({ closeMenu }) {
   const t = useTranslations()
   const [dropMenuToggle, setDropMenuToggle] = useState([false, false, false, false])
   function toggleMenu(targetIndex) {
@@ -138,8 +139,8 @@ export function HeaderMenu({ isActive, closeMenu }) {
   return (
     <ul
       className={cn(
-        "lg:static pt-8 lg:pt-0 lg:h-auto lg:flex-row flex-col flex p-0 lg:p-0 overflow-auto lg:overflow-visible bg-background",
-        isUnderLg && "w-full",
+     "lg:static pt-8 lg:pt-0 lg:h-auto lg:flex-row flex-col flex p-0 lg:p-0 overflow-auto lg:overflow-visible bg-white dark:bg-background",
+   isUnderLg && "w-full",
       )}
     >
       <li className="lg:p-1 lg:px-2 2xl:px-3 lg:border-l border-border underline decoration-transparent decoration-o cursor-pointer underline-offset-8 flex items-center lg:hover:decoration-foreground transition-colors">
