@@ -204,7 +204,7 @@ export default function SearchHeader({
 
   {/* Row 2: Rent days + Timer */}
   <div className="mt-2 px-1 flex flex-col gap-1">
-    <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100 font-bold text-[11px]">
+    <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100 text-[11px]">
       <Clock className="h-4 w-4" />
       <span>
         مدت زمان اجاره : {toPersianDigits(String(carDayCount))} روز
@@ -224,8 +224,39 @@ export default function SearchHeader({
         {/* ===================== DESKTOP (همون قبلی، دست نخورده) ===================== */}
         <div className="hidden md:block ">
           <div className="w-full overflow-x-auto hide-scrollbar">
-            <div className="w-full md:min-w-0 flex flex-row-reverse justify-between items-center text-xs ">
-              <DateRangePickerPopover
+            <div className="w-full md:min-w-0 flex  justify-between items-center text-xs ">
+         
+
+              <div>
+
+
+
+              <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
+                <CalendarDays className="h-4 w-4 " />
+                <span className="font-semibold">تاریخ و زمان عودت</span>
+                <span>
+                  {returnDateText} &nbsp; ساعت{" "}
+                  {toPersianDigits(safeTime(returnTime))}
+                </span>
+              </div>
+              </div>
+
+              <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
+                <CalendarDays className="h-4 w-4 " />
+                <span className="font-semibold">تاریخ و زمان تحویل</span>
+                <span>
+                  {deliveryDateText} &nbsp; ساعت{" "}
+                  {toPersianDigits(safeTime(deliveryTime))}
+                </span>
+              </div>
+
+              <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
+                <Clock className="h-4 w-4 " />
+                <span className="text-gray-700 dark:text-gray-200">
+                  مدت زمان اجاره : {toPersianDigits(String(carDayCount))} روز
+                </span>
+              </div>
+             <DateRangePickerPopover
                 initialRange={initialRange}
                 defaultIsJalali={true}
                 initialTimes={{
@@ -267,37 +298,6 @@ export default function SearchHeader({
                   </button>
                 }
               />
-
-              <div>
-
-
-
-              <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
-                <Clock className="h-4 w-4 " />
-                <span className="text-gray-700 dark:text-gray-200">
-                  مدت زمان اجاره : {toPersianDigits(String(carDayCount))} روز
-                </span>
-              </div>
-
-              <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
-                <CalendarDays className="h-4 w-4 " />
-                <span className="font-semibold">تاریخ و زمان عودت</span>
-                <span>
-                  {returnDateText} &nbsp; ساعت{" "}
-                  {toPersianDigits(safeTime(returnTime))}
-                </span>
-              </div>
-              </div>
-
-              <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
-                <CalendarDays className="h-4 w-4 " />
-                <span className="font-semibold">تاریخ و زمان تحویل</span>
-                <span>
-                  {deliveryDateText} &nbsp; ساعت{" "}
-                  {toPersianDigits(safeTime(deliveryTime))}
-                </span>
-              </div>
-
               {timerValue && (
                 <>
                   <VDivider />
