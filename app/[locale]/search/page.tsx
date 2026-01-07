@@ -4,7 +4,7 @@
 import { Suspense } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { motion } from "framer-motion"
 
@@ -106,15 +106,21 @@ function SearchResultPageContent() {
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(true)
-  const [page, setPage] = useState(1)
   const [isMounted, setIsMounted] = useState(false)
 
-  // Refs
+  // ========= ✅ Refs (ضد لوپ / ضد stale) =========
   const observerRef = useRef<IntersectionObserver | null>(null)
-  const isLoadingRef = useRef(false)
 
-  // ✅✅✅ تشخیص حالت "چسبیده" بدون clone
-  // یک سنـتینل درست قبل از sticky میذاریم
+  const loadingRef = useRef(false) // قفل درخواست
+  const pageRef = useRef(1) // صفحه واقعی
+  const hasMoreRef = useRef(true) // hasMore واقعی
+
+  const carCountRef = useRef(0)
+  useEffect(() => {
+    carCountRef.current = carList?.length || 0
+  }, [carList?.length])
+
+  // ========= ✅ Sticky sentinel =========
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   const [stuck, setStuck] = useState(false)
 
@@ -123,14 +129,10 @@ function SearchResultPageContent() {
     if (!el) return
 
     const io = new IntersectionObserver(
-      ([entry]) => {
-        // وقتی سنـتینل از بالای viewport رد شد -> sticky در حال چسبیدن
-        setStuck(!entry.isIntersecting)
-      },
+      ([entry]) => setStuck(!entry.isIntersecting),
       {
         root: null,
         threshold: 1,
-        // به اندازه offset هدر، نقطه‌ی "بالا" رو جابجا میکنیم
         rootMargin: `-${topOffset}px 0px 0px 0px`,
       },
     )
@@ -139,7 +141,23 @@ function SearchResultPageContent() {
     return () => io.disconnect()
   }, [topOffset])
 
-  // 1) Initial Hydration
+  // ========= ✅ Params key (برای تشخیص تغییر واقعی فیلترها) =========
+  const filterKey = useMemo(() => {
+    return JSON.stringify({
+      from: carDates?.[0] || "",
+      to: carDates?.[1] || "",
+      branchId: branchId || "1",
+      sort: filterSort || "price_min",
+      title: filterTitle || "",
+      cats: (filterCats || []).join(","),
+      minp: filterPrice?.length === 2 ? Math.min(...filterPrice) : "",
+      maxp: filterPrice?.length === 2 ? Math.max(...filterPrice) : "",
+      locale,
+      step: roadMapStep,
+    })
+  }, [carDates, branchId, filterSort, filterTitle, filterCats, filterPrice, locale, roadMapStep])
+
+  // ========= 1) Initial Hydration =========
   useEffect(() => {
     const from = searchParams.get("from")
     const to = searchParams.get("to")
@@ -150,7 +168,6 @@ function SearchResultPageContent() {
     const searchTitleParam = searchParams.get("search_title")
 
     if (from && to) dispatch(changeCarDates([from, to]))
-
     if (cats) dispatch(changeSelectedCategories(cats.split(",").map(Number)))
     if (sortParam) dispatch(changeSort(sortParam))
     if (searchTitleParam) dispatch(changeSearchTitle(searchTitleParam))
@@ -166,16 +183,125 @@ function SearchResultPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // 2) Sync Redux -> URL & Fetch
+  // ========= ✅ Fetch (بدون signal / ضد ریکوئست پشت هم) =========
+  const fetchCars = useCallback(
+    async (isLoadMore = false) => {
+      if (roadMapStep !== 1) return
+
+      if (!carDates?.[0] || !carDates?.[1]) {
+        setIsLoading(false)
+        setIsLoadingMore(false)
+        return
+      }
+
+      // LoadMore ولی hasMore نداریم
+      if (isLoadMore && !hasMoreRef.current) return
+
+      // قفل محکم
+      if (loadingRef.current) return
+      loadingRef.current = true
+
+      const nextPage = isLoadMore ? pageRef.current + 1 : 1
+
+      if (isLoadMore) setIsLoadingMore(true)
+      else setIsLoading(true)
+
+      setError(null)
+
+      const bodyData = {
+        branch_id: branchId || "1",
+        from: carDates[0],
+        to: carDates[1],
+        sort: filterSort || "price_min",
+        search_title: filterTitle || "",
+        page: nextPage,
+        min_p: filterPrice?.length === 2 ? Math.min(...filterPrice) : "0",
+        max_p: filterPrice?.length === 2 ? Math.max(...filterPrice) : "50000",
+        cat_id: filterCats || [],
+      }
+
+      try {
+        // ✅ دقیقاً همون قبلی
+        const response = await api.post(`/car/filter/${locale}`, bodyData)
+
+        if (response.status !== 200) throw new Error("Invalid response status")
+
+        const { cars, currency, min_price, max_price, count_cars } = response.data
+
+        dispatch(changeSearchCurrency(currency))
+
+        if (!isLoadMore && (!filterPrice || filterPrice.length === 0)) {
+          dispatch(changePriceRange([min_price, max_price]))
+        }
+
+        // اگر چیزی نیومد => stop (جلو loop)
+        if (!cars || cars.length === 0) {
+          hasMoreRef.current = false
+          setHasMore(false)
+          return
+        }
+
+        // ✅ DEDUPE: اگر API تکراری داد / overlap داشت
+        const existingIds = new Set((carList || []).map((c: any) => c?.id))
+        const uniqueCars = cars.filter((c: any) => !existingIds.has(c?.id))
+
+        // اگر هیچ آیتم جدید نداشتیم، stop کن تا پشت هم ریکوئست نزنه
+        if (uniqueCars.length === 0) {
+          hasMoreRef.current = false
+          setHasMore(false)
+          return
+        }
+
+        dispatch(addCarList(uniqueCars))
+
+        // محاسبه hasMore بدون stale
+        const loadedBefore = isLoadMore ? carCountRef.current : 0
+        const loadedAfter = loadedBefore + uniqueCars.length
+
+        if (typeof count_cars === "number" && loadedAfter >= count_cars) {
+          hasMoreRef.current = false
+          setHasMore(false)
+        } else {
+          hasMoreRef.current = true
+          setHasMore(true)
+          pageRef.current = nextPage
+        }
+      } catch (err) {
+        console.error("Search Fetch Error:", err)
+
+        // روی خطا هم stop تا loop نشه
+        hasMoreRef.current = false
+        setHasMore(false)
+
+        if (!isLoadMore) setError(t("errorLoading") || "خطا در بارگذاری")
+      } finally {
+        loadingRef.current = false
+        setIsLoading(false)
+        setIsLoadingMore(false)
+      }
+    },
+    [
+      roadMapStep,
+      carDates,
+      branchId,
+      filterSort,
+      filterTitle,
+      filterPrice,
+      filterCats,
+      locale,
+      dispatch,
+      t,
+      carList,
+    ],
+  )
+
+  // ========= ✅ Reset + Fetch when filters change =========
   useEffect(() => {
     if (!isMounted || roadMapStep !== 1) return
 
-    dispatch(clearCarList())
-    setPage(1)
-    setHasMore(true)
-    setIsLoading(true)
-
+    // URL sync
     const params = new URLSearchParams(searchParams.toString())
+
     if (filterSort) params.set("sort", filterSort)
     else params.delete("sort")
 
@@ -188,91 +314,71 @@ function SearchResultPageContent() {
     if (filterPrice?.length === 2) {
       params.set("min_p", String(Math.min(...filterPrice)))
       params.set("max_p", String(Math.max(...filterPrice)))
+    } else {
+      params.delete("min_p")
+      params.delete("max_p")
     }
 
     router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+
+    // reset state
+    dispatch(clearCarList())
+    setError(null)
+
+    pageRef.current = 1
+    hasMoreRef.current = true
+    setHasMore(true)
+
+    setIsLoading(true)
+    setIsLoadingMore(false)
+
+    // fetch first page
     fetchCars(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterSort, filterCats, filterPrice, filterTitle, isMounted, roadMapStep])
+  }, [filterKey])
 
-  // 3) Fetch Function
-  const fetchCars = useCallback(
-    async (isLoadMore = false) => {
-      if (!carDates?.[0] || !carDates?.[1]) {
-        setIsLoading(false)
-        return
-      }
-      if (isLoadingRef.current) return
-      isLoadingRef.current = true
-
-      const currentPage = isLoadMore ? page + 1 : 1
-      if (!isLoadMore) setIsLoading(true)
-      else setIsLoadingMore(true)
-
-      setError(null)
-
-      const bodyData = {
-        branch_id: branchId || "1",
-        from: carDates[0],
-        to: carDates[1],
-        sort: filterSort || "price_min",
-        search_title: filterTitle || "",
-        page: currentPage,
-        min_p: filterPrice ? Math.min(...filterPrice) : "0",
-        max_p: filterPrice ? Math.max(...filterPrice) : "50000",
-        cat_id: filterCats || [],
-      }
-
-      try {
-        const response = await api.post(`/car/filter/${locale}`, bodyData)
-        if (response.status === 200) {
-          const { cars, currency, min_price, max_price, count_cars } = response.data
-
-          dispatch(addCarList(cars))
-          dispatch(changeSearchCurrency(currency))
-
-          if (!isLoadMore && (!filterPrice || filterPrice.length === 0)) {
-            dispatch(changePriceRange([min_price, max_price]))
-          }
-
-          const totalAfter = (carList?.length || 0) + (cars?.length || 0)
-          if (totalAfter >= count_cars || cars.length === 0) setHasMore(false)
-          else {
-            setHasMore(true)
-            setPage(currentPage)
-          }
-        } else throw new Error("Invalid response status")
-      } catch (err) {
-        console.error("Search Fetch Error:", err)
-        if (!isLoadMore) setError(t("errorLoading") || "خطا در بارگذاری")
-      } finally {
-        isLoadingRef.current = false
-        setIsLoading(false)
-        setIsLoadingMore(false)
-      }
-    },
-    [carDates, branchId, filterSort, filterTitle, filterPrice, filterCats, page, carList?.length, locale, dispatch, t],
-  )
-
+  // ========= ✅ Infinite Scroll observer =========
   const lastElementRef = useCallback(
     (node: HTMLDivElement | null) => {
-      if (isLoading || isLoadingMore) return
+      if (!node) return
+
       if (observerRef.current) observerRef.current.disconnect()
 
-      observerRef.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) fetchCars(true)
-      })
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          const first = entries[0]
+          if (!first?.isIntersecting) return
 
-      if (node) observerRef.current.observe(node)
+          // قفل‌ها
+          if (loadingRef.current) return
+          if (!hasMoreRef.current) return
+          if (error) return
+
+          fetchCars(true)
+        },
+        {
+          root: null,
+          threshold: 0,
+          rootMargin: "250px 0px 250px 0px",
+        },
+      )
+
+      observerRef.current.observe(node)
     },
-    [isLoading, isLoadingMore, hasMore, fetchCars],
+    [fetchCars, error],
   )
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      observerRef.current?.disconnect()
+    }
+  }, [])
 
   return (
     <>
       <Header shadowLess />
 
-      {/* SearchHeader همونطور که گفتی دست نزن */}
       <div className="bg-white dark:bg-background">
         <SearchHeader isSticky={false} />
       </div>
@@ -283,16 +389,13 @@ function SearchResultPageContent() {
 
       {roadMapStep === 1 && (
         <>
-          {/* ✅ sentinel دقیقاً قبل از sticky */}
           <div ref={sentinelRef} />
 
-          {/* ✅✅✅ فقط یک نسخه: sticky واقعی + framer motion */}
           <motion.div
-            className="sticky z-[40]"
+            className="sticky z-40"
             style={{ top: topOffset }}
             initial={false}
             animate={{
-    
               backdropFilter: stuck ? "blur(12px)" : "blur(0px)",
             }}
             transition={{
@@ -303,15 +406,9 @@ function SearchResultPageContent() {
             <div className="sm:w-[90vw] max-w-334 m-auto px-0 sm:px-2">
               <motion.div
                 initial={false}
-                animate={{
-                  opacity: 1,
-                }}
-                transition={{
-                  duration: 0.3,
-                  ease: "easeInOut",
-                }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
               >
-                {/* ✅ خود SerarchSection استایلش همونه */}
                 <SerarchSection
                   searchDisable={isLoading && !isLoadingMore}
                   containerClassName={
@@ -330,7 +427,18 @@ function SearchResultPageContent() {
                 <Info size={48} className="opacity-80" />
                 <span className="mt-2 font-bold">{t("errorLoading")}</span>
 
-                <Button onClick={() => fetchCars(false)} className="mt-4 flex items-center gap-2" variant="default">
+                <Button
+                  onClick={() => {
+                    // retry امن
+                    hasMoreRef.current = true
+                    setHasMore(true)
+                    pageRef.current = 1
+                    dispatch(clearCarList())
+                    fetchCars(false)
+                  }}
+                  className="mt-4 flex items-center gap-2"
+                  variant="default"
+                >
                   <RefreshCcw className="size-4" />
                   {t("tryAgain")}
                 </Button>
