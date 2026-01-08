@@ -1,4 +1,25 @@
 {
+
+    "branchs": {
+    "dubai": "دبي",
+    "istanbul": "إسطنبول",
+    "oman": "عُمان",
+    "kish": "كيش",
+    "izmir": "إزمير",
+    "ankara": "أنقرة",
+    "antalya": "أنطاليا",
+    "samsun": "سامسون",
+    "kayseri": "قيصري",
+    "georgia": "جورجيا"
+  },
+
+    "AED": "درهم",
+  "day": "يوم",
+  "reserve": "الحجز",
+  "daily": "يوميًا",
+  "dailyPriceFor": "السعر اليومي لمدة",
+  "totalFor": "الإجمالي لمدة",
+
   "settings": "إعدادات",
   "chooselang": "اختيار اللغة",
   "choosecurrency": "اختيار العملة",

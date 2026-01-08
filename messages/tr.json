@@ -1,4 +1,25 @@
 {
+
+    "branchs": {
+    "dubai": "Dubai",
+    "istanbul": "İstanbul",
+    "oman": "Umman",
+    "kish": "Kiş",
+    "izmir": "İzmir",
+    "ankara": "Ankara",
+    "antalya": "Antalya",
+    "samsun": "Samsun",
+    "kayseri": "Kayseri",
+    "georgia": "Gürcistan"
+  },
+
+    "AED": "AED",
+  "day": "gün",
+  "reserve": "rezervasyon",
+  "daily": "Günlük",
+  "dailyPriceFor": "Günlük fiyat",
+  "totalFor": "Toplam",
+
   "settings": "Ayarlar",
   "chooselang": "Dil seçimi",
   "choosecurrency": "Para birimi seçimi",

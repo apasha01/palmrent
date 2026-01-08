@@ -42,6 +42,7 @@ export default async function RootLayout({
       dir={locale === "fa" || locale === "ar" ? "rtl" : "ltr"}
       suppressHydrationWarning
     >
+      {/* <body> */}
       <body className={`${dana.className}`}>
         <Providers locale={locale} messages={messages}>
           {children}

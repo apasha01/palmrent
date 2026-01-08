@@ -6,7 +6,6 @@ import { useLocale, useTranslations } from "next-intl"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { motion } from "framer-motion"
 
 // Components
 import SearchHeader from "@/components/search/search-header"
@@ -120,26 +119,50 @@ function SearchResultPageContent() {
     carCountRef.current = carList?.length || 0
   }, [carList?.length])
 
-  // ========= ✅ Sticky sentinel =========
-  const sentinelRef = useRef<HTMLDivElement | null>(null)
-  const [stuck, setStuck] = useState(false)
+  // ========= ✅ Sticky sentinel + CSS fade-in =========
+// ========= ✅ Sticky sentinel + CSS fade-in (SAFE) =========
+const sentinelRef = useRef<HTMLDivElement | null>(null)
+const [stuck, setStuck] = useState(false)
+const [playFade, setPlayFade] = useState(false)
 
-  useEffect(() => {
-    const el = sentinelRef.current
-    if (!el) return
+const stuckRef = useRef(false)
+const animatedRef = useRef(false)
 
-    const io = new IntersectionObserver(
-      ([entry]) => setStuck(!entry.isIntersecting),
-      {
-        root: null,
-        threshold: 1,
-        rootMargin: `-${topOffset}px 0px 0px 0px`,
-      },
-    )
+useEffect(() => {
+  const el = sentinelRef.current
+  if (!el) return
 
-    io.observe(el)
-    return () => io.disconnect()
-  }, [topOffset])
+  const io = new IntersectionObserver(
+    ([entry]) => {
+      const nowStuck = !entry.isIntersecting
+
+      // ✅ جلوگیری از setState پشت هم (فیکس کرش)
+      if (nowStuck !== stuckRef.current) {
+        stuckRef.current = nowStuck
+        setStuck(nowStuck)
+
+        // فقط موقع stuck شدن fade رو پلی کن
+        if (nowStuck && !animatedRef.current) {
+          animatedRef.current = true
+          setPlayFade(true)
+        }
+
+        // وقتی برگشت بالا، ریست کن تا دفعه بعد دوباره فید بزنه
+        if (!nowStuck && animatedRef.current) {
+          animatedRef.current = false
+          setPlayFade(false)
+        }
+      }
+    },
+    {
+      threshold: 0,
+      rootMargin: `-${topOffset}px 0px 0px 0px`,
+    }
+  )
+
+  io.observe(el)
+  return () => io.disconnect()
+}, [topOffset])
 
   // ========= ✅ Params key (برای تشخیص تغییر واقعی فیلترها) =========
   const filterKey = useMemo(() => {
@@ -194,10 +217,7 @@ function SearchResultPageContent() {
         return
       }
 
-      // LoadMore ولی hasMore نداریم
       if (isLoadMore && !hasMoreRef.current) return
-
-      // قفل محکم
       if (loadingRef.current) return
       loadingRef.current = true
 
@@ -221,9 +241,7 @@ function SearchResultPageContent() {
       }
 
       try {
-        // ✅ دقیقاً همون قبلی
         const response = await api.post(`/car/filter/${locale}`, bodyData)
-
         if (response.status !== 200) throw new Error("Invalid response status")
 
         const { cars, currency, min_price, max_price, count_cars } = response.data
@@ -234,18 +252,15 @@ function SearchResultPageContent() {
           dispatch(changePriceRange([min_price, max_price]))
         }
 
-        // اگر چیزی نیومد => stop (جلو loop)
         if (!cars || cars.length === 0) {
           hasMoreRef.current = false
           setHasMore(false)
           return
         }
 
-        // ✅ DEDUPE: اگر API تکراری داد / overlap داشت
         const existingIds = new Set((carList || []).map((c: any) => c?.id))
         const uniqueCars = cars.filter((c: any) => !existingIds.has(c?.id))
 
-        // اگر هیچ آیتم جدید نداشتیم، stop کن تا پشت هم ریکوئست نزنه
         if (uniqueCars.length === 0) {
           hasMoreRef.current = false
           setHasMore(false)
@@ -254,7 +269,6 @@ function SearchResultPageContent() {
 
         dispatch(addCarList(uniqueCars))
 
-        // محاسبه hasMore بدون stale
         const loadedBefore = isLoadMore ? carCountRef.current : 0
         const loadedAfter = loadedBefore + uniqueCars.length
 
@@ -268,11 +282,8 @@ function SearchResultPageContent() {
         }
       } catch (err) {
         console.error("Search Fetch Error:", err)
-
-        // روی خطا هم stop تا loop نشه
         hasMoreRef.current = false
         setHasMore(false)
-
         if (!isLoadMore) setError(t("errorLoading") || "خطا در بارگذاری")
       } finally {
         loadingRef.current = false
@@ -292,14 +303,13 @@ function SearchResultPageContent() {
       dispatch,
       t,
       carList,
-    ],
+    ]
   )
 
   // ========= ✅ Reset + Fetch when filters change =========
   useEffect(() => {
     if (!isMounted || roadMapStep !== 1) return
 
-    // URL sync
     const params = new URLSearchParams(searchParams.toString())
 
     if (filterSort) params.set("sort", filterSort)
@@ -321,7 +331,6 @@ function SearchResultPageContent() {
 
     router.replace(`${pathname}?${params.toString()}`, { scroll: false })
 
-    // reset state
     dispatch(clearCarList())
     setError(null)
 
@@ -332,7 +341,6 @@ function SearchResultPageContent() {
     setIsLoading(true)
     setIsLoadingMore(false)
 
-    // fetch first page
     fetchCars(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterKey])
@@ -341,34 +349,29 @@ function SearchResultPageContent() {
   const lastElementRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (!node) return
-
       if (observerRef.current) observerRef.current.disconnect()
 
       observerRef.current = new IntersectionObserver(
         (entries) => {
           const first = entries[0]
           if (!first?.isIntersecting) return
-
-          // قفل‌ها
           if (loadingRef.current) return
           if (!hasMoreRef.current) return
           if (error) return
-
           fetchCars(true)
         },
         {
           root: null,
           threshold: 0,
           rootMargin: "250px 0px 250px 0px",
-        },
+        }
       )
 
       observerRef.current.observe(node)
     },
-    [fetchCars, error],
+    [fetchCars, error]
   )
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       observerRef.current?.disconnect()
@@ -380,46 +383,41 @@ function SearchResultPageContent() {
       <Header shadowLess />
 
       <div className="bg-white dark:bg-background">
-        <SearchHeader isSticky={false} />
+        <SearchHeader  />
       </div>
 
       <div className="sm:w-[90vw] max-w-334 m-auto relative my-4 px-0 sm:px-2">
-        {(!searchParams.get("step") || Number(searchParams.get("step")) < 3) && <StepRent step={Number(roadMapStep)} />}
+        {(!searchParams.get("step") || Number(searchParams.get("step")) < 3) && (
+          <StepRent step={Number(roadMapStep)} />
+        )}
       </div>
 
       {roadMapStep === 1 && (
         <>
-          <div ref={sentinelRef} />
+          {/* ✅ sentinel حتماً ارتفاع داشته باشه */}
+         <div ref={sentinelRef} className="h-px w-full" />
 
-          <motion.div
-            className="sticky z-40"
-            style={{ top: topOffset }}
-            initial={false}
-            animate={{
-              backdropFilter: stuck ? "blur(12px)" : "blur(0px)",
-            }}
-            transition={{
-              duration: 0.4,
-              ease: [0.4, 0, 0.2, 1],
-            }}
-          >
+
+          {/* ✅ Sticky (با fade-in CSS شما) */}
+  <div
+  className={`
+    sticky z-40 transition-all duration-500
+    ${isHeaderClose ? "top-0" : "top-16"}
+    ${playFade ? "animate-fade-in" : ""}
+  `}
+>
+
             <div className="sm:w-[90vw] max-w-334 m-auto px-0 sm:px-2">
-              <motion.div
-                initial={false}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-              >
-                <SerarchSection
-                  searchDisable={isLoading && !isLoadingMore}
-                  containerClassName={
-                    stuck
-                      ? "shadow-lg shadow-black/5 dark:shadow-black/20 border-b border-gray-200/80 dark:border-gray-700/80"
-                      : ""
-                  }
-                />
-              </motion.div>
+              <SerarchSection
+                searchDisable={isLoading && !isLoadingMore}
+                containerClassName={
+                  stuck
+                    ? "shadow-lg shadow-black/5 dark:shadow-black/20 border-b border-gray-200/80 dark:border-gray-700/80"
+                    : ""
+                }
+              />
             </div>
-          </motion.div>
+          </div>
 
           <div className="md:w-[90vw] max-w-334 m-auto relative min-h-[50vh] px-0 md:px-2 mt-4">
             {error && !isLoading && (
@@ -429,7 +427,6 @@ function SearchResultPageContent() {
 
                 <Button
                   onClick={() => {
-                    // retry امن
                     hasMoreRef.current = true
                     setHasMore(true)
                     pageRef.current = 1
@@ -450,7 +447,11 @@ function SearchResultPageContent() {
                 carList.map((item: any, index: number) => {
                   const isLast = carList.length === index + 1
                   return (
-                    <div ref={isLast ? lastElementRef : undefined} key={`${item.id}-${index}`} className="flex w-full">
+                    <div
+                      ref={isLast ? lastElementRef : undefined}
+                      key={`${item.id}-${index}`}
+                      className="flex w-full"
+                    >
                       <SingleCar data={item} />
                     </div>
                   )

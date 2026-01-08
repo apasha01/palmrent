@@ -14,6 +14,7 @@ import {
   changeDeliveryTime,
   changeReturnTime,
 } from "@/redux/slices/globalSlice";
+import BranchName from "@/helpers/BranchNameHelper";
 
 function toEnglishDigits(input: string) {
   const fa = "۰۱۲۳۴۵۶۷۸۹";
@@ -207,7 +208,7 @@ export default function SearchHeader({
     <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100 text-[11px]">
       <Clock className="h-4 w-4" />
       <span>
-        مدت زمان اجاره : {toPersianDigits(String(carDayCount))} روز
+        مدت زمان اجاره : {toPersianDigits(String(carDayCount))} روز 
       </span>
     </div>
 
@@ -253,7 +254,7 @@ export default function SearchHeader({
               <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
                 <Clock className="h-4 w-4 " />
                 <span className="text-gray-700 dark:text-gray-200">
-                  مدت زمان اجاره : {toPersianDigits(String(carDayCount))} روز
+                  مدت زمان اجاره : {toPersianDigits(String(carDayCount))} روز فراموش نشدی در <BranchName />
                 </span>
               </div>
              <DateRangePickerPopover

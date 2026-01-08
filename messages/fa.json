@@ -1,4 +1,26 @@
 {
+
+
+    "branchs": {
+    "dubai": "دبی",
+    "istanbul": "استانبول",
+    "oman": "عمان",
+    "kisk": "کیش",
+    "izmir": "ازمیر",
+    "ankara": "آنکارا",
+    "antalya": "آنتالیا",
+    "samsun": "سامسون",
+    "kayseri": "قیصریه",
+    "georgia": "گرجستان"
+  },
+
+    "AED": "درهم",
+  "day": "روز",
+  "reserve": "رزرو",
+  "daily": "روزانه",
+  "dailyPriceFor": "قیمت روزانه برای",
+  "totalFor": "مجموع برای",
+
   "settings": "تنظیمات",
   "chooselang": "انتخاب زبان",
   "choosecurrency": "انتخاب ارز",

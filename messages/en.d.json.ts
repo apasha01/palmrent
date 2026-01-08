@@ -2,6 +2,27 @@
 // See: https://next-intl.dev/docs/workflows/typescript#messages-arguments
 
 declare const messages: {
+
+    "branchs": {
+    "dubai": "Dubai",
+    "istanbul": "Istanbul",
+    "oman": "Oman",
+    "kisk": "Kisk",
+    "izmir": "Izmir",
+    "ankara": "Ankara",
+    "antalya": "Antalya",
+    "samsun": "Samsun",
+    "kayseri": "Kayseri",
+    "georgia": "Georgia"
+  },
+
+    "AED": "AED",
+  "day": "day",
+  "reserve": "reservation",
+  "daily": "Daily",
+  "dailyPriceFor": "Daily price for",
+  "totalFor": "Total for",
+
   "settings": "Settings",
   "chooselang": "Choose language",
   "choosecurrency": "Currency selection",
