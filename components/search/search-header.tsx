@@ -208,7 +208,7 @@ export default function SearchHeader({
     <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100 text-[11px]">
       <Clock className="h-4 w-4" />
       <span>
-        مدت زمان اجاره : {toPersianDigits(String(carDayCount))} روز 
+   مدت زمان اجاره : {toPersianDigits(String(carDayCount))} روز فراموش نشدی در <BranchName />
       </span>
     </div>
 
