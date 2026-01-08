@@ -522,11 +522,6 @@ export function SingleCarPriceList({
             </div>
           )}
 
-          {isInSearchPage && (
-            <div className="flex justify-between text-[10px] text-gray-400 dark:text-gray-500 px-1">
-              <span>{t("daily")}</span>
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>
