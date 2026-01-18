@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { User, LogOut, Settings, CreditCard } from "lucide-react";
+import { User, LogOut, CreditCard } from "lucide-react";
 
 import {
   Popover,

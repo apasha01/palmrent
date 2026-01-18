@@ -1,5 +1,5 @@
 import Footer from '@/components/Footer';
-import Header from '@/components/Header';
+import Header from "@/components/layouts/Header";
 // import { useParams } from "next/navigation";
 
 // export const metadata = {

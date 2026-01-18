@@ -8,6 +8,7 @@ import { Slide, ToastContainer } from "react-toastify";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { NextIntlClientProvider } from "next-intl";
 import AppBoot from "@/components/layouts/AppBoot";
+import ReactQueryProvider from "@/providers/ReactQuery-provider";
 
 export default function Providers({
   children,
@@ -21,6 +22,7 @@ export default function Providers({
   return (
     <SessionProvider>
       <ReduxProvider>
+        <ReactQueryProvider>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Toast />
 
@@ -50,6 +52,8 @@ export default function Providers({
             </AppBoot>
           </ThemeProvider>
         </NextIntlClientProvider>
+
+        </ReactQueryProvider>
       </ReduxProvider>
     </SessionProvider>
   );

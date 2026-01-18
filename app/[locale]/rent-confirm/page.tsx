@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import Header from "@/components/Header"
+import Header from "@/components/layouts/Header"
 import Footer from "@/components/Footer"
 
 type Step = "SUCCESS_SUBMITTED" | "PAYMENT_DETAILS" | "PAYMENT_SUCCESS" | "DOCUMENT_CHECKLIST"

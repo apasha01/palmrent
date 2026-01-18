@@ -5,32 +5,43 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useTranslations, useLocale } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { changeSearchTitle, changeSort, toggleSelectedCategory } from "@/redux/slices/searchSlice";
+import {
+  changeSearchTitle,
+  changeSort,
+  toggleSelectedCategory,
+} from "@/redux/slices/searchSlice";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import {
   Search,
   X,
-  HandCoins,
-  PiggyBank,
-  Gem,
-  UsersRound,
-  Trophy,
-  BriefcaseBusiness,
-  Sun,
-  BadgeCheck,
-  CarFront,
-  Car,
   ArrowDownWideNarrow,
   SlidersHorizontal,
 } from "lucide-react";
 
 import SearchFilterSheet from "./SearchFilterSheet";
+import {
+  Icon7Plus,
+  IconBusiness,
+  IconCoupe,
+  IconCrook,
+  IconEconemy,
+  IconLuxury,
+  IconNoDeposite,
+  IconSport,
+  IconStandard,
+  IconSuv,
+} from "../Icons";
 
 export function SerarchSection({
   searchDisable = false,
@@ -46,8 +57,12 @@ export function SerarchSection({
   const dispatch = useDispatch();
 
   const searchOrder = useSelector((state: any) => state.search.sort);
-  const selectedCategories = useSelector((state: any) => state.search.selectedCategories);
-  const reduxSearchTitle = useSelector((state: any) => state.search.search_title);
+  const selectedCategories = useSelector(
+    (state: any) => state.search.selectedCategories
+  );
+  const reduxSearchTitle = useSelector(
+    (state: any) => state.search.search_title
+  );
 
   const [searchValue, setSearchValue] = useState(reduxSearchTitle || "");
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -56,16 +71,66 @@ export function SerarchSection({
 
   const sortList = useMemo(
     () => [
-      { id: 14, icon: <HandCoins size={18} />, title: "noDeposite" },
-      { id: 3, icon: <PiggyBank size={18} />, title: "economicCar" },
-      { id: 13, icon: <Gem size={18} />, title: "luxCar" },
-      { id: 15, icon: <UsersRound size={18} />, title: "sevenplus" },
-      { id: 19, icon: <Trophy size={18} />, title: "sport" },
-      { id: 18, icon: <BriefcaseBusiness size={18} />, title: "business" },
-      { id: 21, icon: <Sun size={18} />, title: "crook" },
-      { id: 17, icon: <BadgeCheck size={18} />, title: "standard" },
-      { id: 9, icon: <CarFront size={18} />, title: "suv" },
-      { id: 20, icon: <Car size={18} />, title: "coupe" },
+      {
+        id: 14,
+        icon: <IconNoDeposite />,
+        title: "noDeposite",
+        selected: false,
+      },
+      {
+        id: 3,
+        icon: <IconEconemy />,
+        title: "economicCar",
+        selected: false,
+      },
+      {
+        id: 13,
+        icon: <IconLuxury />,
+        title: "luxCar",
+        selected: false,
+      },
+      {
+        id: 15,
+        icon: <Icon7Plus />,
+        title: "sevenplus",
+        selected: false,
+      },
+      {
+        id: 19,
+        icon: <IconSport />,
+        title: "sport",
+        selected: false,
+      },
+      {
+        id: 18,
+        icon: <IconBusiness />,
+        title: "business",
+        selected: false,
+      },
+      {
+        id: 21,
+        icon: <IconCrook />,
+        title: "crook",
+        selected: false,
+      },
+      {
+        id: 17,
+        icon: <IconStandard />,
+        title: "standard",
+        selected: false,
+      },
+      {
+        id: 9,
+        icon: <IconSuv />,
+        title: "suv",
+        selected: false,
+      },
+      {
+        id: 20,
+        icon: <IconCoupe />,
+        title: "coupe",
+        selected: false,
+      },
     ],
     []
   );
@@ -76,23 +141,24 @@ export function SerarchSection({
   );
 
   useEffect(() => {
-    if (debouncedSearchTerm !== undefined) dispatch(changeSearchTitle(debouncedSearchTerm));
+    if (debouncedSearchTerm !== undefined)
+      dispatch(changeSearchTitle(debouncedSearchTerm));
   }, [debouncedSearchTerm, dispatch]);
 
   const handleSortChange = (sortType: string) => dispatch(changeSort(sortType));
-  const handleCategoryToggle = (id: number) => dispatch(toggleSelectedCategory(id));
+  const handleCategoryToggle = (id: number) =>
+    dispatch(toggleSelectedCategory(id));
 
   return (
     <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
       <Card
         className={cn(
-          // ✅ خود کارت دیگه sticky/fixed نیست. فقط ظاهر.
           "bg-white dark:bg-gray-900",
           "transition-all duration-300 relative",
           "rounded-none shadow-none border-x-0",
           "sm:rounded-lg sm:shadow-md sm:border",
           "border border-[#E0E0E0] dark:border-gray-700",
-          "py-2 sm:py-3",
+          "py-2 sm:py-4",
           containerClassName
         )}
       >
@@ -105,8 +171,8 @@ export function SerarchSection({
               "bg-gray-50 dark:bg-gray-900"
             )}
           >
-            <span className="text-[#4b5259] dark:text-gray-400 px-2 shrink-0">
-              <Search size={20} className="transform -scale-x-100" />
+            <span className="px-2 shrink-0">
+              <Search size={20} color={"#969696"} />
             </span>
 
             <Input
@@ -115,21 +181,41 @@ export function SerarchSection({
               type="search"
               placeholder={t("carSearch")}
               className={cn(
-                "border-none shadow-none bg-transparent",
+                "border-none shadow-none bg-transparent dark:bg-gray-900  placeholder:text-xs",
+              
                 "focus:outline-none focus:ring-0 focus:ring-offset-0",
                 "focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0",
                 "h-10 sm:h-9 px-0"
+                
               )}
             />
 
             <div className="flex items-center gap-1 text-[#75736F] dark:text-gray-400 border-r pr-2 border-gray-300 dark:border-gray-600">
-              {/* Sort */}
+              <SheetTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className={cn(
+                    "flex items-center gap-1 p-1.5 rounded",
+                    "h-auto hover:bg-gray-200 dark:hover:bg-gray-700"
+                  )}
+                >
+                  <ArrowDownWideNarrow size="20" />
+                  <span className="hidden sm:block text-xs font-bold text-nowrap dark:text-gray-300">
+                    {t("filters")}
+                  </span>
+                </Button>
+              </SheetTrigger>
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     type="button"
                     variant="ghost"
-                    className={cn("flex items-center gap-1 p-1.5 rounded", "h-auto hover:bg-gray-200 dark:hover:bg-gray-700")}
+                    className={cn(
+                      "flex items-center gap-1 p-1.5 rounded",
+                      "h-auto hover:bg-gray-200 dark:hover:bg-gray-700"
+                    )}
                   >
                     <SlidersHorizontal size="20" />
                     <span className="hidden sm:block text-xs font-bold text-nowrap dark:text-gray-300">
@@ -162,35 +248,26 @@ export function SerarchSection({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {/* Filters */}
-              <SheetTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className={cn("flex items-center gap-1 p-1.5 rounded", "h-auto hover:bg-gray-200 dark:hover:bg-gray-700")}
-                >
-                  <ArrowDownWideNarrow size="20" />
-                  <span className="hidden sm:block text-xs font-bold text-nowrap dark:text-gray-300">
-                    {t("filters")}
-                  </span>
-                </Button>
-              </SheetTrigger>
             </div>
           </div>
 
           {/* Selected chips */}
           {selectedItems.length > 0 && (
-            <div className={cn("flex flex-wrap gap-2", isRtl ? "justify-start" : "justify-end")}>
+            <div
+              className={cn(
+                "flex flex-wrap gap-2",
+                isRtl ? "justify-start" : "justify-end"
+              )}
+            >
               {selectedItems.map((item) => (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => handleCategoryToggle(item.id)}
                   className={cn(
-                    "inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs whitespace-nowrap",
+                    "inline-flex items-center gap-2 px-3 py-2 rounded-md text-xs whitespace-nowrap",
                     "border border-blue-500 dark:border-blue-400",
-                    "bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 font-bold"
+                    "bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 "
                   )}
                 >
                   {t(item.title)}
@@ -208,30 +285,38 @@ export function SerarchSection({
             )}
           >
             <div className="flex gap-2">
-              {sortList.map((item) => {
-                const isSelected = selectedCategories.includes(item.id);
+              {sortList.map((item, index) => {
+              const isSelected = selectedCategories.includes(item.id);
                 return (
-                  <Button
-                    key={item.id}
-                    type="button"
-                    variant="outline"
-                    onClick={() => handleCategoryToggle(item.id)}
-                    className={cn(
-                      "flex items-center gap-2 px-2 rounded-lg border text-xs cursor-pointer whitespace-nowrap transition-all",
-                      "h-auto",
-                      "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  <div key={index}>
+                    {!isSelected && (
+                      <Button
+                        key={item.id}
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleCategoryToggle(item.id)}
+                        className={cn(
+                          "flex items-center gap-2 px-2 rounded-lg border text-xs cursor-pointer whitespace-nowrap transition-all",
+                          "h-auto",
+                          "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        )}
+                      >
+                        {item.icon}
+                        {t(item.title)}
+                      </Button>
                     )}
-                  >
-                    {item.icon}
-                    {t(item.title)}
-                    {isSelected && <X className="size-3 text-gray-400" />}
-                  </Button>
+                  </div>
                 );
+
+       
+          
               })}
             </div>
           </div>
 
-          {searchDisable && <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 z-40 cursor-wait" />}
+          {searchDisable && (
+            <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 z-40 cursor-wait" />
+          )}
         </div>
       </Card>
 

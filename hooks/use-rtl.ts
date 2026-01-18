@@ -1,23 +1,16 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
+import { useLocale } from "next-intl";
 
-export const useRTL = (): boolean => {
-  const [isRTL, setIsRTL] = useState(false)
-  const [mounted, setMounted] = useState(false)
+export default function useDIR() {
+  const locale = useLocale();
+  const languages = ["fa","ar"]
 
-  useEffect(() => {
-    setMounted(true)
-    // Check if document direction is RTL
-    const direction = document.documentElement.dir || document.body.dir
-    setIsRTL(direction === "rtl")
-  }, [])
+  const isRtl = languages.includes(locale)
+  
+  const language = isRtl? "rtl" : "ltr";
+  const direction = language === 'rtl';
 
-  // تا زمانی که mount نشده، false برگردون
-  if (!mounted) {
-    return false
-  }
-
-  return isRTL
+  // console.log(direction, language)
+  return {language, direction};
 }

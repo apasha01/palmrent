@@ -30,6 +30,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "app/[locale]/search/page.tsx", "components/search/search-header.tsx", "components/search/StepsRent.tsx", "app/[locale]/cars-rent/[cityName]/page.jsx", "components/card/CarsCard.tsx", "app/[locale]/cars-list/[cityName]/page.jsx", "components/Header.jsx"  ],
+, "app/[locale]/search/page.tsx", "components/search/search-header.tsx", "components/search/StepsRent.tsx", "app/[locale]/cars-rent/[cityName]/page1.jsx", "components/card/CarsCard.tsx", "app/[locale]/cars-list/[citySlug]/page.jsx", "components/Header.tsx"  ],
   "exclude": ["node_modules"]
 }

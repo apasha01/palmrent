@@ -1,5 +1,5 @@
 import Footer from "@/components/Footer";
-import Header from "@/components/Header";
+import Header from "@/components/layouts/Header";
 import { ResNavigationBar } from "@/components/ResponseNavigationBar";
 export const metadata = {
   title: "سامانه آنلاین اجاره خودرو بدون دپوزیت | پالم رنت",

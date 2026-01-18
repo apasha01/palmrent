@@ -94,7 +94,7 @@ export default function Footer({NMG=false}){
                 </div>
                 <div className="w-full flex items-center rounded-2xl dark:bg-gray-900 md:justify-between justify-center my-4 py-4 px-6 md:gap-0 gap-4 md:flex-nowrap flex-wrap">
                     <Link className="text-[#1E40AF] items-center text-xl font-bold lg:flex hidden" href={'#'}>
-                        <Image className="filter-[invert(1)]" src={'/images/logo.png'} width={150} height={80} alt="palmrent logo"></Image>
+                        <Image className="filter-[invert(1)] dark:filter-none"  src={'/images/logo.png'} width={150} height={80} alt="palmrent logo"></Image>
                         <div>{t('palmRent')}</div>
                     </Link>
                     <Link href={'tel:+989196784367'} className=" md:w-auto w-full md:justify-start justify-center rounded-2xl flex text-[#1E40AF] px-10 py-3 items-center">

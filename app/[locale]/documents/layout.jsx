@@ -1,5 +1,5 @@
 import Footer from "@/components/Footer";
-import Header from "@/components/Header";
+import Header from "@/components/layouts/Header";
 
 export const metadata = {
   title: "مدارک مورد نیاز برای اجاره خودرو - پالم رنت",

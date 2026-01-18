@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useLocale, useTranslations } from 'next-intl';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
-import PhoneInput from 'react-phone-input-2';
-import 'react-phone-input-2/lib/style.css';
-import { useDispatch, useSelector } from 'react-redux';
+import { useLocale, useTranslations } from "next-intl";
+import Image from "next/image";
+import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import { useDispatch, useSelector } from "react-redux";
 
 // ✅ Lucide Icons
 import {
@@ -17,14 +17,14 @@ import {
   Check,
   ArrowUpDown,
   LayoutGrid,
-} from 'lucide-react';
+} from "lucide-react";
 
-import InfoListPopup from './InfoListPopup';
-import LocationPopup from './LocationPopup';
-import { SingleCarOptions } from './card/CarsCard';
+import InfoListPopup from "./InfoListPopup";
+import LocationPopup from "./LocationPopup";
+import { SingleCarOptions } from "./card/CarsCard";
 
 // Redux Actions
-import { selectCar } from '@/redux/slices/carListSlice';
+import { selectCar } from "@/redux/slices/carListSlice";
 import {
   changeAreLocationsSame,
   changeDeliveryLocation,
@@ -33,13 +33,13 @@ import {
   changeIsLocationPopupOpen,
   changeReturnLocation,
   changeRoadMapStep,
-} from '@/redux/slices/globalSlice';
+} from "@/redux/slices/globalSlice";
 
 // Utils & API
-import { api } from '@/lib/apiClient';
-import { dateDifference } from '@/lib/getDateDiffrence';
-import { toast } from 'react-toastify';
-import { STORAGE_URL } from '../lib/apiClient';
+import { api } from "@/lib/apiClient";
+import { dateDifference } from "@/lib/getDateDiffrence";
+import { toast } from "react-toastify";
+import { STORAGE_URL } from "../lib/apiClient";
 
 export default function InformationStep() {
   const t = useTranslations();
@@ -49,20 +49,28 @@ export default function InformationStep() {
   const router = useRouter();
 
   // -- Global State & Params --
-  const reduxSelectedCarId = useSelector((state) => state.carList.selectedCarId);
-  const urlCarId = searchParams.get('car_id');
+  const reduxSelectedCarId = useSelector(
+    (state) => state.carList.selectedCarId
+  );
+  const urlCarId = searchParams.get("car_id");
   const selectedCarId = reduxSelectedCarId || urlCarId;
 
-  const urlFrom = searchParams.get('from');
-  const urlTo = searchParams.get('to');
+  const urlFrom = searchParams.get("from");
+  const urlTo = searchParams.get("to");
   const reduxCarDates = useSelector((state) => state.global.carDates);
   const carDates = urlFrom && urlTo ? [urlFrom, urlTo] : reduxCarDates;
 
   const branchId = useSelector((state) => state.search.branch_id);
-  const deliveryLocation = useSelector((state) => state.global.deliveryLocation);
+  const deliveryLocation = useSelector(
+    (state) => state.global.deliveryLocation
+  );
   const returnLocation = useSelector((state) => state.global.returnLocation);
-  const areLocationsSame = useSelector((state) => state.global.areLocationsSame);
-  const isLocationPopupOpen = useSelector((state) => state.global.isLocationPopupOpen);
+  const areLocationsSame = useSelector(
+    (state) => state.global.areLocationsSame
+  );
+  const isLocationPopupOpen = useSelector(
+    (state) => state.global.isLocationPopupOpen
+  );
   const isInfoListOpen = useSelector((state) => state.global.isInfoListOpen);
 
   // -- Local State --
@@ -76,20 +84,20 @@ export default function InformationStep() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [userInfo, setUserInfo] = useState({
-    name: '',
-    email: '',
-    phone: '',
+    name: "",
+    email: "",
+    phone: "",
   });
 
   // 1) Initial Data Fetch
   useEffect(() => {
-    if (!selectedCarId || selectedCarId === 'null') {
+    if (!selectedCarId || selectedCarId === "null") {
       dispatch(changeRoadMapStep(1));
       return;
     }
 
     if (!carDates || !carDates[0] || !carDates[1]) {
-      toast.error('تاریخ رزرو نامعتبر است');
+      toast.error("تاریخ رزرو نامعتبر است");
       dispatch(changeRoadMapStep(1));
       return;
     }
@@ -102,32 +110,49 @@ export default function InformationStep() {
       setIsLoading(true);
       try {
         const params = new URLSearchParams();
-        params.append('branch_id', branchId || '1');
-        params.append('from', carDates[0]);
-        params.append('to', carDates[1]);
+        params.append("branch_id", branchId || "1");
+        params.append("from", carDates[0]);
+        params.append("to", carDates[1]);
 
         const url = `/car/rent/${selectedCarId}/${locale}?${params.toString()}`;
         const res = await api.get(url);
 
         if (res.status === 200) setApiData(res.data);
         else {
-          console.warn('Invalid response status:', res.status);
-          toast.error('خطا در دریافت اطلاعات. لطفا مجدد تلاش کنید.');
+          console.warn("Invalid response status:", res.status);
+          toast.error("خطا در دریافت اطلاعات. لطفا مجدد تلاش کنید.");
         }
       } catch (error) {
-        console.error('Calculation Error:', error);
-        toast.error('خطا در ارتباط با سرور.');
+        console.error("Calculation Error:", error);
+        toast.error("خطا در ارتباط با سرور.");
       } finally {
         setIsLoading(false);
       }
     }
 
     fetchCalc();
-  }, [selectedCarId, carDates?.[0], carDates?.[1], branchId, locale, reduxSelectedCarId, urlCarId, dispatch]);
+  }, [
+    selectedCarId,
+    carDates?.[0],
+    carDates?.[1],
+    branchId,
+    locale,
+    reduxSelectedCarId,
+    urlCarId,
+    dispatch,
+  ]);
 
   // 2) Real-time Totals Calculation & Breakdown
   const totals = useMemo(() => {
-    const safeTotals = { total: 0, prePay: 0, debt: 0, tax: 0, rentDays: 0, dailyPrice: 0, extraItems: [] };
+    const safeTotals = {
+      total: 0,
+      prePay: 0,
+      debt: 0,
+      tax: 0,
+      rentDays: 0,
+      dailyPrice: 0,
+      extraItems: [],
+    };
     if (!apiData || !apiData.item) return safeTotals;
 
     let totalPrice = parseFloat(apiData.item.pay_price) || 0;
@@ -159,41 +184,67 @@ export default function InformationStep() {
         const optPrice = parseFloat(opt.price_pay || 0);
         totalPrice += optPrice;
         prePayPrice += parseFloat(opt.pre_price_pay || 0);
-        if (optPrice > 0) extraItems.push({ title: opt.title, price: optPrice });
+        if (optPrice > 0)
+          extraItems.push({ title: opt.title, price: optPrice });
       });
     }
 
     // Insurance
     if (insuranceComplete) {
-      const insPrice = parseFloat(apiData.item.insurance_complete_price_pay || 0);
+      const insPrice = parseFloat(
+        apiData.item.insurance_complete_price_pay || 0
+      );
       totalPrice += insPrice;
-      prePayPrice += parseFloat(apiData.item.pre_price_insurance_complete_price_pay || 0);
-      if (insPrice > 0) extraItems.push({ title: t('insurancePrice') || 'بیمه کامل', price: insPrice });
+      prePayPrice += parseFloat(
+        apiData.item.pre_price_insurance_complete_price_pay || 0
+      );
+      if (insPrice > 0)
+        extraItems.push({
+          title: t("insurancePrice") || "بیمه کامل",
+          price: insPrice,
+        });
     }
 
     // Locations
     if (apiData.places && Array.isArray(apiData.places)) {
       // Delivery
-      if (deliveryLocation?.location && deliveryLocation.location !== 'desired') {
-        const delPlace = apiData.places.find((p) => p && String(p.id) === String(deliveryLocation.location));
+      if (
+        deliveryLocation?.location &&
+        deliveryLocation.location !== "desired"
+      ) {
+        const delPlace = apiData.places.find(
+          (p) => p && String(p.id) === String(deliveryLocation.location)
+        );
         if (delPlace) {
           const delPrice = parseFloat(delPlace.price_pay || 0);
           totalPrice += delPrice;
           prePayPrice += parseFloat(delPlace.pre_price_pay || 0);
-          if (delPrice > 0) extraItems.push({ title: `${t('deliveryPrice')}: ${delPlace.title}`, price: delPrice });
+          if (delPrice > 0)
+            extraItems.push({
+              title: `${t("deliveryPrice")}: ${delPlace.title}`,
+              price: delPrice,
+            });
         }
       }
 
       // Return
-      const targetReturnLoc = areLocationsSame ? deliveryLocation : returnLocation;
-      if (targetReturnLoc?.location && targetReturnLoc.location !== 'desired') {
+      const targetReturnLoc = areLocationsSame
+        ? deliveryLocation
+        : returnLocation;
+      if (targetReturnLoc?.location && targetReturnLoc.location !== "desired") {
         if (!areLocationsSame) {
-          const retPlace = apiData.places.find((p) => p && String(p.id) === String(targetReturnLoc.location));
+          const retPlace = apiData.places.find(
+            (p) => p && String(p.id) === String(targetReturnLoc.location)
+          );
           if (retPlace) {
             const retPrice = parseFloat(retPlace.price_pay || 0);
             totalPrice += retPrice;
             prePayPrice += parseFloat(retPlace.pre_price_pay || 0);
-            if (retPrice > 0) extraItems.push({ title: `${t('returnPrice')}: ${retPlace.title}`, price: retPrice });
+            if (retPrice > 0)
+              extraItems.push({
+                title: `${t("returnPrice")}: ${retPlace.title}`,
+                price: retPrice,
+              });
           }
         }
       }
@@ -205,7 +256,7 @@ export default function InformationStep() {
     if (taxPercent > 0) {
       tax = totalPrice * (taxPercent / 100);
       totalPrice += tax;
-      if (apiData.collage_tax_in === 'no') prePayPrice += tax;
+      if (apiData.collage_tax_in === "no") prePayPrice += tax;
     }
 
     return {
@@ -217,18 +268,27 @@ export default function InformationStep() {
       dailyPrice,
       extraItems,
     };
-  }, [apiData, selectedOptions, insuranceComplete, deliveryLocation, returnLocation, areLocationsSame, carDates, t]);
+  }, [
+    apiData,
+    selectedOptions,
+    insuranceComplete,
+    deliveryLocation,
+    returnLocation,
+    areLocationsSame,
+    carDates,
+    t,
+  ]);
 
   // 3) Submit (ثبت اطلاعات + انتقال به /rent/{rent_id})
   const handleSubmit = async () => {
     if (isSubmitting) return;
 
     if (!userInfo.name || !userInfo.phone) {
-      toast.warning('لطفا نام و شماره تماس را وارد کنید');
+      toast.warning("لطفا نام و شماره تماس را وارد کنید");
       return;
     }
     if (!deliveryLocation?.location) {
-      toast.warning('لطفا محل تحویل را انتخاب کنید');
+      toast.warning("لطفا محل تحویل را انتخاب کنید");
       return;
     }
 
@@ -240,30 +300,39 @@ export default function InformationStep() {
         from: carDates[0],
         to: carDates[1],
         place_delivery: deliveryLocation.location,
-        address_delivery: deliveryLocation.isDesired ? deliveryLocation.address : '',
-        place_return: areLocationsSame ? deliveryLocation.location : returnLocation.location || deliveryLocation.location,
+        address_delivery: deliveryLocation.isDesired
+          ? deliveryLocation.address
+          : "",
+        place_return: areLocationsSame
+          ? deliveryLocation.location
+          : returnLocation.location || deliveryLocation.location,
         address_return: areLocationsSame
-          ? (deliveryLocation.isDesired ? deliveryLocation.address : '')
+          ? deliveryLocation.isDesired
+            ? deliveryLocation.address
+            : ""
           : returnLocation.isDesired
           ? returnLocation.address
-          : '',
+          : "",
         first_name: userInfo.name,
-        last_name: '.',
+        last_name: ".",
         phone: userInfo.phone,
         email: userInfo.email,
         option_check: selectedOptions,
-        insurance_complete: insuranceComplete ? 'yes' : 'no',
+        insurance_complete: insuranceComplete ? "yes" : "no",
       };
 
-      const res = await api.post(`/car/rent/${selectedCarId}/${locale}/registration`, payload);
+      const res = await api.post(
+        `/car/rent/${selectedCarId}/${locale}/registration`,
+        payload
+      );
 
-      if (res.status !== 200) throw new Error(res.message || 'خطا در ثبت رزرو');
+      if (res.status !== 200) throw new Error(res.message || "خطا در ثبت رزرو");
 
       const rentId = res?.data?.item?.rent_id ?? res?.data?.rent_id;
       if (!rentId) {
         // اگر بک‌اند rent_id نداد، حداقل همون مرحله قبلی
         dispatch(changeRoadMapStep(3));
-        toast.warning('رزرو ثبت شد ولی rent_id دریافت نشد');
+        toast.warning("رزرو ثبت شد ولی rent_id دریافت نشد");
         return;
       }
 
@@ -271,17 +340,17 @@ export default function InformationStep() {
 
       if (paymentUrl) {
         const cb = encodeURIComponent(`/rent/${rentId}`);
-        const joiner = paymentUrl.includes('?') ? '&' : '?';
+        const joiner = paymentUrl.includes("?") ? "&" : "?";
         window.location.href = `${paymentUrl}${joiner}callback=${cb}`;
         return;
       }
 
-      toast.success('درخواست رزرو انجام شد');
+      toast.success("درخواست رزرو انجام شد");
 
       router.push(`/rent/reservation?status=initialize&rentid=${rentId}`);
     } catch (error) {
-      console.error('Booking Error:', error);
-      toast.error(error?.message || 'خطا در ثبت رزرو');
+      console.error("Booking Error:", error);
+      toast.error(error?.message || "خطا در ثبت رزرو");
     } finally {
       setIsSubmitting(false);
     }
@@ -289,9 +358,9 @@ export default function InformationStep() {
 
   const handleSelectUser = (user) => {
     setUserInfo({
-      name: user.name || '',
-      phone: user.phone || '',
-      email: user.email || '',
+      name: user.name || "",
+      phone: user.phone || "",
+      email: user.email || "",
     });
     dispatch(changeIsInfoListOpen(false));
   };
@@ -300,7 +369,9 @@ export default function InformationStep() {
     return (
       <div className="w-full flex flex-col items-center justify-center py-32 gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3B82F6]"></div>
-        <div className="text-gray-500 text-sm">در حال دریافت اطلاعات خودرو...</div>
+        <div className="text-gray-500 text-sm">
+          در حال دریافت اطلاعات خودرو...
+        </div>
       </div>
     );
   }
@@ -309,13 +380,28 @@ export default function InformationStep() {
     <>
       <div className="flex w-full lg:flex-row flex-col-reverse flex-1 gap-4 lg:flex-nowrap flex-wrap pb-20">
         <div className="flex flex-col flex-1 lg:w-auto w-full h-fit">
-          <DeliverySpot places={apiData.places || []} setIsLocationReturn={setIsLocationReturn} />
+          <DeliverySpot
+            places={apiData.places || []}
+            setIsLocationReturn={setIsLocationReturn}
+          />
 
-          <ExtraServices options={apiData.options || []} selected={selectedOptions} setSelected={setSelectedOptions} />
+          <ExtraServices
+            options={apiData.options || []}
+            selected={selectedOptions}
+            setSelected={setSelectedOptions}
+          />
 
-          <FineDeposit price={apiData.item.deposit_price} currency={apiData.currency} />
+          <FineDeposit
+            price={apiData.item.deposit_price}
+            currency={apiData.currency}
+          />
 
-          <PaymentDetail data={apiData.item} totals={totals} currency={apiData.currency} toman={apiData.item.price_2_toman} />
+          <PaymentDetail
+            data={apiData.item}
+            totals={totals}
+            currency={apiData.currency}
+            toman={apiData.item.price_2_toman}
+          />
 
           <PersonalInfoBox userInfo={userInfo} setUserInfo={setUserInfo} />
 
@@ -324,19 +410,25 @@ export default function InformationStep() {
               onClick={handleSubmit}
               disabled={isSubmitting}
               className={`w-11/12 rounded-2xl text-white p-4 text-lg font-bold transition-all shadow-xl shadow-blue-200/50 cursor-pointer
-                ${isSubmitting ? 'bg-[#3B82F6]/70 cursor-not-allowed' : 'bg-[#3B82F6] hover:bg-[#2563EB]'}
+                ${
+                  isSubmitting
+                    ? "bg-[#3B82F6]/70 cursor-not-allowed"
+                    : "bg-[#3B82F6] hover:bg-[#2563EB]"
+                }
               `}
             >
               <span className="flex items-center justify-center gap-2">
                 {isSubmitting && (
                   <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-white border-b-transparent" />
                 )}
-                {isSubmitting ? '' : t('resButton')}
+                {isSubmitting ? "" : t("resButton")}
               </span>
             </button>
           </div>
 
-          <div className="text-center text-[#8A8A8A] md:text-xs text-xs pb-4">{t('paymentNRequired')}</div>
+          <div className="text-center text-[#8A8A8A] md:text-xs text-xs pb-4">
+            {t("paymentNRequired")}
+          </div>
         </div>
 
         <div className="lg:w-1/3 w-full flex h-fit lg:sticky top-24">
@@ -344,7 +436,12 @@ export default function InformationStep() {
         </div>
       </div>
 
-      {isLocationPopupOpen && <LocationPopup isReturn={isLocationReturn} places={apiData.places || []} />}
+      {isLocationPopupOpen && (
+        <LocationPopup
+          isReturn={isLocationReturn}
+          places={apiData.places || []}
+        />
+      )}
       {isInfoListOpen && <InfoListPopup onSelect={handleSelectUser} />}
     </>
   );
@@ -355,15 +452,23 @@ export default function InformationStep() {
 export function DeliverySpot({ setIsLocationReturn, places }) {
   const t = useTranslations();
   const dispatch = useDispatch();
-  const areLocationsSame = useSelector((state) => state.global.areLocationsSame);
-  const deliveryLocation = useSelector((state) => state.global.deliveryLocation);
+  const areLocationsSame = useSelector(
+    (state) => state.global.areLocationsSame
+  );
+  const deliveryLocation = useSelector(
+    (state) => state.global.deliveryLocation
+  );
   const returnLocation = useSelector((state) => state.global.returnLocation);
 
-  const delPlace = places.find((p) => p && String(p.id) === String(deliveryLocation.location));
-  const delTitle = delPlace ? delPlace.title : t('chooseDeliveryLoc');
+  const delPlace = places.find(
+    (p) => p && String(p.id) === String(deliveryLocation.location)
+  );
+  const delTitle = delPlace ? delPlace.title : t("chooseDeliveryLoc");
 
-  const retPlace = places.find((p) => p && String(p.id) === String(returnLocation.location));
-  const retTitle = retPlace ? retPlace.title : t('chooseReturnLoc');
+  const retPlace = places.find(
+    (p) => p && String(p.id) === String(returnLocation.location)
+  );
+  const retTitle = retPlace ? retPlace.title : t("chooseReturnLoc");
 
   function openLocationPopup(isReturn = false) {
     setIsLocationReturn(isReturn);
@@ -373,7 +478,9 @@ export function DeliverySpot({ setIsLocationReturn, places }) {
   return (
     <div className="border border-[#0000001f] shadow-[0_2px_5px_-1px_rgba(0,0,0,.08)] p-4 rounded-4xl my-4 flex-1 bg-white">
       <div className="mb-4">
-        <div className="lg:text-base sm:text-sm text-xs font-semibold">{t('deliveryTitle')}</div>
+        <div className="lg:text-base sm:text-sm text-xs font-semibold">
+          {t("deliveryTitle")}
+        </div>
       </div>
 
       <div>
@@ -384,7 +491,7 @@ export function DeliverySpot({ setIsLocationReturn, places }) {
           <div>
             <div className="font-bold text-gray-700">{delTitle}</div>
             <div className="text-[#545454] text-xs mt-1">
-              {t('from')} {places.length} {t('afterDeliveryNum')}
+              {t("from")} {places.length} {t("afterDeliveryNum")}
             </div>
           </div>
 
@@ -395,10 +502,17 @@ export function DeliverySpot({ setIsLocationReturn, places }) {
           <div className="mt-2 animate-fade-in px-1">
             <input
               type="text"
-              value={deliveryLocation.address || ''}
-              onChange={(e) => dispatch(changeDeliveryLocation({ ...deliveryLocation, address: e.target.value }))}
+              value={deliveryLocation.address || ""}
+              onChange={(e) =>
+                dispatch(
+                  changeDeliveryLocation({
+                    ...deliveryLocation,
+                    address: e.target.value,
+                  })
+                )
+              }
               className="w-full border border-gray-300 rounded-lg p-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-all bg-white"
-              placeholder={t('optionalTitle')}
+              placeholder={t("optionalTitle")}
             />
           </div>
         )}
@@ -408,15 +522,21 @@ export function DeliverySpot({ setIsLocationReturn, places }) {
             <input
               type="checkbox"
               checked={!areLocationsSame}
-              onChange={() => dispatch(changeAreLocationsSame(!areLocationsSame))}
+              onChange={() =>
+                dispatch(changeAreLocationsSame(!areLocationsSame))
+              }
               className="sr-only peer"
             />
             <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
           </div>
-          <span className="text-gray-700 font-medium">{t('otherPlaces')}</span>
+          <span className="text-gray-700 font-medium">{t("otherPlaces")}</span>
         </label>
 
-        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${areLocationsSame ? 'max-h-0 opacity-0' : 'max-h-40 opacity-100'}`}>
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            areLocationsSame ? "max-h-0 opacity-0" : "max-h-40 opacity-100"
+          }`}
+        >
           <div
             onClick={() => openLocationPopup(true)}
             className="md:text-sm sm:text-xs text-xs bg-[#F4F4F4] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-200 transition-colors"
@@ -424,7 +544,7 @@ export function DeliverySpot({ setIsLocationReturn, places }) {
             <div>
               <div className="font-bold text-gray-700">{retTitle}</div>
               <div className="text-[#545454] text-xs mt-1">
-                {t('from')} {places.length} {t('afterDeliveryNum')}
+                {t("from")} {places.length} {t("afterDeliveryNum")}
               </div>
             </div>
 
@@ -435,10 +555,17 @@ export function DeliverySpot({ setIsLocationReturn, places }) {
             <div className="mt-2 animate-fade-in px-1">
               <input
                 type="text"
-                value={returnLocation.address || ''}
-                onChange={(e) => dispatch(changeReturnLocation({ ...returnLocation, address: e.target.value }))}
+                value={returnLocation.address || ""}
+                onChange={(e) =>
+                  dispatch(
+                    changeReturnLocation({
+                      ...returnLocation,
+                      address: e.target.value,
+                    })
+                  )
+                }
                 className="w-full border border-gray-300 rounded-lg p-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-all bg-white"
-                placeholder={t('optionalTitle')}
+                placeholder={t("optionalTitle")}
               />
             </div>
           )}
@@ -458,13 +585,15 @@ export function ExtraServices({ options, selected, setSelected }) {
   }
 
   function openDescriptionPopup(title, desc) {
-    dispatch(changeDescriptionPopup({ title, description: desc || '...' }));
+    dispatch(changeDescriptionPopup({ title, description: desc || "..." }));
   }
 
   return (
     <div className="border border-[#0000001f] shadow-[0_2px_5px_-1px_rgba(0,0,0,.08)] p-4 rounded-4xl my-4 flex-1 bg-white">
       <div className="mb-4">
-        <div className="lg:text-base sm:text-sm text-xs font-semibold">{t('extraSerTitle')}</div>
+        <div className="lg:text-base sm:text-sm text-xs font-semibold">
+          {t("extraSerTitle")}
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">
@@ -476,7 +605,12 @@ export function ExtraServices({ options, selected, setSelected }) {
           >
             <div className="flex gap-2 items-center">
               <label className="flex gap-2 items-center cursor-pointer pointer-events-none">
-                <input type="checkbox" className="peer hidden" checked={selected.includes(item.id)} readOnly />
+                <input
+                  type="checkbox"
+                  className="peer hidden"
+                  checked={selected.includes(item.id)}
+                  readOnly
+                />
 
                 <div className="md:size-[28px] sm:size-[26px] size-[24px] text-white bg-[#3B82F6] rounded-sm overflow-hidden relative hidden peer-checked:flex items-center justify-center">
                   <Check size={18} />
@@ -499,7 +633,9 @@ export function ExtraServices({ options, selected, setSelected }) {
             </div>
 
             <div className="text-[#545454] font-bold">
-              {parseInt(item.price) === 0 ? t('free') : `${item.price} ${t('AED')}`}
+              {parseInt(item.price) === 0
+                ? t("free")
+                : `${item.price} ${t("AED")}`}
             </div>
           </div>
         ))}
@@ -513,16 +649,29 @@ export function FineDeposit({ borderLess = false, price, currency }) {
   const dispatch = useDispatch();
 
   return (
-    <div className={`${!borderLess ? 'bg-white p-4 my-4 rounded-2xl border border-[#0000001f] shadow-[0_2px_5px_-1px_rgba(0,0,0,.08)]' : ''}`}>
+    <div
+      className={`${
+        !borderLess
+          ? "bg-white p-4 my-4 rounded-2xl border border-[#0000001f] shadow-[0_2px_5px_-1px_rgba(0,0,0,.08)]"
+          : ""
+      }`}
+    >
       <div
         className="md:text-sm sm:text-xs text-xs bg-[#F4F4F4] rounded-2xl p-4 flex items-center justify-between cursor-pointer"
-        onClick={() => dispatch(changeDescriptionPopup({ title: t('fineTitle'), description: '...' }))}
+        onClick={() =>
+          dispatch(
+            changeDescriptionPopup({
+              title: t("fineTitle"),
+              description: "...",
+            })
+          )
+        }
       >
         <div className="flex gap-2 items-center">
           <span className="flex size-9 p-1 text-[#7C7C7C]">
             <ArrowUpDown />
           </span>
-          <div className="font-medium">{t('fineTitle')}</div>
+          <div className="font-medium">{t("fineTitle")}</div>
           <div className="text-gray-400">
             <Info size={18} />
           </div>
@@ -535,7 +684,13 @@ export function FineDeposit({ borderLess = false, price, currency }) {
   );
 }
 
-export function PaymentDetail({ borderLess = false, data, totals, currency, toman }) {
+export function PaymentDetail({
+  borderLess = false,
+  data,
+  totals,
+  currency,
+  toman,
+}) {
   const t = useTranslations();
   if (!totals) return null;
 
@@ -543,10 +698,19 @@ export function PaymentDetail({ borderLess = false, data, totals, currency, toma
   const displayTotal = totals.total.toLocaleString();
 
   return (
-    <div className={`${!borderLess && 'border border-[#0000001f] shadow-[0_2px_5px_-1px_rgba(0,0,0,.08)] p-4 rounded-4xl'} my-4 flex-1 bg-white`}>
+    <div
+      className={`${
+        !borderLess &&
+        "border border-[#0000001f] shadow-[0_2px_5px_-1px_rgba(0,0,0,.08)] p-4 rounded-4xl"
+      } my-4 flex-1 bg-white`}
+    >
       <div className="mb-4 flex justify-between px-2">
-        <div className="lg:text-base sm:text-sm text-xs font-semibold">{t('reviewTitle')}</div>
-        <div className="text-[#3B82F6] cursor-pointer text-xs font-bold">{t('gotDiscount')}</div>
+        <div className="lg:text-base sm:text-sm text-xs font-semibold">
+          {t("reviewTitle")}
+        </div>
+        <div className="text-[#3B82F6] cursor-pointer text-xs font-bold">
+          {t("gotDiscount")}
+        </div>
       </div>
 
       <div className="bg-[#EFFBF6] rounded-2xl overflow-hidden pt-6 pb-2 relative">
@@ -556,26 +720,37 @@ export function PaymentDetail({ borderLess = false, data, totals, currency, toma
 
         <div className="flex flex-col justify-center items-center w-full md:text-sm text-xs z-10">
           <SinglePaymentDet
-            title={`${t('rentPriceB')} ${totals.rentDays} ${t('days')}`}
-            subtitle={<span className="text-[#0FA875] text-xs">{displayDaily} {t(currency)} {t('daily')}</span>}
-            price={`${(totals.dailyPrice * totals.rentDays).toLocaleString()} ${t(currency)}`}
+            title={`${t("rentPriceB")} ${totals.rentDays} ${t("days")}`}
+            subtitle={
+              <span className="text-[#0FA875] text-xs">
+                {displayDaily} {t(currency)} {t("daily")}
+              </span>
+            }
+            price={`${(
+              totals.dailyPrice * totals.rentDays
+            ).toLocaleString()} ${t(currency)}`}
           />
 
           {totals.extraItems?.map((item, idx) => (
-            <SinglePaymentDet key={idx} title={item.title} subtitle="" price={`${item.price.toLocaleString()} ${t(currency)}`} />
+            <SinglePaymentDet
+              key={idx}
+              title={item.title}
+              subtitle=""
+              price={`${item.price.toLocaleString()} ${t(currency)}`}
+            />
           ))}
 
           {totals.tax > 0 && (
             <SinglePaymentDet
-              title={t('tax Title')}
-              subtitle={`${data.tax_percent} ${t('percent')}`}
+              title={t("tax Title")}
+              subtitle={`${data.tax_percent} ${t("percent")}`}
               price={`${totals.tax.toLocaleString()} ${t(currency)}`}
             />
           )}
 
           <div className="border-b border-[#B5E9D880] flex justify-between items-center w-full p-3 px-4">
             <div className="font-bold text-base text-gray-800">
-              {t('finalPriceB')} {totals.rentDays} {t('days')}
+              {t("finalPriceB")} {totals.rentDays} {t("days")}
             </div>
             <div className="font-bold text-lg text-[#3B82F6]">
               {displayTotal} {t(currency)}
@@ -586,10 +761,24 @@ export function PaymentDetail({ borderLess = false, data, totals, currency, toma
             <div className="rounded-2xl bg-white w-full border border-gray-100 shadow-sm">
               <div className="py-4 md:px-5 px-2 flex w-full items-center justify-between">
                 <div className="flex flex-col gap-1">
-                  <div className="lg:text-lg md:text-base text-xs font-semibold text-gray-800">{t('prepayment')}</div>
+                  <div className="lg:text-lg md:text-base text-xs font-semibold text-gray-800">
+                    {t("prepayment")}
+                  </div>
                   <div className="flex gap-1 opacity-75">
-                    <Image src={'/images/shaparak.png'} width={35} height={20} alt="shaparak" style={{ objectFit: 'contain' }} />
-                    <Image src={'/images/zarinpal.png'} width={45} height={22} alt="zarinpal" style={{ objectFit: 'contain' }} />
+                    <Image
+                      src={"/images/shaparak.png"}
+                      width={35}
+                      height={20}
+                      alt="shaparak"
+                      style={{ objectFit: "contain" }}
+                    />
+                    <Image
+                      src={"/images/zarinpal.png"}
+                      width={45}
+                      height={22}
+                      alt="zarinpal"
+                      style={{ objectFit: "contain" }}
+                    />
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1 md:text-sm text-xs">
@@ -597,29 +786,31 @@ export function PaymentDetail({ borderLess = false, data, totals, currency, toma
                     {totals.prePay.toLocaleString()} {t(currency)}
                   </div>
                   <div className="text-xs text-[#10B981]">
-                    {(totals.prePay * toman).toLocaleString()} {t('toman')}
+                    {(totals.prePay * toman).toLocaleString()} {t("toman")}
                   </div>
                 </div>
               </div>
 
               <div className="border-t border-gray-100 pt-3 flex justify-between items-center bg-gray-50 p-2 rounded-lg">
                 <div>
-                  <div className="font-bold text-sm text-gray-700">{t('debt')}</div>
-                  <div className="text-[10px] text-gray-500">{t('debtDescription')}</div>
+                  <div className="font-bold text-sm text-gray-700">
+                    {t("debt")}
+                  </div>
+                  <div className="text-[10px] text-gray-500">
+                    {t("debtDescription")}
+                  </div>
                 </div>
                 <div className="text-right">
                   <div className="font-bold text-base text-gray-700">
                     {totals.debt.toLocaleString()} {t(currency)}
                   </div>
                   <div className="text-xs text-[#10B981]">
-                    {(totals.debt * toman).toLocaleString()} {t('toman')}
+                    {(totals.debt * toman).toLocaleString()} {t("toman")}
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -641,12 +832,15 @@ export function SinglePaymentDet({ title, subtitle, price }) {
 export function PersonalInfoBox({ userInfo, setUserInfo }) {
   const t = useTranslations();
   const dispatch = useDispatch();
-  const handleChange = (field, value) => setUserInfo({ ...userInfo, [field]: value });
+  const handleChange = (field, value) =>
+    setUserInfo({ ...userInfo, [field]: value });
 
   return (
     <div className="lg:text-sm md:text-xs text-xs pb-6 border border-[#0000001f] shadow-[0_2px_5px_-1px_rgba(0,0,0,.08)] p-4 rounded-4xl my-4 flex-1 bg-white">
       <div className="mb-4 flex justify-between items-center">
-        <div className="lg:text-base sm:text-sm text-xs font-semibold">{t('personalInfoTitle')}</div>
+        <div className="lg:text-base sm:text-sm text-xs font-semibold">
+          {t("personalInfoTitle")}
+        </div>
         <button
           onClick={() => dispatch(changeIsInfoListOpen(true))}
           className="text-[#3B82F6] hover:bg-blue-50 transition-all cursor-pointer text-xs items-center flex gap-2 border border-[#3B82F6] rounded-lg px-3 py-1.5 font-bold"
@@ -654,7 +848,7 @@ export function PersonalInfoBox({ userInfo, setUserInfo }) {
           <span className="size-6 inline-flex items-center justify-center">
             <UserSearch size={18} />
           </span>
-          <span>{t('chooseInfoTitle')}</span>
+          <span>{t("chooseInfoTitle")}</span>
         </button>
       </div>
 
@@ -662,33 +856,35 @@ export function PersonalInfoBox({ userInfo, setUserInfo }) {
         <label className="border border-[#B0B0B0B2] rounded-[5px] relative focus-within:border-blue-500 transition-colors bg-white h-12 flex items-center">
           <input
             value={userInfo.name}
-            onChange={(e) => handleChange('name', e.target.value)}
+            onChange={(e) => handleChange("name", e.target.value)}
             className="p-3 w-full outline-none bg-transparent"
             type="text"
             placeholder=" "
           />
-          <span className="absolute -translate-y-1/2 right-2 transition-all px-2 text-[#8A8A8A] bg-white top-0 text-xs">{t('nameLastname')}</span>
+          <span className="absolute -translate-y-1/2 right-2 transition-all px-2 text-[#8A8A8A] bg-white top-0 text-xs">
+            {t("nameLastname")}
+          </span>
         </label>
 
         <div dir="ltr" className="w-full relative h-12">
           <PhoneInput
-            country={'ae'}
+            country={"ae"}
             value={userInfo.phone}
-            onChange={(phone) => handleChange('phone', phone)}
-            containerStyle={{ width: '100%', height: '100%' }}
+            onChange={(phone) => handleChange("phone", phone)}
+            containerStyle={{ width: "100%", height: "100%" }}
             inputStyle={{
-              width: '100%',
-              height: '100%',
-              borderRadius: '5px',
-              borderColor: '#B0B0B0B2',
-              fontSize: '14px',
-              paddingLeft: '48px',
+              width: "100%",
+              height: "100%",
+              borderRadius: "5px",
+              borderColor: "#B0B0B0B2",
+              fontSize: "14px",
+              paddingLeft: "48px",
             }}
             buttonStyle={{
-              borderRadius: '5px 0 0 5px',
-              borderColor: '#B0B0B0B2',
-              borderRight: 'none',
-              backgroundColor: '#f9f9f9',
+              borderRadius: "5px 0 0 5px",
+              borderColor: "#B0B0B0B2",
+              borderRight: "none",
+              backgroundColor: "#f9f9f9",
             }}
           />
         </div>
@@ -696,28 +892,30 @@ export function PersonalInfoBox({ userInfo, setUserInfo }) {
         <label className="border border-[#B0B0B0B2] rounded-[5px] relative focus-within:border-blue-500 transition-colors bg-white h-12 flex items-center">
           <input
             value={userInfo.email}
-            onChange={(e) => handleChange('email', e.target.value)}
+            onChange={(e) => handleChange("email", e.target.value)}
             className="p-3 w-full outline-none bg-transparent"
             type="email"
             placeholder=" "
           />
-          <span className="absolute -translate-y-1/2 right-2 transition-all px-2 text-[#8A8A8A] bg-white top-0 text-xs">{t('email')}</span>
+          <span className="absolute -translate-y-1/2 right-2 transition-all px-2 text-[#8A8A8A] bg-white top-0 text-xs">
+            {t("email")}
+          </span>
         </label>
       </div>
 
       <div className="flex justify-center py-4 gap-1 sm:text-xs text-[10px] text-gray-500">
-        {t('rulesB')}{' '}
-        <Link className="text-[#3B82F6] underline" href={'/rules'}>
-          {t('rules2')}
-        </Link>{' '}
-        {t('rulesA')}
+        {t("rulesB")}{" "}
+        <Link className="text-[#3B82F6] underline" href={"/rules"}>
+          {t("rules2")}
+        </Link>{" "}
+        {t("rulesA")}
       </div>
 
       <div className="bg-blue-50 p-3 rounded-lg flex items-start gap-2 text-xs text-blue-800">
         <span className="shrink-0 mt-0.5">
           <Info size={18} />
         </span>
-        <div>{t('rulesDescription')}</div>
+        <div>{t("rulesDescription")}</div>
       </div>
     </div>
   );
@@ -727,37 +925,53 @@ export function SideCarDetail({ item, totals }) {
   const t = useTranslations();
   if (!item) return null;
 
-  const dailyPrice = totals?.dailyPrice ? totals.dailyPrice.toLocaleString() : item.rent_price_day;
+  const dailyPrice = totals?.dailyPrice
+    ? totals.dailyPrice.toLocaleString()
+    : item.rent_price_day;
   const rentDays = totals?.rentDays || item.rent_days || 0;
 
   return (
     <div className="border border-[#0000001f] shadow-[0_2px_5px_-1px_rgba(0,0,0,.08)] p-4 rounded-4xl my-4 flex-1 bg-white h-fit sticky top-24">
       <div className="mb-4 pb-2 border-b border-gray-100">
-        <div className="lg:text-base sm:text-sm text-xs font-bold text-gray-800">{t('onlinePur')}</div>
+        <div className="lg:text-base sm:text-sm text-xs font-bold text-gray-800">
+          {t("onlinePur")}
+        </div>
       </div>
-{console.log(item.photo)}
+      {console.log(item.photo)}
       <div className="relative w-full aspect-video rounded-lg overflow-hidden mb-4 bg-gray-100">
-        <Image className="object-cover" src={`${STORAGE_URL}${item.photo?.[0]}` || '/images/placeholder.png'} fill alt={item.title} />
+        <Image
+          className="object-cover"
+          src={`${STORAGE_URL}${item.photo?.[0]}` || "/images/placeholder.png"}
+          fill
+          alt={item.title}
+        />
       </div>
 
       <div className="py-3">
         <div className="flex w-full justify-between my-2 items-center">
           <h3 className="font-bold text-gray-800 text-lg">{item.title}</h3>
         </div>
-        <SingleCarOptions car={{ gearbox: item.gearbox === 'اتوماتیک' ? 'automatic' : 'geared', fuel: item.fuel, baggage: item.baggage, passengers: item.person }} />
+        <SingleCarOptions
+          car={{
+            gearbox: item.gearbox === "اتوماتیک" ? "automatic" : "geared",
+            fuel: item.fuel,
+            baggage: item.baggage,
+            passengers: item.person,
+          }}
+        />
       </div>
 
       <div className="mt-4 bg-gray-50 p-3 rounded-xl">
         <div className="flex justify-between items-center text-sm mb-2">
           <div className="flex items-center gap-2">
-            <span className="text-gray-500">{t('BSPrice')}</span>
+            <span className="text-gray-500">{t("BSPrice")}</span>
             <span className="text-xs text-gray-400 text-center">
-              {rentDays} {t('days')}
+              {rentDays} {t("days")}
             </span>
           </div>
 
           <div className="font-bold text-[#3B82F6]">
-            {dailyPrice} {t('AED')}
+            {dailyPrice} {t("AED")}
           </div>
         </div>
       </div>

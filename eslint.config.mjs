@@ -6,6 +6,28 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   // Override default ignores of eslint-config-next.
+
+    {
+    rules: {
+      // ⛔ any قرمز نشه، فقط هشدار بده
+      // "@typescript-eslint/no-explicit-any": "warn",
+
+      // // ⛔ unused vars قرمز نشه اگر با _ شروع بشه
+      // "@typescript-eslint/no-unused-vars": [
+      //   "warn",
+      //   { argsIgnorePattern: "^_" },
+      // ],
+
+      // ⛔ import استفاده نشده قرمز نشه
+      "no-unused-vars": "off",
+
+      // ⛔ console.log فقط warning
+      // "no-console": "warn",
+    },
+  },
+
+
+
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",

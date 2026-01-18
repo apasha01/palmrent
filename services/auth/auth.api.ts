@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import axios from "@/utils/axios";
+import axios from "@/lib/axios";
 
 type ApiResponse<T> = {
   success: boolean;

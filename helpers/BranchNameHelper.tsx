@@ -1,31 +1,34 @@
-"use client"
+"use client";
 
-import { useSearchParams } from "next/navigation"
-import { useTranslations } from "next-intl"
+import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
-const BRANCH_KEYS: Record<number, string> = {
-  1: "dubai",
-  2: "istanbul",
-  6: "oman",
-  7: "kish",
-  8: "izmir",
-  9: "ankara",
-  10: "antalya",
-  11: "samsun",
-  12: "kayseri",
-  13: "georgia",
-}
+const BRANCH_KEYS: Record<string, string> = {
+  dubai: "dubai",
+  istanbul: "istanbul",
+  oman: "oman",
+  kish: "kish",
+  izmir: "izmir",
+  ankara: "ankara",
+  antalya: "antalya",
+  samsun: "samsun",
+  kayseri: "kayseri",
+  georgia: "georgia",
+};
 
 export default function BranchName({ fallback = "" }: { fallback?: string }) {
-  const searchParams = useSearchParams()
-  const t = useTranslations("branchs")
+  const pathname = usePathname();
+  const t = useTranslations("branchs");
 
-  const branchId = searchParams.get("branch_id")
-  if (!branchId) return <>{fallback}</>
+  if (!pathname) return <>{fallback}</>;
 
-  const id = Number(branchId)
-  const key = BRANCH_KEYS[id]
-  if (!key) return <>{fallback}</>
+  // آخر path رو می‌گیریم
+  const slug = pathname.split("/").filter(Boolean).at(-1);
 
-  return <>{t(key)}</>
+  if (!slug) return <>{fallback}</>;
+
+  const key = BRANCH_KEYS[slug];
+  if (!key) return <>{fallback}</>;
+
+  return <>{t(key)}</>;
 }

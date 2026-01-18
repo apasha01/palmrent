@@ -1,70 +1,59 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// app/page.tsx
-import HomeComponent from "@/components/HomePage"
-import { BASE_URL } from "../../lib/apiClient"
+"use client";
 
-async function getHomeData(locale: any) {
-  try {
- const res = await fetch(`${BASE_URL}/home/${locale}`, {
+import Footer from "@/components/Footer";
+import ImportantQuestions from "@/components/Branchs/Important-Questions";
+import NavSection from "@/components/Branchs/Nav-Section";
+import QRApplication from "@/components/Branchs/QR-Application";
+import Header from "@/components/layouts/Header";
+import { useBranches } from "@/services/branches/branches.queries";
+import { useLocale } from "next-intl";
+import ActiveRentCities from "@/components/Landing/ActiveRentCities";
+import HubSupportSection from "@/components/Landing/HubSupportSection";
+import GuidesSection from "@/components/Landing/GuideSection";
 
-      next: { revalidate: 60 }
-    })
-    
-    if (!res.ok) {
-      throw new Error('Failed to fetch data')
-    }
-    
-    return res.json()
-  } catch (error) {
-    console.error('Error fetching home data:', error)
-    return { data: null, meta: null }
-  }
-}
+const Page = () => {
+  const locale = useLocale();
 
-export async function generateMetadata({ params } : { params: any }) {
-  const { locale } = await params;
-  const response = await getHomeData(locale)
-  
-  if (!response.meta) {
-    return {
-      title: "سامانه آنلاین اجاره خودرو بدون دپوزیت | پالم رنت",
-      description: "اجاره خودرو در دبی، استانبول و عمان بدون دپوزیت! رزرو آسان، پرداخت ریالی، بیمه رایگان و تحویل در محل. بهترین قیمت و پشتیبانی ۲۴/۷.",
-    }
-  }
+  const { data } = useBranches(locale);
 
-  const { meta } = response;
+  return (
+    <section className="max-w-7xl mx-auto">
+      <Header />
 
-  return {
-    title: meta.titleSeo,
-    description: meta.descriptionSeo,
-    robots: meta.robots,
-    icons: {
-      icon: meta.favIcon || '/favicon.png',
-    },
-    openGraph: {
-      title: meta.titleSeo,
-      description: meta.descriptionSeo,
-      images: [meta.imgSeo],
-      url: meta.urlPage,
-      siteName: meta.siteName,
-    },
-    alternates: {
-      canonical: meta.canonical,
-    },
-    ...(meta.schemaSeo && {
-      other: {
-        'script:ld+json': meta.schemaSeo,
-      }
-    }),
-  }
-}
+      <NavSection
+        image="/images/head-list-branch.jpg"
+        title="پالم رنت | رزرو آنلاین اجاره خودرو در شهرهای منتخب"
+        subtitle1="رزرو آنلاین, تحویل هماهنگ شده, پشتیبانی فارسی ۷/۲۴"
+        // subtitle2="تا خودروهای موجود و قیمت نهایی نمایش داده شود."
+      />
 
-export default async function HomePage({ params } : { params: any }) {
-  const { locale } = await params;
+      <div className="mt-6">
 
-  const response = await getHomeData(locale)
-  const initialData = response.data
-  
-  return <HomeComponent data={initialData} />
-}
+      <ActiveRentCities cities={data} />
 
+      </div>
+
+
+      <div>
+        <ImportantQuestions onlySupportView />
+      </div>
+
+      <div className="mt-8">
+       <HubSupportSection />
+      </div>
+
+      <div className="mt-6">
+        <QRApplication />
+      </div>
+
+      <div className="mt-8">
+        <GuidesSection />
+      </div>
+
+
+      <Footer />
+    </section>
+  );
+};
+
+export default Page;

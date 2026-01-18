@@ -11,9 +11,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { selectCar } from "@/redux/slices/carListSlice";
 import { changeRoadMapStep } from "@/redux/slices/globalSlice";
 import { addReelItem, changeReelActive } from "@/redux/slices/reelsSlice";
-
 import { adaptCarData } from "@/lib/adapters";
-import { capitalizeWords } from "@/lib/capitalizeFirstLetter";
 import { dateDifference } from "@/lib/getDateDiffrence";
 import { getLangUrl } from "@/lib/getLangUrl";
 import { STORAGE_URL } from "@/lib/apiClient";
@@ -31,16 +29,22 @@ import {
   IconPerson,
   IconWhatsapp,
 } from "../Icons";
+import { capitalizeWords, toFaDigits } from "@/helpers/helper";
 
 const toStorageUrl = (p: unknown) => {
   if (!p) return "";
-  if (typeof p === "string" && (p.startsWith("http://") || p.startsWith("https://"))) return p;
+  if (
+    typeof p === "string" &&
+    (p.startsWith("http://") || p.startsWith("https://"))
+  )
+    return p;
   return `${STORAGE_URL}${String(p)}`;
 };
 
 const normalizeImages = (input: unknown): string[] => {
   if (!input) return [];
-  if (Array.isArray(input)) return (input as unknown[]).filter(Boolean).map(String);
+  if (Array.isArray(input))
+    return (input as unknown[]).filter(Boolean).map(String);
   if (typeof input === "string") return input ? [input] : [];
   return [];
 };
@@ -54,7 +58,7 @@ export default function SingleCar({
 }) {
   const t = useTranslations();
   const dispatch = useDispatch();
-    const locale = useLocale(); // ✅ اینو اضافه کن
+  const locale = useLocale(); // ✅ اینو اضافه کن
 
   const optionList = useSelector((state: any) => state.carList.optionList);
 
@@ -87,7 +91,11 @@ export default function SingleCar({
       onMouseLeave={() => setIsHovering(false)}
     >
       <CardContent className="p-0 px-1 m-0">
-        <SingleCarGallery imageList={images} hasVideo={!!car.video} noBtn={noBtn}>
+        <SingleCarGallery
+          imageList={images}
+          hasVideo={!!car.video}
+          noBtn={noBtn}
+        >
           {/* ✅ Badges Overlay — بدون Tooltip، ثابت، بدون پرش */}
           <div className="absolute top-2 rtl:right-2 ltr:left-2 z-40 w-full flex flex-wrap gap-2 max-[380px]:gap-1 text-nowrap pointer-events-none">
             {car.rawOptions?.map((item: any, index: number) => {
@@ -97,8 +105,10 @@ export default function SingleCar({
               return (
                 <div
                   key={index}
-                  className={`sm:py-1 py-2 sm:px-2 px-3 max-[405px]:px-2 max-[405px]:text-[9px] font-bold rounded-4xl border border-white ${
-                    isNoDeposit ? "bg-[#eafaee] border-[#eafaee]" : "bg-[#e2e6e9]"
+                  className={`sm:py-1 py-2 sm:px-2 px-3 max-[405px]:px-2 text-[9px] font-bold rounded-4xl border border-white ${
+                    isNoDeposit
+                      ? "bg-[#eafaee] border-[#eafaee]"
+                      : "bg-[#e2e6e9]"
                   }`}
                 >
                   <span
@@ -132,9 +142,11 @@ export default function SingleCar({
             <span className="size-5 text-[#888] dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors">
               <Heart className="size-5" />
             </span>
- <h3 className="text-lg">
-  {locale === "fa" ? toFaDigits(capitalizeWords(car.title)) : capitalizeWords(car.title)}
-</h3>
+            <h3 className="text-lg">
+              {locale === "fa"
+                ? toFaDigits(capitalizeWords(car.title))
+                : capitalizeWords(car.title)}
+            </h3>
           </div>
 
           <SingleCarOptions car={car} />
@@ -168,7 +180,9 @@ export function SingleCarGallery({
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const safeImageList =
-    Array.isArray(imageList) && imageList.length > 0 ? imageList : ["/images/placeholder.png"];
+    Array.isArray(imageList) && imageList.length > 0
+      ? imageList
+      : ["/images/placeholder.png"];
 
   const handleMouseMove = (index: number) => setActiveImageIndex(index);
   const handleMouseLeave = () => setActiveImageIndex(0);
@@ -184,7 +198,7 @@ export function SingleCarGallery({
       <div
         className="
           md:hidden flex w-full h-[230px]
-          overflow-x-auto overflow-y-hidden flex-nowrap gap-2
+          overflow-x-auto flex-nowrap gap-2
           hide-scrollbar
           [scrollbar-width:none] [-ms-overflow-style:none]
           [&::-webkit-scrollbar]:hidden
@@ -202,7 +216,7 @@ export function SingleCarGallery({
             <div
               key={index}
               className={`
-                shrink-0 h-full w-[85%]
+                shrink-0 h-full
                 relative overflow-hidden bg-white
                 ${isSingle ? "rounded-xl" : ""}
                 ${!isSingle && isFirst ? "rounded-tr-xl rounded-br-xl" : ""}
@@ -223,7 +237,11 @@ export function SingleCarGallery({
 
         {safeImageList.length > 1 && (
           <div className="shrink-0 h-full w-[26%] bg-transparent flex items-center justify-center flex-col gap-2">
-            <Button size="icon" variant="outline" className="rounded-full border-none">
+            <Button
+              size="icon"
+              variant="outline"
+              className="rounded-full border-none"
+            >
               <ChevronLeft className="size-6" />
             </Button>
             <span className="text-xs text-black">{t("moredetail")}</span>
@@ -240,7 +258,12 @@ export function SingleCarGallery({
               index === activeImageIndex ? "opacity-100 z-10" : "opacity-0 z-0"
             }`}
           >
-            <Image className="w-full h-full object-cover" src={toStorageUrl(src)} fill alt="Car image" />
+            <Image
+              className="w-full h-full object-cover"
+              src={toStorageUrl(src)}
+              fill
+              alt="Car image"
+            />
 
             {index === safeImageList.length - 1 && safeImageList.length > 1 && (
               <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white z-20">
@@ -254,9 +277,16 @@ export function SingleCarGallery({
         ))}
 
         {/* ✅ Hover zones (فقط برای عوض شدن عکس) */}
-        <div className="absolute inset-0 z-30 flex" onMouseLeave={handleMouseLeave}>
+        <div
+          className="absolute inset-0 z-30 flex"
+          onMouseLeave={handleMouseLeave}
+        >
           {safeImageList.map((_: any, index: number) => (
-            <div key={index} className="flex-1 h-full" onMouseEnter={() => handleMouseMove(index)} />
+            <div
+              key={index}
+              className="flex-1 h-full"
+              onMouseEnter={() => handleMouseMove(index)}
+            />
           ))}
         </div>
 
@@ -298,45 +328,56 @@ export function SingleCarOptions({
   const t = useTranslations();
   if (!car) return null;
 
-  const textSize = bigFont ? "xl:text-base sm:text-sm text-xs" : "text-[10px] sm:text-xs";
+  const textSize = bigFont
+    ? "xl:text-base sm:text-sm text-xs"
+    : "text-[10px] sm:text-xs";
 
   const fuel = car.fuel || "Petrol";
   const gearboxKey = String(car.gearbox).toLowerCase();
-  const gearbox = gearboxKey.includes("auto") || gearboxKey.includes("اتوماتیک") ? "automatic" : "geared";
+  const gearbox =
+    gearboxKey.includes("auto") || gearboxKey.includes("اتوماتیک")
+      ? "automatic"
+      : "geared";
 
   return (
     <div
-      className={`grid grid-cols-4 gap-1 text-[#787878] dark:text-gray-400 border-[#0000001F] dark:border-gray-700 mt-1 mb-4 ${textSize}`}
+      className={`grid grid-cols-4 gap-1 text-[#787878] dark:text-gray-400 dark:border-gray-700 mt-1 mb-4 ${textSize} border-y   p-2 text-nowrap ${
+        bigFont
+          ? "xl:text-base sm:text-sm text-xs filter-[brightness(0.5)]"
+          : "text-xs"
+      }`}
     >
       <div className="flex items-center justify-center gap-1">
-        <span className={bigFont ? "xl:size-5 size-4" : "size-4"}>
+        <span className={bigFont ? "xl:size-5 size-4" : `size-4`}>
           <IconGas />
         </span>
-        <span className="text-xs">{t(String(fuel === "بنزین" ? "petrol" : fuel).toLowerCase())}</span>
+        <span className="text-xs">
+          {t(String(fuel === "بنزین" ? "petrol" : fuel).toLowerCase())}
+        </span>
       </div>
 
       <div className="flex items-center justify-center gap-1">
-        <span className={bigFont ? "xl:size-5 size-4" : "size-4"}>
+        <span className={bigFont ? "xl:size-5 size-4" : `size-4`}>
           <IconGearBox />
         </span>
         <span className="text-xs">{t(gearbox)}</span>
       </div>
 
       <div className="flex items-center justify-center gap-1">
-        <span className={bigFont ? "xl:size-5 size-4" : "size-4"}>
+        <span className={bigFont ? "xl:size-5 size-4" : `size-4`}>
           <IconBag />
         </span>
         <span className="text-xs">
-          {car.baggage || 0} {t("suitCase")}
+          {toFaDigits(car.baggage) || 0} {t("suitCase")}
         </span>
       </div>
 
       <div className="flex items-center justify-center gap-1">
-        <span className={bigFont ? "xl:size-5 size-4" : "size-4"}>
+        <span className={bigFont ? "xl:size-5 size-4" : `size-4`}>
           <IconPerson />
         </span>
         <span className="text-xs">
-          {car.passengers || 0} {t("people")}
+          {toFaDigits(car.passengers) || 0} {t("people")}
         </span>
       </div>
     </div>
@@ -358,7 +399,8 @@ export function SingleCarPriceList({
   const locale = useLocale();
   const langUrl = getLangUrl(locale);
 
-  const isInSearchPage = pathname === (langUrl ? `${langUrl}/search` : "/search");
+  const isInSearchPage =
+    pathname === (langUrl ? `${langUrl}/search` : "/search");
 
   // ✅ فقط برای عددهای قیمت (جداکننده و…)
   const numberFmt = useMemo(() => {
@@ -374,16 +416,14 @@ export function SingleCarPriceList({
   );
 
   // ✅ تبدیل عدد روزها به فارسی بدون dir (حتی اگر کانتینر LTR باشه)
-  const toPersianDigits = useCallback((input: string) => {
-    const en = "0123456789";
-    const fa = "۰۱۲۳۴۵۶۷۸۹";
-    return input.replace(/[0-9]/g, (d) => fa[en.indexOf(d)]);
-  }, []);
 
   const normalizePriceList = (list: any) => {
     if (!list) return [];
     if (Array.isArray(list)) return list;
-    return Object.entries(list).map(([key, value]: any) => ({ range: key, ...(value as any) }));
+    return Object.entries(list).map(([key, value]: any) => ({
+      range: key,
+      ...(value as any),
+    }));
   };
 
   const displayInfo = useMemo(() => {
@@ -412,12 +452,24 @@ export function SingleCarPriceList({
     let activeOldPrice = oldPrice ?? 0;
 
     if (match) {
-      activePrice = Number.parseFloat(match.final_price || match.currentPrice || activePrice) || activePrice;
-      activeOldPrice = Number.parseFloat(match.base_price || match.previousPrice || activeOldPrice) || activeOldPrice;
+      activePrice =
+        Number.parseFloat(
+          match.final_price || match.currentPrice || activePrice
+        ) || activePrice;
+      activeOldPrice =
+        Number.parseFloat(
+          match.base_price || match.previousPrice || activeOldPrice
+        ) || activeOldPrice;
     } else if (pricesArray.length > 0) {
       const first: any = pricesArray[0];
-      activePrice = Number.parseFloat(first.final_price || first.currentPrice || activePrice) || activePrice;
-      activeOldPrice = Number.parseFloat(first.base_price || first.previousPrice || activeOldPrice) || activeOldPrice;
+      activePrice =
+        Number.parseFloat(
+          first.final_price || first.currentPrice || activePrice
+        ) || activePrice;
+      activeOldPrice =
+        Number.parseFloat(
+          first.base_price || first.previousPrice || activeOldPrice
+        ) || activeOldPrice;
     }
 
     return { days, price: activePrice, oldPrice: activeOldPrice };
@@ -429,7 +481,7 @@ export function SingleCarPriceList({
   return (
     <Card className="p-0 shadow-none border-0 bg-transparent">
       <CardContent className="p-0">
-        <div className="flex flex-col gap-1 my-3 mt-auto border-t pt-2 border-[#0000001f] dark:border-gray-700">
+        <div className="flex flex-col gap-1 my-3 mt-auto pt-1  dark:border-gray-700">
           {isInSearchPage ? (
             (() => {
               const days = displayInfo.days || 1;
@@ -439,7 +491,8 @@ export function SingleCarPriceList({
               const total = daily * days;
               const totalOld = dailyOld * days;
 
-              const daysText = locale === "fa" ? toPersianDigits(String(days)) : String(days);
+              const daysText =
+                locale === "fa" ? toFaDigits(String(days)) : String(days);
 
               return (
                 <div className="flex flex-col gap-1">
@@ -449,9 +502,11 @@ export function SingleCarPriceList({
                     </span>
 
                     <div dir="ltr" className="flex items-center gap-2">
-                      <span className="text-xs text-[#4b5259] dark:text-gray-300">{currencyLabel}</span>
+                      <span className="text-base text-[#4b5259] font-bold dark:text-gray-300">
+                        {currencyLabel}
+                      </span>
 
-                      <span className="text-[#3B82F6] dark:text-blue-400 font-bold text-base sm:text-lg">
+                      <span className="text-[#3B82F6] dark:text-blue-400 text-base ">
                         {formatNum(daily)}
                       </span>
 
@@ -470,9 +525,11 @@ export function SingleCarPriceList({
                     </span>
 
                     <div dir="ltr" className="flex items-center gap-2">
-                      <span className="text-xs text-[#4b5259] dark:text-gray-300">{currencyLabel}</span>
+                      <span className="text-base text-[#4b5259] dark:text-gray-300">
+                        {currencyLabel}
+                      </span>
 
-                      <span className="text-[#111827] dark:text-gray-100 font-bold text-base sm:text-lg">
+                      <span className="text-[#111827] dark:text-gray-100  text-base ">
                         {formatNum(total)}
                       </span>
 
@@ -491,24 +548,40 @@ export function SingleCarPriceList({
               {pricesArray.map((item: any, index: number) => {
                 if (index > 3) return null;
 
-                const current = parseFloat(item.final_price || item.currentPrice || 0);
-                const previous = parseFloat(item.base_price || item.previousPrice || 0);
+                const current = parseFloat(
+                  item.final_price || item.currentPrice || 0
+                );
+                const previous = parseFloat(
+                  item.base_price || item.previousPrice || 0
+                );
 
                 let rangeText = item.range;
                 const nums = (item.range || "").match(/\d+/g);
                 if (nums && nums.length > 0) {
-                  if (nums.length === 2) rangeText = `${t("from")} ${nums[0]} ${t("to")} ${nums[1]} ${t("day")}`;
+                  if (nums.length === 2)
+                    rangeText = `${t("from")} ${nums[0]} ${t("to")} ${
+                      nums[1]
+                    } ${t("day")}`;
                   else rangeText = `${t("moreThan")} ${nums[0]} ${t("day")}`;
                 }
 
                 return (
-                  <div key={index} className="flex justify-between items-center text-[10px] sm:text-xs">
-                    <span className="text-gray-600 dark:text-gray-400">{rangeText}</span>
+                  <div
+                    key={index}
+                    className="flex justify-between items-center text-[10px] sm:text-xs"
+                  >
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {rangeText}
+                    </span>
 
                     <div dir="ltr" className="flex items-center gap-2">
-                      <span className="text-[10px] sm:text-xs text-[#4b5259] dark:text-gray-300">{currencyLabel}</span>
+                      <span className="text-[10px] sm:text-xs text-[#4b5259] dark:text-gray-300">
+                        {currencyLabel}
+                      </span>
 
-                      <span className="text-[#3B82F6] dark:text-blue-400 font-bold">{formatNum(current)}</span>
+                      <span className="text-[#3B82F6] dark:text-blue-400">
+                        {formatNum(current)}
+                      </span>
 
                       {previous > current && (
                         <span className="text-[#A7A7A7] dark:text-gray-500 line-through decoration-gray-400 dark:decoration-gray-600">
@@ -521,21 +594,11 @@ export function SingleCarPriceList({
               })}
             </div>
           )}
-
         </div>
       </CardContent>
     </Card>
   );
 }
-
-export function toFaDigits(input: unknown) {
-  if (input === null || input === undefined) return "";
-  const s = String(input);
-  const en = "0123456789";
-  const fa = "۰۱۲۳۴۵۶۷۸۹";
-  return s.replace(/\d/g, (d) => fa[en.indexOf(d)]);
-}
-
 
 export function SingleCarButtons({ car }: { car: any }) {
   const t = useTranslations();
@@ -590,7 +653,12 @@ export function SingleCarButtons({ car }: { car: any }) {
           bg-[#10B9811A] border-[#10B98180] text-[#10B981] hover:bg-[#10B981] hover:text-white
           dark:bg-[#10B9811A] dark:border-[#10B98180] dark:text-[#10B981] dark:hover:bg-[#10B981] dark:hover:text-white"
       >
-        <Link href={`https://wa.me/971556061134?text=${encodeURIComponent(whatsappText)}`} target="_blank">
+        <Link
+          href={`https://wa.me/971556061134?text=${encodeURIComponent(
+            whatsappText
+          )}`}
+          target="_blank"
+        >
           <IconWhatsapp className="size-5" />
           واتساپ
         </Link>
