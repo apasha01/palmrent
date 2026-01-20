@@ -8,6 +8,7 @@ import { useLocale } from "next-intl";
 import { useHubCarsOnly } from "@/services/hub-cars/hub-cars.queries";
 import SingleCar from "../card/CarsCard";
 import { Card, CardContent } from "../ui/card";
+import Link from "next/link";
 
 type BranchItem = {
   id: number;
@@ -203,6 +204,9 @@ const BranchCars = ({ branches, isLoading }: BranchCarsProps) => {
 
       {/* View All Button */}
       <div className="flex justify-center">
+        
+        <Link href={`cars-rent/${activeBranchId}`}>
+        
         <Button
           variant="outline-primary"
           size="lg"
@@ -211,6 +215,8 @@ const BranchCars = ({ branches, isLoading }: BranchCarsProps) => {
         >
           مشاهده همه خودروهای {activeCityName}
         </Button>
+        </Link>
+   
       </div>
     </div>
   );

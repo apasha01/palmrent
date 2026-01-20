@@ -1,76 +1,150 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter, usePathname, useSearchParams } from "next/navigation"
-import { Check, ChevronDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useEffect, useState } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import ReactCountryFlag from "react-country-flag";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { cn } from "@/lib/utils";
 
-const languages = [
-  { code: "fa", name: "فارسی", flag: "🇮🇷" },
-  { code: "en", name: "English", flag: "🇬🇧" },
-  { code: "ar", name: "العربية", flag: "🇸🇦" },
-  { code: "tr", name: "Türkçe", flag: "🇹🇷" },
-]
+interface Language {
+  code: string;
+  name: string;
+  nativeName: string;
+  flagCode: string;
+}
 
-const locales = ["fa", "en", "ar", "tr"]
+const languages: Language[] = [
+  { code: "fa", name: "Persian", nativeName: "فارسی", flagCode: "ir" },
+  { code: "en", name: "English", nativeName: "English", flagCode: "gb" },
+  { code: "ar", name: "Arabic", nativeName: "العربية", flagCode: "ae" },
+  { code: "tr", name: "Turkish", nativeName: "Türkçe", flagCode: "tr" },
+];
+
+const locales = ["fa", "en", "ar", "tr"];
 
 export default function LanguageSwitcher() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [currentLang, setCurrentLang] = useState("fa")
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [currentLang, setCurrentLang] = useState("fa");
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const currentLocale = locales.find((l) => pathname.startsWith(`/${l}`)) || "fa"
+    const currentLocale =
+      locales.find((l) => pathname.startsWith(`/${l}`)) || "fa";
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCurrentLang(currentLocale)
-  }, [pathname])
+    setCurrentLang(currentLocale);
+  }, [pathname]);
 
   function changeLanguageHandler(lang: string) {
-    let newPath = pathname
+    let newPath = pathname;
 
-    // حذف زبان فعلی از مسیر
     for (const l of locales) {
       if (newPath.startsWith(`/${l}/`) || newPath === `/${l}`) {
-        newPath = newPath.replace(`/${l}`, "") || "/"
-        break
+        newPath = newPath.replace(`/${l}`, "") || "/";
+        break;
       }
     }
 
-    // حفظ query string فعلی
-    const currentParams = searchParams.toString()
-    const fullPath = `/${lang}${newPath}${currentParams ? `?${currentParams}` : ""}`
+    const currentParams = searchParams.toString();
+    const fullPath = `/${lang}${newPath}${currentParams ? `?${currentParams}` : ""}`;
 
-    router.push(fullPath, { scroll: false })
+    router.push(fullPath, { scroll: false });
+    setOpen(false);
   }
 
-  const currentLanguage = languages.find((l) => l.code === currentLang) || languages[0]
+  const currentLanguage =
+    languages.find((l) => l.code === currentLang) || languages[0];
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="gap-2 bg-transparent">
-          <span className="text-lg">{currentLanguage.flag}</span>
-          <span className="hidden sm:inline">{currentLanguage.name}</span>
-          <ChevronDown className="h-4 w-4 opacity-50" />
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 border-border/50 bg-background/80  hover:bg-accent/80"
+        >
+          <ReactCountryFlag svg countryCode={currentLanguage.flagCode} />
+
+          <span className="hidden sm:inline text-sm font-medium">
+            {currentLanguage.nativeName}
+          </span>
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        {languages.map((language) => (
-          <DropdownMenuItem
-            key={language.code}
-            onClick={() => changeLanguageHandler(language.code)}
-            className="flex items-center justify-between gap-2 cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-lg">{language.flag}</span>
-              <span>{language.name}</span>
+      </DrawerTrigger>
+
+      <DrawerContent className="max-h-[85vh] ">
+        <div className="mx-auto w-full max-w-md">
+          <DrawerTitle className="text-xl"></DrawerTitle>
+
+          <div className="p-4 pt-6">
+            <div className="grid gap-2">
+              {languages.map((language) => {
+                const isSelected = currentLang === language.code;
+                return (
+                  <DrawerClose asChild key={language.code}>
+                    <button
+                      onClick={() => changeLanguageHandler(language.code)}
+                      className={cn(
+                        "group relative flex w-full items-center gap-4 rounded-xl p-4 text-left ",
+                        "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                        isSelected
+                          ? "bg-primary/5 border-2 border-primary/20"
+                          : "border border-border/50 hover:border-border",
+                      )}
+                    >
+                      {/* Flag */}
+                      <div
+                        className={cn(
+                          "flex h-12 w-12 items-center justify-center rounded-full text-2xl transition-transform duration-200",
+                         
+                          isSelected && "bg-primary/10",
+                        )}
+                      >
+                        <ReactCountryFlag svg countryCode={language.flagCode} />
+                      </div>
+
+                      {/* Text Content */}
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={cn(
+                            "font-semibold text-foreground",
+                            isSelected && "text-primary",
+                          )}
+                        >
+                          {language.nativeName}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {language.name}
+                        </p>
+                      </div>
+
+                      {/* Check Icon */}
+                      <div
+                        className={cn(
+                          "flex h-6 w-6 items-center justify-center rounded-full transition-all duration-200",
+                          isSelected
+                            ? "bg-primary text-primary-foreground"
+                            : "text-transparent group-hover:bg-accent",
+                        )}
+                      >
+                        <Check className="h-4 w-4" />
+                      </div>
+                    </button>
+                  </DrawerClose>
+                );
+              })}
             </div>
-            {currentLang === language.code && <Check className="h-4 w-4 text-primary" />}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
+          </div>
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import {
@@ -10,11 +12,44 @@ import { Button } from "../ui/button";
 import { PhoneCall } from "lucide-react";
 import { IconWhatsapp } from "../Icons";
 
-type ImportantQuestionsProps = {
+type Props = {
   onlySupportView?: boolean;
+
+  // ✅ شماره‌ها از بیرون (اگر ندادی، دیفالت پایین اعمال میشه)
+  whatsappNumber?: string | null;
+  phoneNumber?: string | null;
 };
 
-const ImportantQuestions = ({ onlySupportView }: ImportantQuestionsProps) => {
+function sanitizePhone(input?: string | null) {
+  if (!input) return "";
+  const digits = String(input).replace(/[^\d]/g, "");
+  if (!digits || digits === "0") return "";
+  return digits;
+}
+
+function buildWhatsAppUrl(raw?: string | null) {
+  const phone = sanitizePhone(raw);
+  if (!phone) return "";
+  return `https://wa.me/${phone}`;
+}
+
+function buildTelUrl(raw?: string | null) {
+  const phone = sanitizePhone(raw);
+  if (!phone) return "";
+  return `tel:${phone}`;
+}
+
+const ImportantQuestions = ({
+  onlySupportView,
+  whatsappNumber = "989211284055",
+  phoneNumber = "02191097811",
+}: Props) => {
+  const whatsappUrl = buildWhatsAppUrl(whatsappNumber);
+  const telUrl = buildTelUrl(phoneNumber);
+
+  const whatsappDisabled = !whatsappUrl;
+  const telDisabled = !telUrl;
+
   return (
     <div>
       {!onlySupportView && (
@@ -31,7 +66,6 @@ const ImportantQuestions = ({ onlySupportView }: ImportantQuestionsProps) => {
 
               <div className="mt-2">
                 <Tabs defaultValue="delivary">
-                  {/* ✅ موبایل وسط‌چین نباشه | md به بالا وسط‌چین بشه */}
                   <div className="flex justify-end md:justify-center">
                     <TabsList className="bg-transparent p-0! m-0! gap-2">
                       <TabsTrigger
@@ -66,30 +100,15 @@ const ImportantQuestions = ({ onlySupportView }: ImportantQuestionsProps) => {
 
                   <TabsContent value="general" className="mt-5">
                     <Accordion type="single" collapsible>
-                      <AccordionItem value="item-1" className="border-b border-gray-200 dark:border-gray-800">
+                      <AccordionItem
+                        value="item-1"
+                        className="border-b border-gray-200 dark:border-gray-800"
+                      >
                         <AccordionTrigger className="text-gray-900 dark:text-gray-100">
-                          چگونه میتوانم در پالم رنت خودرو رزرو کنم xxx؟
+                          چگونه میتوانم در پالم رنت خودرو رزرو کنم؟
                         </AccordionTrigger>
                         <AccordionContent className="text-gray-600 dark:text-gray-300">
-                          <p>
-                            Our flagship product combines cutting-edge technology
-                            with sleek design. Built with premium materials, it
-                            offers unparalleled performance and reliability.
-                          </p>
-                        </AccordionContent>
-                      </AccordionItem>
-
-                      <AccordionItem value="item-2" className="border-b border-gray-200 dark:border-gray-800">
-                        <AccordionTrigger className="text-gray-900 dark:text-gray-100">
-                          چرا میتوانم به پالم رنت اعتماد کنم ؟
-                        </AccordionTrigger>
-                        <AccordionContent className="text-gray-600 dark:text-gray-300">
-                          <p>
-                            We offer worldwide shipping through trusted courier
-                            partners. Standard delivery takes 3-5 business days,
-                            while express shipping ensures delivery within 1-2
-                            business days.
-                          </p>
+                          <p>...</p>
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
@@ -97,30 +116,15 @@ const ImportantQuestions = ({ onlySupportView }: ImportantQuestionsProps) => {
 
                   <TabsContent value="delivary" className="mt-5">
                     <Accordion type="single" collapsible>
-                      <AccordionItem value="item-1" className="border-b border-gray-200 dark:border-gray-800">
+                      <AccordionItem
+                        value="item-1"
+                        className="border-b border-gray-200 dark:border-gray-800"
+                      >
                         <AccordionTrigger className="text-gray-900 dark:text-gray-100">
-                          چگونه میتوانم در پالم رنت خودرو رزرو کنم ؟
+                          چرا میتوانم به پالم رنت اعتماد کنم؟
                         </AccordionTrigger>
                         <AccordionContent className="text-gray-600 dark:text-gray-300">
-                          <p>
-                            Our flagship product combines cutting-edge technology
-                            with sleek design. Built with premium materials, it
-                            offers unparalleled performance and reliability.
-                          </p>
-                        </AccordionContent>
-                      </AccordionItem>
-
-                      <AccordionItem value="item-2" className="border-b border-gray-200 dark:border-gray-800">
-                        <AccordionTrigger className="text-gray-900 dark:text-gray-100">
-                          چرا میتوانم به پالم رنت اعتماد کنم ؟
-                        </AccordionTrigger>
-                        <AccordionContent className="text-gray-600 dark:text-gray-300">
-                          <p>
-                            We offer worldwide shipping through trusted courier
-                            partners. Standard delivery takes 3-5 business days,
-                            while express shipping ensures delivery within 1-2
-                            business days.
-                          </p>
+                          <p>...</p>
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
@@ -147,18 +151,56 @@ const ImportantQuestions = ({ onlySupportView }: ImportantQuestionsProps) => {
             </div>
 
             <div className="flex gap-3 w-full md:w-auto">
-              <Button variant="outline-success" className="flex-1 md:flex-none">
-                <IconWhatsapp className={undefined} />
-                مشاوره واتساپ
-              </Button>
+              {/* ✅ واتساپ */}
+              {whatsappDisabled ? (
+                <Button
+                  variant="outline-success"
+                  className="flex-1 md:flex-none"
+                  disabled
+                >
+                  <IconWhatsapp className={undefined} />
+                  مشاوره واتساپ
+                </Button>
+              ) : (
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 md:flex-none"
+                >
+                  <Button
+                    variant="outline-success"
+                    className="w-full"
+                    type="button"
+                  >
+                    <IconWhatsapp className={undefined} />
+                    مشاوره واتساپ
+                  </Button>
+                </a>
+              )}
 
-              <Button
-                variant="outline-primary"
-                className="flex items-center flex-1 md:flex-none"
-              >
-                <PhoneCall />
-                مشاوره تلفنی
-              </Button>
+              {/* ✅ تماس */}
+              {telDisabled ? (
+                <Button
+                  variant="outline-primary"
+                  className="flex items-center flex-1 md:flex-none"
+                  disabled
+                >
+                  <PhoneCall />
+                  مشاوره تلفنی
+                </Button>
+              ) : (
+                <a href={telUrl} className="flex-1 md:flex-none">
+                  <Button
+                    variant="outline-primary"
+                    className="w-full flex items-center"
+                    type="button"
+                  >
+                    <PhoneCall />
+                    مشاوره تلفنی
+                  </Button>
+                </a>
+              )}
             </div>
           </div>
         </div>

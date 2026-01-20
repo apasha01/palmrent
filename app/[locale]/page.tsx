@@ -46,7 +46,7 @@ const Page = () => {
         <QRApplication />
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8 px-2 md:px-0">
         <GuidesSection />
       </div>
 

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Button } from "../ui/button";
 import { ChevronLeft } from "lucide-react";
+import Link from "next/link";
 
 const QRApplication = () => {
   return (
@@ -35,17 +36,22 @@ const QRApplication = () => {
 
               {/* ✅ موبایل: primary + rounded-full | md+: لینک بدون تغییر */}
               {/* Mobile: primary */}
-              <Button variant="default" className="rounded-full md:hidden">
+              <Link href="/app">
+              <Button variant="default" type="button" className="rounded-full md:hidden">
                 مشاهده لینک های دانلود
               </Button>
+              </Link>
 
               {/* Desktop: link */}
+               <Link href="/app">
+               
               <Button
                 variant="link"
                 className="p-0 m-0 hidden md:inline-flex dark:text-blue-400"
               >
                 مشاهده لینک های دانلود <ChevronLeft />
               </Button>
+               </Link>
 
               <div className="flex gap-2 items-end">
                 <Image

@@ -4,6 +4,7 @@
 
 import { useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, Clock, Search } from "lucide-react";
 import { DateRangePickerPopover } from "@/components/custom/calender/date-range-picker";
 import { jalaliToDate, formatJalaliDate } from "@/lib/date-utils";
@@ -29,6 +30,11 @@ function toEnglishDigits(input: string) {
       return ch;
     })
     .join("");
+}
+
+function normalizeJalaliString(s: string) {
+  // ✅ هم ارقام رو انگلیسی می‌کنه هم - رو / می‌کنه
+  return toEnglishDigits(s).replace(/-/g, "/").trim();
 }
 
 function toPersianDigits(input: string) {
@@ -88,13 +94,19 @@ export default function SearchHeader({
 }) {
   const dispatch = useDispatch();
 
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const isHeaderClose = useSelector((state: any) => state.global.isHeaderClose);
   const carDates = useSelector((state: any) => state.global.carDates) as
     | (string | null)[]
     | null;
+
   const returnTime = useSelector((state: any) => state.global.returnTime) as
     | string
     | null;
+
   const deliveryTime = useSelector(
     (state: any) => state.global.deliveryTime
   ) as string | null;
@@ -124,15 +136,56 @@ export default function SearchHeader({
   );
 
   function formatRangeMobile(opts: {
-  startText: string
-  endText: string
-  deliveryTime: string
-  returnTime: string
-}) {
-  return `از ${opts.startText} ساعت ${toPersianDigits(opts.deliveryTime)} تا ${opts.endText} ساعت ${toPersianDigits(
-    opts.returnTime,
-  )}`
-}
+    startText: string;
+    endText: string;
+    deliveryTime: string;
+    returnTime: string;
+  }) {
+    return `از ${opts.startText} ساعت ${toPersianDigits(
+      opts.deliveryTime
+    )} تا ${opts.endText} ساعت ${toPersianDigits(opts.returnTime)}`;
+  }
+
+  // ✅ تنها جایی که URL رو تغییر می‌دیم (فقط from/to)
+  const updateUrlFromTo = (from: string | null, to: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (from) params.set("from", from);
+    else params.delete("from");
+
+    if (to) params.set("to", to);
+    else params.delete("to");
+
+    // ✅ branch_id و بقیه پارامترها حفظ میشن چون ما فقط from/to رو تغییر دادیم
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const handleConfirm = ({
+    start,
+    end,
+    deliveryTime: dt,
+    returnTime: rt,
+  }: any) => {
+    // ✅ خروجی formatJalaliDate ممکنه فارسی/عربی باشه، پس normalize می‌کنیم
+    const fromStr = normalizeJalaliString(formatJalaliDate(start));
+    const toStr = normalizeJalaliString(formatJalaliDate(end));
+
+    // 1) Redux
+    dispatch(changeCarDates([fromStr, toStr] as any));
+    dispatch(changeDeliveryTime(dt as any));
+    dispatch(changeReturnTime(rt as any));
+
+    // 2) URL
+    updateUrlFromTo(fromStr, toStr);
+  };
+
+  const handleClear = () => {
+    dispatch(changeCarDates([null, null] as any));
+    dispatch(changeDeliveryTime(null as any));
+    dispatch(changeReturnTime(null as any));
+
+    updateUrlFromTo(null, null);
+  };
 
   return (
     <div
@@ -147,91 +200,69 @@ export default function SearchHeader({
     >
       <div className="mx-auto max-w-6xl px-3 md:px-4 py-2">
         {/* ===================== MOBILE ===================== */}
-<div className="md:hidden">
-  {/* Row 1: Search + Date Range (horizontal scroll) */}
-  <div className="w-full overflow-x-auto hide-scrollbar">
-    <div className="flex flex-row-reverse items-center justify-between whitespace-nowrap text-[11px] px-1">
-      <DateRangePickerPopover
-        initialRange={initialRange}
-        defaultIsJalali={true}
-        initialTimes={{
-          deliveryTime: safeTime(deliveryTime),
-          returnTime: safeTime(returnTime),
-        }}
-        onConfirm={({ start, end, deliveryTime: dt, returnTime: rt }) => {
-          dispatch(
-            changeCarDates([
-              formatJalaliDate(start),
-              formatJalaliDate(end),
-            ] as any)
-          )
-          dispatch(changeDeliveryTime(dt as any))
-          dispatch(changeReturnTime(rt as any))
-        }}
-        onClear={() => {
-          dispatch(changeCarDates([null, null] as any))
-          dispatch(changeDeliveryTime(null as any))
-          dispatch(changeReturnTime(null as any))
-        }}
-        trigger={
-          <button
-            type="button"
-            className={cn(
-              "shrink-0 h-9 w-9 rounded-full",
-              "bg-blue-600 hover:bg-blue-700 text-white",
-              "inline-flex items-center justify-center"
-            )}
-            aria-label="جستجو"
-          >
-            <Search className="h-4 w-4" />
-          </button>
-        }
-      />
-
-      {/* 🔹 متن رنج تاریخ (جایگزین تحویل + عودت) */}
-      <div className="inline-flex items-center gap-2 font-bold text-gray-800 dark:text-gray-100 shrink-0">
-        <CalendarDays className="h-4 w-4" />
-        <span className="font-bold">
-          {formatRangeMobile({
-            startText: deliveryDateText,
-            endText: returnDateText,
-            deliveryTime: safeTime(deliveryTime),
-            returnTime: safeTime(returnTime),
-          })}
-        </span>
-      </div>
-    </div>
-  </div>
-
-  {/* Row 2: Rent days + Timer */}
-  <div className="mt-2 px-1 flex flex-col gap-1">
-    <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100 text-[11px]">
-      <Clock className="h-4 w-4" />
-      <span>
-   مدت زمان اجاره : {toPersianDigits(String(carDayCount))} روز فراموش نشدی در <BranchName />
-      </span>
-    </div>
-
-    {timerValue && (
-      <div className="inline-flex items-center gap-2 whitespace-nowrap text-red-500 font-bold text-[11px]">
-        <Clock className="h-4 w-4" />
-        <span className="font-mono">{timerValue}</span>
-      </div>
-    )}
-  </div>
-</div>
-
-
-        {/* ===================== DESKTOP (همون قبلی، دست نخورده) ===================== */}
-        <div className="hidden md:block ">
+        <div className="md:hidden">
           <div className="w-full overflow-x-auto hide-scrollbar">
-            <div className="w-full md:min-w-0 flex  justify-between items-center text-xs ">
-         
+            <div className="flex flex-row-reverse items-center justify-between whitespace-nowrap text-[11px] px-1">
+              <DateRangePickerPopover
+                initialRange={initialRange}
+                defaultIsJalali={true}
+                initialTimes={{
+                  deliveryTime: safeTime(deliveryTime),
+                  returnTime: safeTime(returnTime),
+                }}
+                onConfirm={handleConfirm}
+                onClear={handleClear}
+                trigger={
+                  <button
+                    type="button"
+                    className={cn(
+                      "shrink-0 h-9 w-9 rounded-full",
+                      "bg-blue-600 hover:bg-blue-700 text-white",
+                      "inline-flex items-center justify-center"
+                    )}
+                    aria-label="جستجو"
+                  >
+                    <Search className="h-4 w-4" />
+                  </button>
+                }
+              />
 
-              <div>
+              <div className="inline-flex items-center gap-2 font-bold text-gray-800 dark:text-gray-100 shrink-0">
+                <CalendarDays className="h-4 w-4" />
+                <span className="font-bold">
+                  {formatRangeMobile({
+                    startText: deliveryDateText,
+                    endText: returnDateText,
+                    deliveryTime: safeTime(deliveryTime),
+                    returnTime: safeTime(returnTime),
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
 
+          <div className="mt-2 px-1 flex flex-col gap-1">
+            <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100 text-[11px]">
+              <Clock className="h-4 w-4" />
+              <span>
+                مدت زمان اجاره : {toPersianDigits(String(carDayCount))} روز فراموش
+                نشدی در <BranchName />
+              </span>
+            </div>
 
+            {timerValue && (
+              <div className="inline-flex items-center gap-2 whitespace-nowrap text-red-500 font-bold text-[11px]">
+                <Clock className="h-4 w-4" />
+                <span className="font-mono">{timerValue}</span>
+              </div>
+            )}
+          </div>
+        </div>
 
+        {/* ===================== DESKTOP ===================== */}
+        <div className="hidden md:block">
+          <div className="w-full overflow-x-auto hide-scrollbar">
+            <div className="w-full md:min-w-0 flex justify-between items-center text-xs">
               <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
                 <CalendarDays className="h-4 w-4 " />
                 <span className="font-semibold">تاریخ و زمان عودت</span>
@@ -239,7 +270,6 @@ export default function SearchHeader({
                   {returnDateText} &nbsp; ساعت{" "}
                   {toPersianDigits(safeTime(returnTime))}
                 </span>
-              </div>
               </div>
 
               <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
@@ -254,36 +284,20 @@ export default function SearchHeader({
               <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
                 <Clock className="h-4 w-4 " />
                 <span className="text-gray-700 dark:text-gray-200">
-                  مدت زمان اجاره : {toPersianDigits(String(carDayCount))} روز فراموش نشدی در <BranchName />
+                  مدت زمان اجاره : {toPersianDigits(String(carDayCount))} روز فراموش
+                  نشدی در <BranchName />
                 </span>
               </div>
-             <DateRangePickerPopover
+
+              <DateRangePickerPopover
                 initialRange={initialRange}
                 defaultIsJalali={true}
                 initialTimes={{
                   deliveryTime: safeTime(deliveryTime),
                   returnTime: safeTime(returnTime),
                 }}
-                onConfirm={({
-                  start,
-                  end,
-                  deliveryTime: dt,
-                  returnTime: rt,
-                }) => {
-                  dispatch(
-                    changeCarDates([
-                      formatJalaliDate(start),
-                      formatJalaliDate(end),
-                    ] as any)
-                  );
-                  dispatch(changeDeliveryTime(dt as any));
-                  dispatch(changeReturnTime(rt as any));
-                }}
-                onClear={() => {
-                  dispatch(changeCarDates([null, null] as any));
-                  dispatch(changeDeliveryTime(null as any));
-                  dispatch(changeReturnTime(null as any));
-                }}
+                onConfirm={handleConfirm}
+                onClear={handleClear}
                 trigger={
                   <button
                     type="button"
@@ -299,6 +313,7 @@ export default function SearchHeader({
                   </button>
                 }
               />
+
               {timerValue && (
                 <>
                   <VDivider />

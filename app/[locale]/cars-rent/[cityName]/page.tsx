@@ -135,9 +135,7 @@ export default function HomePage() {
 
     const t = window.setTimeout(() => {
       setHasMore(apiHasMore);
-
-      setPendingFilter(false); // ✅ دیتا رسید، اسکلتون رو قطع کن
-
+      setPendingFilter(false);
       setCars((prev) => {
         if (page === 1) return newCars;
 
@@ -306,7 +304,12 @@ export default function HomePage() {
       <main className="max-w-7xl w-full mx-auto">
         <NavSection
           image="/images/head-list-branch.jpg"
-          title={<> اجاره خودرو در <BranchName /> بدون دپوزیت </>}
+          title={
+            <>
+              {" "}
+              اجاره خودرو در <BranchName /> بدون دپوزیت{" "}
+            </>
+          }
           subtitle1="تحویل فوری در فرودگاه هتل یا بیمه رایگان"
           subtitle2="رزرو آنلاین سریع, پرداخت هنگام تحویل و پشتیبانی ۷/۲۴"
         />
@@ -360,7 +363,7 @@ export default function HomePage() {
           {!listLoading && !query.isError && (
             <>
               {cars.length === 0 ? (
-                <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+                <div className="text-center pt-6 text-gray-500 dark:text-gray-400">
                   خودرویی یافت نشد
                 </div>
               ) : (
@@ -423,7 +426,10 @@ export default function HomePage() {
           <TinyInformation />
         </div>
         <div className="mt-6 ">
-          <ImportantQuestions />
+          <ImportantQuestions
+            whatsappNumber={query.data?.branch?.whatsapp ?? undefined}
+            phoneNumber={query.data?.branch?.phone ?? undefined}
+          />
         </div>
         <div className="mt-8">
           <FavoriteBrands />

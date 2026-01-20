@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 
 const BRANCH_KEYS: Record<string, string> = {
   dubai: "dubai",
-  istanbul: "istanbul",
+  turkey: "istanbul",
   oman: "oman",
   kish: "kish",
   izmir: "izmir",

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Skeleton } from "../ui/skeleton";
+import Link from "next/link";
 
 type BranchItem = {
   id: number;
@@ -32,6 +33,7 @@ const BranchList = ({ branches, isLoading }: BranchListProps) => {
             ))
           : (branches ?? []).map((item) => (
               <div key={item.id} className="flex flex-col items-center gap-2">
+                <Link href={`/cars-rent/${item.slug}`}>
                 <div className="relative w-[80px] h-[80px] sm:w-[100px] sm:h-[100px]">
                   <Image
                     src={`/images/about-ser-2.png`}
@@ -41,7 +43,8 @@ const BranchList = ({ branches, isLoading }: BranchListProps) => {
                   />
                 </div>
 
-                <p className="text-center">{item.title}</p>
+                <p className="text-center mt-2">{item.title}</p>
+                </Link>
               </div>
             ))}
       </div>
