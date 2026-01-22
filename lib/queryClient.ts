@@ -1,3 +1,4 @@
+// queryClient.ts
 import { QueryClient } from '@tanstack/react-query';
 
 export function makeQueryClient() {
@@ -7,7 +8,8 @@ export function makeQueryClient() {
         retry: 1,
         refetchOnWindowFocus: false,
         refetchOnReconnect: true,
-        staleTime: 30_000, // پیش‌فرض ۳۰ ثانیه
+        staleTime: 1000 * 60 * 60 * 24 , // 7 روز
+        gcTime: 1000 * 60 * 60 * 24 ,
       },
       mutations: {
         retry: 0,

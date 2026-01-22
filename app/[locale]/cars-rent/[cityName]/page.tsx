@@ -1,82 +1,88 @@
-"use client";
+"use client"
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "next/navigation";
-import { useSelector } from "react-redux";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useParams } from "next/navigation"
+import { useSelector } from "react-redux"
 
-import NavSection from "@/components/Branchs/Nav-Section";
-import TinyInformation from "@/components/Branchs/Tiny-Information";
-import ImportantQuestions from "@/components/Branchs/Important-Questions";
-import FavoriteBrands from "@/components/Branchs/Favorite-Brands";
-import QRApplication from "@/components/Branchs/QR-Application";
-import WhyUs from "@/components/Branchs/Why-Us";
-import GoogleReview from "@/components/Branchs/Google-Review";
-import FAQlanding from "@/components/Branchs/FAQ-landing";
-import DescriptionLanding from "@/components/Branchs/Description-Landing";
+import NavSection from "@/components/Branchs/Nav-Section"
+import TinyInformation from "@/components/Branchs/Tiny-Information"
+import ImportantQuestions from "@/components/Branchs/Important-Questions"
+import FavoriteBrands from "@/components/Branchs/Favorite-Brands"
+import QRApplication from "@/components/Branchs/QR-Application"
+import WhyUs from "@/components/Branchs/Why-Us"
+import GoogleReview from "@/components/Branchs/Google-Review"
+import FAQlanding from "@/components/Branchs/FAQ-landing"
+import DescriptionLanding from "@/components/Branchs/Description-Landing"
 
-import CarCategory from "@/components/Branchs/Category-List";
-import { SerarchSection } from "@/components/search/SearchSection";
-import SingleCar from "@/components/card/CarsCard";
+import CarCategory from "@/components/Branchs/Category-List"
+import { SerarchSection } from "@/components/search/SearchSection"
+import SingleCar from "@/components/card/CarsCard"
 
-import { useBranchCars } from "@/services/branch-cars/branch-cars.queries";
+import { useBranchCars } from "@/services/branch-cars/branch-cars.queries"
 
-import SkeletonCarCard from "@/components/Loadings/SkeletonCarCard";
-import SkeletonSearchBar from "@/components/Loadings/SkeletonSearchBar";
+import SkeletonCarCard from "@/components/Loadings/SkeletonCarCard"
+import SkeletonSearchBar from "@/components/Loadings/SkeletonSearchBar"
 
-import { RainbowButton } from "@/components/ui/rainbow-button";
-import { ArrowLeftIcon } from "@/components/ui/arrow-left";
-import type { ArrowLeftIconHandle } from "@/components/ui/arrow-left";
-import BranchName from "@/helpers/BranchNameHelper";
+import { RainbowButton } from "@/components/ui/rainbow-button"
+import { ArrowLeftIcon } from "@/components/ui/arrow-left"
+import type { ArrowLeftIconHandle } from "@/components/ui/arrow-left"
+import BranchName from "@/helpers/BranchNameHelper"
+
+// ✅ Zustand (برای فیلترها)
+import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store"
 
 export default function HomePage() {
-  const routeParams = useParams() as { locale?: string; cityName?: string };
+  const routeParams = useParams() as { locale?: string; cityName?: string }
 
-  const resolvedLocale = String(routeParams?.locale || "fa");
-  const slug = String(routeParams?.cityName || "");
+  const resolvedLocale = String(routeParams?.locale || "fa")
+  const slug = String(routeParams?.cityName || "")
 
-  const filterSort = useSelector((state: any) => state.search.sort);
-  const filterTitle = useSelector((state: any) => state.search.search_title);
-  const filterCats = useSelector(
-    (state: any) => state.search.selectedCategories,
-  ) as number[];
+  // ✅✅✅ فیلترها از zustand (تا با SerarchSection یکی باشد)
+  const filterSort = useSearchPageStore((s) => s.sort)
+  const filterTitle = useSearchPageStore((s) => s.search_title)
+  const filterCats = useSearchPageStore((s) => s.selectedCategories)
 
-  // ✅ Header hide/show (مثل صفحه‌ی دیگه)
-  const isHeaderClose = useSelector(
-    (state: any) => state.global?.isHeaderClose,
-  );
-  const topOffset = isHeaderClose ? 0 : 64; // اگر هدر 64 نیست، عوض کن
+  // ✅✅✅ این قسمت حتماً مثل قبل از Redux بماند تا sticky خراب نشود
+  const isHeaderClose = useSelector((state: any) => state.global?.isHeaderClose)
+  const topOffset = isHeaderClose ? 0 : 64 // همون قبلی
+
+  // ✅✅✅ وقتی از این صفحه رفتی بیرون، فیلترهای zustand پاک بشن
+  useEffect(() => {
+    return () => {
+      useSearchPageStore.getState().resetFilters?.()
+    }
+  }, [])
 
   // ---------- Pagination ----------
-  const [page, setPage] = useState(1);
-  const [cars, setCars] = useState<any[]>([]);
-  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1)
+  const [cars, setCars] = useState<any[]>([])
+  const [hasMore, setHasMore] = useState(true)
 
-  const manualGatePage = 3;
-  const [manualUnlocked, setManualUnlocked] = useState(false);
+  const manualGatePage = 3
+  const [manualUnlocked, setManualUnlocked] = useState(false)
 
   // ✅ Pending filter (برای اسکلتون موقع تغییر فیلتر)
-  const [pendingFilter, setPendingFilter] = useState(false);
+  const [pendingFilter, setPendingFilter] = useState(false)
 
   // ---------- Cooldown ----------
-  const COOLDOWN_MS = 800;
-  const cooldownRef = useRef(false);
-  const cooldownTimerRef = useRef<number | null>(null);
+  const COOLDOWN_MS = 800
+  const cooldownRef = useRef(false)
+  const cooldownTimerRef = useRef<number | null>(null)
 
   const startCooldown = useCallback(() => {
-    cooldownRef.current = true;
-    if (cooldownTimerRef.current) window.clearTimeout(cooldownTimerRef.current);
+    cooldownRef.current = true
+    if (cooldownTimerRef.current) window.clearTimeout(cooldownTimerRef.current)
     cooldownTimerRef.current = window.setTimeout(() => {
-      cooldownRef.current = false;
-    }, COOLDOWN_MS);
-  }, []);
+      cooldownRef.current = false
+    }, COOLDOWN_MS)
+  }, [])
 
   useEffect(() => {
     return () => {
-      if (cooldownTimerRef.current)
-        window.clearTimeout(cooldownTimerRef.current);
-    };
-  }, []);
+      if (cooldownTimerRef.current) window.clearTimeout(cooldownTimerRef.current)
+    }
+  }, [])
 
   // ---------- Filters key ----------
   const filterKey = useMemo(() => {
@@ -86,26 +92,25 @@ export default function HomePage() {
       cats: (filterCats || []).join(","),
       slug,
       locale: resolvedLocale,
-    });
-  }, [filterSort, filterTitle, filterCats, slug, resolvedLocale]);
+    })
+  }, [filterSort, filterTitle, filterCats, slug, resolvedLocale])
 
   // ✅ Reset when filters change
   useEffect(() => {
     const t = window.setTimeout(() => {
-      setPage(1);
-      setCars([]);
-      setHasMore(true);
-      setManualUnlocked(false);
+      setPage(1)
+      setCars([])
+      setHasMore(true)
+      setManualUnlocked(false)
 
-      setPendingFilter(true); // ✅ مهم: تا دیتا نیومده "یافت نشد" نشون نده
+      setPendingFilter(true)
 
-      cooldownRef.current = false;
-      if (cooldownTimerRef.current)
-        window.clearTimeout(cooldownTimerRef.current);
-    }, 0);
+      cooldownRef.current = false
+      if (cooldownTimerRef.current) window.clearTimeout(cooldownTimerRef.current)
+    }, 0)
 
-    return () => window.clearTimeout(t);
-  }, [filterKey]);
+    return () => window.clearTimeout(t)
+  }, [filterKey])
 
   // ---------- Query params ----------
   const queryParams = useMemo(() => {
@@ -113,191 +118,180 @@ export default function HomePage() {
       page,
       sort: filterSort || null,
       search_title: filterTitle || null,
-      cat_id:
-        Array.isArray(filterCats) && filterCats.length ? filterCats : null,
-    };
-  }, [page, filterSort, filterTitle, filterCats]);
+      cat_id: Array.isArray(filterCats) && filterCats.length ? filterCats : null,
+    }
+  }, [page, filterSort, filterTitle, filterCats])
 
-  const query = useBranchCars(slug, resolvedLocale, queryParams);
+  const query = useBranchCars(slug, resolvedLocale, queryParams)
 
   const categories = (query.data?.categories ?? []) as Array<{
-    id: number;
-    title: string;
-    image?: string | null;
-  }>;
+    id: number
+    title: string
+    image?: string | null
+  }>
 
   // ---------- Append/Replace cars on data ----------
   useEffect(() => {
-    if (!query.data) return;
+    if (!query.data) return
 
-    const newCars = (query.data?.cars ?? []) as any[];
-    const apiHasMore = Boolean(query.data?.has_more);
+    const newCars = (query.data?.cars ?? []) as any[]
+    const apiHasMore = Boolean(query.data?.has_more)
 
     const t = window.setTimeout(() => {
-      setHasMore(apiHasMore);
-      setPendingFilter(false);
+      setHasMore(apiHasMore)
+      setPendingFilter(false)
+
       setCars((prev) => {
-        if (page === 1) return newCars;
+        if (page === 1) return newCars
 
-        const prevIds = new Set(prev.map((x: any) => x?.id));
-        const unique = newCars.filter((x: any) => !prevIds.has(x?.id));
-        return [...prev, ...unique];
-      });
+        const prevIds = new Set(prev.map((x: any) => x?.id))
+        const unique = newCars.filter((x: any) => !prevIds.has(x?.id))
+        return [...prev, ...unique]
+      })
 
-      startCooldown();
-    }, 0);
+      startCooldown()
+    }, 0)
 
-    return () => window.clearTimeout(t);
-  }, [query.data, page, startCooldown]);
+    return () => window.clearTimeout(t)
+  }, [query.data, page, startCooldown])
 
-  const listLoading = (pendingFilter || query.isFetching) && cars.length === 0;
-  const refetching = query.isFetching && cars.length > 0;
+  const listLoading = (pendingFilter || query.isFetching) && cars.length === 0
+  const refetching = query.isFetching && cars.length > 0
 
   // ---------- Refs (ضد stale) ----------
-  const pageRef = useRef(page);
-  const hasMoreRef = useRef(hasMore);
-  const isFetchingRef = useRef(query.isFetching);
-  const manualUnlockedRef = useRef(manualUnlocked);
+  const pageRef = useRef(page)
+  const hasMoreRef = useRef(hasMore)
+  const isFetchingRef = useRef(query.isFetching)
+  const manualUnlockedRef = useRef(manualUnlocked)
 
   useEffect(() => {
-    pageRef.current = page;
-  }, [page]);
+    pageRef.current = page
+  }, [page])
 
   useEffect(() => {
-    hasMoreRef.current = hasMore;
-  }, [hasMore]);
+    hasMoreRef.current = hasMore
+  }, [hasMore])
 
   useEffect(() => {
-    isFetchingRef.current = query.isFetching;
-  }, [query.isFetching]);
+    isFetchingRef.current = query.isFetching
+  }, [query.isFetching])
 
   useEffect(() => {
-    manualUnlockedRef.current = manualUnlocked;
-  }, [manualUnlocked]);
+    manualUnlockedRef.current = manualUnlocked
+  }, [manualUnlocked])
 
   // ---------- Load more ----------
   const loadMore = useCallback(() => {
-    if (isFetchingRef.current) return;
-    if (!hasMoreRef.current) return;
-    if (cooldownRef.current) return;
-
-    setPage((p) => p + 1);
-  }, []);
+    if (isFetchingRef.current) return
+    if (!hasMoreRef.current) return
+    if (cooldownRef.current) return
+    setPage((p) => p + 1)
+  }, [])
 
   // ---------- Infinite scroll observer ----------
-  const observerRef = useRef<IntersectionObserver | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null)
 
   const infiniteSentinelRef = useCallback(
     (node: HTMLDivElement | null) => {
-      if (!node) return;
-
-      if (observerRef.current) observerRef.current.disconnect();
+      if (!node) return
+      if (observerRef.current) observerRef.current.disconnect()
 
       observerRef.current = new IntersectionObserver(
         (entries) => {
-          const entry = entries[0];
-          if (!entry?.isIntersecting) return;
+          const entry = entries[0]
+          if (!entry?.isIntersecting) return
 
-          if (!hasMoreRef.current) return;
-          if (isFetchingRef.current) return;
-          if (cooldownRef.current) return;
+          if (!hasMoreRef.current) return
+          if (isFetchingRef.current) return
+          if (cooldownRef.current) return
 
-          const nextPage = pageRef.current + 1;
+          const nextPage = pageRef.current + 1
+          if (!manualUnlockedRef.current && nextPage >= manualGatePage) return
 
-          // تا وقتی unlock نشده، وقتی رسید به gate (مثلاً 3)، اسکرولی نرو جلو
-          if (!manualUnlockedRef.current && nextPage >= manualGatePage) return;
-
-          loadMore();
+          loadMore()
         },
-        {
-          root: null,
-          threshold: 0,
-          rootMargin: "350px 0px 350px 0px",
-        },
-      );
+        { root: null, threshold: 0, rootMargin: "350px 0px 350px 0px" }
+      )
 
-      observerRef.current.observe(node);
+      observerRef.current.observe(node)
     },
-    [loadMore],
-  );
+    [loadMore]
+  )
 
   useEffect(() => {
-    return () => observerRef.current?.disconnect();
-  }, []);
+    return () => observerRef.current?.disconnect()
+  }, [])
 
-  // ---------- Button logic (فقط یک بار) ----------
+  // ---------- Button logic ----------
   const showLoadMoreButton = useMemo(() => {
-    if (!hasMore) return false;
-    if (manualUnlocked) return false;
-    return page >= manualGatePage - 1;
-  }, [hasMore, manualUnlocked, page]);
+    if (!hasMore) return false
+    if (manualUnlocked) return false
+    return page >= manualGatePage - 1
+  }, [hasMore, manualUnlocked, page])
 
   const onManualLoadOnce = useCallback(() => {
-    if (query.isFetching) return;
-    if (!hasMore) return;
-
-    setManualUnlocked(true);
-    loadMore();
-  }, [query.isFetching, hasMore, loadMore]);
+    if (query.isFetching) return
+    if (!hasMore) return
+    setManualUnlocked(true)
+    loadMore()
+  }, [query.isFetching, hasMore, loadMore])
 
   const buttonText = useMemo(() => {
-    if (query.isFetching) return "در حال دریافت…";
-    return "مشاهده بیشتر";
-  }, [query.isFetching]);
+    if (query.isFetching) return "در حال دریافت…"
+    return "مشاهده بیشتر"
+  }, [query.isFetching])
 
-  // ---------- Sticky sentinel + fade ----------
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const [stuck, setStuck] = useState(false);
-  const [playFade, setPlayFade] = useState(false);
+  // ---------- Sticky sentinel + fade (همون قبلی) ----------
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const [stuck, setStuck] = useState(false)
+  const [playFade, setPlayFade] = useState(false)
 
-  const stuckRef = useRef(false);
-  const animatedRef = useRef(false);
+  const stuckRef = useRef(false)
+  const animatedRef = useRef(false)
 
   useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
+    const el = sentinelRef.current
+    if (!el) return
 
     const io = new IntersectionObserver(
       ([entry]) => {
-        const nowStuck = !entry.isIntersecting;
+        const nowStuck = !entry.isIntersecting
 
         if (nowStuck !== stuckRef.current) {
-          stuckRef.current = nowStuck;
-          setStuck(nowStuck);
+          stuckRef.current = nowStuck
+          setStuck(nowStuck)
 
-          // فقط موقع stuck شدن fade رو پلی کن
           if (nowStuck && !animatedRef.current) {
-            animatedRef.current = true;
-            setPlayFade(true);
+            animatedRef.current = true
+            setPlayFade(true)
           }
 
-          // وقتی برگشت بالا ریست کن
           if (!nowStuck && animatedRef.current) {
-            animatedRef.current = false;
-            setPlayFade(false);
+            animatedRef.current = false
+            setPlayFade(false)
           }
         }
       },
       {
         threshold: 0,
         rootMargin: `-${topOffset}px 0px 0px 0px`,
-      },
-    );
+      }
+    )
 
-    io.observe(el);
-    return () => io.disconnect();
-  }, [topOffset]);
+    io.observe(el)
+    return () => io.disconnect()
+  }, [topOffset])
 
-  // ---------- Arrow animation on button hover (controlled) ----------
-  const arrowRef = useRef<ArrowLeftIconHandle | null>(null);
+  // ---------- Arrow animation on button hover ----------
+  const arrowRef = useRef<ArrowLeftIconHandle | null>(null)
 
   const handleBtnEnter = useCallback(() => {
-    arrowRef.current?.startAnimation();
-  }, []);
+    arrowRef.current?.startAnimation()
+  }, [])
 
   const handleBtnLeave = useCallback(() => {
-    arrowRef.current?.stopAnimation();
-  }, []);
+    arrowRef.current?.stopAnimation()
+  }, [])
 
   return (
     <>
@@ -322,7 +316,7 @@ export default function HomePage() {
         {/* ✅ sentinel دقیقا قبل از sticky سرچ */}
         <div ref={sentinelRef} className="h-px w-full" />
 
-        {/* ✅ Sticky Search */}
+        {/* ✅ Sticky Search (همون قبلی) */}
         <div
           className={`
             sticky top-0 z-40 
@@ -415,9 +409,7 @@ export default function HomePage() {
           )}
 
           {query.isError && !listLoading && (
-            <div className="text-center py-20 text-red-500">
-              خطا در دریافت اطلاعات
-            </div>
+            <div className="text-center py-20 text-red-500">خطا در دریافت اطلاعات</div>
           )}
         </div>
 
@@ -451,5 +443,5 @@ export default function HomePage() {
         </div>
       </main>
     </>
-  );
+  )
 }

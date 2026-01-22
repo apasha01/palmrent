@@ -1,35 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
+"use client"
 
-import { useDebounce } from "@/hooks/useDebounce";
-import { useTranslations, useLocale } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  changeSearchTitle,
-  changeSort,
-  toggleSelectedCategory,
-} from "@/redux/slices/searchSlice";
-import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useDebounce } from "@/hooks/useDebounce"
+import { useTranslations, useLocale } from "next-intl"
+import { useEffect, useMemo, useState } from "react"
 
-import {
-  Search,
-  X,
-  ArrowDownWideNarrow,
-  SlidersHorizontal,
-} from "lucide-react";
+import { cn } from "@/lib/utils"
+import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
-import SearchFilterSheet from "./SearchFilterSheet";
+import { Search, X, ArrowDownWideNarrow, SlidersHorizontal } from "lucide-react"
+
+import SearchFilterSheet from "./SearchFilterSheet"
 import {
   Icon7Plus,
   IconBusiness,
@@ -41,113 +26,66 @@ import {
   IconSport,
   IconStandard,
   IconSuv,
-} from "../Icons";
+} from "../Icons"
+
+// zustand
+import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store"
 
 export function SerarchSection({
   searchDisable = false,
   containerClassName,
+  carListLength = 0,
 }: {
-  searchDisable?: boolean;
-  containerClassName?: string;
+  searchDisable?: boolean
+  containerClassName?: string
+  carListLength?: number
 }) {
-  const t = useTranslations();
-  const locale = useLocale();
-  const isRtl = locale === "fa" || locale === "ar";
+  const t = useTranslations()
+  const locale = useLocale()
+  const isRtl = locale === "fa" || locale === "ar"
 
-  const dispatch = useDispatch();
+  // zustand state
+  const sort = useSearchPageStore((s) => s.sort)
+  const setSort = useSearchPageStore((s) => s.setSort)
 
-  const searchOrder = useSelector((state: any) => state.search.sort);
-  const selectedCategories = useSelector(
-    (state: any) => state.search.selectedCategories
-  );
-  const reduxSearchTitle = useSelector(
-    (state: any) => state.search.search_title
-  );
+  const selectedCategories = useSearchPageStore((s) => s.selectedCategories)
+  const toggleSelectedCategory = useSearchPageStore((s) => s.toggleSelectedCategory)
 
-  const [searchValue, setSearchValue] = useState(reduxSearchTitle || "");
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const search_title = useSearchPageStore((s) => s.search_title)
+  const setSearchTitle = useSearchPageStore((s) => s.setSearchTitle)
 
-  const debouncedSearchTerm = useDebounce(searchValue, 800);
+  const [searchValue, setSearchValue] = useState(search_title || "")
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
+  const debouncedSearchTerm = useDebounce(searchValue, 800)
 
   const sortList = useMemo(
     () => [
-      {
-        id: 14,
-        icon: <IconNoDeposite />,
-        title: "noDeposite",
-        selected: false,
-      },
-      {
-        id: 3,
-        icon: <IconEconemy />,
-        title: "economicCar",
-        selected: false,
-      },
-      {
-        id: 13,
-        icon: <IconLuxury />,
-        title: "luxCar",
-        selected: false,
-      },
-      {
-        id: 15,
-        icon: <Icon7Plus />,
-        title: "sevenplus",
-        selected: false,
-      },
-      {
-        id: 19,
-        icon: <IconSport />,
-        title: "sport",
-        selected: false,
-      },
-      {
-        id: 18,
-        icon: <IconBusiness />,
-        title: "business",
-        selected: false,
-      },
-      {
-        id: 21,
-        icon: <IconCrook />,
-        title: "crook",
-        selected: false,
-      },
-      {
-        id: 17,
-        icon: <IconStandard />,
-        title: "standard",
-        selected: false,
-      },
-      {
-        id: 9,
-        icon: <IconSuv />,
-        title: "suv",
-        selected: false,
-      },
-      {
-        id: 20,
-        icon: <IconCoupe />,
-        title: "coupe",
-        selected: false,
-      },
+      { id: 14, icon: <IconNoDeposite />, title: "noDeposite" },
+      { id: 3, icon: <IconEconemy />, title: "economicCar" },
+      { id: 13, icon: <IconLuxury />, title: "luxCar" },
+      { id: 15, icon: <Icon7Plus />, title: "sevenplus" },
+      { id: 19, icon: <IconSport />, title: "sport" },
+      { id: 18, icon: <IconBusiness />, title: "business" },
+      { id: 21, icon: <IconCrook />, title: "crook" },
+      { id: 17, icon: <IconStandard />, title: "standard" },
+      { id: 9, icon: <IconSuv />, title: "suv" },
+      { id: 20, icon: <IconCoupe />, title: "coupe" },
     ],
     []
-  );
+  )
 
   const selectedItems = useMemo(
     () => sortList.filter((x) => selectedCategories.includes(x.id)),
     [sortList, selectedCategories]
-  );
+  )
 
   useEffect(() => {
-    if (debouncedSearchTerm !== undefined)
-      dispatch(changeSearchTitle(debouncedSearchTerm));
-  }, [debouncedSearchTerm, dispatch]);
+    setSearchTitle(debouncedSearchTerm ?? "")
+  }, [debouncedSearchTerm, setSearchTitle])
 
-  const handleSortChange = (sortType: string) => dispatch(changeSort(sortType));
-  const handleCategoryToggle = (id: number) =>
-    dispatch(toggleSelectedCategory(id));
+  const handleSortChange = (sortType: string) => setSort(sortType)
+  const handleCategoryToggle = (id: number) => toggleSelectedCategory(id)
 
   return (
     <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
@@ -181,12 +119,10 @@ export function SerarchSection({
               type="search"
               placeholder={t("carSearch")}
               className={cn(
-                "border-none shadow-none bg-transparent dark:bg-gray-900  placeholder:text-xs",
-              
+                "border-none shadow-none bg-transparent dark:bg-gray-900 placeholder:text-xs",
                 "focus:outline-none focus:ring-0 focus:ring-offset-0",
                 "focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0",
                 "h-10 sm:h-9 px-0"
-                
               )}
             />
 
@@ -219,7 +155,7 @@ export function SerarchSection({
                   >
                     <SlidersHorizontal size="20" />
                     <span className="hidden sm:block text-xs font-bold text-nowrap dark:text-gray-300">
-                      {searchOrder ? t(searchOrder) : t("sort")}
+                      {sort ? t(sort) : t("sort")}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -253,12 +189,7 @@ export function SerarchSection({
 
           {/* Selected chips */}
           {selectedItems.length > 0 && (
-            <div
-              className={cn(
-                "flex flex-wrap gap-2",
-                isRtl ? "justify-start" : "justify-end"
-              )}
-            >
+            <div className={cn("flex flex-wrap gap-2", isRtl ? "justify-start" : "justify-end")}>
               {selectedItems.map((item) => (
                 <button
                   key={item.id}
@@ -285,13 +216,12 @@ export function SerarchSection({
             )}
           >
             <div className="flex gap-2">
-              {sortList.map((item, index) => {
-              const isSelected = selectedCategories.includes(item.id);
+              {sortList.map((item) => {
+                const isSelected = selectedCategories.includes(item.id)
                 return (
-                  <div key={index}>
+                  <div key={item.id}>
                     {!isSelected && (
                       <Button
-                        key={item.id}
                         type="button"
                         variant="outline"
                         onClick={() => handleCategoryToggle(item.id)}
@@ -306,17 +236,12 @@ export function SerarchSection({
                       </Button>
                     )}
                   </div>
-                );
-
-       
-          
+                )
               })}
             </div>
           </div>
 
-          {searchDisable && (
-            <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 z-40 cursor-wait" />
-          )}
+          {searchDisable && <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 z-40 cursor-wait" />}
         </div>
       </Card>
 
@@ -324,8 +249,8 @@ export function SerarchSection({
         side={isRtl ? "left" : "right"}
         className="w-full max-w-md p-0 bg-white dark:bg-gray-900 shadow-2xl border-l dark:border-gray-700"
       >
-        <SearchFilterSheet closePopup={() => setFiltersOpen(false)} />
+        <SearchFilterSheet closePopup={() => setFiltersOpen(false)} carListLength={carListLength} />
       </SheetContent>
     </Sheet>
-  );
+  )
 }

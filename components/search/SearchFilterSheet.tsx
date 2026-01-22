@@ -3,9 +3,6 @@
 
 import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-
-import { changeSelectedCategories, changeSelectedPriceRange, toggleSelectedCategory } from "@/redux/slices/searchSlice"
 
 // shadcn/ui
 import { cn } from "@/lib/utils"
@@ -18,22 +15,24 @@ import { Slider } from "@/components/ui/slider"
 // lucide
 import { Building2, Car, Check, DollarSign, RefreshCw, Settings2, Sparkles } from "lucide-react"
 
+// zustand
+import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store"
+
 type Props = {
   closePopup?: () => void
+  carListLength?: number
 }
 
-export default function SearchFilterSheet({ closePopup }: Props) {
+export default function SearchFilterSheet({ closePopup, carListLength = 0 }: Props) {
   const t = useTranslations()
   const locale = useLocale()
-  const dispatch = useDispatch()
-
   const isRtl = locale === "fa" || locale === "ar"
 
-  const selectedCategories = useSelector((state: any) => state.search.selectedCategories)
-  const carListLength = useSelector((state: any) => state.carList.carList.length)
+  const selectedCategories = useSearchPageStore((s) => s.selectedCategories)
+  const resetCategories = useSearchPageStore((s) => s.resetCategories)
 
   const handleReset = () => {
-    dispatch(changeSelectedCategories([]))
+    resetCategories()
   }
 
   const filterGroups = useMemo(
@@ -83,7 +82,7 @@ export default function SearchFilterSheet({ closePopup }: Props) {
         ],
       },
     ],
-    [],
+    []
   )
 
   return (
@@ -108,7 +107,6 @@ export default function SearchFilterSheet({ closePopup }: Props) {
         </div>
       </div>
 
-      {/* Scrollable Content */}
       <ScrollArea className="h-[calc(100vh-88px-88px)]">
         <div className="p-5 pb-6 space-y-8  dark:bg-gray-950">
           <section>
@@ -137,24 +135,30 @@ export default function SearchFilterSheet({ closePopup }: Props) {
 
               <div className="flex flex-wrap gap-2">
                 {group.items.map((item) => (
-                  <FilterChip key={item.id} id={item.id} label={group.shouldTranslate ? t(item.title) : item.title} />
+                  <FilterChip
+                    key={item.id}
+                    id={item.id}
+                    label={group.shouldTranslate ? t(item.title) : item.title}
+                  />
                 ))}
               </div>
 
-              {index < filterGroups.length - 1 && <Separator className="bg-gray-200 dark:bg-gray-800 mt-6" />}
+              {index < filterGroups.length - 1 && (
+                <Separator className="bg-gray-200 dark:bg-gray-800 mt-6" />
+              )}
             </div>
           ))}
         </div>
       </ScrollArea>
 
-      <div className="px-2 pt-4  border-t ">
+      <div className="px-2 pt-4 border-t">
         <Button
           type="button"
           onClick={closePopup}
           className={cn(
             "w-full font-bold text-lg py-7 rounded-xl transition-all",
             "bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white",
-            "flex justify-between px-6",
+            "flex justify-between px-6"
           )}
         >
           <span>مشاهده نتایج</span>
@@ -168,21 +172,21 @@ export default function SearchFilterSheet({ closePopup }: Props) {
 }
 
 function FilterChip({ id, label }: { id: number; label: string }) {
-  const dispatch = useDispatch()
-  const selectedCategories = useSelector((state: any) => state.search.selectedCategories)
+  const selectedCategories = useSearchPageStore((s) => s.selectedCategories)
+  const toggleSelectedCategory = useSearchPageStore((s) => s.toggleSelectedCategory)
   const isSelected = selectedCategories.includes(id)
 
   return (
     <Button
       type="button"
       variant="outline"
-      onClick={() => dispatch(toggleSelectedCategory(id))}
+      onClick={() => toggleSelectedCategory(id)}
       className={cn(
         "px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border",
         "flex items-center gap-2 select-none h-auto",
         isSelected
           ? "bg-blue-600 dark:bg-blue-600 text-white border-blue-600 dark:border-blue-600 shadow-md shadow-blue-200 dark:shadow-blue-900/50 hover:bg-blue-600"
-          : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700",
+          : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
       )}
     >
       {isSelected && <Check className="size-3 text-white" />}
@@ -192,28 +196,29 @@ function FilterChip({ id, label }: { id: number; label: string }) {
 }
 
 function PriceRange({ isRtl }: { isRtl: boolean }) {
-  const dispatch = useDispatch()
-  const priceRange = useSelector((state: any) => state.search.priceRange)
-  const selectedPriceRange = useSelector((state: any) => state.search.selectedPriceRange)
-  const currency = useSelector((state: any) => state.search.currency) || "AED"
+  const priceRange = useSearchPageStore((s) => s.priceRange) // optional
+  const selectedPriceRange = useSearchPageStore((s) => s.selectedPriceRange)
+  const setSelectedPriceRange = useSearchPageStore((s) => s.setSelectedPriceRange)
+  const currency = useSearchPageStore((s) => s.currency) || "AED"
 
-  const safePriceRange = priceRange && priceRange.length >= 2 ? priceRange : [0, 50000]
+  // اگر priceRange از API نداری، این fallback میشه
+  const safePriceRange = priceRange && priceRange.length === 2 ? priceRange : ([0, 50000] as [number, number])
   const MIN_LIMIT = Math.min(...safePriceRange)
   const MAX_LIMIT = Math.max(...safePriceRange)
 
   const [values, setValues] = useState<[number, number]>([MIN_LIMIT, MAX_LIMIT])
 
   useEffect(() => {
-    if (selectedPriceRange && selectedPriceRange.length >= 2) {
+    if (selectedPriceRange && selectedPriceRange.length === 2) {
       setValues([Math.min(...selectedPriceRange), Math.max(...selectedPriceRange)])
     } else {
       setValues([MIN_LIMIT, MAX_LIMIT])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [priceRange])
+  }, [priceRange, selectedPriceRange?.[0], selectedPriceRange?.[1]])
 
   const commit = (v: number[]) => {
-    if (v?.length >= 2) dispatch(changeSelectedPriceRange([v[0], v[1]]))
+    if (v?.length >= 2) setSelectedPriceRange([v[0], v[1]])
   }
 
   return (

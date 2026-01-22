@@ -3,19 +3,14 @@
 "use client";
 
 import { useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CalendarDays, Clock, Search } from "lucide-react";
 import { DateRangePickerPopover } from "@/components/custom/calender/date-range-picker";
 import { jalaliToDate, formatJalaliDate } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
+import BranchName, { BranchById } from "@/helpers/BranchNameHelper";
 
-import {
-  changeCarDates,
-  changeDeliveryTime,
-  changeReturnTime,
-} from "@/redux/slices/globalSlice";
-import BranchName from "@/helpers/BranchNameHelper";
+import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store";
 
 function toEnglishDigits(input: string) {
   const fa = "۰۱۲۳۴۵۶۷۸۹";
@@ -33,7 +28,6 @@ function toEnglishDigits(input: string) {
 }
 
 function normalizeJalaliString(s: string) {
-  // ✅ هم ارقام رو انگلیسی می‌کنه هم - رو / می‌کنه
   return toEnglishDigits(s).replace(/-/g, "/").trim();
 }
 
@@ -80,9 +74,7 @@ function safeTime(t?: string | null) {
 }
 
 function VDivider() {
-  return (
-    <span className="mx-3 h-6 w-px bg-gray-200 dark:bg-white/10 shrink-0" />
-  );
+  return <span className="mx-3 h-6 w-px bg-gray-200 dark:bg-white/10 shrink-0" />;
 }
 
 export default function SearchHeader({
@@ -92,24 +84,20 @@ export default function SearchHeader({
   isSticky?: boolean;
   timerValue?: string;
 }) {
-  const dispatch = useDispatch();
-
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const isHeaderClose = useSelector((state: any) => state.global.isHeaderClose);
-  const carDates = useSelector((state: any) => state.global.carDates) as
-    | (string | null)[]
-    | null;
+  const isHeaderClose = useSearchPageStore((s) => s.isHeaderClose);
 
-  const returnTime = useSelector((state: any) => state.global.returnTime) as
-    | string
-    | null;
+  const carDates = useSearchPageStore((s) => s.carDates);
+  const setCarDates = useSearchPageStore((s) => s.setCarDates);
 
-  const deliveryTime = useSelector(
-    (state: any) => state.global.deliveryTime
-  ) as string | null;
+  const deliveryTime = useSearchPageStore((s) => s.deliveryTime);
+  const setDeliveryTime = useSearchPageStore((s) => s.setDeliveryTime);
+
+  const returnTime = useSearchPageStore((s) => s.returnTime);
+  const setReturnTime = useSearchPageStore((s) => s.setReturnTime);
 
   const carDayCount = useMemo(() => {
     const s = parseJalaliToDate(carDates?.[0] ?? null);
@@ -156,7 +144,6 @@ export default function SearchHeader({
     if (to) params.set("to", to);
     else params.delete("to");
 
-    // ✅ branch_id و بقیه پارامترها حفظ میشن چون ما فقط from/to رو تغییر دادیم
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
@@ -166,23 +153,20 @@ export default function SearchHeader({
     deliveryTime: dt,
     returnTime: rt,
   }: any) => {
-    // ✅ خروجی formatJalaliDate ممکنه فارسی/عربی باشه، پس normalize می‌کنیم
     const fromStr = normalizeJalaliString(formatJalaliDate(start));
     const toStr = normalizeJalaliString(formatJalaliDate(end));
 
-    // 1) Redux
-    dispatch(changeCarDates([fromStr, toStr] as any));
-    dispatch(changeDeliveryTime(dt as any));
-    dispatch(changeReturnTime(rt as any));
+    setCarDates([fromStr, toStr]);
+    setDeliveryTime(dt ?? null);
+    setReturnTime(rt ?? null);
 
-    // 2) URL
     updateUrlFromTo(fromStr, toStr);
   };
 
   const handleClear = () => {
-    dispatch(changeCarDates([null, null] as any));
-    dispatch(changeDeliveryTime(null as any));
-    dispatch(changeReturnTime(null as any));
+    setCarDates([null, null]);
+    setDeliveryTime(null);
+    setReturnTime(null);
 
     updateUrlFromTo(null, null);
   };
@@ -246,7 +230,7 @@ export default function SearchHeader({
               <Clock className="h-4 w-4" />
               <span>
                 مدت زمان اجاره : {toPersianDigits(String(carDayCount))} روز فراموش
-                نشدی در <BranchName />
+                نشدی در <BranchById />
               </span>
             </div>
 
@@ -285,7 +269,7 @@ export default function SearchHeader({
                 <Clock className="h-4 w-4 " />
                 <span className="text-gray-700 dark:text-gray-200">
                   مدت زمان اجاره : {toPersianDigits(String(carDayCount))} روز فراموش
-                  نشدی در <BranchName />
+                  نشدی در <BranchById />
                 </span>
               </div>
 

@@ -2,6 +2,9 @@
 
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+
+
 
 const BRANCH_KEYS: Record<string, string> = {
   dubai: "dubai",
@@ -31,4 +34,33 @@ export default function BranchName({ fallback = "" }: { fallback?: string }) {
   if (!key) return <>{fallback}</>;
 
   return <>{t(key)}</>;
+}
+
+
+
+
+const BRANCH_BY_ID: Record<string, string> = {
+  "1": "دبی",
+  "2": "استانبول",
+  "6": "شعبه عمان",
+  "7": "شعبه کیش",
+  "8": "ازمیر ترکیه",
+  "9": "آنکارا ترکیه",
+  "10": "آتالیا ترکیه",
+  "11": "سامسون ترکیه",
+  "12": "قیصریه ترکیه",
+  "13": "گرجستان ترکیه",
+};
+
+export function BranchById({ fallback = "" }: { fallback?: string }) {
+  const searchParams = useSearchParams();
+  const branchId = searchParams.get("branch_id");
+
+  if (!branchId) return <>{fallback}</>;
+
+  const branchName = BRANCH_BY_ID[branchId];
+
+  if (!branchName) return <>{fallback}</>;
+
+  return <>{branchName}</>;
 }
