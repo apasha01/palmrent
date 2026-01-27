@@ -229,7 +229,7 @@ function SearchResultPageContent() {
     params.set("step", "1");
     params.delete("car_id");
 
-    // موبایل: ما URL رو مجبور نیستیم push کنیم (ولی اگر خواستی میتونی)
+    // موبایل: URL لازم نیست تغییر کنه
     if (isMobile) return;
 
     navModeRef.current = "push";
@@ -245,10 +245,11 @@ function SearchResultPageContent() {
   }, [isMobile, isMobileInfoOpen]);
 
   // =========================================================
-  // ✅ syncFromUrl (URL -> store)
+  // ✅ syncFromUrl (URL -> store)  [SAFE]
   // =========================================================
-  const syncFromUrl = useCallback(() => {
-    const sp = searchParams.toString();
+  const sp = searchParams.toString();
+
+  useEffect(() => {
     if (sp === lastPushedRef.current) return;
 
     const fromQ = searchParams.get("from");
@@ -265,20 +266,15 @@ function SearchResultPageContent() {
     const minP = searchParams.get("min_p");
     const maxP = searchParams.get("max_p");
 
-    // ✅ dates
     if (fromQ && toQ) {
       const curFrom = carDates?.[0] ?? null;
       const curTo = carDates?.[1] ?? null;
-      if (curFrom !== fromQ || curTo !== toQ) {
-        setCarDates([fromQ, toQ]);
-      }
+      if (curFrom !== fromQ || curTo !== toQ) setCarDates([fromQ, toQ]);
     }
 
-    // ✅ times
     if (dtRaw && normalizeTime(deliveryTime) !== dt) setDeliveryTime(dt);
     if (rtRaw && normalizeTime(returnTime) !== rt) setReturnTime(rt);
 
-    // ✅ categories
     if (cats) {
       const parsed = cats
         .split(",")
@@ -289,13 +285,9 @@ function SearchResultPageContent() {
       setSelectedCategories([]);
     }
 
-    // ✅ sort
     setSort(sortParam ?? null);
-
-    // ✅ search title
     setSearchTitle(searchTitleParam ?? "");
 
-    // ✅ price range
     if (minP && maxP) {
       const a = Number(minP);
       const b = Number(maxP);
@@ -306,24 +298,19 @@ function SearchResultPageContent() {
       setSelectedPriceRange(null);
     }
 
-    // 🔒🚫 IMPORTANT
-    // موبایل: step از URL خوانده نمی‌شود
-    // اما car_id می‌تواند باشد (برای deep-link یا reload). پس car_id را بخوان.
     const carIdParam = searchParams.get("car_id");
+
     if (isMobile) {
+      // موبایل: فقط car_id رو بخون
       if (carIdParam) {
         const id = Number(carIdParam);
         if (Number.isFinite(id)) setSelectedCarId(id);
-      } else {
-        // اگر URL car_id ندارد، دست نزن (می‌تونی null هم کنی اگر دوست داری)
-        // setSelectedCarId(null);
       }
       return;
     }
 
-    // ===== Desktop only =====
+    // Desktop
     const stepParam = searchParams.get("step");
-
     const stepNum = stepParam ? Number(stepParam) : NaN;
     const safeStep = Number.isFinite(stepNum) && stepNum > 0 ? Math.min(4, stepNum) : 1;
 
@@ -336,11 +323,12 @@ function SearchResultPageContent() {
       setSelectedCarId(null);
     }
   }, [
+    sp,
+    isMobile,
     searchParams,
     carDates,
     deliveryTime,
     returnTime,
-    isMobile,
     roadMapStep,
     setCarDates,
     setDeliveryTime,
@@ -353,18 +341,13 @@ function SearchResultPageContent() {
     setSelectedCarId,
   ]);
 
-  useEffect(() => {
-    syncFromUrl();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [syncFromUrl]);
-
   const from = (carDates as any)?.[0];
   const to = (carDates as any)?.[1];
 
   const step1Done = Boolean(from && to);
   const step2Done = Boolean(selectedCarId);
 
-  // ✅ when car selected => open sheet + push step=3
+  // ✅ when car selected => open sheet on mobile / go step=3 on desktop
   useEffect(() => {
     if (!selectedCarId) return;
 
@@ -374,7 +357,6 @@ function SearchResultPageContent() {
       return;
     }
 
-    // desktop
     if (roadMapStep < 3) {
       navModeRef.current = "push";
       setRoadMapStep(3);
@@ -417,9 +399,7 @@ function SearchResultPageContent() {
 
     const derivedStepForHistory = Math.min(4, Math.max(1, roadMapStep || 1));
     const prev = prevStepRef.current;
-    if (prev !== derivedStepForHistory) {
-      navModeRef.current = "push";
-    }
+    if (prev !== derivedStepForHistory) navModeRef.current = "push";
     prevStepRef.current = derivedStepForHistory;
   }, [roadMapStep, isMobile]);
 
@@ -467,7 +447,7 @@ function SearchResultPageContent() {
       if (selectedCarId) params.set("car_id", String(selectedCarId));
       else params.delete("car_id");
     } else {
-      // ✅ موبایل: step حذف میشه ولی car_id نگه داشته میشه تا InformationStep دیتا بگیره
+      // ✅ موبایل: step حذف شود
       params.delete("step");
       if (selectedCarId) params.set("car_id", String(selectedCarId));
       else params.delete("car_id");
@@ -475,6 +455,7 @@ function SearchResultPageContent() {
 
     const next = params.toString();
     if (next === lastPushedRef.current) return;
+    if (next === searchParams.toString()) return;
 
     navigateTo(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -511,7 +492,7 @@ function SearchResultPageContent() {
     if (isMobile && isMobileInfoOpen) return 3;
     if (!step1Done) return 1;
     if (step1Done && !step2Done) return 2;
-    return isMobile ? 2 : 3;
+    return isMobile ? 2 : 3; // ✅ موبایل پشت شیت همیشه ۲ بمونه
   }, [isMobile, isMobileInfoOpen, step1Done, step2Done]);
 
   const canFetch = Boolean(step1Done && branchIdFromUrl && from && to);
@@ -645,14 +626,25 @@ function SearchResultPageContent() {
 
           <div className="sm:w-[90vw] max-w-334 m-auto relative my-4 px-0 sm:px-2">
             {(!searchParams.get("step") || Number(searchParams.get("step")) < 4) && (
-              <StepRent step={uiStep} onStepClick={handleStepClick} step1Done={step1Done} step2Done={step2Done} />
+              <StepRent
+                step={uiStep}
+                onStepClick={handleStepClick}
+                step1Done={step1Done}
+                step2Done={step2Done}
+              />
             )}
           </div>
         </>
       )}
 
+      {/* ✅✅ FIX اصلی همینجاست */}
       <div className="step-stage">
-        {step1Done && !selectedCarId && <div className="step-layer">{renderCarsStep()}</div>}
+        {/* موبایل: حتی اگر selectedCarId پر شد هم لیست باید بمونه */}
+        {step1Done && (isMobile ? true : !selectedCarId) && (
+          <div className="step-layer">{renderCarsStep()}</div>
+        )}
+
+        {/* دسکتاپ: وقتی ماشین انتخاب شد info بیاد */}
         {!isMobile && selectedCarId && <div className="step-layer">{renderInfoStep()}</div>}
       </div>
 

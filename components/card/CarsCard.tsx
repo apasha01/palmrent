@@ -4,7 +4,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import { useSelector } from "react-redux"
 
@@ -28,9 +28,10 @@ import { STORAGE_URL } from "@/lib/apiClient"
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store"
 import { adaptCarData } from "@/lib/adapters"
 
-// ✅ IMPORTANT: days with grace (same as header)
 import { calcRentDaysWithGrace, normalizeTime } from "@/lib/rent-days"
 import { jalaliToDate } from "@/lib/date-utils"
+
+const MOBILE_BREAKPOINT = 768
 
 /* ---------------- helpers ---------------- */
 
@@ -92,7 +93,6 @@ function pickBestMatch(pricesArray: any[], days: number) {
   return candidates[0] || null
 }
 
-/** ✅ central function: days with grace (same logic as header) */
 function calcDaysWithGraceSafe(opts: {
   carDates: [string | null, string | null] | null
   deliveryTime: string | null
@@ -132,25 +132,24 @@ export default function SingleCar({
   const locale = useLocale()
   const optionList = useSelector((state: any) => state.carList.optionList)
 
-  // ✅ تاریخ/تایم از zustand
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
   const carDates = useSearchPageStore((s) => s.carDates)
   const deliveryTime = useSearchPageStore((s) => s.deliveryTime)
   const returnTime = useSearchPageStore((s) => s.returnTime)
 
-  const setRoadMapStep = useSearchPageStore((s) => s.setRoadMapStep)
   const setSelectedCarId = useSearchPageStore((s) => s.setSelectedCarId)
+  const setRoadMapStep = useSearchPageStore((s) => s.setRoadMapStep)
   const setReelActive = useSearchPageStore((s) => s.setReelActive)
   const addReelItemStore = useSearchPageStore((s) => s.addReelItem)
 
   const [isHovering, setIsHovering] = useState(false)
 
-  /**
-   * ✅ ضد دوبار-adapt
-   */
   const car = useMemo(() => {
     const alreadyCardModel =
       data && typeof data === "object" && (Array.isArray((data as any).images) || (data as any).priceList)
-
     return alreadyCardModel ? data : adaptCarData(data)
   }, [data])
 
@@ -163,9 +162,34 @@ export default function SingleCar({
 
   useEffect(() => {
     if (!video || !id) return
-    const videoData = { id, title, video, price }
-    addReelItemStore(videoData)
+    addReelItemStore({ id, title, video, price })
   }, [id, title, video, price, addReelItemStore])
+
+  // ✅✅ انتخاب ماشین = هم store هم URL همون لحظه
+  const selectThisCar = useCallback(() => {
+    const carId = Number((car as any)?.id)
+    if (!Number.isFinite(carId) || carId <= 0) return
+
+    const isMobile = typeof window !== "undefined" && window.innerWidth < MOBILE_BREAKPOINT
+
+    // 1) store
+    setSelectedCarId(carId)
+    if (!isMobile) setRoadMapStep(3)
+
+    // 2) URL (قطعی و بدون دو کلیک)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("car_id", String(carId))
+
+    if (isMobile) {
+      // ✅ موبایل: step نذار (فقط شیت باز میشه)
+      params.delete("step")
+    } else {
+      // ✅ دسکتاپ: مستقیم برو step=3
+      params.set("step", "3")
+    }
+
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+  }, [car, pathname, router, searchParams, setRoadMapStep, setSelectedCarId])
 
   if (!car) return null
 
@@ -181,10 +205,18 @@ export default function SingleCar({
       `}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
+      onClick={selectThisCar}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          selectThisCar()
+        }
+      }}
     >
       <CardContent className="p-0 px-1 m-0">
         <SingleCarGallery imageList={images} hasVideo={!!(car as any).video} noBtn={noBtn}>
-          {/* ✅ Badges Overlay */}
           <div className="absolute top-2 rtl:right-2 ltr:left-2 z-40 w-full flex flex-wrap gap-2 max-[380px]:gap-1 text-nowrap pointer-events-none">
             {(((car as any).rawOptions || (car as any).options || []) as any[]).map((item: any, index: number) => {
               if (!optionList?.[item]) return null
@@ -214,7 +246,6 @@ export default function SingleCar({
             })}
           </div>
 
-          {/* ✅ Discount Badge */}
           {Number((car as any).discountPercent || (car as any).discount || 0) > 0 && (
             <div className="absolute bottom-2 left-2 z-40 pointer-events-none bg-[#e1ff00] py-1.5 px-2.5 text-[#3b3d40] opacity-85 rounded-lg flex items-center gap-1">
               <IconDiscount size="20" />
@@ -238,7 +269,6 @@ export default function SingleCar({
 
           <SingleCarOptions car={car} />
 
-          {/* ✅ Price list now uses grace-based days */}
           <SingleCarPriceList
             priceList={(car as any).priceList || (car as any).dailyPrices}
             defaultPrice={(car as any).price ?? 0}
@@ -256,10 +286,7 @@ export default function SingleCar({
               carDates={carDates}
               deliveryTime={deliveryTime}
               returnTime={returnTime}
-              onChoose={() => {
-                setSelectedCarId(Number((car as any).id))
-                setRoadMapStep(3) // ✅ فقط همین تغییر: بعد انتخاب کارت -> استپ ۳
-              }}
+              onChoose={selectThisCar}
               onOpenReel={() => setReelActive(true)}
             />
           )}
@@ -300,7 +327,7 @@ export function SingleCarGallery({
 
   return (
     <div className="relative w-full z-10 overflow-hidden rounded-none md:rounded-lg group">
-      {/* ✅ Mobile */}
+      {/* Mobile */}
       <div
         className="
           md:hidden flex w-full h-57.5
@@ -312,6 +339,7 @@ export function SingleCarGallery({
           touch-pan-x
           overscroll-x-auto
         "
+        onClick={(e) => e.stopPropagation()}
       >
         {safeImageList.map((src: any, index: number) => {
           const isFirst = index === 0
@@ -351,7 +379,7 @@ export function SingleCarGallery({
         )}
       </div>
 
-      {/* ✅ Desktop */}
+      {/* Desktop */}
       <div className="hidden md:block w-full aspect-16/10 relative rounded-lg overflow-hidden">
         {safeImageList.map((src: any, index: number) => (
           <div
@@ -373,14 +401,12 @@ export function SingleCarGallery({
           </div>
         ))}
 
-        {/* ✅ Hover zones */}
         <div className="absolute inset-0 z-30 flex" onMouseLeave={handleMouseLeave}>
           {safeImageList.map((_: any, index: number) => (
             <div key={index} className="flex-1 h-full" onMouseEnter={() => handleMouseMove(index)} />
           ))}
         </div>
 
-        {/* ✅ Progress bars */}
         <div className="absolute bottom-0 left-0 w-full flex p-1 gap-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
           {safeImageList.map((_: any, index: number) => (
             <div
@@ -461,7 +487,7 @@ export function SingleCarOptions({ car, bigFont = false }: { car: any; bigFont?:
   )
 }
 
-/* ---------------- price list (uses grace days) ---------------- */
+/* ---------------- price list ---------------- */
 
 export function SingleCarPriceList({
   priceList,
@@ -502,7 +528,6 @@ export function SingleCarPriceList({
 
   const displayInfo = useMemo(() => {
     const days = calcDaysWithGraceSafe({ carDates, deliveryTime, returnTime })
-
     const match = pickBestMatch(pricesArray, days)
 
     let activePrice = defaultPrice ?? 0
@@ -525,7 +550,6 @@ export function SingleCarPriceList({
   const currencyLabel = useMemo(() => {
     const code = String(currency || "").trim().toUpperCase()
     if (!code) return ""
-
     const translated = t(code)
     return translated && translated !== code ? translated : code
   }, [currency, t])
@@ -634,7 +658,7 @@ export function SingleCarPriceList({
   )
 }
 
-/* ---------------- buttons (uses grace days) ---------------- */
+/* ---------------- buttons ---------------- */
 
 export function SingleCarButtons({
   car,
@@ -642,20 +666,17 @@ export function SingleCarButtons({
   deliveryTime,
   returnTime,
   onChoose,
-  onOpenReel,
 }: {
   car: any
   carDates: [string | null, string | null] | null
   deliveryTime: string | null
   returnTime: string | null
   onChoose: () => void
-  onOpenReel: () => void
+  onOpenReel?: () => void
 }) {
   const t = useTranslations()
 
-  const days = useMemo(() => {
-    return calcDaysWithGraceSafe({ carDates, deliveryTime, returnTime })
-  }, [carDates, deliveryTime, returnTime])
+  const days = useMemo(() => calcDaysWithGraceSafe({ carDates, deliveryTime, returnTime }), [carDates, deliveryTime, returnTime])
 
   const whatsappText = useMemo(() => {
     if (carDates?.[0] && carDates?.[1]) {
@@ -669,13 +690,11 @@ export function SingleCarButtons({
   const handleBooking = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     e.stopPropagation()
-
-    // ✅ فقط state رو عوض کن، صفحه خودش URL رو sync می‌کنه
     onChoose()
   }
 
   return (
-    <div className="flex w-full gap-2 mt-1">
+    <div className="flex w-full gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
       <Button
         type="button"
         onClick={handleBooking}
@@ -692,7 +711,11 @@ export function SingleCarButtons({
           bg-[#10B9811A] border-[#10B98180] text-[#10B981] hover:bg-[#10B981] hover:text-white
           dark:bg-[#10B9811A] dark:border-[#10B98180] dark:text-[#10B981] dark:hover:bg-[#10B981] dark:hover:text-white"
       >
-        <Link href={`https://wa.me/971556061134?text=${encodeURIComponent(whatsappText)}`} target="_blank">
+        <Link
+          href={`https://wa.me/971556061134?text=${encodeURIComponent(whatsappText)}`}
+          target="_blank"
+          onClick={(e) => e.stopPropagation()}
+        >
           <IconWhatsapp className="size-5" />
           واتساپ
         </Link>
