@@ -26,12 +26,14 @@ export type CarFilterItem = {
 export type CarFilterParams = {
   locale: string;
 
-  // required by backend (for price calc)
   branch_id: number;
-  from: string; // e.g. '2024-04-08 10:00:00'
-  to: string;   // e.g. '2024-04-18 12:00:00'
+  from: string;
+  to: string;
 
-  // optional filters
+  // ✅ NEW
+  dt?: string; // "10:00"
+  rt?: string; // "11:30"
+
   page?: number;
   car_id?: number;
   cat_id?: number[];
@@ -43,4 +45,7 @@ export type CarFilterParams = {
 
 export type CarFilterResponse = {
   cars: CarFilterItem[];
+
+  currency: string;             // مثلا 'AED'
+  rate_to_rial: number | null;  // مثلا 36000 یا null
 };

@@ -39,7 +39,10 @@ export type HubCarsOnlyResponse = {
   page: number;
   per_page: number;
   has_more: boolean;
+
+  // ✅✅✅ جدید مثل filter_car
   currency: string;
+  rate_to_rial: number | null;
 };
 
 // اگر کل API response رو هم خواستی:

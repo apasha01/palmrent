@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { useDebounce } from "@/hooks/useDebounce"
@@ -9,7 +8,7 @@ import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 import { Search, X, ArrowDownWideNarrow, SlidersHorizontal } from "lucide-react"
@@ -30,6 +29,7 @@ import {
 
 // zustand
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store"
+import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet"
 
 export function SerarchSection({
   searchDisable = false,

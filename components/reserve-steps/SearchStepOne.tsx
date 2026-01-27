@@ -48,7 +48,6 @@ function SkeletonCarCard() {
 }
 
 type Props = {
-  // ✅✅✅ مهم
   topOffset: number
   stuck: boolean
   playFade: boolean
@@ -62,6 +61,8 @@ type Props = {
   lastElementRef: (node: HTMLDivElement | null) => void
   onRetry: () => void
   t: (key: string) => string
+  currency: string
+  rateToRial: number | null
 }
 
 export default function SearchStepOne({
@@ -76,12 +77,13 @@ export default function SearchStepOne({
   lastElementRef,
   onRetry,
   t,
+  currency,
+  rateToRial,
 }: Props) {
   return (
     <>
       <div ref={sentinelRef} className="h-px w-full" />
 
-      {/* ✅ Sticky درست: top-0 + translateY */}
       <div
         className={`
           sticky top-0 z-40
@@ -129,7 +131,7 @@ export default function SearchStepOne({
                   key={`${item.id}-${index}`}
                   className="flex w-full"
                 >
-                  <SingleCar data={item} />
+                  <SingleCar data={item} currency={currency} rateToRial={rateToRial} />
                 </div>
               )
             })}

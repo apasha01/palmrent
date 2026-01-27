@@ -38,7 +38,7 @@ export default async function BlogPost({ params }) {
 
 
   return (
-    <div className="xl:w-[85vw] w-[95vw] m-auto max-w-[1336px]">
+    <div className="xl:w-[85vw] w-[95vw] m-auto max-w-334">
       <div className="flex w-full lg:flex-row flex-col">
         <article className="lg:w-8/12 w-full container mx-auto px-4 py-8 flex flex-col gap-8">
           <div className="w-full flex flex-col items-center justify-center">

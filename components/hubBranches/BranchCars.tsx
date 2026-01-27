@@ -21,7 +21,7 @@ type BranchCarsProps = {
   isLoading?: boolean;
 };
 
-const BranchCars = ({ branches, isLoading }: BranchCarsProps) => {
+const BranchCars = ({ branches }: BranchCarsProps) => {
   const locale = useLocale();
   const sliderRef = useRef<HTMLDivElement>(null);
 
@@ -46,16 +46,16 @@ const BranchCars = ({ branches, isLoading }: BranchCarsProps) => {
 
   const cars = carsData?.cars ?? [];
 
+  // ✅✅✅ currency/rate از API
+  const currency = carsData?.currency ?? "";
+  const rateToRial = carsData?.rate_to_rial ?? null;
+
   const scrollLeft = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: -300, behavior: "smooth" });
-    }
+    if (sliderRef.current) sliderRef.current.scrollBy({ left: -300, behavior: "smooth" });
   };
 
   const scrollRight = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: 300, behavior: "smooth" });
-    }
+    if (sliderRef.current) sliderRef.current.scrollBy({ left: 300, behavior: "smooth" });
   };
 
   const activeCityName =
@@ -82,7 +82,6 @@ const BranchCars = ({ branches, isLoading }: BranchCarsProps) => {
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             <div className="relative inline-flex w-fit">
-              {/* خط طوسی فقط اندازه تب‌ها (فقط دسکتاپ) */}
               <div className="hidden md:block absolute bottom-0 left-0 right-0 h-0.5 bg-gray-200" />
 
               <div className="inline-flex gap-1 pr-1">
@@ -110,20 +109,10 @@ const BranchCars = ({ branches, isLoading }: BranchCarsProps) => {
 
         {/* Arrows (md+) */}
         <div className="hidden md:flex gap-2 shrink-0">
-          <Button
-            size="icon"
-            type="button"
-            variant="outline"
-            onClick={scrollRight}
-          >
+          <Button size="icon" type="button" variant="outline" onClick={scrollRight}>
             <ChevronRight className="w-6 h-6 text-gray-700" />
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            type="button"
-            onClick={scrollLeft}
-          >
+          <Button variant="outline" size="icon" type="button" onClick={scrollLeft}>
             <ChevronLeft className="w-6 h-6 text-gray-700" />
           </Button>
         </div>
@@ -137,19 +126,8 @@ const BranchCars = ({ branches, isLoading }: BranchCarsProps) => {
       >
         {showSkeleton ? (
           Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="shrink-0 w-[330px] sm:w-[360px] md:w-[380px]"
-            >
-              <Card
-                className="
-                  flex w-full flex-col rounded-2xl
-                  border border-[#0000001f]
-                  shadow-[0_2px_5px_-1px_rgba(0,0,0,.08)]
-                  bg-white dark:bg-gray-900 dark:border-gray-700
-                  xs:p-0 max-sm:p-2 md:p-2 h-full
-                "
-              >
+            <div key={i} className="shrink-0 w-[330px] sm:w-[360px] md:w-[380px]">
+              <Card className="flex w-full flex-col rounded-2xl border border-[#0000001f] shadow-[0_2px_5px_-1px_rgba(0,0,0,.08)] bg-white dark:bg-gray-900 dark:border-gray-700 xs:p-0 max-sm:p-2 md:p-2 h-full">
                 <CardContent className="p-0 px-1 m-0">
                   <div className="relative w-full overflow-hidden rounded-none md:rounded-lg">
                     <div className="md:hidden w-full h-[230px] bg-gray-200 dark:bg-gray-800 animate-pulse rounded-xl" />
@@ -186,17 +164,13 @@ const BranchCars = ({ branches, isLoading }: BranchCarsProps) => {
           ))
         ) : cars.length === 0 ? (
           <div className="w-full flex justify-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              خودرویی نیست
-            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">خودرویی نیست</p>
           </div>
         ) : (
           cars.map((car: any) => (
-            <div
-              key={car.id}
-              className="shrink-0 w-[330px] sm:w-[360px] md:w-[380px]"
-            >
-              <SingleCar data={car} />
+            <div key={car.id} className="shrink-0 w-[330px] sm:w-[360px] md:w-[380px]">
+              {/* ✅✅✅ currency/rate را پاس می‌دهیم */}
+              <SingleCar data={car} currency={currency} rateToRial={rateToRial} />
             </div>
           ))
         )}
@@ -204,19 +178,16 @@ const BranchCars = ({ branches, isLoading }: BranchCarsProps) => {
 
       {/* View All Button */}
       <div className="flex justify-center">
-        
         <Link href={`cars-rent/${activeBranchId}`}>
-        
-        <Button
-          variant="outline-primary"
-          size="lg"
-          type="button"
-          className="px-6 py-2 border-2 rounded-md font-bold transition-colors"
-        >
-          مشاهده همه خودروهای {activeCityName}
-        </Button>
+          <Button
+            variant="outline-primary"
+            size="lg"
+            type="button"
+            className="px-6 py-2 border-2 rounded-md font-bold transition-colors"
+          >
+            مشاهده همه خودروهای {activeCityName}
+          </Button>
         </Link>
-   
       </div>
     </div>
   );

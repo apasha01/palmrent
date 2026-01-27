@@ -23,9 +23,17 @@ type Props = {
 
 const EMPTY: Range = { start: null, end: null }
 
-function safeTime(t?: string) {
-  if (!t) return "10:00"
-  return t
+/** ✅ همیشه HH:mm برمی‌گردونه */
+function normalizeTimeLocal(t?: string | null) {
+  const s = String(t ?? "").trim()
+  if (!s) return "10:00"
+
+  const m = s.match(/^(\d{1,2}):(\d{1,2})$/)
+  if (!m) return "10:00"
+
+  const hh = String(Math.min(23, Math.max(0, Number(m[1])))).padStart(2, "0")
+  const mm = String(Math.min(59, Math.max(0, Number(m[2])))).padStart(2, "0")
+  return `${hh}:${mm}`
 }
 
 export function DateRangePickerPopover({
@@ -42,17 +50,29 @@ export function DateRangePickerPopover({
   const [isOpen, setIsOpen] = React.useState(false)
 
   const [range, setRange] = React.useState<Range>(initialRange ?? EMPTY)
-  const [deliveryTime, setDeliveryTime] = React.useState<string>(safeTime(initialTimes?.deliveryTime))
-  const [returnTime, setReturnTime] = React.useState<string>(safeTime(initialTimes?.returnTime))
 
-  // ✅ هر بار باز شد از بیرون sync کن
+  const [deliveryTime, setDeliveryTime] = React.useState<string>(normalizeTimeLocal(initialTimes?.deliveryTime))
+  const [returnTime, setReturnTime] = React.useState<string>(normalizeTimeLocal(initialTimes?.returnTime))
+
+  /**
+   * ✅✅✅ FIX اصلی:
+   * هر بار Popover باز شد، هم تاریخ هم ساعت‌ها از بیرون sync بشن
+   * (حتی اگر فقط ساعت‌ها عوض شده باشند)
+   */
   React.useEffect(() => {
     if (!isOpen) return
+
     setRange(initialRange ?? EMPTY)
-    setDeliveryTime(safeTime(initialTimes?.deliveryTime))
-    setReturnTime(safeTime(initialTimes?.returnTime))
+    setDeliveryTime(normalizeTimeLocal(initialTimes?.deliveryTime))
+    setReturnTime(normalizeTimeLocal(initialTimes?.returnTime))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, initialRange?.start, initialRange?.end])
+  }, [
+    isOpen,
+    initialRange?.start,
+    initialRange?.end,
+    initialTimes?.deliveryTime,
+    initialTimes?.returnTime,
+  ])
 
   // ویو اولیه
   const jToday = getJalaliParts(new Date())
@@ -116,12 +136,17 @@ export function DateRangePickerPopover({
 
   const confirm = () => {
     if (!range.start || !range.end) return
+
+    const dt = normalizeTimeLocal(deliveryTime)
+    const rt = normalizeTimeLocal(returnTime)
+
     onConfirm?.({
       start: range.start,
       end: range.end,
-      deliveryTime,
-      returnTime,
+      deliveryTime: dt,
+      returnTime: rt,
     })
+
     setIsOpen(false)
   }
 
@@ -129,12 +154,7 @@ export function DateRangePickerPopover({
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>{trigger as any}</PopoverTrigger>
 
-      <PopoverContent
-        side="bottom"
-        align="center"
-        sideOffset={10}
-        className="p-0 border-0 bg-transparent shadow-none"
-      >
+      <PopoverContent side="bottom" align="center" sideOffset={10} className="p-0 border-0 bg-transparent shadow-none">
         <div
           className={cn(
             "w-[92vw] max-w-[820px] overflow-hidden rounded-2xl",
@@ -164,11 +184,7 @@ export function DateRangePickerPopover({
               {isJalali ? "تقویم میلادی" : "تقویم شمسی"}
             </button>
 
-            <button
-              type="button"
-              onClick={goToToday}
-              className="text-blue-600 dark:text-blue-400 text-sm font-semibold"
-            >
+            <button type="button" onClick={goToToday} className="text-blue-600 dark:text-blue-400 text-sm font-semibold">
               برو به امروز
             </button>
           </div>
@@ -192,13 +208,7 @@ export function DateRangePickerPopover({
             </button>
 
             <div className={cn("grid gap-8 md:gap-12", isMobile ? "grid-cols-1" : "grid-cols-2")}>
-              <CalendarGrid
-                year={viewDate.year}
-                month={viewDate.month}
-                range={range}
-                onSelect={handleSelect}
-                isJalali={isJalali}
-              />
+              <CalendarGrid year={viewDate.year} month={viewDate.month} range={range} onSelect={handleSelect} isJalali={isJalali} />
 
               {!isMobile && (
                 <CalendarGrid
@@ -233,8 +243,8 @@ export function DateRangePickerPopover({
                   </span>
                   <input
                     type="time"
-                    value={deliveryTime}
-                    onChange={(e) => setDeliveryTime(e.target.value)}
+                    value={normalizeTimeLocal(deliveryTime)}
+                    onChange={(e) => setDeliveryTime(normalizeTimeLocal(e.target.value))}
                     className={cn(
                       "h-9 rounded-lg px-3",
                       "border border-gray-200 dark:border-white/10",
@@ -251,8 +261,8 @@ export function DateRangePickerPopover({
                   </span>
                   <input
                     type="time"
-                    value={returnTime}
-                    onChange={(e) => setReturnTime(e.target.value)}
+                    value={normalizeTimeLocal(returnTime)}
+                    onChange={(e) => setReturnTime(normalizeTimeLocal(e.target.value))}
                     className={cn(
                       "h-9 rounded-lg px-3",
                       "border border-gray-200 dark:border-white/10",

@@ -4,9 +4,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
-import { useDispatch, useSelector } from "react-redux"
+import { useSelector } from "react-redux"
 
 import { Card, CardContent } from "../ui/card"
 import { Button } from "../ui/button"
@@ -23,15 +23,14 @@ import {
 } from "../Icons"
 
 import { capitalizeWords, toFaDigits } from "@/helpers/helper"
-import { dateDifference } from "@/lib/getDateDiffrence"
 import { getLangUrl } from "@/lib/getLangUrl"
 import { STORAGE_URL } from "@/lib/apiClient"
-
-// ✅ zustand
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store"
-
-// ❗️اگر هنوز adaptCarData نیاز داری نگه دار، ولی ما "دو بار adapt" رو کنترل می‌کنیم
 import { adaptCarData } from "@/lib/adapters"
+
+// ✅ IMPORTANT: days with grace (same as header)
+import { calcRentDaysWithGrace, normalizeTime } from "@/lib/rent-days"
+import { jalaliToDate } from "@/lib/date-utils"
 
 /* ---------------- helpers ---------------- */
 
@@ -79,12 +78,6 @@ function parseRange(range: any) {
   return { min, max: Number.isFinite(max) ? max : 9999 }
 }
 
-/**
- * ✅ بهترین رنج:
- * - days داخلش باشد
- * - بزرگترین min را ترجیح بده (دقیق‌ترین)
- * - اگر مساوی: کوچک‌ترین max
- */
 function pickBestMatch(pricesArray: any[], days: number) {
   const candidates = pricesArray
     .map((item) => {
@@ -99,14 +92,44 @@ function pickBestMatch(pricesArray: any[], days: number) {
   return candidates[0] || null
 }
 
+/** ✅ central function: days with grace (same logic as header) */
+function calcDaysWithGraceSafe(opts: {
+  carDates: [string | null, string | null] | null
+  deliveryTime: string | null
+  returnTime: string | null
+}) {
+  const { carDates, deliveryTime, returnTime } = opts
+  if (!carDates?.[0] || !carDates?.[1]) return 1
+
+  try {
+    return calcRentDaysWithGrace({
+      fromDateJalali: carDates[0],
+      toDateJalali: carDates[1],
+      deliveryTime: normalizeTime(deliveryTime),
+      returnTime: normalizeTime(returnTime),
+      graceMinutes: 90,
+      jalaliToDate,
+    })
+  } catch {
+    return 1
+  }
+}
+
 /* ---------------- main component ---------------- */
 
-export default function SingleCar({ data, noBtn = false }: { data: any; noBtn?: boolean }) {
+export default function SingleCar({
+  data,
+  noBtn = false,
+  currency = "",
+  rateToRial,
+}: {
+  data: any
+  noBtn?: boolean
+  currency?: string
+  rateToRial?: number | null
+}) {
   const t = useTranslations()
   const locale = useLocale()
-  const dispatch = useDispatch()
-
-  // ✅ optionList هنوز از redux
   const optionList = useSelector((state: any) => state.carList.optionList)
 
   // ✅ تاریخ/تایم از zustand
@@ -123,30 +146,21 @@ export default function SingleCar({ data, noBtn = false }: { data: any; noBtn?: 
 
   /**
    * ✅ ضد دوبار-adapt
-   * اگر data از zustand normalize شده باشد (priceList/images/...) دیگر adapt نکن
    */
   const car = useMemo(() => {
     const alreadyCardModel =
-      data && typeof data === "object" && (Array.isArray(data.images) || data.priceList)
+      data && typeof data === "object" && (Array.isArray((data as any).images) || (data as any).priceList)
 
     return alreadyCardModel ? data : adaptCarData(data)
   }, [data])
 
   const { id, title, video, price } = car || {}
 
-  /**
-   * ✅ مهم‌ترین fix برای دوبار شدن عکس‌ها:
-   * 1) normalize
-   * 2) uniq (dedupe)
-   */
   const images = useMemo(() => {
-    const arr = normalizeImages(car?.images || car?.photo)
+    const arr = normalizeImages((car as any)?.images || (car as any)?.photo)
     return uniqStrings(arr)
-  }, [car?.images, car?.photo])
+  }, [car])
 
-  /**
-   * ✅ ریل: فقط یک بار برای هر id اضافه کن
-   */
   useEffect(() => {
     if (!video || !id) return
     const videoData = { id, title, video, price }
@@ -169,10 +183,10 @@ export default function SingleCar({ data, noBtn = false }: { data: any; noBtn?: 
       onMouseLeave={() => setIsHovering(false)}
     >
       <CardContent className="p-0 px-1 m-0">
-        <SingleCarGallery imageList={images} hasVideo={!!car.video} noBtn={noBtn}>
+        <SingleCarGallery imageList={images} hasVideo={!!(car as any).video} noBtn={noBtn}>
           {/* ✅ Badges Overlay */}
           <div className="absolute top-2 rtl:right-2 ltr:left-2 z-40 w-full flex flex-wrap gap-2 max-[380px]:gap-1 text-nowrap pointer-events-none">
-            {(car.rawOptions || car.options || []).map((item: any, index: number) => {
+            {(((car as any).rawOptions || (car as any).options || []) as any[]).map((item: any, index: number) => {
               if (!optionList?.[item]) return null
               const isNoDeposit = optionList[item].title === "noDeposite"
 
@@ -201,10 +215,10 @@ export default function SingleCar({ data, noBtn = false }: { data: any; noBtn?: 
           </div>
 
           {/* ✅ Discount Badge */}
-          {Number(car.discountPercent || car.discount || 0) > 0 && (
+          {Number((car as any).discountPercent || (car as any).discount || 0) > 0 && (
             <div className="absolute bottom-2 left-2 z-40 pointer-events-none bg-[#e1ff00] py-1.5 px-2.5 text-[#3b3d40] opacity-85 rounded-lg flex items-center gap-1">
               <IconDiscount size="20" />
-              {car.discountPercent || car.discount}% {t("discount")}
+              {(car as any).discountPercent || (car as any).discount}% {t("discount")}
             </div>
           )}
         </SingleCarGallery>
@@ -217,18 +231,23 @@ export default function SingleCar({ data, noBtn = false }: { data: any; noBtn?: 
 
             <h3 className="text-lg">
               {locale === "fa"
-                ? toFaDigits(capitalizeWords(car.title))
-                : capitalizeWords(car.title)}
+                ? toFaDigits(capitalizeWords((car as any).title))
+                : capitalizeWords((car as any).title)}
             </h3>
           </div>
 
           <SingleCarOptions car={car} />
 
+          {/* ✅ Price list now uses grace-based days */}
           <SingleCarPriceList
-            priceList={car.priceList || car.dailyPrices}
-            defaultPrice={car.price ?? 0}
-            oldPrice={car.oldPrice ?? 0}
+            priceList={(car as any).priceList || (car as any).dailyPrices}
+            defaultPrice={(car as any).price ?? 0}
+            oldPrice={(car as any).oldPrice ?? 0}
             carDates={carDates}
+            deliveryTime={deliveryTime}
+            returnTime={returnTime}
+            currency={currency}
+            rateToRial={rateToRial}
           />
 
           {!noBtn && (
@@ -238,8 +257,8 @@ export default function SingleCar({ data, noBtn = false }: { data: any; noBtn?: 
               deliveryTime={deliveryTime}
               returnTime={returnTime}
               onChoose={() => {
-                setSelectedCarId(Number(car.id))
-                setRoadMapStep(2)
+                setSelectedCarId(Number((car as any).id))
+                setRoadMapStep(3) // ✅ فقط همین تغییر: بعد انتخاب کارت -> استپ ۳
               }}
               onOpenReel={() => setReelActive(true)}
             />
@@ -284,7 +303,7 @@ export function SingleCarGallery({
       {/* ✅ Mobile */}
       <div
         className="
-          md:hidden flex w-full h-[230px]
+          md:hidden flex w-full h-57.5
           overflow-x-auto flex-nowrap gap-2
           hide-scrollbar
           [scrollbar-width:none] [-ms-overflow-style:none]
@@ -333,7 +352,7 @@ export function SingleCarGallery({
       </div>
 
       {/* ✅ Desktop */}
-      <div className="hidden md:block w-full aspect-[16/10] relative rounded-lg overflow-hidden">
+      <div className="hidden md:block w-full aspect-16/10 relative rounded-lg overflow-hidden">
         {safeImageList.map((src: any, index: number) => (
           <div
             key={`${String(src)}-${index}`}
@@ -442,18 +461,26 @@ export function SingleCarOptions({ car, bigFont = false }: { car: any; bigFont?:
   )
 }
 
-/* ---------------- price list (Zustand) ---------------- */
+/* ---------------- price list (uses grace days) ---------------- */
 
 export function SingleCarPriceList({
   priceList,
   defaultPrice,
   oldPrice,
   carDates,
+  deliveryTime,
+  returnTime,
+  currency,
+  rateToRial,
 }: {
   priceList: any
   defaultPrice?: number | null
   oldPrice?: number | null
   carDates: [string | null, string | null] | null
+  deliveryTime: string | null
+  returnTime: string | null
+  currency: string
+  rateToRial?: number | null
 }) {
   const t = useTranslations()
   const pathname = usePathname()
@@ -474,16 +501,7 @@ export function SingleCarPriceList({
   const pricesArray = useMemo(() => normalizePriceList(priceList), [priceList])
 
   const displayInfo = useMemo(() => {
-    let days = 1
-
-    if (carDates && carDates.length >= 2 && carDates[0] && carDates[1]) {
-      try {
-        const diff = dateDifference(carDates[0], carDates[1])
-        days = diff.days || 1
-      } catch {
-        days = 1
-      }
-    }
+    const days = calcDaysWithGraceSafe({ carDates, deliveryTime, returnTime })
 
     const match = pickBestMatch(pricesArray, days)
 
@@ -502,9 +520,15 @@ export function SingleCarPriceList({
     }
 
     return { days, price: activePrice, oldPrice: activeOldPrice }
-  }, [carDates, pricesArray, defaultPrice, oldPrice])
+  }, [carDates, deliveryTime, returnTime, pricesArray, defaultPrice, oldPrice])
 
-  const currencyLabel = t("AED")
+  const currencyLabel = useMemo(() => {
+    const code = String(currency || "").trim().toUpperCase()
+    if (!code) return ""
+
+    const translated = t(code)
+    return translated && translated !== code ? translated : code
+  }, [currency, t])
 
   return (
     <Card className="p-0 shadow-none border-0 bg-transparent">
@@ -529,9 +553,11 @@ export function SingleCarPriceList({
                     </span>
 
                     <div dir="ltr" className="flex items-center gap-2">
-                      <span className="text-base text-[#4b5259] font-bold dark:text-gray-300">
-                        {currencyLabel}
-                      </span>
+                      {!!currencyLabel && (
+                        <span className="text-base text-[#4b5259] font-bold dark:text-gray-300">
+                          {currencyLabel}
+                        </span>
+                      )}
 
                       <span className="text-[#3B82F6] dark:text-blue-400 text-base">{formatNum(daily)}</span>
 
@@ -549,7 +575,9 @@ export function SingleCarPriceList({
                     </span>
 
                     <div dir="ltr" className="flex items-center gap-2">
-                      <span className="text-base text-[#4b5259] dark:text-gray-300">{currencyLabel}</span>
+                      {!!currencyLabel && (
+                        <span className="text-base text-[#4b5259] dark:text-gray-300">{currencyLabel}</span>
+                      )}
 
                       <span className="text-[#111827] dark:text-gray-100 text-base">{formatNum(total)}</span>
 
@@ -581,7 +609,11 @@ export function SingleCarPriceList({
                     <span className="text-gray-600 dark:text-gray-400">{rangeText}</span>
 
                     <div dir="ltr" className="flex items-center gap-2">
-                      <span className="text-[10px] sm:text-xs text-[#4b5259] dark:text-gray-300">{currencyLabel}</span>
+                      {!!currencyLabel && (
+                        <span className="text-[10px] sm:text-xs text-[#4b5259] dark:text-gray-300">
+                          {currencyLabel}
+                        </span>
+                      )}
 
                       <span className="text-[#3B82F6] dark:text-blue-400">{formatNum(current)}</span>
 
@@ -602,7 +634,7 @@ export function SingleCarPriceList({
   )
 }
 
-/* ---------------- buttons (Zustand) ---------------- */
+/* ---------------- buttons (uses grace days) ---------------- */
 
 export function SingleCarButtons({
   car,
@@ -620,39 +652,32 @@ export function SingleCarButtons({
   onOpenReel: () => void
 }) {
   const t = useTranslations()
-  const router = useRouter()
-  const locale = useLocale()
-  const searchParams = useSearchParams()
+
+  const days = useMemo(() => {
+    return calcDaysWithGraceSafe({ carDates, deliveryTime, returnTime })
+  }, [carDates, deliveryTime, returnTime])
 
   const whatsappText = useMemo(() => {
-    if (carDates && carDates.length >= 2 && carDates[0] && carDates[1]) {
-      try {
-        const days = dateDifference(carDates[0], carDates[1]).days || 1
-        return `سلام، مایل هستم خودروی ${car.title} را در دبی از تاریخ ${carDates[0]} (${deliveryTime || "10:00"}) تا ${carDates[1]} (${returnTime || "10:00"}) به مدت ${days} روز رزرو کنم.`
-      } catch {
-        return `Hello, I am interested in ${car.title}.`
-      }
+    if (carDates?.[0] && carDates?.[1]) {
+      return `سلام، مایل هستم خودروی ${car.title} را در دبی از تاریخ ${carDates[0]} (${normalizeTime(
+        deliveryTime
+      )}) تا ${carDates[1]} (${normalizeTime(returnTime)}) به مدت ${days} روز رزرو کنم.`
     }
     return `Hello, I am interested in ${car.title}.`
-  }, [carDates, deliveryTime, returnTime, car.title])
+  }, [carDates, deliveryTime, returnTime, car.title, days])
 
-  const handleBooking = () => {
+  const handleBooking = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    // ✅ فقط state رو عوض کن، صفحه خودش URL رو sync می‌کنه
     onChoose()
-
-    // ✅ URL هم sync بشه
-    const currentParams = new URLSearchParams(searchParams.toString())
-    currentParams.set("step", "2")
-    currentParams.set("car_id", String(car.id))
-
-    if (carDates?.[0]) currentParams.set("from", carDates[0])
-    if (carDates?.[1]) currentParams.set("to", carDates[1])
-
-    router.push(`/${locale}/search?${currentParams.toString()}`)
   }
 
   return (
     <div className="flex w-full gap-2 mt-1">
       <Button
+        type="button"
         onClick={handleBooking}
         className="flex-1 p-4 rounded-md flex justify-center items-center gap-2 cursor-pointer font-bold text-sm transition-colors shadow-sm"
       >
@@ -661,6 +686,7 @@ export function SingleCarButtons({
 
       <Button
         asChild
+        type="button"
         variant="outline"
         className="rounded-md p-4 flex justify-center items-center gap-2 cursor-pointer transition-all
           bg-[#10B9811A] border-[#10B98180] text-[#10B981] hover:bg-[#10B981] hover:text-white

@@ -1,63 +1,53 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
+"use client"
 
-import Image from "next/image";
-import React from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Label } from "../ui/label";
-import { CalendarRange, Clock, Search } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import {
-  DateRangePickerPopover,
-  Range,
-} from "../custom/calender/date-range-picker";
-import { Separator } from "../ui/separator";
-import { Button } from "../ui/button";
-import useDIR from "@/hooks/use-rtl";
-import { useBranches } from "@/services/branches/branches.queries";
-import { useLocale } from "next-intl";
-import { formatJalaliDate } from "@/lib/date-utils";
-import { Spinner } from "../ui/spinner";
+import Image from "next/image"
+import React from "react"
+import { useParams, useRouter } from "next/navigation"
+import { Label } from "../ui/label"
+import { CalendarRange, Clock, Search } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
+import { DateRangePickerPopover, Range } from "../custom/calender/date-range-picker"
+import { Separator } from "../ui/separator"
+import { Button } from "../ui/button"
+import useDIR from "@/hooks/use-rtl"
+import { useBranches } from "@/services/branches/branches.queries"
+import { useLocale } from "next-intl"
+import { formatJalaliDate } from "@/lib/date-utils"
+import { Spinner } from "../ui/spinner"
 
 function toPersianDigits(input: string) {
-  const en = "0123456789";
-  const fa = "۰۱۲۳۴۵۶۷۸۹";
-  return input.replace(/[0-9]/g, (d) => fa[en.indexOf(d)]);
+  const en = "0123456789"
+  const fa = "۰۱۲۳۴۵۶۷۸۹"
+  return input.replace(/[0-9]/g, (d) => fa[en.indexOf(d)])
 }
 
 function toEnglishDigits(input: string) {
-  const fa = "۰۱۲۳۴۵۶۷۸۹";
-  const ar = "٠١٢٣٤٥٦٧٨٩";
-  const en = "0123456789";
+  const fa = "۰۱۲۳۴۵۶۷۸۹"
+  const ar = "٠١٢٣٤٥٦٧٨٩"
+  const en = "0123456789"
 
   return input.replace(/[۰-۹٠-٩]/g, (d) => {
-    const iFa = fa.indexOf(d);
-    if (iFa !== -1) return en[iFa];
-    const iAr = ar.indexOf(d);
-    if (iAr !== -1) return en[iAr];
-    return d;
-  });
+    const iFa = fa.indexOf(d)
+    if (iFa !== -1) return en[iFa]
+    const iAr = ar.indexOf(d)
+    if (iAr !== -1) return en[iAr]
+    return d
+  })
 }
 
 function formatJalaliShort(date: Date | null) {
-  if (!date) return "---";
+  if (!date) return "---"
 
-  const jalaliStr = toEnglishDigits(formatJalaliDate(date));
-  const parts = jalaliStr.split("/");
-  if (parts.length !== 3) return "---";
+  const jalaliStr = toEnglishDigits(formatJalaliDate(date))
+  const parts = jalaliStr.split("/")
+  if (parts.length !== 3) return "---"
 
-  const [, mStr, dStr] = parts;
-  const m = Number(mStr);
-  const d = Number(dStr);
+  const [, mStr, dStr] = parts
+  const m = Number(mStr)
+  const d = Number(dStr)
 
-  if (!Number.isFinite(m) || !Number.isFinite(d) || m < 1 || m > 12)
-    return "---";
+  if (!Number.isFinite(m) || !Number.isFinite(d) || m < 1 || m > 12) return "---"
 
   const monthNames = [
     "فروردین",
@@ -72,9 +62,9 @@ function formatJalaliShort(date: Date | null) {
     "دی",
     "بهمن",
     "اسفند",
-  ];
+  ]
 
-  return `${toPersianDigits(String(d))} ${monthNames[m - 1]}`;
+  return `${toPersianDigits(String(d))} ${monthNames[m - 1]}`
 }
 
 /** ✅ Trigger عمومی: اول تاریخ بعد ساعت */
@@ -84,12 +74,12 @@ function DateTimeTrigger({
   datePlaceholder,
   timePlaceholder,
 }: {
-  date?: Date | null;
-  time?: string;
-  datePlaceholder: string;
-  timePlaceholder: string;
+  date?: Date | null
+  time?: string
+  datePlaceholder: string
+  timePlaceholder: string
 }) {
-  const hasDate = date instanceof Date && !isNaN(date.getTime());
+  const hasDate = date instanceof Date && !isNaN(date.getTime())
 
   return (
     <div className="flex items-center border h-10 rounded-md w-full overflow-hidden bg-transparent">
@@ -119,7 +109,7 @@ function DateTimeTrigger({
         )}
       </div>
     </div>
-  );
+  )
 }
 
 function MobileFloatLabel({ text }: { text: string }) {
@@ -127,107 +117,117 @@ function MobileFloatLabel({ text }: { text: string }) {
     <span className="pointer-events-none rounded-t-md absolute right-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-gray-600 dark:bg-gray-900">
       {text}
     </span>
-  );
+  )
 }
 
 /** ✅ نرمال‌سازی برای مقایسه slug/title */
 function normalizeSlugLike(s: string) {
-  return String(s)
-    .trim()
-    .toLowerCase()
-    .replace(/[\s_]+/g, "-")
-    .replace(/-+/g, "-");
+  return String(s).trim().toLowerCase().replace(/[\s_]+/g, "-").replace(/-+/g, "-")
 }
 
 /** ✅ خروجی جلالی مناسب query string: 1404/10/15 */
 function jalaliQueryDate(date: Date | null) {
-  if (!date) return "";
-  return toEnglishDigits(formatJalaliDate(date)); // YYYY/MM/DD
+  if (!date) return ""
+  return toEnglishDigits(formatJalaliDate(date)) // YYYY/MM/DD
 }
 
-/** ✅ فردا تا ۵ روز بعد (جمعاً ۶ روز بازه) + ساعت ۱۰:۰۰ */
+/** ✅ ساعت امن: همیشه HH:mm */
+function safeTime(t?: string | null) {
+  const s = String(t || "").trim()
+  if (!s) return "10:00"
+
+  const m = s.match(/^(\d{1,2}):(\d{1,2})$/)
+  if (m) {
+    const hh = String(Math.min(23, Math.max(0, Number(m[1])))).padStart(2, "0")
+    const mm = String(Math.min(59, Math.max(0, Number(m[2])))).padStart(2, "0")
+    return `${hh}:${mm}`
+  }
+
+  return "10:00"
+}
+
+/** ✅ فردا تا ۵ روز بعد + ساعت ۱۰:۰۰ */
 function makeDefaultRange(): Range {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  start.setDate(start.getDate() + 1); // فردا
+  const start = new Date()
+  start.setHours(0, 0, 0, 0)
+  start.setDate(start.getDate() + 1)
 
-  const end = new Date(start);
-  end.setDate(end.getDate() + 5); // ۵ روز بعد
+  const end = new Date(start)
+  end.setDate(end.getDate() + 5)
 
-  return { start, end };
+  return { start, end }
 }
 
 const NavSection = ({ image, title, subtitle1, subtitle2 }: any) => {
-  useDIR();
+  useDIR()
 
-  const router = useRouter();
-  const locale = useLocale();
-  const params = useParams() as any;
+  const router = useRouter()
+  const locale = useLocale()
+  const params = useParams() as any
 
-  const branchSlugFromRoute =
-    params?.cityName ?? params?.slug ?? params?.branch ?? params?.city ?? "";
-  const routeSlug = normalizeSlugLike(String(branchSlugFromRoute || ""));
+  const branchSlugFromRoute = params?.cityName ?? params?.slug ?? params?.branch ?? params?.city ?? ""
+  const routeSlug = normalizeSlugLike(String(branchSlugFromRoute || ""))
 
-  const { data, isLoading, isFetching } = useBranches(locale) as any;
+  const { data, isLoading, isFetching } = useBranches(locale) as any
 
-  const [selectedCity, setSelectedCity] = React.useState<string>("");
-  const [cityLocked, setCityLocked] = React.useState(false);
+  const [selectedCity, setSelectedCity] = React.useState<string>("")
+  const [cityLocked, setCityLocked] = React.useState(false)
 
-  // ✅ دیفالت: فردا تا ۵ روز بعد
-  const [selectedRange, setSelectedRange] = React.useState<Range>(() =>
-    makeDefaultRange(),
-  );
+  const [selectedRange, setSelectedRange] = React.useState<Range>(() => makeDefaultRange())
 
-  // ✅ دیفالت ساعت‌ها: ۱۰:۰۰
-  const [deliveryTime, setDeliveryTime] = React.useState<string>("10:00");
-  const [returnTime, setReturnTime] = React.useState<string>("10:00");
+  const [deliveryTime, setDeliveryTime] = React.useState<string>("10:00")
+  const [returnTime, setReturnTime] = React.useState<string>("10:00")
 
-  const handleConfirm = (payload: {
-    start: Date;
-    end: Date;
-    deliveryTime: string;
-    returnTime: string;
-  }) => {
-    setSelectedRange({ start: payload.start, end: payload.end });
-    setDeliveryTime(payload.deliveryTime);
-    setReturnTime(payload.returnTime);
-  };
+  const handleConfirm = (payload: { start: Date; end: Date; deliveryTime: string; returnTime: string }) => {
+    setSelectedRange({ start: payload.start, end: payload.end })
+    setDeliveryTime(safeTime(payload.deliveryTime))
+    setReturnTime(safeTime(payload.returnTime))
+  }
 
   const handleClear = () => {
-    // ✅ اگر کاربر Clear زد، دوباره دیفالت رو برگردون
-    setSelectedRange(makeDefaultRange());
-    setDeliveryTime("10:00");
-    setReturnTime("10:00");
-  };
+    setSelectedRange(makeDefaultRange())
+    setDeliveryTime("10:00")
+    setReturnTime("10:00")
+  }
 
+  // ✅✅✅ FIX اصلی: dt/rt هم به URL اضافه شد
   const handleSearch = () => {
-    const branchId = selectedCity;
-    const from = jalaliQueryDate(selectedRange.start);
-    const to = jalaliQueryDate(selectedRange.end);
+    const branchId = selectedCity
+    const from = jalaliQueryDate(selectedRange.start)
+    const to = jalaliQueryDate(selectedRange.end)
 
-    const qs = new URLSearchParams();
-    if (branchId) qs.set("branch_id", branchId);
-    if (from) qs.set("from", from);
-    if (to) qs.set("to", to);
+    const dt = safeTime(deliveryTime)
+    const rt = safeTime(returnTime)
 
-    router.push(`/search?${qs.toString()}`);
-  };
+    const qs = new URLSearchParams()
+    if (branchId) qs.set("branch_id", branchId)
+    if (from) qs.set("from", from)
+    if (to) qs.set("to", to)
 
-  const cityLoading = Boolean(isLoading || isFetching || !data);
+    // ✅ NEW: send times
+    qs.set("dt", dt)
+    qs.set("rt", rt)
+
+    // اگر پروژه‌ات لوکال‌دار است، این خط را فعال کن:
+    // router.push(`/${locale}/search?${qs.toString()}`)
+    router.push(`/search?${qs.toString()}`)
+  }
+
+  const cityLoading = Boolean(isLoading || isFetching || !data)
 
   React.useEffect(() => {
-    if (!data || !Array.isArray(data)) return;
-    if (!routeSlug) return;
+    if (!data || !Array.isArray(data)) return
+    if (!routeSlug) return
 
-    if (cityLocked && selectedCity) return;
+    if (cityLocked && selectedCity) return
 
     const found = data.find((b: any) => {
-      const idStr = String(b?.id ?? "");
-      const slug1 = normalizeSlugLike(String(b?.slug ?? ""));
-      const slug2 = normalizeSlugLike(String(b?.city_slug ?? ""));
-      const slug3 = normalizeSlugLike(String(b?.cityName ?? ""));
-      const slug4 = normalizeSlugLike(String(b?.name_en ?? ""));
-      const titleLike = normalizeSlugLike(String(b?.title ?? ""));
+      const idStr = String(b?.id ?? "")
+      const slug1 = normalizeSlugLike(String(b?.slug ?? ""))
+      const slug2 = normalizeSlugLike(String(b?.city_slug ?? ""))
+      const slug3 = normalizeSlugLike(String(b?.cityName ?? ""))
+      const slug4 = normalizeSlugLike(String(b?.name_en ?? ""))
+      const titleLike = normalizeSlugLike(String(b?.title ?? ""))
 
       return (
         slug1 === routeSlug ||
@@ -236,14 +236,14 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: any) => {
         slug4 === routeSlug ||
         titleLike === routeSlug ||
         normalizeSlugLike(idStr) === routeSlug
-      );
-    });
+      )
+    })
 
     if (found?.id != null) {
-      setSelectedCity(String(found.id));
-      setCityLocked(true);
+      setSelectedCity(String(found.id))
+      setCityLocked(true)
     }
-  }, [data, routeSlug, cityLocked, selectedCity]);
+  }, [data, routeSlug, cityLocked, selectedCity])
 
   return (
     <section className="w-full">
@@ -260,12 +260,8 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: any) => {
           <div className="w-full max-w-6xl px-4 text-center z-10">
             <div className="flex flex-col gap-2">
               <p className="text-xl md:text-2xl text-white font-bold">{title}</p>
-              <p className="text-muted-foreground font-light text-sm mt-2">
-                {subtitle1}
-              </p>
-              <p className="text-muted-foreground font-light text-sm">
-                {subtitle2}
-              </p>
+              <p className="text-muted-foreground font-light text-sm mt-2">{subtitle1}</p>
+              <p className="text-muted-foreground font-light text-sm">{subtitle2}</p>
             </div>
           </div>
         </div>
@@ -279,21 +275,13 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: any) => {
               <Select
                 value={selectedCity}
                 onValueChange={(value) => {
-                  if (cityLocked) return;
-                  setSelectedCity(value);
+                  if (cityLocked) return
+                  setSelectedCity(value)
                 }}
                 disabled={cityLoading || cityLocked}
               >
                 <SelectTrigger className="w-full h-10 bg-white border-6 border-white p-1 dark:bg-gray-900 dark:border-gray-900">
-                  <SelectValue
-                    placeholder={
-                      cityLoading
-                        ? "در حال بارگذاری..."
-                        : cityLocked
-                        ? "شهر انتخاب شده"
-                        : ""
-                    }
-                  />
+                  <SelectValue placeholder={cityLoading ? "در حال بارگذاری..." : cityLocked ? "شهر انتخاب شده" : ""} />
                 </SelectTrigger>
 
                 <SelectContent>
@@ -303,11 +291,7 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: any) => {
                     </div>
                   ) : (
                     data?.map((items: any, key: number) => (
-                      <SelectItem
-                        key={key}
-                        value={String(items.id ?? "1")}
-                        disabled={cityLocked}
-                      >
+                      <SelectItem key={key} value={String(items.id ?? "1")} disabled={cityLocked}>
                         {items.title}
                       </SelectItem>
                     ))
@@ -360,11 +344,7 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: any) => {
               </div>
             </div>
 
-            <Button
-              className="w-full h-10"
-              onClick={handleSearch}
-              disabled={cityLoading || !selectedCity}
-            >
+            <Button className="w-full h-10" onClick={handleSearch} disabled={cityLoading || !selectedCity}>
               <div className="flex items-center justify-center gap-2 px-3">
                 <Search className="size-4.5" />
                 جستجوی خودروها
@@ -384,20 +364,14 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: any) => {
                   <Select
                     value={selectedCity}
                     onValueChange={(value) => {
-                      if (cityLocked) return;
-                      setSelectedCity(value);
+                      if (cityLocked) return
+                      setSelectedCity(value)
                     }}
                     disabled={cityLoading || cityLocked}
                   >
                     <SelectTrigger className="w-full h-10!">
                       <SelectValue
-                        placeholder={
-                          cityLoading
-                            ? "در حال بارگذاری..."
-                            : cityLocked
-                            ? "شهر انتخاب شده"
-                            : "شهر را انتخاب کنید"
-                        }
+                        placeholder={cityLoading ? "در حال بارگذاری..." : cityLocked ? "شهر انتخاب شده" : "شهر را انتخاب کنید"}
                       />
                     </SelectTrigger>
 
@@ -408,11 +382,7 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: any) => {
                         </div>
                       ) : (
                         data?.map((items: any, key: number) => (
-                          <SelectItem
-                            key={key}
-                            value={String(items.id ?? "1")}
-                            disabled={cityLocked}
-                          >
+                          <SelectItem key={key} value={String(items.id ?? "1")} disabled={cityLocked}>
                             {items.title}
                           </SelectItem>
                         ))
@@ -463,11 +433,7 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: any) => {
 
                 <div className="space-y-2">
                   <Label className="opacity-0 select-none">جستجو</Label>
-                  <Button
-                    className="w-full h-10"
-                    onClick={handleSearch}
-                    disabled={cityLoading || !selectedCity}
-                  >
+                  <Button className="w-full h-10" onClick={handleSearch} disabled={cityLoading || !selectedCity}>
                     <div className="flex items-center justify-center gap-2 px-3">
                       <Search className="size-4.5" />
                       جستجوی خودروها
@@ -482,7 +448,7 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: any) => {
 
       <div className="hidden md:block h-20" />
     </section>
-  );
-};
+  )
+}
 
-export default NavSection;
+export default NavSection

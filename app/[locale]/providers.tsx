@@ -3,7 +3,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import ReduxProvider from "@/components/ReduxProvider";
-import Toast from "@/components/Toast";
+
 import { Slide, ToastContainer } from "react-toastify";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { NextIntlClientProvider } from "next-intl";
@@ -24,7 +24,7 @@ export default function Providers({
       <ReduxProvider>
         <ReactQueryProvider>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Toast />
+    
 
           <ToastContainer
             position="top-right"

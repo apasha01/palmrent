@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { HubCarsParams, getHubCarsOnly } from "./hub-cars.api";
-
 
 export const HubCarsOnlyKey = (
   branchId: number | string,

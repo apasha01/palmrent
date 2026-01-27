@@ -38,16 +38,16 @@ export default function HomePage() {
   const resolvedLocale = String(routeParams?.locale || "fa")
   const slug = String(routeParams?.cityName || "")
 
-  // ✅✅✅ فیلترها از zustand (تا با SerarchSection یکی باشد)
+  // ✅ فیلترها از zustand (هم‌سو با SerarchSection)
   const filterSort = useSearchPageStore((s) => s.sort)
   const filterTitle = useSearchPageStore((s) => s.search_title)
   const filterCats = useSearchPageStore((s) => s.selectedCategories)
 
-  // ✅✅✅ این قسمت حتماً مثل قبل از Redux بماند تا sticky خراب نشود
+  // ✅ این قسمت مثل قبل از Redux (sticky خراب نشود)
   const isHeaderClose = useSelector((state: any) => state.global?.isHeaderClose)
-  const topOffset = isHeaderClose ? 0 : 64 // همون قبلی
+  const topOffset = isHeaderClose ? 0 : 64
 
-  // ✅✅✅ وقتی از این صفحه رفتی بیرون، فیلترهای zustand پاک بشن
+  // ✅ وقتی از این صفحه رفتی بیرون، فیلترهای zustand پاک بشن (اگر متدش رو داری)
   useEffect(() => {
     return () => {
       useSearchPageStore.getState().resetFilters?.()
@@ -116,13 +116,18 @@ export default function HomePage() {
   const queryParams = useMemo(() => {
     return {
       page,
-      sort: filterSort || null,
-      search_title: filterTitle || null,
+      // ✅✅✅ هیچ دیفالت sort نداریم
+      sort: filterSort ?? null,
+      search_title: filterTitle ?? null,
       cat_id: Array.isArray(filterCats) && filterCats.length ? filterCats : null,
     }
   }, [page, filterSort, filterTitle, filterCats])
 
   const query = useBranchCars(slug, resolvedLocale, queryParams)
+
+  // ✅✅✅ currency/rate از بک (مثل filter_car)
+  const currency = String(query.data?.currency || "")
+  const rateToRial = query.data?.rate_to_rial ?? null
 
   const categories = (query.data?.categories ?? []) as Array<{
     id: number
@@ -241,7 +246,7 @@ export default function HomePage() {
     return "مشاهده بیشتر"
   }, [query.isFetching])
 
-  // ---------- Sticky sentinel + fade (همون قبلی) ----------
+  // ---------- Sticky sentinel + fade ----------
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   const [stuck, setStuck] = useState(false)
   const [playFade, setPlayFade] = useState(false)
@@ -300,8 +305,7 @@ export default function HomePage() {
           image="/images/head-list-branch.jpg"
           title={
             <>
-              {" "}
-              اجاره خودرو در <BranchName /> بدون دپوزیت{" "}
+              اجاره خودرو در <BranchName /> بدون دپوزیت
             </>
           }
           subtitle1="تحویل فوری در فرودگاه هتل یا بیمه رایگان"
@@ -309,14 +313,14 @@ export default function HomePage() {
         />
 
         {/* Categories */}
-        <div className=" px-0 sm:px-2">
+        <div className="px-0 sm:px-2">
           <CarCategory categories={categories} loading={query.isLoading} />
         </div>
 
         {/* ✅ sentinel دقیقا قبل از sticky سرچ */}
         <div ref={sentinelRef} className="h-px w-full" />
 
-        {/* ✅ Sticky Search (همون قبلی) */}
+        {/* ✅ Sticky Search */}
         <div
           className={`
             sticky top-0 z-40 
@@ -339,7 +343,7 @@ export default function HomePage() {
         </div>
 
         {/* Cars */}
-        <div className=" m-auto relative min-h-[50vh] px-0 md:px-2 mt-2">
+        <div className="m-auto relative min-h-[50vh] px-0 md:px-2 mt-2">
           {refetching && (
             <div className="absolute inset-0 z-20 bg-white/40 dark:bg-black/30 backdrop-blur-[1px] rounded-xl pointer-events-none" />
           )}
@@ -365,7 +369,8 @@ export default function HomePage() {
                   <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
                     {cars.map((item: any, index: number) => (
                       <div key={`${item.id}-${index}`} className="flex w-full">
-                        <SingleCar data={item} />
+                        {/* ✅✅✅ currency از بک به کارت پاس داده می‌شود */}
+                        <SingleCar data={item} currency={currency} rateToRial={rateToRial} />
                       </div>
                     ))}
 
@@ -417,7 +422,7 @@ export default function HomePage() {
         <div className="mt-16">
           <TinyInformation />
         </div>
-        <div className="mt-6 ">
+        <div className="mt-6">
           <ImportantQuestions
             whatsappNumber={query.data?.branch?.whatsapp ?? undefined}
             phoneNumber={query.data?.branch?.phone ?? undefined}

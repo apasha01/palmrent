@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import axios from "@/lib/axios";
 
 export type HubCarsParams = {
@@ -11,7 +10,6 @@ export type HubCarsParams = {
 
 const buildQuery = (params?: HubCarsParams) => {
   const qs = new URLSearchParams();
-
   if (!params) return qs.toString();
 
   if (params.page) qs.set("page", String(params.page));

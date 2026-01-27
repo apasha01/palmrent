@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: false,
   env: {
     // NEXT_PUBLIC_API_URL: "https://temp.palmrentcar.com/api",
+    // NEXT_PUBLIC_API_URL: "http://192.168.100.31:8000/api",
     NEXT_PUBLIC_API_URL: "http://localhost:8000/api",
     NEXT_PUBLIC_STORAGE_URL: "https://cdn.palmrentcar.com/",
 

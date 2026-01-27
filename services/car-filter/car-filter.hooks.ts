@@ -13,15 +13,15 @@ export function useInfiniteCarFilter(params: CarFilterParams, enabled = true) {
     enabled,
 
     initialPageParam: 1,
-    queryFn: ({ pageParam }) => carFilterPage(params, pageParam),
+    queryFn: ({ pageParam }) => carFilterPage(params, pageParam as number),
 
     getNextPageParam: (lastPage, allPages) => {
-      const lastPageNumber = allPages.length // چون صفحه 1 => length=1
+      const pageNumber = allPages.length
       const got = lastPage?.cars?.length ?? 0
-      const need = expectedPageSize(lastPageNumber)
+      const need = expectedPageSize(pageNumber)
 
-      if (got < need) return undefined // پایان
-      return allPages.length + 1
+      if (got < need) return undefined
+      return pageNumber + 1
     },
 
     staleTime: 1000 * 60 * 2,
