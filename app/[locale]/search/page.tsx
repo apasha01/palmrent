@@ -1,7 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -34,7 +41,8 @@ function useHeaderOffsetPx(defaultPx = 64) {
   useEffect(() => {
     let raf = 0;
 
-    const getHeaderEl = () => document.getElementById("site-fixed-header") as HTMLElement | null;
+    const getHeaderEl = () =>
+      document.getElementById("site-fixed-header") as HTMLElement | null;
 
     const measure = () => {
       const el = getHeaderEl();
@@ -82,7 +90,8 @@ function SearchResultPageContent() {
   // ✅ isMobile WITHOUT matchMedia (NO mql)
   // =========================================================
   const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window !== "undefined") return window.innerWidth < MOBILE_BREAKPOINT;
+    if (typeof window !== "undefined")
+      return window.innerWidth < MOBILE_BREAKPOINT;
     return false;
   });
 
@@ -96,42 +105,29 @@ function SearchResultPageContent() {
   const {
     roadMapStep,
     setRoadMapStep,
-
     isSearchOpen,
     isFilterOpen,
-
     carDates,
     setCarDates,
-
     deliveryTime,
     setDeliveryTime,
-
     returnTime,
     setReturnTime,
-
     sort,
     setSort,
-
     search_title,
     setSearchTitle,
-
     selectedCategories,
     setSelectedCategories,
-
     selectedPriceRange,
     setSelectedPriceRange,
-
     selectedCarId,
     setSelectedCarId,
-
     descriptionPopup,
-
     carList,
     addCarList,
     clearCarList,
-
     setIsAnySheetOpen,
-
     isMobileInfoOpen,
     setIsMobileInfoOpen,
   } = useSearchPageStore();
@@ -234,7 +230,14 @@ function SearchResultPageContent() {
 
     navModeRef.current = "push";
     navigateTo(params.toString());
-  }, [navigateTo, searchParams, setRoadMapStep, setSelectedCarId, setIsMobileInfoOpen, isMobile]);
+  }, [
+    navigateTo,
+    searchParams,
+    setRoadMapStep,
+    setSelectedCarId,
+    setIsMobileInfoOpen,
+    isMobile,
+  ]);
 
   // =========================================================
   // ✅ IMPORTANT: prevent "initial onOpenChange(false)" bug
@@ -312,7 +315,8 @@ function SearchResultPageContent() {
     // Desktop
     const stepParam = searchParams.get("step");
     const stepNum = stepParam ? Number(stepParam) : NaN;
-    const safeStep = Number.isFinite(stepNum) && stepNum > 0 ? Math.min(4, stepNum) : 1;
+    const safeStep =
+      Number.isFinite(stepNum) && stepNum > 0 ? Math.min(4, stepNum) : 1;
 
     if (roadMapStep !== safeStep) setRoadMapStep(safeStep);
 
@@ -361,7 +365,14 @@ function SearchResultPageContent() {
       navModeRef.current = "push";
       setRoadMapStep(3);
     }
-  }, [selectedCarId, isMobile, topOffset, roadMapStep, setIsMobileInfoOpen, setRoadMapStep]);
+  }, [
+    selectedCarId,
+    isMobile,
+    topOffset,
+    roadMapStep,
+    setIsMobileInfoOpen,
+    setRoadMapStep,
+  ]);
 
   const filterKey = useMemo(() => {
     const dt = normalizeTime(deliveryTime);
@@ -428,7 +439,8 @@ function SearchResultPageContent() {
     if (search_title) params.set("search_title", search_title);
     else params.delete("search_title");
 
-    if (selectedCategories?.length) params.set("categories", selectedCategories.join(","));
+    if (selectedCategories?.length)
+      params.set("categories", selectedCategories.join(","));
     else params.delete("categories");
 
     if (selectedPriceRange?.length === 2) {
@@ -440,7 +452,9 @@ function SearchResultPageContent() {
     }
 
     const derivedStepForUrl =
-      isMobile && isMobileInfoOpen ? 3 : Math.min(4, Math.max(1, roadMapStep || 1));
+      isMobile && isMobileInfoOpen
+        ? 3
+        : Math.min(4, Math.max(1, roadMapStep || 1));
 
     if (!isMobile) {
       params.set("step", String(derivedStepForUrl));
@@ -466,7 +480,9 @@ function SearchResultPageContent() {
   // =========================================================
   const handleStepClick = useCallback(
     (targetStep: number) => {
-      const stepSafe = Number.isFinite(targetStep) ? Math.min(4, Math.max(1, targetStep)) : 1;
+      const stepSafe = Number.isFinite(targetStep)
+        ? Math.min(4, Math.max(1, targetStep))
+        : 1;
 
       navModeRef.current = "push";
 
@@ -485,7 +501,14 @@ function SearchResultPageContent() {
       if (isMobile) setIsMobileInfoOpen(false);
       setRoadMapStep(stepSafe);
     },
-    [isMobile, topOffset, roadMapStep, setRoadMapStep, closeSheetToStep1, setIsMobileInfoOpen],
+    [
+      isMobile,
+      topOffset,
+      roadMapStep,
+      setRoadMapStep,
+      closeSheetToStep1,
+      setIsMobileInfoOpen,
+    ],
   );
 
   const uiStep = useMemo(() => {
@@ -549,7 +572,10 @@ function SearchResultPageContent() {
   }, [q.data, canFetch]);
 
   const metaPage = useMemo(() => {
-    return q.data?.pages?.find((p: any) => p?.currency || p?.rate_to_rial != null) ?? null;
+    return (
+      q.data?.pages?.find((p: any) => p?.currency || p?.rate_to_rial != null) ??
+      null
+    );
   }, [q.data]);
 
   const currency = canFetch ? (metaPage?.currency ?? "") : "";
@@ -585,7 +611,10 @@ function SearchResultPageContent() {
 
   const isLoading = canFetch ? q.isLoading : false;
   const isLoadingMore = canFetch ? q.isFetchingNextPage : false;
-  const error = canFetch && q.isError ? ((q.error as any)?.message ?? t("errorLoading")) : null;
+  const error =
+    canFetch && q.isError
+      ? ((q.error as any)?.message ?? t("errorLoading"))
+      : null;
 
   const renderCarsStep = () =>
     !canFetch ? null : (
@@ -625,7 +654,8 @@ function SearchResultPageContent() {
           </div>
 
           <div className="sm:w-[90vw] max-w-334 m-auto relative my-4 px-0 sm:px-2">
-            {(!searchParams.get("step") || Number(searchParams.get("step")) < 4) && (
+            {(!searchParams.get("step") ||
+              Number(searchParams.get("step")) < 4) && (
               <StepRent
                 step={uiStep}
                 onStepClick={handleStepClick}
@@ -645,7 +675,9 @@ function SearchResultPageContent() {
         )}
 
         {/* دسکتاپ: وقتی ماشین انتخاب شد info بیاد */}
-        {!isMobile && selectedCarId && <div className="step-layer">{renderInfoStep()}</div>}
+        {!isMobile && selectedCarId && (
+          <div className="step-layer">{renderInfoStep()}</div>
+        )}
       </div>
 
       <Sheet
@@ -674,7 +706,10 @@ function SearchResultPageContent() {
           <div className="min-h-full">
             <div className="sticky top-0 z-50 bg-white dark:bg-background border-b">
               <div className="flex items-center">
-                <SheetClose className="pr-4" onClick={() => closeSheetToStep1()}>
+                <SheetClose
+                  className="pr-4"
+                  onClick={() => closeSheetToStep1()}
+                >
                   <ArrowRight />
                 </SheetClose>
 
@@ -685,7 +720,12 @@ function SearchResultPageContent() {
             </div>
 
             <div className="sm:w-full max-w-334 m-auto relative my-2 px-0 sm:px-2">
-              <StepRent step={3} onStepClick={handleStepClick} step1Done={step1Done} step2Done={step2Done} />
+              <StepRent
+                step={3}
+                onStepClick={handleStepClick}
+                step1Done={step1Done}
+                step2Done={step2Done}
+              />
             </div>
 
             {renderInfoStep()}

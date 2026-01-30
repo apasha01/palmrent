@@ -3,37 +3,57 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { Info, ArrowRight } from "lucide-react";
+import {
+  Info,
+  ArrowRight,
+  MapPin,
+  ChevronsUpDown,
+  Check,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+
 import type { LocationState } from "@/types/rent-information";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 // ---------------- Types ----------------
-
 type PlaceRow = {
   id: number | string;
   title: string;
   price_pay?: string | number;
   pre_price_pay?: string | number;
+  need_address?: "yes" | "no";
+  address_title?: string | null;
 };
 
 type Props = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  // فقط برای Mobile Sheet (optional کنترل از بیرون)
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 
   title: string;
   currencyLabel: string;
@@ -43,11 +63,11 @@ type Props = {
   value: LocationState;
   onChange: (next: LocationState) => void;
 
-  allowDesired?: boolean;
+  placeholder?: string;
+  triggerClassName?: string;
 };
 
 // ---------------- Helpers ----------------
-
 function useIsMobile(breakpoint = 1024) {
   const [isMobile, setIsMobile] = React.useState(false);
 
@@ -67,75 +87,16 @@ function toPriceNumber(x: any) {
   return Number.isFinite(n) ? n : 0;
 }
 
-// ---------------- Row (OUTSIDE render) ----------------
-// ✅ اینجا آوردیم بیرون تا ارور “Cannot create components during render” رفع شه
-
-type RowProps = {
-  id: string;
-  title: string;
-  priceNum: number;
-  isFree: boolean;
-
-  selectedKey: string;
-  currencyLabel: string;
-  onSelect: (id: string) => void;
-};
-
-function LocationRow({
-  id,
-  title,
-  priceNum,
-  isFree,
-  selectedKey,
-  currencyLabel,
-  onSelect,
-}: RowProps) {
-  const checked = selectedKey === id;
-
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={() => onSelect(id)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onSelect(id);
-      }}
-      className={cn(
-        "flex items-center justify-between gap-3 rounded-xl border border-gray-200 p-3",
-        "hover:bg-gray-50 cursor-pointer select-none",
-      )}
-    >
-      {/* RIGHT */}
-      <div className="flex items-center gap-3 min-w-0">
-        <Checkbox
-        variant="info"
-          checked={checked}
-          onCheckedChange={() => onSelect(id)}
-          onClick={(e) => e.stopPropagation()}
-          className="h-5 w-5"
-        />
-
-        <div className="min-w-0">
-          <div className="text-sm font-semibold text-gray-900 truncate">
-            {title}
-          </div>
-
-          <div className="text-xs text-gray-500 mt-1">
-            هزینه:{" "}
-            {isFree ? "رایگان" : `${priceNum.toLocaleString()} ${currencyLabel}`}
-          </div>
-        </div>
-      </div>
-
-      {/* LEFT */}
-      <Badge variant="secondary" className="rounded-full whitespace-nowrap">
-        {isFree ? "رایگان" : `${priceNum.toLocaleString()}`}
-      </Badge>
-    </div>
-  );
+function oneLine(s: string) {
+  return String(s || "").replace(/\s+/g, " ").trim();
 }
 
-// ---------------- Main Component ----------------
+// ✅ کوتاه کردن آدرس برای نمایش داخل Trigger
+function shortText(s: string, max = 44) {
+  const x = oneLine(s);
+  if (!x) return "";
+  return x.length > max ? x.slice(0, max) + "…" : x;
+}
 
 export default function ResponsiveLocationPicker({
   open,
@@ -145,220 +106,483 @@ export default function ResponsiveLocationPicker({
   places,
   value,
   onChange,
-  allowDesired = true,
+  placeholder = "انتخاب کنید",
+  triggerClassName,
 }: Props) {
   const isMobile = useIsMobile(1024);
+  const placesSafe = React.useMemo(
+    () => (Array.isArray(places) ? places : []),
+    [places],
+  );
 
-  // ✅ تک انتخابی
-  const selectedKey = value?.isDesired
-    ? "desired"
-    : value?.location != null
-      ? String(value.location)
-      : "";
+  // ===== selected from value (only committed selection) =====
+  const selectedKey = value?.location != null ? String(value.location) : "";
+  const selectedPlace = React.useMemo(
+    () => placesSafe.find((p) => String((p as any)?.id) === String(selectedKey)),
+    [placesSafe, selectedKey],
+  );
 
-  const isDesiredChecked = selectedKey === "desired";
+  const selectedNeedAddress =
+    selectedPlace &&
+    String((selectedPlace as any)?.need_address || "no") === "yes";
 
-  const selectKey = React.useCallback(
+  const addressLabel = selectedPlace
+    ? String((selectedPlace as any)?.address_title || "آدرس")
+    : "آدرس";
+
+  // ===== open states =====
+  const [mobileOpen, setMobileOpen] = React.useState<boolean>(Boolean(open));
+  const [desktopOpen, setDesktopOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof open === "boolean") setMobileOpen(open);
+  }, [open]);
+
+  const emitOpenChange = React.useCallback(
+    (v: boolean) => {
+      setMobileOpen(v);
+      onOpenChange?.(v);
+    },
+    [onOpenChange],
+  );
+
+  // ===== Pending selection for address-required flow (MOBILE ONLY) =====
+  const [addressSheetOpen, setAddressSheetOpen] = React.useState(false);
+
+  const [pendingKey, setPendingKey] = React.useState<string>("");
+  const [pendingTitle, setPendingTitle] = React.useState<string>("");
+  const [pendingAddressLabel, setPendingAddressLabel] =
+    React.useState<string>("آدرس");
+  const [pendingAddress, setPendingAddress] = React.useState<string>("");
+
+  const resetPending = React.useCallback(() => {
+    setPendingKey("");
+    setPendingTitle("");
+    setPendingAddressLabel("آدرس");
+    setPendingAddress("");
+  }, []);
+
+  // ✅ Back inside address sheet: اگر آدرس ثبت نشده -> هیچ انتخابی ثبت نشده، برگرد به لیست
+  const backFromAddress = React.useCallback(() => {
+    setAddressSheetOpen(false);
+    resetPending();
+    emitOpenChange(true);
+  }, [emitOpenChange, resetPending]);
+
+  // ✅ Close address sheet completely (x / overlay): مثل back عمل کن
+  const closeAddress = React.useCallback(() => {
+    setAddressSheetOpen(false);
+    resetPending();
+    emitOpenChange(true);
+  }, [emitOpenChange, resetPending]);
+
+  // ===== Selection handler =====
+  const selectPlace = React.useCallback(
     (key: string) => {
-      if (key === "desired") {
+      const p = placesSafe.find((x) => String((x as any)?.id) === String(key));
+      if (!p) return;
+
+      const needAddress = String((p as any)?.need_address || "no") === "yes";
+
+      // ✅ اگر آدرس نمی‌خواهد: همان لحظه commit
+      if (!needAddress) {
         onChange({
           ...value,
-          isDesired: true,
-          location: "desired",
-          address: value?.address || "",
+          isDesired: false,
+          location: String(key),
+          address: "",
         });
+
+        emitOpenChange(false);
+        setDesktopOpen(false);
         return;
       }
 
-      onChange({
-        ...value,
-        isDesired: false,
-        location: String(key), // ✅ string ذخیره می‌کنیم
-        address: "",
+      // ✅ اگر آدرس می‌خواهد:
+      setPendingKey(String(key));
+      setPendingTitle(String((p as any)?.title ?? ""));
+      setPendingAddressLabel(String((p as any)?.address_title || "آدرس"));
+
+      const isSameCommitted =
+        value?.location != null && String(value.location) === String(key);
+
+      setPendingAddress(isSameCommitted ? String(value.address || "") : "");
+
+      emitOpenChange(false);
+      setDesktopOpen(false);
+
+      requestAnimationFrame(() => {
+        setAddressSheetOpen(true);
       });
     },
-    [onChange, value],
+    [emitOpenChange, onChange, placesSafe, value],
   );
 
-  // ✅ Header
-  const Header = (
-    <div className="shrink-0 px-4 py-2 border-b bg-gray-50">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center">
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-gray-100"
-            aria-label="بازگشت"
-          >
-            <ArrowRight size={20} className="text-gray-700" />
-          </button>
+  const confirmAddress = React.useCallback(() => {
+    const addr = oneLine(pendingAddress);
+    if (!addr) return;
 
-          <div className="font-bold text-gray-900">{title}</div>
+    onChange({
+      ...value,
+      isDesired: true,
+      location: String(pendingKey),
+      address: addr,
+    });
+
+    setAddressSheetOpen(false);
+    resetPending();
+  }, [onChange, pendingAddress, pendingKey, resetPending, value]);
+
+  // اگر گزینه committed تغییر کرد و نیاز به آدرس نداشت، آدرس رو پاک کن (safe)
+  React.useEffect(() => {
+    if (!selectedKey) return;
+    if (
+      !selectedNeedAddress &&
+      oneLine(String((value as any)?.address || "")).length > 0
+    ) {
+      onChange({ ...value, isDesired: false, address: "" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNeedAddress, selectedKey]);
+
+  // ✅✅✅ فقط موبایل: اگر نیاز آدرس داشت، داخل همون Trigger آدرس/placeholder آدرس نمایش بده
+  const mobileCommittedAddress = oneLine(String((value as any)?.address || ""));
+
+  const buttonLabel = selectedPlace
+    ? isMobile && selectedNeedAddress
+      ? mobileCommittedAddress
+        ? `${String((selectedPlace as any)?.title ?? "")} — ${shortText(mobileCommittedAddress)}`
+        : `${String((selectedPlace as any)?.title ?? "")} — ${addressLabel} را وارد کنید`
+      : String((selectedPlace as any)?.title ?? "")
+    : placeholder;
+
+  const TriggerButton = (
+    <Button
+      type="button"
+      variant="outline"
+      className={cn(
+        "w-full justify-between h-12 rounded-lg bg-transparent border-gray-300 text-gray-600",
+        triggerClassName,
+      )}
+    >
+      <span className={cn("truncate", selectedPlace ? "text-gray-800" : "text-gray-500")}>
+        {buttonLabel}
+      </span>
+      <ChevronsUpDown size={18} className="text-gray-500" />
+    </Button>
+  );
+
+  // ✅ Desktop inline address ONLY (همون کد خودت، دست نخورده)
+  const DesktopAddressInline =
+    !isMobile && selectedNeedAddress ? (
+      <div className="mt-2">
+        <div className="flex items-center justify-between mb-2">
+          <Label className="text-xs text-gray-600 text-right">{addressLabel}</Label>
+          <div className="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
+            نیاز به آدرس
+          </div>
         </div>
 
-        <div className="w-9" />
+        <div className="relative">
+          <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            value={String((value as any)?.address || "")}
+            onChange={(e) => {
+              const addr = oneLine(e.target.value);
+              onChange({ ...value, isDesired: true, address: addr });
+            }}
+            placeholder={addressLabel}
+            className="h-11 rounded-lg border-gray-300 pr-9"
+          />
+        </div>
+
+        <div className="text-[11px] text-gray-500 text-right mt-2 flex items-start gap-2">
+          <Info size={14} className="mt-0.5 text-gray-400" />
+          <span>برای ثبت این گزینه، وارد کردن آدرس الزامی است.</span>
+        </div>
+      </div>
+    ) : null;
+
+  // ---------------- Mobile UI ----------------
+  const MobileHeader = (
+    <div className="shrink-0 border-b bg-white dark:bg-gray-800">
+      <div className="px-4 py-2 flex items-center">
+        <button
+          type="button"
+          onClick={() => emitOpenChange(false)}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-gray-100"
+          aria-label="بازگشت"
+        >
+          <ArrowRight size={20} className="text-gray-700" />
+        </button>
+        <div className="mr-2 font-bold text-gray-900 text-right">{title}</div>
       </div>
     </div>
   );
 
-  // ✅ List Content (shared)
-  const ListContent = (
-    <div className="space-y-3">
-      {(Array.isArray(places) ? places : []).map((item, index) => {
+  const MobileList = (
+    <div className="space-y-3 p-4 pb-28">
+      {placesSafe.map((item, index) => {
         const id = String((item as any)?.id ?? index);
         const priceNum = toPriceNumber((item as any)?.price_pay);
         const isFree = priceNum <= 0;
+        const needAddress = String((item as any)?.need_address || "no") === "yes";
+        const checked = selectedKey === id;
 
         return (
-          <LocationRow
+          <div
             key={id}
-            id={id}
-            title={String((item as any)?.title ?? "")}
-            priceNum={priceNum}
-            isFree={isFree}
-            selectedKey={selectedKey}
-            currencyLabel={currencyLabel}
-            onSelect={selectKey}
-          />
+            role="button"
+            tabIndex={0}
+            onClick={() => selectPlace(id)}
+            className={cn(
+              "rounded-2xl border bg-white transition-colors cursor-pointer select-none",
+              checked ? "border-blue-200" : "border-gray-200",
+              "hover:bg-gray-50",
+            )}
+          >
+            <div className="flex items-center justify-between gap-3 p-3">
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-gray-900 truncate">
+                  {String((item as any)?.title ?? "")}
+                </div>
+
+                <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                  <span>
+                    هزینه: {isFree ? "رایگان" : `${priceNum.toLocaleString()} ${currencyLabel}`}
+                  </span>
+
+                  {needAddress ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+                      نیاز به آدرس
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+
+              <Badge variant="secondary" className="rounded-full whitespace-nowrap shrink-0">
+                {isFree ? "رایگان" : `${priceNum.toLocaleString()}`}
+              </Badge>
+            </div>
+
+            {checked && needAddress && oneLine(String((value as any)?.address || "")).length > 0 ? (
+              <div className="px-3 pb-3">
+                <div className="flex items-start gap-2 rounded-xl bg-gray-50 px-3 py-2 border border-gray-100">
+                  <MapPin className="size-4 text-gray-400 mt-0.5" />
+                  <div className="min-w-0">
+                    <div className="text-[11px] text-gray-500">آدرس ثبت‌شده</div>
+                    <div className="text-xs text-gray-800 truncate">
+                      {oneLine(String((value as any)?.address || ""))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
         );
       })}
+    </div>
+  );
 
-      {allowDesired ? (
-        <>
-          <Separator className="my-2" />
-          <LocationRow
-            id="desired"
-            title="سایر (آدرس دلخواه)"
-            priceNum={0}
-            isFree
-            selectedKey={selectedKey}
-            currencyLabel={currencyLabel}
-            onSelect={selectKey}
-          />
-        </>
-      ) : null}
+  const AddressMobileHeader = (
+    <div className="shrink-0 border-b bg-white dark:bg-gray-800">
+      <div className="px-4 py-2 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={backFromAddress}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-gray-100"
+          aria-label="بازگشت"
+        >
+          <ArrowRight size={20} className="text-gray-700" />
+        </button>
 
-      {allowDesired && isDesiredChecked ? (
-        <div className="pt-2 space-y-1">
-          <Label className="text-xs text-gray-500">آدرس دلخواه</Label>
+        <div className="flex-1 mr-2">
+          <div className="font-extrabold text-gray-900 text-right truncate">
+            {pendingTitle || "آدرس"}
+          </div>
+          <div className="text-xs text-gray-500 text-right mt-0.5">
+            {pendingAddressLabel}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const AddressMobileContent = (
+    <div className="p-4 space-y-4">
+      <div className="space-y-2">
+        <Label className="text-xs text-gray-600 text-right">{pendingAddressLabel}</Label>
+        <div className="relative">
+          <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            value={value?.address || ""}
-            onChange={(e) =>
-              onChange({
-                ...value,
-                isDesired: true,
-                location: "desired",
-                address: e.target.value,
-              })
-            }
-            placeholder="آدرس را وارد کنید"
-            className="h-11 rounded-lg border-gray-300"
+            value={pendingAddress}
+            onChange={(e) => setPendingAddress(e.target.value)}
+            placeholder={pendingAddressLabel}
+            className="h-11 rounded-lg border-gray-300 pr-9"
           />
         </div>
-      ) : null}
-    </div>
-  );
 
-  // ✅ Mobile: scroll + footer fixed
-  const MobileBody = (
-    <div className="flex-1 overflow-hidden">
-      <ScrollArea className="h-full">
-        {/* ✅ padding پایین برای اینکه زیر footer نره */}
-        <div className={cn("p-4", "pb-40")}>{ListContent}</div>
-      </ScrollArea>
-    </div>
-  );
-
-  const MobileFooterFixed = (
-    <div
-      className={cn(
-        "fixed bottom-0 left-0 right-0 z-60",
-        "border-t bg-white",
-        "px-4 py-4 space-y-3",
-        "pb-[calc(env(safe-area-inset-bottom)+16px)]",
-      )}
-    >
-      <div className="text-[11px] text-gray-500 flex items-start gap-2">
-        <Info size={14} className="mt-0.5 text-gray-400" />
-        <span>بعد از انتخاب، روی «انجام شد» بزنید.</span>
+        <div className="text-[11px] text-gray-500 text-right flex items-start gap-2">
+          <Info size={14} className="mt-0.5 text-gray-400" />
+          <span>برای ثبت انتخاب، وارد کردن آدرس الزامی است.</span>
+        </div>
       </div>
 
       <Button
         type="button"
         className="w-full h-12 rounded-xl font-extrabold"
-        onClick={() => onOpenChange(false)}
+        disabled={oneLine(pendingAddress).length === 0}
+        onClick={confirmAddress}
       >
-        انجام شد
+        ثبت
       </Button>
     </div>
   );
 
-  const MobilePage = (
-    <div className="relative h-dvh w-full flex flex-col overflow-hidden">
-      {Header}
-      {MobileBody}
-      {MobileFooterFixed}
-    </div>
-  );
-
-  // ✅ Mobile Sheet
+  // ✅ RENDER
   if (isMobile) {
     return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent
-          showCloseButton={false}
-          side="right"
+      <>
+        <Button
+          type="button"
+          variant="outline"
           className={cn(
-            "p-0",
-            "h-dvh w-screen max-w-none",
-            "rounded-none border-0",
-            "overflow-hidden",
+            "w-full justify-between h-12 rounded-lg bg-transparent border-gray-300 text-gray-600",
+            triggerClassName,
           )}
+          onClick={() => emitOpenChange(true)}
         >
-          <SheetHeader className="sr-only">
-            <SheetTitle>{title}</SheetTitle>
-          </SheetHeader>
+          <span
+            className={cn(
+              "truncate",
+              selectedPlace
+                ? selectedNeedAddress && oneLine(String((value as any)?.address || "")).length === 0
+                  ? "text-gray-500"
+                  : "text-gray-800"
+                : "text-gray-500",
+            )}
+          >
+            {buttonLabel}
+          </span>
+          <ChevronsUpDown size={18} className="text-gray-500" />
+        </Button>
 
-          {MobilePage}
-        </SheetContent>
-      </Sheet>
+        {/* LIST SHEET */}
+        <Sheet open={mobileOpen} onOpenChange={emitOpenChange}>
+          <SheetContent
+            showCloseButton={false}
+            side="right"
+            className={cn("p-0", "h-dvh w-screen max-w-none", "rounded-none border-0", "overflow-hidden")}
+          >
+            <SheetHeader className="sr-only">
+              <SheetTitle>{title}</SheetTitle>
+            </SheetHeader>
+
+            <div className="h-dvh w-full flex flex-col overflow-hidden">
+              {MobileHeader}
+              <div className="flex-1 overflow-hidden">
+                <ScrollArea className="h-full">{MobileList}</ScrollArea>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        {/* ADDRESS SHEET (OVER IT) */}
+        <Sheet open={addressSheetOpen} onOpenChange={(v) => (v ? setAddressSheetOpen(true) : closeAddress())}>
+          <SheetContent
+            showCloseButton={false}
+            side="right"
+            className={cn("p-0", "h-dvh w-screen max-w-none", "rounded-none border-0", "overflow-hidden")}
+          >
+            <div className="h-dvh w-full flex flex-col overflow-hidden">
+              {AddressMobileHeader}
+              <div className="flex-1 overflow-auto">{AddressMobileContent}</div>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </>
     );
   }
 
-  // ✅ Desktop Dialog + footer sticky
+  // ✅ Desktop (دست نخورده)
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="max-w-130 p-0 overflow-hidden">
-        <DialogHeader className="sr-only">
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
+    <>
+      <Popover open={desktopOpen} onOpenChange={setDesktopOpen}>
+        <PopoverTrigger asChild>{TriggerButton}</PopoverTrigger>
 
-        <div className="h-[70vh] flex flex-col">
-          {Header}
-
-          <div className="flex-1 overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className={cn("p-4", "pb-28")}>{ListContent}</div>
-            </ScrollArea>
+        <PopoverContent
+          align="start"
+          className={cn(
+            "p-0 overflow-hidden",
+            "w-(--radix-popover-trigger-width)",
+            "max-w-(--radix-popover-trigger-width)",
+          )}
+        >
+          <div className="px-4 py-3">
+            <div className="text-right font-extrabold text-gray-900">{title}</div>
           </div>
 
-          <div className="shrink-0 border-t bg-white px-4 py-4 space-y-3">
-            <div className="text-[11px] text-gray-500 flex items-start gap-2">
-              <Info size={14} className="mt-0.5 text-gray-400" />
-              <span>بعد از انتخاب، روی «انجام شد» بزنید.</span>
-            </div>
+          <Command className="w-full">
+            <CommandList className="w-full max-h-125 overflow-auto">
+              <CommandEmpty>موردی پیدا نشد</CommandEmpty>
 
-            <Button
-              type="button"
-              className="w-full h-12 rounded-xl font-extrabold"
-              onClick={() => onOpenChange(false)}
-            >
-              انجام شد
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+              <CommandGroup className="w-full">
+                {placesSafe.map((item, idx) => {
+                  const id = String((item as any)?.id ?? idx);
+                  const priceNum = toPriceNumber((item as any)?.price_pay);
+                  const isFree = priceNum <= 0;
+                  const needAddress = String((item as any)?.need_address || "no") === "yes";
+                  const active = selectedKey === id;
+
+                  return (
+                    <CommandItem
+                      key={id}
+                      value={String((item as any)?.title ?? "")}
+                      onSelect={() => {
+                        onChange({
+                          ...value,
+                          isDesired: needAddress ? true : false,
+                          location: String(id),
+                          address: needAddress ? String(value.address || "") : "",
+                        });
+                        setDesktopOpen(false);
+                      }}
+                      className="w-full flex items-start justify-between gap-3"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-gray-900">
+                            {String((item as any)?.title ?? "")}
+                          </span>
+
+                          {needAddress ? (
+                            <span className="text-[11px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 shrink-0">
+                              نیاز به آدرس
+                            </span>
+                          ) : null}
+                        </div>
+
+                        <div className="text-xs text-gray-500 mt-1">
+                          هزینه: {isFree ? "رایگان" : `${priceNum.toLocaleString()} ${currencyLabel}`}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge variant="secondary" className="rounded-full whitespace-nowrap shrink-0">
+                          {isFree ? "رایگان" : `${priceNum.toLocaleString()}`}
+                        </Badge>
+                        {active ? <Check className="h-4 w-4 text-blue-600 shrink-0" /> : null}
+                      </div>
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      {DesktopAddressInline}
+    </>
   );
 }

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "@/lib/axios"
+import { BranchCarsResponse } from "./branch-cars.types"
 
 export type BranchCarsParams = {
   page?: number
@@ -29,13 +30,27 @@ const buildQuery = (params?: BranchCarsParams) => {
   return qs.toString()
 }
 
-export async function getBranchCars(slug: string, locale: string, params?: BranchCarsParams) {
+// export async function getBranchCars(slug: string, locale: string, params?: BranchCarsParams) {
+//   const query = buildQuery(params)
+//   const url = query ? `/car/branch/${slug}/${locale}?${query}` : `/car/branch/${slug}/${locale}`
+
+//   const res = await axios.get(url)
+
+//   // ✅ خروجی: res.data.data
+//   // data شامل: cars, categories, branch, currency, rate_to_rial, has_more, page, per_page...
+//   return res.data?.data
+// }
+
+export async function getBranchCars(slug: string, locale: string, params?: BranchCarsParams): Promise<BranchCarsResponse> {
   const query = buildQuery(params)
   const url = query ? `/car/branch/${slug}/${locale}?${query}` : `/car/branch/${slug}/${locale}`
 
   const res = await axios.get(url)
+  console.log(res)
 
-  // ✅ خروجی: res.data.data
-  // data شامل: cars, categories, branch, currency, rate_to_rial, has_more, page, per_page...
-  return res.data?.data
+  if (!res.data?.data) {
+    throw new Error(res.data?.message || "Invalid API response: missing data")
+  }
+
+  return res.data.data as BranchCarsResponse
 }

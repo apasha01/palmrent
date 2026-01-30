@@ -27,7 +27,6 @@ import { cn } from "@/lib/utils";
 
 import type {
   ApiCalcResponse,
-  ApiOption,
   LocationState,
   Totals,
   UserInfo,
@@ -46,15 +45,31 @@ import {
 
 import { Switch } from "../ui/switch";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // ✅ مهم: برای موبایل که car_id از URL حذف میشه، از store بخونیم
-// اگر مسیر پروژه‌ت فرق داره، فقط این import رو اصلاح کن:
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store";
+import { PriceGroupsResponsive } from "../search/extra/PriceGroupsResponsive";
+import SummaryRow from "../search/extra/SummarySection";
 
 // ✅ cache & inflight (key باید dt/rt داشته باشه)
 const calcCache = new Map<string, ApiCalcResponse>();
 const calcInflight = new Map<string, Promise<ApiCalcResponse>>();
+
+function oneLine(s: any) {
+  return String(s ?? "").replace(/\s+/g, " ").trim();
+}
+
+function shortAddr(s: any, max = 50) {
+  const x = oneLine(s);
+  if (!x) return "";
+  return x.length > max ? x.slice(0, max) + "…" : x;
+}
 
 function safeNum(v: any, fallback = 0): number {
   const n = typeof v === "number" ? v : parseFloat(String(v ?? ""));
@@ -67,9 +82,6 @@ function clamp(n: number, min: number, max: number) {
 
 /**
  * ✅ استخراج امن تخفیف/قیمت از API
- * - offPercent: از apiData.item.off
- * - dailyBefore/dailyAfter: ترجیحاً از rent_price_day_* و fallback به rent_price/final_price
- * - totalBefore/totalAfter: ترجیحاً از rent_total_* و fallback به pay_price و روزها
  */
 function useRentPricing(apiData: ApiCalcResponse | null, rentDays: number) {
   return useMemo(() => {
@@ -77,20 +89,19 @@ function useRentPricing(apiData: ApiCalcResponse | null, rentDays: number) {
 
     const offPercent = clamp(safeNum(item.off, 0), 0, 100);
 
-    // daily after: از سرور
     const dailyAfter =
       safeNum(item.rent_price_day_after_discount, 0) ||
       safeNum(item.rent_price_day, 0) ||
       safeNum(item.final_price, 0) ||
       0;
 
-    // daily before: از سرور
     const dailyBefore =
       safeNum(item.rent_price_day_before_discount, 0) ||
       safeNum(item.rent_price, 0) ||
-      (offPercent > 0 && dailyAfter > 0 ? dailyAfter / (1 - offPercent / 100) : dailyAfter);
+      (offPercent > 0 && dailyAfter > 0
+        ? dailyAfter / (1 - offPercent / 100)
+        : dailyAfter);
 
-    // totals: ترجیحاً از سرور
     const totalAfter =
       safeNum(item.rent_total_after_discount, 0) ||
       safeNum(item.pay_price, 0) ||
@@ -157,8 +168,7 @@ export default function InformationStep(): JSX.Element {
     address: "",
   });
   const [returnDifferent, setReturnDifferent] = useState<boolean>(false);
-  const [isLocationDialogOpen, setIsLocationDialogOpen] = useState<boolean>(false);
-  const [isLocationReturn, setIsLocationReturn] = useState<boolean>(false);
+
   const [isInfoListOpen, setIsInfoListOpen] = useState<boolean>(false);
   const [apiData, setApiData] = useState<ApiCalcResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -171,10 +181,46 @@ export default function InformationStep(): JSX.Element {
     phone: "",
   });
 
+  // ✅✅✅ NEW: skeleton 1s فقط برای آیتمی که تغییر کرده
+  const [pendingSummaryIds, setPendingSummaryIds] = useState<
+    Record<number, boolean>
+  >({});
+  const pendingTimersRef = useRef<Record<number, any>>({});
+
+  function triggerSummarySkeleton(optionId: number, ms = 1000) {
+    const id = Number(optionId);
+    if (!Number.isFinite(id)) return;
+
+    if (pendingTimersRef.current[id]) {
+      clearTimeout(pendingTimersRef.current[id]);
+    }
+
+    setPendingSummaryIds((prev) => ({ ...prev, [id]: true }));
+
+    pendingTimersRef.current[id] = setTimeout(() => {
+      setPendingSummaryIds((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      delete pendingTimersRef.current[id];
+    }, ms);
+  }
+
+  useEffect(() => {
+    return () => {
+      Object.values(pendingTimersRef.current).forEach((t) => {
+        if (t) clearTimeout(t);
+      });
+      pendingTimersRef.current = {};
+    };
+  }, []);
+
   // ✅ وقتی ماشین عوض شد، state های قیمت‌ساز رو reset کن تا قیمت “ارثی” نشه
   const prevCarRef = useRef<string | null>(null);
   useEffect(() => {
-    const cur = selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : null;
+    const cur =
+      selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : null;
     if (prevCarRef.current === null) {
       prevCarRef.current = cur;
       return;
@@ -192,7 +238,9 @@ export default function InformationStep(): JSX.Element {
   // ===== Fake Coupon Dialog =====
   const [couponOpen, setCouponOpen] = useState(false);
   const [couponCode, setCouponCode] = useState("");
-  const [couponState, setCouponState] = useState<"idle" | "checking" | "invalid">("idle");
+  const [couponState, setCouponState] = useState<
+    "idle" | "checking" | "invalid"
+  >("idle");
   const couponTimerRef = useRef<any>(null);
 
   useEffect(() => {
@@ -203,7 +251,8 @@ export default function InformationStep(): JSX.Element {
 
   // ✅ fetchKey باید dt/rt داشته باشه وگرنه cache اشتباه میشه
   const fetchKey = useMemo(() => {
-    const carId = selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : "";
+    const carId =
+      selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : "";
     const branchId = branchIdFromUrl ? String(branchIdFromUrl) : "";
     const from = urlFrom || "";
     const to = urlTo || "";
@@ -214,8 +263,10 @@ export default function InformationStep(): JSX.Element {
   const lastFetchKeyRef = useRef<string>("");
 
   useEffect(() => {
-    const carIdRaw = selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : null;
-    const branchIdRaw = branchIdFromUrl != null ? String(branchIdFromUrl) : null;
+    const carIdRaw =
+      selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : null;
+    const branchIdRaw =
+      branchIdFromUrl != null ? String(branchIdFromUrl) : null;
 
     // ✅ مهم: اگر دیتاهای لازم نداریم، اسکلتون گیر نکنه
     if (!carIdRaw || !branchIdRaw || !urlFrom || !urlTo) {
@@ -264,7 +315,9 @@ export default function InformationStep(): JSX.Element {
           const status = res?.status ?? (payload as any)?.status;
 
           if (status && Number(status) !== 200) {
-            throw new Error((payload as any)?.message || "خطا در دریافت اطلاعات.");
+            throw new Error(
+              (payload as any)?.message || "خطا در دریافت اطلاعات.",
+            );
           }
           if (!payload?.item) throw new Error("پاسخ سرور نامعتبر است.");
           return payload;
@@ -290,18 +343,74 @@ export default function InformationStep(): JSX.Element {
     return () => {
       alive = false;
     };
-  }, [fetchKey, selectedCarId, urlFrom, urlTo, branchIdFromUrl, locale, dt, rt]);
+  }, [
+    fetchKey,
+    selectedCarId,
+    urlFrom,
+    urlTo,
+    branchIdFromUrl,
+    locale,
+    dt,
+    rt,
+  ]);
 
   // ================== Places safe ==================
   const activePlaces = useMemo(() => {
-    return Array.isArray(apiData?.places) ? apiData!.places!.filter(Boolean) : [];
+    return Array.isArray(apiData?.places)
+      ? apiData!.places!.filter(Boolean)
+      : [];
   }, [apiData]);
 
-  const delPlace = activePlaces.find((p) => p && String(p.id) === String(deliveryLocation.location));
-  const delTitle = delPlace ? (delPlace as any).title : "محل تحویل خودرو را انتخاب کنید";
+  const delPlace = activePlaces.find(
+    (p) => p && String((p as any).id) === String(deliveryLocation.location),
+  );
+  const delTitle = delPlace
+    ? (delPlace as any).title
+    : "محل تحویل خودرو را انتخاب کنید";
 
-  const retPlace = activePlaces.find((p) => p && String(p.id) === String(returnLocation.location));
-  const retTitle = retPlace ? (retPlace as any).title : "محل عودت خودرو را انتخاب کنید";
+  const retPlace = activePlaces.find(
+    (p) => p && String((p as any).id) === String(returnLocation.location),
+  );
+  const retTitle = retPlace
+    ? (retPlace as any).title
+    : "محل عودت خودرو را انتخاب کنید";
+
+  // ✅✅✅ FIX: currencyLabel باید قبل از totals ساخته بشه (تا داخل totals استفاده کنیم)
+  const currencyLabel = useMemo(() => {
+    const cur = (apiData as any)?.currency;
+    return cur ? t(cur) : "";
+  }, [apiData, t]);
+
+  // ================== ✅ Options: hide zero-priced + hide section if empty ==================
+  const payableOptions = useMemo(() => {
+    const opts = Array.isArray((apiData as any)?.options)
+      ? (apiData as any).options.filter(Boolean)
+      : [];
+
+    // ✅ اگر price و price_pay هر دو صفر بودند => نمایش نده
+    return opts.filter((o: any) => {
+      const p = safeNum(o?.price, 0);
+      const pp = safeNum(o?.price_pay, 0);
+      return p > 0 || pp > 0;
+    });
+  }, [apiData]);
+
+  const canSelectInsuranceComplete = useMemo(() => {
+    return (
+      String((apiData?.item as any)?.insurance_complete_status || "no")
+        .toLowerCase() === "yes"
+    );
+  }, [apiData]);
+
+  const shouldShowExtrasSection = useMemo(() => {
+    return payableOptions.length > 0 || canSelectInsuranceComplete;
+  }, [payableOptions, canSelectInsuranceComplete]);
+
+  // ✅ پاکسازی انتخاب‌ها اگر آپشن صفر/حذف‌شده انتخاب شده باشد
+  useEffect(() => {
+    const allowed = new Set(payableOptions.map((o: any) => Number(o?.id)));
+    setSelectedOptions((prev) => prev.filter((id) => allowed.has(Number(id))));
+  }, [payableOptions]);
 
   // ================== Totals ==================
   const totals: Totals = useMemo(() => {
@@ -347,18 +456,25 @@ export default function InformationStep(): JSX.Element {
       0;
 
     const dailyPrice =
-      serverDaily > 0 ? serverDaily : totalPrice > 0 ? totalPrice / rentDays : 0;
+      serverDaily > 0
+        ? serverDaily
+        : totalPrice > 0
+          ? totalPrice / rentDays
+          : 0;
 
-    const extraItems: { title: string; price: number }[] = [];
+    const extraItems: {
+      optionId?: number; // ✅ NEW
+      title: string;
+      price: number;
+      subLabel?: React.ReactNode;
+    }[] = [];
 
-    // Options
-    if (Array.isArray(apiData.options)) {
-      const safeOptions = apiData.options.filter(
-        (o): o is ApiOption => Boolean(o) && typeof (o as any).id !== "undefined",
-      );
+    // ✅ Options (فقط آپشن‌های غیر صفر)
+    {
+      const safeOptions = payableOptions as any[];
 
       selectedOptions.forEach((optId) => {
-        const opt = safeOptions.find((o) => o.id === optId);
+        const opt = safeOptions.find((o) => Number(o?.id) === Number(optId));
         if (!opt) return;
 
         const optPrice = safeNum((opt as any).price_pay, 0);
@@ -367,63 +483,145 @@ export default function InformationStep(): JSX.Element {
         totalPrice += optPrice;
         prePayPrice += preOpt;
 
-        extraItems.push({ title: (opt as any).title, price: optPrice });
+        // ✅ قیمت روزانه (optPrice کلِ اجاره است => تقسیم بر روزها)
+        const perDay =
+          rentDays > 0 ? Math.round(optPrice / rentDays) : optPrice;
+
+        extraItems.push({
+          optionId: Number(optId), // ✅ NEW (برای skeleton)
+          title: (opt as any).title,
+          price: optPrice,
+          subLabel: (
+            <span className="inline-flex items-center gap-1">
+              <span className="text-gray-500">قیمت روزانه:</span>
+              <span className="text-gray-500 ">
+                {formatNum(perDay)} {currencyLabel}
+              </span>
+            </span>
+          ),
+        });
       });
     }
 
     // Insurance (complete)
-    if (insuranceComplete) {
-      const insPrice = safeNum((apiData.item as any).insurance_complete_price_pay, 0);
-      totalPrice += insPrice;
-      prePayPrice += safeNum((apiData.item as any).pre_price_insurance_complete_price_pay, 0);
-      extraItems.push({ title: "بسته جامع خسارت", price: insPrice });
+// Insurance (complete)
+if (insuranceComplete) {
+  const insPrice = safeNum(
+    (apiData.item as any).insurance_complete_price_pay,
+    0,
+  );
+
+  const insPre = safeNum(
+    (apiData.item as any).pre_price_insurance_complete_price_pay,
+    0,
+  );
+
+  totalPrice += insPrice;
+  prePayPrice += insPre;
+
+  // ✅ قیمت روزانه بیمه:
+  // از insurance_complete_price (روزانه) اگر بود
+  // وگرنه از price_pay تقسیم بر روزها
+  const insuranceDailyFromApi = safeNum(
+    (apiData.item as any).insurance_complete_price,
+    0,
+  );
+
+  const perDay =
+    insuranceDailyFromApi > 0
+      ? insuranceDailyFromApi
+      : rentDays > 0
+        ? Math.round(insPrice / rentDays)
+        : insPrice;
+
+  extraItems.push({
+    optionId: -999, // ✅ id ثابت برای skeleton بیمه
+    title: "بسته جامع خسارت",
+    price: insPrice,
+    subLabel: (
+      <span className="inline-flex items-center gap-1">
+        <span className="text-gray-500">
+          {formatNum(perDay)} {currencyLabel}
+        </span>
+        <span className="text-gray-500">روزانه</span>
+      </span>
+    ),
+  });
+}
+
+
+// Places
+if (Array.isArray(apiData.places)) {
+  const places = apiData.places.filter(Boolean);
+  const getPlaceById = (id: any) =>
+    places.find((p) => p && String((p as any).id) === String(id));
+
+  // ✅ تشخیص اینکه این فیلد "اسم هتل" هست یا نه
+  const isHotelField = (addressTitle: any) => {
+    const s = String(addressTitle ?? "").toLowerCase();
+    return s.includes("هتل") || s.includes("hotel");
+  };
+
+  const hotelSuffix = (placeObj: any, addr: any) => {
+    const a = oneLine(addr);
+    if (!a) return "";
+    const title = (placeObj as any)?.address_title;
+    if (!isHotelField(title)) return "";
+    return ` (${shortAddr(a, 35)})`;
+  };
+
+  // ---------- Delivery ----------
+  if (deliveryLocation?.location) {
+    const del = getPlaceById((deliveryLocation as any).location);
+    const delPrice = safeNum((del as any)?.price_pay, 0);
+    const delPre = safeNum((del as any)?.pre_price_pay, 0);
+
+    totalPrice += delPrice;
+    prePayPrice += delPre;
+
+    const delNeedAddr = String((del as any)?.need_address || "no") === "yes";
+
+    // ✅ فقط اگر هتل بود، اسم هتل داخل پرانتز
+    const delHotel = delNeedAddr
+      ? hotelSuffix(del, (deliveryLocation as any)?.address)
+      : "";
+
+    extraItems.push({
+      title: `محل تحویل: ${(del as any)?.title || "نامشخص"}${delHotel}`,
+      price: delPrice,
+    });
+  }
+
+  // ---------- Return ----------
+  const effectiveReturn = returnDifferent ? returnLocation : deliveryLocation;
+
+  if ((effectiveReturn as any)?.location) {
+    const ret = getPlaceById((effectiveReturn as any).location);
+    const retPrice = safeNum((ret as any)?.price_pay, 0);
+    const retPre = safeNum((ret as any)?.pre_price_pay, 0);
+
+    // فقط وقتی returnDifferent=true هزینه عودت جدا حساب میشه
+    if (returnDifferent) {
+      totalPrice += retPrice;
+      prePayPrice += retPre;
     }
 
-    // Places
-    if (Array.isArray(apiData.places)) {
-      const places = apiData.places.filter(Boolean);
-      const getPlaceById = (id: any) => places.find((p) => p && String((p as any).id) === String(id));
+    const retNeedAddr = String((ret as any)?.need_address || "no") === "yes";
 
-      if (deliveryLocation?.location) {
-        if (deliveryLocation.location === "desired") {
-          extraItems.push({ title: `هزینه تحویل: آدرس دلخواه`, price: 0 });
-        } else {
-          const del = getPlaceById(deliveryLocation.location);
-          const delPrice = safeNum((del as any)?.price_pay, 0);
-          const delPre = safeNum((del as any)?.pre_price_pay, 0);
+    const retAddrValue = returnDifferent
+      ? (returnLocation as any)?.address
+      : (deliveryLocation as any)?.address;
 
-          totalPrice += delPrice;
-          prePayPrice += delPre;
+    // ✅ فقط اگر هتل بود، اسم هتل داخل پرانتز
+    const retHotel = retNeedAddr ? hotelSuffix(ret, retAddrValue) : "";
 
-          extraItems.push({
-            title: `محل تحویل: ${(del as any)?.title || "نامشخص"}`,
-            price: delPrice,
-          });
-        }
-      }
+    extraItems.push({
+      title: `محل عودت: ${(ret as any)?.title || "نامشخص"}${retHotel}`,
+      price: retPrice,
+    });
+  }
+}
 
-      const effectiveReturn = returnDifferent ? returnLocation : deliveryLocation;
-
-      if (effectiveReturn?.location) {
-        if (effectiveReturn.location === "desired") {
-          extraItems.push({ title: `هزینه عودت: آدرس دلخواه`, price: 0 });
-        } else {
-          const ret = getPlaceById(effectiveReturn.location);
-          const retPrice = safeNum((ret as any)?.price_pay, 0);
-          const retPre = safeNum((ret as any)?.pre_price_pay, 0);
-
-          if (returnDifferent) {
-            totalPrice += retPrice;
-            prePayPrice += retPre;
-          }
-
-          extraItems.push({
-            title: `محل عودت: ${(ret as any)?.title || "نامشخص"}`,
-            price: retPrice,
-          });
-        }
-      }
-    }
 
     // Tax
     let tax = 0;
@@ -445,6 +643,7 @@ export default function InformationStep(): JSX.Element {
     };
   }, [
     apiData,
+    payableOptions,
     selectedOptions,
     insuranceComplete,
     deliveryLocation,
@@ -453,6 +652,7 @@ export default function InformationStep(): JSX.Element {
     carDates,
     dt,
     rt,
+    currencyLabel,
   ]);
 
   // ✅ قیمت و تخفیف واقعی از API
@@ -463,19 +663,6 @@ export default function InformationStep(): JSX.Element {
 
   // ✅ اجاره پایه (کل) قبل/بعد تخفیف از API
   const baseRentAfter = pricing.totalAfter;
-  const baseRentBefore = pricing.totalBefore;
-
-  const currentLocation = isLocationReturn ? returnLocation : deliveryLocation;
-  const [isDesiredChecked, setIsDesiredChecked] = useState(false);
-
-  useEffect(() => {
-    setIsDesiredChecked(Boolean(currentLocation?.isDesired));
-  }, [isLocationReturn, currentLocation?.isDesired]);
-
-  function openLocationDialog(isReturn: boolean) {
-    setIsLocationReturn(isReturn);
-    setIsLocationDialogOpen(true);
-  }
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
@@ -504,25 +691,41 @@ export default function InformationStep(): JSX.Element {
         return;
       }
 
+      // ✅ فقط از API: نیاز به آدرس؟
+      const places = Array.isArray(apiData?.places)
+        ? apiData!.places!.filter(Boolean)
+        : [];
+      const findPlace = (id: any) =>
+        places.find((p: any) => String(p?.id) === String(id));
+
+      const delObj = findPlace((deliveryLocation as any).location);
+      const delNeed = delObj?.need_address === "yes";
+
+      const retId = returnDifferent
+        ? (returnLocation as any).location || (deliveryLocation as any).location
+        : (deliveryLocation as any).location;
+
+      const retObj = findPlace(retId);
+      const retNeed = retObj?.need_address === "yes";
+
       const payload = {
         branch_id: branchIdFromUrl || 1,
         from: carDates[0],
         to: carDates[1],
 
-        place_delivery: deliveryLocation.location,
-        address_delivery: deliveryLocation.isDesired ? deliveryLocation.address : "",
+        place_delivery: (deliveryLocation as any).location,
+        address_delivery: delNeed ? (deliveryLocation as any).address || "" : "",
 
         place_return: returnDifferent
-          ? returnLocation.location || deliveryLocation.location
-          : deliveryLocation.location,
+          ? (returnLocation as any).location ||
+            (deliveryLocation as any).location
+          : (deliveryLocation as any).location,
 
-        address_return: returnDifferent
-          ? returnLocation.isDesired
-            ? returnLocation.address
-            : ""
-          : deliveryLocation.isDesired
-            ? deliveryLocation.address
-            : "",
+        address_return: retNeed
+          ? returnDifferent
+            ? (returnLocation as any).address || ""
+            : (deliveryLocation as any).address || ""
+          : "",
 
         first_name: userInfo.name,
         last_name: ".",
@@ -532,7 +735,10 @@ export default function InformationStep(): JSX.Element {
         insurance_complete: insuranceComplete ? "yes" : "no",
       };
 
-      const res: any = await api.post(`/car/rent/${selectedCarId}/${locale}/registration`, payload);
+      const res: any = await api.post(
+        `/car/rent/${selectedCarId}/${locale}/registration`,
+        payload,
+      );
       const data: any = res?.data ?? res;
 
       const status = res?.status ?? data?.status;
@@ -564,7 +770,11 @@ export default function InformationStep(): JSX.Element {
     }
   };
 
-  const handleSelectUser = (user: { name?: string; phone?: string; email?: string }) => {
+  const handleSelectUser = (user: {
+    name?: string;
+    phone?: string;
+    email?: string;
+  }) => {
     setUserInfo({
       name: user.name || "",
       phone: user.phone || "",
@@ -577,27 +787,47 @@ export default function InformationStep(): JSX.Element {
     return <InformationStepSkeleton />;
   }
 
+  // ✅ badges / banner فقط از API
+  const showNoDeposit =
+    String((apiData.item as any)?.deposit || "").toLowerCase() === "no";
+
+  // ✅✅✅ FIX طبق دیتای شما: km:"no" یعنی نامحدود
+  const showUnlimitedKm =
+    String((apiData.item as any)?.km || "").toLowerCase() === "no";
+
+  const showFreeDelivery =
+    String((apiData.item as any)?.free_delivery || "").toLowerCase() === "yes";
+
+  // ✅✅✅ NEW: بیمه رایگان (طبق دیتای شما insurance:"yes")
+  const showFreeInsurance =
+    String((apiData.item as any)?.insurance || "").toLowerCase() === "yes";
+
+  // ✅ ودیعه: فقط اگر deposit === yes
+  const showDeposit =
+    String((apiData.item as any)?.deposit || "").toLowerCase() === "yes";
+  const depositPrice = safeNum((apiData.item as any)?.deposit_price, 0);
+
   const photo0 = Array.isArray((apiData.item as any).photo)
     ? (apiData.item as any).photo?.[0]
     : typeof (apiData.item as any).photo === "string"
       ? (apiData.item as any).photo
       : "";
 
-  const currencyLabel = t((apiData as any).currency);
-
   // ================== UI Blocks ==================
   const SelectedCarCard = (
-    <Card className="border border-gray-200 rounded-none lg:rounded-xl shadow-sm p-0 bg-white dark:bg-gray-900 gap-0">
+    <Card className="border border-gray-200 rounded-none lg:rounded-xl shadow-sm p-0 bg-white dark:bg-gray-900 gap-0 overflow-hidden">
       <div className="hidden md:block">
         <CardHeader className="px-3 pt-4 pb-2 m-0">
-          <CardTitle className="text-sm text-gray-700 dark:text-gray-200">خودرو انتخابی شما</CardTitle>
+          <CardTitle className="text-sm text-gray-700 dark:text-gray-200">
+            خودرو انتخابی شما
+          </CardTitle>
         </CardHeader>
         <Separator />
       </div>
 
-      <CardContent className="p-3">
-        <div className="flex items-start gap-3">
-          <div className="relative w-28 h-18 rounded bg-gray-100 shrink-0 overflow-hidden">
+      <CardContent className="p-2">
+        <div className="flex items-start gap-2">
+          <div className="relative w-26 h-18 rounded bg-gray-100 shrink-0 overflow-hidden">
             <Image
               src={`${STORAGE_URL}${photo0}` || "/images/placeholder.png"}
               alt={(apiData.item as any).title}
@@ -618,16 +848,27 @@ export default function InformationStep(): JSX.Element {
               passengers={(apiData.item as any).person}
             />
 
-            <div className="mt-2 flex items-center justify-between text-xs text-gray-600 leading-4 whitespace-nowrap">
+            <div className="mt-2 flex items-center justify-between text-[11px] text-gray-600 ">
               <div className="flex items-center gap-0.5 min-w-0">
                 <span>قیمت روزانه برای</span>
-                <span className="text-gray-700">{totals.rentDays} روز:</span>
+                <span className="text-gray-700">{totals.rentDays} روز</span>
+                <PriceGroupsResponsive
+                  prices={(apiData as any)?.item?.prices}
+                  currencyLabel={currencyLabel}
+                  trigger={<Info className="size-4 text-gray-700" />}
+                />
+
+                <span>:</span>
 
                 {offPercent > 0 ? (
-                  <span className="text-gray-400 line-through">{formatNum(dailyBefore)}</span>
+                  <span className="text-gray-400 line-through">
+                    {formatNum(dailyBefore)}
+                  </span>
                 ) : null}
 
-                <span className="text-gray-900">{formatNum(dailyAfter)}</span>
+                <span className="text-gray-900 font-bold">
+                  {formatNum(dailyAfter)}
+                </span>
                 <span className="text-gray-500">{currencyLabel}</span>
               </div>
 
@@ -643,25 +884,71 @@ export default function InformationStep(): JSX.Element {
         <Separator className="my-3" />
 
         <div className="flex flex-wrap gap-2">
-          <Badge
-            variant="secondary"
-            className="rounded-full bg-emerald-50 text-emerald-700 px-2 py-1 text-[11px]"
-          >
-            کیلومتر نامحدود
-          </Badge>
-          <Badge
-            variant="secondary"
-            className="rounded-full bg-emerald-50 text-emerald-700 px-2 py-1 text-[11px]"
-          >
-            تحویل رایگان
-          </Badge>
-          <Badge
-            variant="secondary"
-            className="rounded-full bg-emerald-50 text-emerald-700 px-2 py-1 text-[11px]"
-          >
-            بدون ودیعه
-          </Badge>
+          {showUnlimitedKm ? (
+            <Badge
+              variant="secondary"
+              className="rounded-full bg-emerald-50 text-emerald-700 px-2 py-1 text-[11px]"
+            >
+              کیلومتر نامحدود
+            </Badge>
+          ) : null}
+
+          {showFreeDelivery ? (
+            <Badge
+              variant="secondary"
+              className="rounded-full bg-emerald-50 text-emerald-700 px-2 py-1 text-[11px]"
+            >
+              تحویل رایگان
+            </Badge>
+          ) : null}
+
+          {showFreeInsurance ? (
+            <Badge
+              variant="secondary"
+              className="rounded-full bg-emerald-50 text-emerald-700 px-2 py-1 text-[11px]"
+            >
+              بیمه رایگان
+            </Badge>
+          ) : null}
+
+          {showNoDeposit ? (
+            <Badge
+              variant="secondary"
+              className="rounded-full bg-emerald-50 text-emerald-700 px-2 py-1 text-[11px]"
+            >
+              بدون ودیعه
+            </Badge>
+          ) : null}
         </div>
+
+        {/* ✅ ودیعه: ادامه‌ی همین کارت (فقط اگر deposit === yes) */}
+        {showDeposit ? (
+          <>
+            <Separator className="my-4" />
+
+            <div className="text-right">
+              <div className="text-md font-bold text-gray-800">ودیعه</div>
+
+              <div className="mt-2 flex items-center justify-between">
+                <div className="text-right flex items-center gap-2">
+                  <Coins size={16} className="text-gray-500" />
+                  <span className="text-sm font-semibold text-gray-500">
+                    ودیعه خلافی :
+                  </span>
+                </div>
+
+                <div className="text-left text-gray-700 whitespace-nowrap">
+                  {formatNum(depositPrice)} {currencyLabel}
+                </div>
+              </div>
+
+              <div className="text-xs text-gray-500 mt-3 leading-5">
+                ودیعه 21 روز پس از عودت خودرو بازگردانده می‌شود، و جدا از هزینه
+                اجاره است.
+              </div>
+            </div>
+          </>
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -674,7 +961,8 @@ export default function InformationStep(): JSX.Element {
       <div className="flex-1">
         <div className="font-bold text-emerald-800">بدون ودیعه (دیپوزیت)</div>
         <div className="text-sm text-emerald-700 mt-1">
-          برای رزرو این خودرو نیازی به پرداخت ودیعه (دیپوزیت) نیست؛ فقط هزینه اجاره را پرداخت می‌کنید.
+          برای رزرو این خودرو نیازی به پرداخت ودیعه (دیپوزیت) نیست؛ فقط هزینه
+          اجاره را پرداخت می‌کنید.
         </div>
       </div>
     </div>
@@ -689,36 +977,15 @@ export default function InformationStep(): JSX.Element {
       </CardHeader>
 
       <CardContent className="space-y-4 px-4">
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full justify-between h-12 bg-transparent rounded-lg border-gray-300 text-gray-600"
-          onClick={() => openLocationDialog(false)}
-        >
-          <span
-            className={cn("truncate", deliveryLocation.location ? "text-gray-800" : "text-gray-500")}
-          >
-            {deliveryLocation.location ? delTitle : "محل تحویل خودرو را انتخاب کنید"}
-          </span>
-          <ChevronDown size={18} className="text-gray-500" />
-        </Button>
-
-        {deliveryLocation.isDesired && (
-          <div className="space-y-1">
-            <Label className="text-xs text-gray-500">آدرس دقیق (اختیاری)</Label>
-            <Input
-              value={deliveryLocation.address}
-              onChange={(e) =>
-                setDeliveryLocation((p) => ({
-                  ...p,
-                  address: e.target.value,
-                }))
-              }
-              className="h-11 rounded-lg border-gray-300"
-              placeholder="آدرس را وارد کنید"
-            />
-          </div>
-        )}
+        {/* ✅ تحویل: Picker خودش Trigger رو می‌سازه */}
+        <ResponsiveLocationPicker
+          title="محل تحویل را انتخاب کنید"
+          currencyLabel={currencyLabel}
+          places={activePlaces as any}
+          value={deliveryLocation}
+          onChange={setDeliveryLocation}
+          placeholder="محل تحویل خودرو را انتخاب کنید"
+        />
 
         <div className="flex items-center justify-between p-0 pb-4 m-0">
           <Label className="flex items-center gap-3 cursor-pointer select-none">
@@ -728,70 +995,66 @@ export default function InformationStep(): JSX.Element {
               onCheckedChange={(v) => {
                 const next = Boolean(v);
                 setReturnDifferent(next);
-                if (!next)
+                if (!next) {
                   setReturnLocation({
                     isDesired: false,
                     location: null,
                     address: "",
                   });
+                }
               }}
             />
-            <span className="text-gray-800 font-semibold">خودرو را در محل دیگری عودت می‌دهم</span>
+            <span className="text-gray-800 font-semibold">
+              خودرو را در محل دیگری عودت می‌دهم
+            </span>
           </Label>
         </div>
 
         {returnDifferent && (
-          <div className="space-y-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full justify-between h-12 rounded-lg bg-transparent border-gray-300 text-gray-600"
-              onClick={() => openLocationDialog(true)}
-            >
-              <span
-                className={cn("truncate", returnLocation.location ? "text-gray-800" : "text-gray-500")}
-              >
-                {returnLocation.location ? retTitle : "محل عودت خودرو را انتخاب کنید"}
-              </span>
-              <ChevronDown size={18} className="text-gray-500" />
-            </Button>
-
-            {returnLocation.isDesired && (
-              <div className="space-y-1">
-                <Label className="text-xs text-gray-500">آدرس دقیق (اختیاری)</Label>
-                <Input
-                  value={returnLocation.address}
-                  onChange={(e) =>
-                    setReturnLocation((p) => ({
-                      ...p,
-                      address: e.target.value,
-                    }))
-                  }
-                  className="h-11 rounded-lg border-gray-300"
-                  placeholder="آدرس را وارد کنید"
-                />
-              </div>
-            )}
-          </div>
+          <ResponsiveLocationPicker
+            title="محل عودت را انتخاب کنید"
+            currencyLabel={currencyLabel}
+            places={activePlaces as any}
+            value={returnLocation}
+            onChange={setReturnLocation}
+            placeholder="محل عودت خودرو را انتخاب کنید"
+          />
         )}
       </CardContent>
     </Card>
   );
 
-  const ExtrasCard = (
+  // ✅ ExtrasCard: اگر هیچ آپشن قابل نمایش نبود و بیمه هم نبود => کل سکشن حذف
+  const ExtrasCard = !shouldShowExtrasSection ? null : (
     <Card className="border border-gray-200 dark:border-gray-800 rounded-xl md:mb-4 shadow-sm p-0 m-0 gap-0 bg-white dark:bg-gray-900">
       <CardHeader className="p-0 px-4 pt-2">
-        <CardTitle className="text-base text-gray-900 flex items-center">آپشن‌های اضافی را انتخاب کنید</CardTitle>
+        <CardTitle className="text-base text-gray-900 flex items-center">
+          آپشن‌های اضافی را انتخاب کنید
+        </CardTitle>
       </CardHeader>
 
       <CardContent className="p-0 m-0 pb-1">
-        <ExtrasList
-          options={(apiData as any).options || []}
-          selected={selectedOptions}
-          setSelected={setSelectedOptions}
-          insuranceComplete={insuranceComplete}
-          setInsuranceComplete={setInsuranceComplete}
-        />
+<ExtrasList
+  options={payableOptions}
+  selected={selectedOptions}
+  setSelected={setSelectedOptions}
+  currencyLabel={currencyLabel}
+
+  // ✅ insurance complete از item
+  insuranceComplete={insuranceComplete}
+  setInsuranceComplete={(v: boolean) => {
+    if (!canSelectInsuranceComplete) return;
+    triggerSummarySkeleton(-999);
+    setInsuranceComplete(Boolean(v));
+  }}
+  insuranceCompleteEnabled={canSelectInsuranceComplete}
+  insuranceCompleteDailyPrice={safeNum((apiData?.item as any)?.insurance_complete_price, 0)}
+
+  onSelectionVisualChange={(changedOptionId: number) => {
+    triggerSummarySkeleton(Number(changedOptionId));
+  }}
+/>
+
       </CardContent>
     </Card>
   );
@@ -820,7 +1083,9 @@ export default function InformationStep(): JSX.Element {
           <div className="md:col-span-5">
             <Input
               value={userInfo.name}
-              onChange={(e) => setUserInfo((p) => ({ ...p, name: e.target.value }))}
+              onChange={(e) =>
+                setUserInfo((p) => ({ ...p, name: e.target.value }))
+              }
               className="h-12 rounded-lg border-gray-300"
               placeholder="نام و نام خانوادگی"
             />
@@ -831,7 +1096,9 @@ export default function InformationStep(): JSX.Element {
               <PhoneInput
                 defaultCountry="ir"
                 value={userInfo.phone}
-                onChange={(phone: string) => setUserInfo((p) => ({ ...p, phone }))}
+                onChange={(phone: string) =>
+                  setUserInfo((p) => ({ ...p, phone }))
+                }
                 className="w-full"
                 inputClassName="!h-12 !w-full !border-0 !bg-transparent !text-sm !outline-none !shadow-none !ring-0 !focus:ring-0 !focus:outline-none !pl-3"
                 countrySelectorStyleProps={{
@@ -845,7 +1112,9 @@ export default function InformationStep(): JSX.Element {
           <div className="md:col-span-3">
             <Input
               value={userInfo.email}
-              onChange={(e) => setUserInfo((p) => ({ ...p, email: e.target.value }))}
+              onChange={(e) =>
+                setUserInfo((p) => ({ ...p, email: e.target.value }))
+              }
               className="h-12 rounded-lg border-gray-300"
               placeholder="ایمیل"
               type="email"
@@ -867,7 +1136,9 @@ export default function InformationStep(): JSX.Element {
   const SummaryCard = (showButton: boolean) => (
     <Card className="border border-gray-200 p-0 pt-2 pb-1 rounded-xl shadow-sm gap-0 overflow-hidden bg-white">
       <CardHeader className="px-4">
-        <CardTitle className="text-md font-bold text-gray-700 p-0 m-0 text-right">جزئیات حساب</CardTitle>
+        <CardTitle className="text-md font-bold text-gray-700 p-0 m-0 text-right">
+          جزئیات حساب
+        </CardTitle>
       </CardHeader>
 
       <Separator />
@@ -877,7 +1148,6 @@ export default function InformationStep(): JSX.Element {
           <SummaryRow
             label={`قیمت اجاره ${totals.rentDays} روز`}
             value={formatMoneyOrFree(baseRentAfter, currencyLabel)}
-            valueBefore={offPercent > 0 ? formatMoneyOrFree(baseRentBefore, currencyLabel) : undefined}
             valueHint={
               <button
                 type="button"
@@ -894,7 +1164,9 @@ export default function InformationStep(): JSX.Element {
             subLabel={
               offPercent > 0 ? (
                 <span className="inline-flex items-center gap-1 flex-wrap justify-end">
-                  <span className="line-through text-gray-400">{formatNum(dailyBefore)}</span>
+                  <span className="line-through text-gray-400">
+                    {formatNum(dailyBefore)}
+                  </span>
                   <span>
                     {formatNum(dailyAfter)} {currencyLabel}
                   </span>
@@ -914,9 +1186,21 @@ export default function InformationStep(): JSX.Element {
             }
           />
 
-          {totals.extraItems.slice(0, 12).map((x, i) => (
-            <SummaryRow key={i} label={x.title} value={formatMoneyOrFree(x.price, currencyLabel)} />
-          ))}
+          {totals.extraItems.slice(0, 12).map((x, i) => {
+            const optId = Number((x as any)?.optionId);
+            const shouldSkeleton =
+              Number.isFinite(optId) && Boolean(pendingSummaryIds[optId]);
+
+            return (
+              <SummaryRow
+                key={i}
+                label={x.title}
+                value={formatMoneyOrFree(x.price, currencyLabel)}
+                subLabel={(x as any).subLabel}
+                loading={shouldSkeleton} // ✅ NEW
+              />
+            );
+          })}
 
           {totals.tax > 0 && (
             <SummaryRow
@@ -930,10 +1214,12 @@ export default function InformationStep(): JSX.Element {
         <div className="mt-4 pt-4 border-gray-200">
           <div className="flex items-end justify-between">
             <div className="text-right">
-              <div className="text-lg font-bold text-gray-800">هزینه نهایی برای {totals.rentDays} روز</div>
+              <div className="text-lg text-gray-800">
+                هزینه نهایی برای {totals.rentDays} روز
+              </div>
             </div>
 
-            <div className="text-lg font-bold text-blue-600 whitespace-nowrap">
+            <div className="text-lg text-blue-600 whitespace-nowrap">
               {formatNum(totals.total)} {currencyLabel}
             </div>
           </div>
@@ -948,7 +1234,7 @@ export default function InformationStep(): JSX.Element {
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="w-full h-14 mb-4 rounded-xl text-base font-extrabold bg-blue-600 hover:bg-blue-700"
+            className="w-full h-14 mb-4 rounded-xl text-base  bg-blue-600 hover:bg-blue-700"
           >
             {isSubmitting ? "در حال ثبت..." : "ثبت رزرو نهایی"}
           </Button>
@@ -968,7 +1254,9 @@ export default function InformationStep(): JSX.Element {
           </DialogHeader>
 
           <div className="space-y-3">
-            <Label className="text-right text-sm text-gray-700">کد تخفیف را وارد کنید</Label>
+            <Label className="text-right text-sm text-gray-700">
+              کد تخفیف را وارد کنید
+            </Label>
 
             <Input
               value={couponCode}
@@ -978,15 +1266,20 @@ export default function InformationStep(): JSX.Element {
             />
 
             {couponState === "invalid" ? (
-              <div className="text-sm text-red-600 text-right">کد تخفیف اشتباه است.</div>
+              <div className="text-sm text-red-600 text-right">
+                کد تخفیف اشتباه است.
+              </div>
             ) : null}
 
             <Button
               type="button"
               className="w-full h-12 rounded-xl font-extrabold"
-              disabled={couponState === "checking" || couponCode.trim().length === 0}
+              disabled={
+                couponState === "checking" || couponCode.trim().length === 0
+              }
               onClick={() => {
-                if (couponTimerRef.current) clearTimeout(couponTimerRef.current);
+                if (couponTimerRef.current)
+                  clearTimeout(couponTimerRef.current);
 
                 setCouponState("checking");
                 couponTimerRef.current = setTimeout(() => {
@@ -1004,8 +1297,9 @@ export default function InformationStep(): JSX.Element {
       {/* ================= MOBILE LAYOUT ================= */}
       <div className="lg:hidden pb-28">
         {SelectedCarCard}
+
         <div className="px-2">
-          <div className="mt-2">{NoDepositBanner}</div>
+          {showNoDeposit ? <div className="mt-2">{NoDepositBanner}</div> : null}
           <div className="mt-2">{DeliveryCard}</div>
           <div className="mt-2">{ExtrasCard}</div>
           <div className="mt-2">{SummaryCard(false)}</div>
@@ -1037,86 +1331,27 @@ export default function InformationStep(): JSX.Element {
       <div className="hidden lg:block">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <div className="lg:col-span-8 space-y-4">
-            {NoDepositBanner}
+            {showNoDeposit ? NoDepositBanner : null}
             {DeliveryCard}
             {ExtrasCard}
             {PersonalInfoCard}
           </div>
 
-          <div className="lg:col-span-4 space-y-4">
+          <div className="lg:col-span-4 space-y-0">
             {SelectedCarCard}
-            {SummaryCard(true)}
+            <div className="mt-4">{SummaryCard(true)}</div>
           </div>
         </div>
       </div>
-
-      {/* ================= Location Dialog ================= */}
-      <ResponsiveLocationPicker
-        open={isLocationDialogOpen}
-        onOpenChange={setIsLocationDialogOpen}
-        title={isLocationReturn ? "محل عودت را انتخاب کنید" : "محل تحویل را انتخاب کنید"}
-        currencyLabel={currencyLabel}
-        places={activePlaces as any}
-        value={isLocationReturn ? returnLocation : deliveryLocation}
-        onChange={(next) => {
-          if (isLocationReturn) setReturnLocation(next);
-          else setDeliveryLocation(next);
-        }}
-      />
 
       {/* ================= InfoList ================= */}
       {isInfoListOpen && (
-        <InfoListDialog open={isInfoListOpen} onOpenChange={setIsInfoListOpen} onSelect={handleSelectUser} />
+        <InfoListDialog
+          open={isInfoListOpen}
+          onOpenChange={setIsInfoListOpen}
+          onSelect={handleSelectUser}
+        />
       )}
-    </div>
-  );
-}
-
-/* ================= SummaryRow (همین فایل) ================= */
-export function SummaryRow({
-  label,
-  value,
-  valueBefore,
-  subLabel,
-  valueHint,
-}: {
-  label: string;
-  value: string;
-  valueBefore?: string;
-  subLabel?: React.ReactNode;
-  valueHint?: React.ReactNode;
-}) {
-  const isFree = value.includes("رایگان");
-
-  const isDelivery = label.startsWith("محل تحویل:");
-  const isReturn = label.startsWith("محل عودت:");
-
-  const normalizedLabel = isDelivery ? "هزینه تحویل" : isReturn ? "هزینه عودت" : label;
-
-  const normalizedSub: React.ReactNode = isDelivery
-    ? label.replace("محل تحویل:", "").trim()
-    : isReturn
-      ? label.replace("محل عودت:", "").trim()
-      : subLabel ?? null;
-
-  return (
-    <div className="py-2">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 text-right">
-          <div className="text-sm text-gray-800 leading-5">{normalizedLabel}</div>
-          {normalizedSub ? <div className="text-xs text-gray-500 mt-1 leading-4">{normalizedSub}</div> : null}
-        </div>
-
-        <div className="text-left">
-          <div className="flex items-center gap-2 whitespace-nowrap">
-            {valueBefore ? <span className="text-xs text-gray-400 line-through">{valueBefore}</span> : null}
-
-            <span className={`text-sm ${isFree ? "text-gray-500" : "text-gray-800"}`}>{value}</span>
-          </div>
-
-          {valueHint ? <div className="mt-1 text-[10px] text-blue-600 font-medium text-left">{valueHint}</div> : null}
-        </div>
-      </div>
     </div>
   );
 }

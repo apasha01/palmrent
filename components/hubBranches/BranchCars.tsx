@@ -25,6 +25,7 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
   const locale = useLocale();
   const sliderRef = useRef<HTMLDivElement>(null);
 
+  // ✅ activeCity = slug
   const [activeCity, setActiveCity] = useState<string>("");
 
   useEffect(() => {
@@ -34,6 +35,7 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
     }
   }, [branches, activeCity]);
 
+  // ✅ برای گرفتن ماشین‌ها هنوز id لازم داری
   const activeBranchId = useMemo(() => {
     return (branches ?? []).find((b) => b.slug === activeCity)?.id ?? "";
   }, [branches, activeCity]);
@@ -46,7 +48,6 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
 
   const cars = carsData?.cars ?? [];
 
-  // ✅✅✅ currency/rate از API
   const currency = carsData?.currency ?? "";
   const rateToRial = carsData?.rate_to_rial ?? null;
 
@@ -63,6 +64,13 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
 
   const showSkeleton = carsLoading || isFetching;
 
+  // ✅✅✅ لینک مشاهده همه: با slug ساخته شود
+  // اگر روت شما locale دارد (مثل /fa/cars-rent/dubai) این را استفاده کن:
+  const viewAllHref = `/${locale}/cars-rent/${activeCity}`;
+
+  // اگر روت شما locale ندارد و فقط /cars-rent/dubai است، این را استفاده کن:
+  // const viewAllHref = `/cars-rent/${activeCity}`;
+
   return (
     <div className="w-full px-2 sm:px-0">
       <p className="text-xl md:text-3xl font-bold">
@@ -75,7 +83,6 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
 
       {/* Navigation Row */}
       <div className="flex items-center justify-between mt-6 mb-8 min-w-0">
-        {/* Tabs container */}
         <div className="min-w-0">
           <div
             className="overflow-x-auto whitespace-nowrap scrollbar-hide max-w-full min-w-0"
@@ -107,7 +114,6 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
           </div>
         </div>
 
-        {/* Arrows (md+) */}
         <div className="hidden md:flex gap-2 shrink-0">
           <Button size="icon" type="button" variant="outline" onClick={scrollRight}>
             <ChevronRight className="w-6 h-6 text-gray-700" />
@@ -169,7 +175,6 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
         ) : (
           cars.map((car: any) => (
             <div key={car.id} className="shrink-0 w-[330px] sm:w-[360px] md:w-[380px]">
-              {/* ✅✅✅ currency/rate را پاس می‌دهیم */}
               <SingleCar data={car} currency={currency} rateToRial={rateToRial} />
             </div>
           ))
@@ -178,7 +183,7 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
 
       {/* View All Button */}
       <div className="flex justify-center">
-        <Link href={`cars-rent/${activeBranchId}`}>
+        <Link href={viewAllHref}>
           <Button
             variant="outline-primary"
             size="lg"
