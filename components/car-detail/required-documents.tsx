@@ -1,4 +1,5 @@
-import { FileCheck, FileText, CreditCard, Camera } from 'lucide-react'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { FileCheck, FileText, CreditCard, Camera, Info } from 'lucide-react'
 
 const documentsIran = [
   { icon: FileText, label: 'پاسپورت' },
@@ -13,16 +14,16 @@ const documentsUAE = [
   { icon: Camera, label: 'عکس بلیت (در صورت تحویل در فرودگاه)' },
 ]
 
-export function RequiredDocuments() {
+export function RequiredDocuments(branch:any) {
   return (
-    <div className="mt-4 pt-4">
+    <div className=" ">
       <h3 className="text-gray-900 font-semibold mb-4">مدارک مورد نیاز برای اجاره کیا سلتوس در دبی</h3>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border rounded-lg p-4">
         {/* For Iran Residents */}
         <div>
-          <h4 className="text-teal-600 font-medium mb-3 flex items-center gap-2">
-            <span className="w-2 h-2 bg-teal-500 rounded-full"></span>
+          <h4 className=" font-medium mb-3 flex items-center gap-2">
+            <span className="w-2 h-2  rounded-full"></span>
             برای افراد مقیم ایران
           </h4>
           <ul className="space-y-2">
@@ -37,8 +38,8 @@ export function RequiredDocuments() {
 
         {/* For UAE Residents */}
         <div>
-          <h4 className="text-teal-600 font-medium mb-3 flex items-center gap-2">
-            <span className="w-2 h-2 bg-teal-500 rounded-full"></span>
+          <h4 className="font-medium mb-3 flex items-center gap-2">
+            <span className="w-2 h-2  rounded-full"></span>
             برای افراد مقیم امارات
           </h4>
           <ul className="space-y-2">
@@ -50,11 +51,14 @@ export function RequiredDocuments() {
             ))}
           </ul>
         </div>
-      </div>
 
-      <p className="text-gray-500 text-xs mt-4">
+              <p className="text-gray-500 text-xs  flex gap-2 items-center">
+                <Info width={12} height={12}/>
         مدارک معتبر است با ملیت‌ها و ویزا همراه داشته باشید.
       </p>
+      </div>
+
+
     </div>
   )
 }

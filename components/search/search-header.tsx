@@ -318,19 +318,22 @@ export default function SearchHeader({
               {/* ✅ حالت قبلی دسکتاپ */}
               <div className="w-full overflow-x-auto hide-scrollbar">
                 <div className="w-full md:min-w-0 flex justify-between items-center text-xs">
-                  <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
-                    <CalendarDays className="h-4 w-4 " />
-                    <span className="font-semibold">تاریخ و زمان عودت</span>
-                    <span>
-                      {returnDateText} &nbsp; ساعت {toPersianDigits(normalizeTime(returnTime))}
-                    </span>
-                  </div>
+
 
                   <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
                     <CalendarDays className="h-4 w-4 " />
                     <span className="font-semibold">تاریخ و زمان تحویل</span>
                     <span>
                       {deliveryDateText} &nbsp; ساعت {toPersianDigits(normalizeTime(deliveryTime))}
+                    </span>
+                  </div>
+
+
+                  <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
+                    <CalendarDays className="h-4 w-4 " />
+                    <span className="font-semibold">تاریخ و زمان عودت</span>
+                    <span>
+                      {returnDateText} &nbsp; ساعت {toPersianDigits(normalizeTime(returnTime))}
                     </span>
                   </div>
 

@@ -4,6 +4,7 @@ import { IconBarcode, IconCalender2, IconCalenderTick, IconClock, IconContact, I
 import { useEffect, useState } from "react";
 import { SingleCarOptions } from "../components/card/CarsCard";
 import { useTranslations } from "next-intl";
+import { STORAGE_URL } from "@/lib/apiClient";
 
 
 function formatDate(isoString) {
@@ -129,8 +130,8 @@ export function ReservationDetail({from,to,deliveryPlace,returnPlace,resDays,car
                         {car_name + ' ' + car_year}
                     </div>
                 </div>
-                <div className="relative w-full max-h-[350px] animate-skeleton">
-                    <Image className={`rounded-lg w-full h-full object-cover`} src={image} width={581} height={307} alt=''></Image>
+                <div className="relative w-full max-h-87.5 animate-skeleton">
+                    <Image className={`rounded-lg w-full h-full object-cover`} src={`${STORAGE_URL}${image}`} width={581} height={307} alt=''></Image>
                     <div className="flex text-[#0B835C] text-[10px] absolute gap-2 text-nowrap top-2 rtl:right-2 ltr:left-2 w-full overflow-hidden flex-wrap">
                         {options.map((item,index)=>{
                             return(

@@ -1,45 +1,49 @@
-export function CarDescription() {
+"use client";
+
+import React, { useMemo } from "react";
+import DOMPurify from "dompurify";
+
+type CarDescriptionProps = {
+  html?: string | null;
+  title?: string | null;
+};
+
+export function CarDescription({ html, title }: CarDescriptionProps) {
+  const cleanHtml = useMemo(() => {
+    const raw = html || "";
+
+    // ✅ HTML رو پاک‌سازی کن (script و چیزای خطرناک حذف میشه)
+    const sanitized = DOMPurify.sanitize(raw, {
+      USE_PROFILES: { html: true },
+      ADD_ATTR: ["target", "rel"],
+    });
+
+    return sanitized;
+  }, [html]);
+
+  if (!cleanHtml || cleanHtml.trim().length === 0) return null;
+
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm">
-      <h2 className="text-lg font-bold text-gray-900 mb-4">در باره کیا سلتوس ۲۰۲۳ در دبی</h2>
-      
-      <div className="space-y-4 text-gray-600 text-sm leading-relaxed">
-        <div>
-          <h3 className="font-bold text-gray-900 mb-2">معرفی کیا سلتوس ۲۰۲۳</h3>
-          <p>
-            کیا سلتوس ۲۰۲۳ یک کراس‌اوور شیرین، خوش‌فرم و اقتصادی است که برای رانندگی روزمره در دبی گزینه‌ی مطمئبی محبوب است. ارتفاع
-            از سطح زمین، دید خوب راننده، فضای کافی برای سرنشینان و مصرف سوخت منطقی باعث می‌شود برای سفرهای‌های شهری و هم برای
-            گردش و خرید در مراکز خرید‌ها دبی انتخاب ایده‌آل برای رزرو باشد.
-          </p>
-        </div>
+    <div className="rounded-xl p-2">
+      <h2 className="text-lg font-bold text-gray-900 mb-4">
+        {title || "توضیحات"}
+      </h2>
 
-        <div>
-          <h3 className="font-bold text-gray-900 mb-2">چرا اجاره کیا سلتوس ۲۰۲۳ در دبی انتخاب خوبی است؟</h3>
-          <p>
-            دبی شهری است که بیشتر مسیرها با خودرو انجام می‌شود. غالبا و دیدن‌نشین گرفته تا خرید، دبی‌مالی، مراکز خرید ۲۰۲۳ با تعادل
-            جمع‌وجور و در عین حال کاملی خدران، جای پارک کردن در شهر راحت‌تر، قیمت پایه پایین است که برای خانواده‌های کوچک یا سفر دونفره، تعادل
-            خودش را دارد و هزینه‌ی اجاره ارزان می‌رهد.
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-bold text-gray-900 mb-2">مناسب چه نوع سفرهایی است؟</h3>
-          <p>
-            این خودرو برای سفرهای شهری، کارهای روزمره، کلاس، رفت‌وآمد بین هتل و مراکز خرید، و همچنین مسیرهای متوسط عالی، ابعاد مناسب
-            است. اگر دنبال خودروی جمع‌وجور هستید که هم ظاهر شیک داشته باشد و هم هزینه‌ی تکان ندهد، و مصرف سوخت اقتصادی، سلتوس ۲۰۲۳
-            معمولا یکی از بهترین انتخاب‌ها در ترکیبی کرایه خودرو اقتصادی است.
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-bold text-gray-900 mb-2">نکات مهم قبل از رزرو در دبی</h3>
-          <p>
-            قیمت‌ها در مناسبت‌ها، تعداد روزها، فصل، سفر (ایرک یا اپیرنگ)، محل تحویل (در هتل/فرودگاه) و ویژا بستگی دارد.
-            پیشنهاد می‌شود اگر تاریخ و ساعت تحویل و عودت را در فرم رزرو وارد کنید تا نهایت دقیق و شرایط همان نمایش داده شود. اگر گزینه‌های
-            مثل بدون ودیعه با شرایط ویژه‌ای وجود داشته باشد، در همین صفحه مشخص خواهد شد.
-          </p>
-        </div>
+      <div className="border p-4 rounded-lg">
+        {/* ✅ استایل‌دهی به HTML خروجی */}
+        <div
+          className="
+            // prose prose-sm max-w-none
+            // prose-headings:font-bold prose-headings:text-gray-900
+            // prose-p:text-gray-600 prose-p:leading-relaxed
+            // prose-strong:text-gray-900
+            // prose-a:text-blue-600 hover:prose-a:text-blue-700
+            // prose-img:rounded-xl prose-img:shadow
+            // prose-ul:text-gray-600 prose-ol:text-gray-600
+          "
+          dangerouslySetInnerHTML={{ __html: cleanHtml }}
+        />
       </div>
     </div>
-  )
+  );
 }

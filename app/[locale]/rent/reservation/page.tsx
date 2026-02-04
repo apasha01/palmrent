@@ -47,12 +47,6 @@ export default function ReservationPage(): any {
     const params = new URLSearchParams(searchParams.toString());
     params.set("status", "upload");
     if (rentId) params.set("rentid", String(rentId));
-
-    // اگر می‌خوای URL تمیز شه:
-    // params.delete("paid");
-    // params.delete("trace");
-    // params.delete("reason");
-
     router.replace(`${pathname}?${params.toString()}`);
   };
 
@@ -62,12 +56,16 @@ export default function ReservationPage(): any {
     try {
       setError(null);
 
-      // ✅ getRentStatus باید خودش data را برگرداند
       const data: any = await getRentStatus(locale, rentId);
-      setRentData(data);
 
-      console.log("rent status:", data);
-      return data;
+      // ✅ اگر سرویس شما کل آبجکت {status,data} برمی‌گردونه، data.data رو بگیر
+      // اگر مستقیم data رو برمی‌گردونه، همون رو نگه دار
+      const normalized = data?.data ? data.data : data;
+
+      setRentData(normalized);
+      console.log("rent status:", normalized);
+
+      return normalized;
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || "خطا در ارتباط با سرور");
       return null;
@@ -128,7 +126,7 @@ export default function ReservationPage(): any {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rentId, statusParam, locale]);
 
-  // ✅ وقتی در initialize تایید شد، URL رو ببر روی payment (بدون رفرش)
+  // ✅ وقتی در initialize تایید شد، URL رو ببر روی payment
   useEffect(() => {
     if (statusParam !== "initialize") return;
     if (!rentData) return;
@@ -153,9 +151,10 @@ export default function ReservationPage(): any {
   // ---------------------------
   // تصمیم رندر کارت‌ها
   // ---------------------------
-
   if (!rentId) return <FailedCard />;
   if (error) return <FailedCard />;
+
+  // وقتی هنوز دیتایی نداریم
   if (loading && !rentData) return <ProcessingCard />;
 
   const isPending =
@@ -169,17 +168,16 @@ export default function ReservationPage(): any {
 
   // ✅ initialize
   if (statusParam === "initialize") {
-    if (isPending) return <ProcessingCard />;
+    if (isPending) return <ProcessingCard rentData={rentData} />;
     if (isRejected) return <RejectedCard />;
-    if (isApproved) return <ProcessingCard />; // useEffect میبره payment
-    return <ProcessingCard />;
+    if (isApproved) return <ProcessingCard rentData={rentData} />; // useEffect میبره payment
+    return <ProcessingCard rentData={rentData} />;
   }
 
   // ✅ payment
   if (statusParam === "payment") {
     if (isRejected) return <RejectedCard />;
 
-    // ✅ اگر پرداخت موفق شد، کارت موفقیت + فاکتور + دکمه آپلود
     if (paid) {
       return (
         <PaymentSuccessCard
@@ -190,8 +188,6 @@ export default function ReservationPage(): any {
       );
     }
 
-    // ✅ اگر پرداخت ناموفق شد (اختیاری: میتونی کارت جدا براش بسازی)
-    // فعلاً همون PaymentCard رو میده که دوباره پرداخت کنه
     return (
       <PaymentCard
         rentData={rentData}

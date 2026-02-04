@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Image from 'next/image'
 import { Car, Fuel, Users, Briefcase, Check } from 'lucide-react'
 import { STORAGE_URL } from '@/lib/apiClient'
@@ -29,9 +30,9 @@ const similarCars = [
   },
 ]
 
-export function SimilarCars() {
+export function SimilarCars(items:any) {
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm">
+    <div className="rounded-xl p-2 ">
       <h2 className="text-lg font-bold text-gray-900 mb-4">خودروهای مشابه</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

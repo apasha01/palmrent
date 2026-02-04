@@ -10,9 +10,9 @@ const withNextIntl = createNextIntlPlugin({
 const nextConfig: NextConfig = {
   reactStrictMode: false,
   env: {
-    NEXT_PUBLIC_API_URL: "https://temp.palmrentcar.com/api",
+    // NEXT_PUBLIC_API_URL: "https://temp.palmrentcar.com/api",
     // NEXT_PUBLIC_API_URL: "http://192.168.100.31:8000/api",
-    // NEXT_PUBLIC_API_URL: "http://localhost:8000/api",
+    NEXT_PUBLIC_API_URL: "http://127.0.0.1:8000/api",
     NEXT_PUBLIC_STORAGE_URL: "https://cdn.palmrentcar.com/",
 
     NEXTAUTH_URL: "http://localhost:3000",
@@ -22,10 +22,18 @@ const nextConfig: NextConfig = {
   images: {
     // unoptimized: true,
     remotePatterns: [
+            { protocol: 'https', hostname: 'picsum.photos' },
+      { protocol: 'https', hostname: 'commondatastorage.googleapis.com' },
       {
         protocol: "https",
         hostname: "cdn.palmrentcar.com",
         pathname: "/**",
+      },
+
+            {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
       },
     ],
   },

@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { PhoneInput } from "react-international-phone";
 import "react-international-phone/style.css";
-import { ChevronDown, Info, UserSearch, Coins } from "lucide-react";
+import { Info, UserSearch, Coins } from "lucide-react";
 import { api } from "@/lib/apiClient";
 import { toast } from "react-toastify";
 import { STORAGE_URL } from "../../lib/apiClient";
@@ -361,19 +361,6 @@ export default function InformationStep(): JSX.Element {
       : [];
   }, [apiData]);
 
-  const delPlace = activePlaces.find(
-    (p) => p && String((p as any).id) === String(deliveryLocation.location),
-  );
-  const delTitle = delPlace
-    ? (delPlace as any).title
-    : "محل تحویل خودرو را انتخاب کنید";
-
-  const retPlace = activePlaces.find(
-    (p) => p && String((p as any).id) === String(returnLocation.location),
-  );
-  const retTitle = retPlace
-    ? (retPlace as any).title
-    : "محل عودت خودرو را انتخاب کنید";
 
   // ✅✅✅ FIX: currencyLabel باید قبل از totals ساخته بشه (تا داخل totals استفاده کنیم)
   const currencyLabel = useMemo(() => {
@@ -713,6 +700,10 @@ if (Array.isArray(apiData.places)) {
         from: carDates[0],
         to: carDates[1],
 
+        // ✅✅✅ اضافه شد: ساعت تحویل/عودت
+        dt: normalizeTime(dt),
+        rt: normalizeTime(rt),
+
         place_delivery: (deliveryLocation as any).location,
         address_delivery: delNeed ? (deliveryLocation as any).address || "" : "",
 
@@ -727,6 +718,9 @@ if (Array.isArray(apiData.places)) {
             : (deliveryLocation as any).address || ""
           : "",
 
+        // ✅ اگر بک‌اندت از این استفاده می‌کنه حتما بفرست (تو کد بک‌اند هست)
+        place_r_custom: returnDifferent ? "yes" : "no",
+
         first_name: userInfo.name,
         last_name: ".",
         phone: userInfo.phone,
@@ -734,6 +728,7 @@ if (Array.isArray(apiData.places)) {
         option_check: selectedOptions,
         insurance_complete: insuranceComplete ? "yes" : "no",
       };
+
 
       const res: any = await api.post(
         `/car/rent/${selectedCarId}/${locale}/registration`,
