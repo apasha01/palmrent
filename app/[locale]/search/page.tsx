@@ -87,7 +87,7 @@ function SearchResultPageContent() {
   const pathname = usePathname();
 
   // =========================================================
-  // ✅ isMobile WITHOUT matchMedia (NO mql)
+  // ✅ isMobile
   // =========================================================
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window !== "undefined")
@@ -214,33 +214,36 @@ function SearchResultPageContent() {
   );
 
   // =========================================================
-  // ✅ Close sheet -> go step 1 + clear car_id
+  // ✅✅✅ FIX: بستن شیت => برگشت به step 2 (نه step 1)
   // =========================================================
-  const closeSheetToStep1 = useCallback(() => {
+  const closeSheetToStep2 = useCallback(() => {
     setIsMobileInfoOpen(false);
     setSelectedCarId(null);
-    setRoadMapStep(1);
 
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("step", "1");
-    params.delete("car_id");
+    // ✅ برگرد به لیست
+    setRoadMapStep(2);
 
-    // موبایل: URL لازم نیست تغییر کنه
+    // ✅ موبایل: URL رو دست نزن
     if (isMobile) return;
+
+    // ✅ دسکتاپ: step=2 و حذف car_id
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("step", "2");
+    params.delete("car_id");
 
     navModeRef.current = "push";
     navigateTo(params.toString());
   }, [
+    isMobile,
     navigateTo,
     searchParams,
+    setIsMobileInfoOpen,
     setRoadMapStep,
     setSelectedCarId,
-    setIsMobileInfoOpen,
-    isMobile,
   ]);
 
   // =========================================================
-  // ✅ IMPORTANT: prevent "initial onOpenChange(false)" bug
+  // ✅ prevent "initial onOpenChange(false)" bug
   // =========================================================
   const wasSheetOpenRef = useRef(false);
   useEffect(() => {
@@ -270,8 +273,8 @@ function SearchResultPageContent() {
     const maxP = searchParams.get("max_p");
 
     if (fromQ && toQ) {
-      const curFrom = carDates?.[0] ?? null;
-      const curTo = carDates?.[1] ?? null;
+      const curFrom = (carDates as any)?.[0] ?? null;
+      const curTo = (carDates as any)?.[1] ?? null;
       if (curFrom !== fromQ || curTo !== toQ) setCarDates([fromQ, toQ]);
     }
 
@@ -415,9 +418,21 @@ function SearchResultPageContent() {
   }, [roadMapStep, isMobile]);
 
   // =========================================================
+  // ✅ GUARD برای جلوگیری از خراب کردن URL
+  // =========================================================
+  const urlFrom = searchParams.get("from");
+  const urlTo = searchParams.get("to");
+  const urlCarId = searchParams.get("car_id");
+
+  // =========================================================
   // ✅ sync URL from store (store -> URL)
   // =========================================================
   useEffect(() => {
+    const needsHydration =
+      (urlFrom && urlTo && (!from || !to)) || (urlCarId && !selectedCarId);
+
+    if (needsHydration) return;
+
     const params = new URLSearchParams(searchParams.toString());
     const dt = normalizeTime(deliveryTime);
     const rt = normalizeTime(returnTime);
@@ -473,43 +488,18 @@ function SearchResultPageContent() {
 
     navigateTo(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKey, roadMapStep, selectedCarId, isMobileInfoOpen]);
+  }, [
+    filterKey,
+    roadMapStep,
+    selectedCarId,
+    isMobileInfoOpen,
 
-  // =========================================================
-  // ✅ Step click
-  // =========================================================
-  const handleStepClick = useCallback(
-    (targetStep: number) => {
-      const stepSafe = Number.isFinite(targetStep)
-        ? Math.min(4, Math.max(1, targetStep))
-        : 1;
-
-      navModeRef.current = "push";
-
-      if (isMobile && stepSafe === 3) {
-        setFrozenOffset(topOffset);
-        setIsMobileInfoOpen(true);
-        if (roadMapStep !== 2) setRoadMapStep(2);
-        return;
-      }
-
-      if (stepSafe === 1) {
-        closeSheetToStep1();
-        return;
-      }
-
-      if (isMobile) setIsMobileInfoOpen(false);
-      setRoadMapStep(stepSafe);
-    },
-    [
-      isMobile,
-      topOffset,
-      roadMapStep,
-      setRoadMapStep,
-      closeSheetToStep1,
-      setIsMobileInfoOpen,
-    ],
-  );
+    urlFrom,
+    urlTo,
+    urlCarId,
+    from,
+    to,
+  ]);
 
   const uiStep = useMemo(() => {
     if (isMobile && isMobileInfoOpen) return 3;
@@ -643,6 +633,56 @@ function SearchResultPageContent() {
 
   const shouldRenderOuterChrome = !(isMobile && isMobileInfoOpen);
 
+  // =========================================================
+  // ✅ Step click
+  // =========================================================
+  const handleStepClick = useCallback(
+    (targetStep: number) => {
+      const stepSafe = Number.isFinite(targetStep)
+        ? Math.min(4, Math.max(1, targetStep))
+        : 1;
+
+      navModeRef.current = "push";
+
+      // موبایل: Step3 یعنی باز کردن شیت
+      if (isMobile && stepSafe === 3) {
+        setFrozenOffset(topOffset);
+        setIsMobileInfoOpen(true);
+        if (roadMapStep !== 2) setRoadMapStep(2);
+        return;
+      }
+
+      // رفتن به step 1 فقط وقتی کاربر خودش زد
+      if (stepSafe === 1) {
+        setIsMobileInfoOpen(false);
+        setSelectedCarId(null);
+        setRoadMapStep(1);
+
+        if (isMobile) return;
+
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("step", "1");
+        params.delete("car_id");
+
+        navigateTo(params.toString());
+        return;
+      }
+
+      if (isMobile) setIsMobileInfoOpen(false);
+      setRoadMapStep(stepSafe);
+    },
+    [
+      isMobile,
+      topOffset,
+      roadMapStep,
+      setRoadMapStep,
+      setIsMobileInfoOpen,
+      setSelectedCarId,
+      searchParams,
+      navigateTo,
+    ],
+  );
+
   return (
     <>
       {shouldRenderOuterChrome && (
@@ -667,23 +707,24 @@ function SearchResultPageContent() {
         </>
       )}
 
-      {/* ✅✅ FIX اصلی همینجاست */}
       <div className="step-stage">
-        {/* موبایل: حتی اگر selectedCarId پر شد هم لیست باید بمونه */}
+        {/* ✅ موبایل: حتی وقتی ماشین انتخاب شد هم لیست باید بمونه */}
         {step1Done && (isMobile ? true : !selectedCarId) && (
           <div className="step-layer">{renderCarsStep()}</div>
         )}
 
-        {/* دسکتاپ: وقتی ماشین انتخاب شد info بیاد */}
+        {/* ✅ دسکتاپ: وقتی ماشین انتخاب شد info بیاد */}
         {!isMobile && selectedCarId && (
           <div className="step-layer">{renderInfoStep()}</div>
         )}
       </div>
 
+      {/* ===================== MOBILE SHEET ===================== */}
       <Sheet
         open={Boolean(isMobileInfoOpen)}
         onOpenChange={(open) => {
-          if (wasSheetOpenRef.current && !open) closeSheetToStep1();
+          // ✅ فقط اگر واقعا قبلاً باز بوده و الان بسته شد
+          if (wasSheetOpenRef.current && !open) closeSheetToStep2();
         }}
       >
         <SheetContent
@@ -706,10 +747,7 @@ function SearchResultPageContent() {
           <div className="min-h-full">
             <div className="sticky top-0 z-50 bg-white dark:bg-background border-b">
               <div className="flex items-center">
-                <SheetClose
-                  className="pr-4"
-                  onClick={() => closeSheetToStep1()}
-                >
+                <SheetClose className="pr-4" onClick={() => closeSheetToStep2()}>
                   <ArrowRight />
                 </SheetClose>
 

@@ -17,6 +17,7 @@
       }
     ],
     "axe/keyboard": "off",
-    "axe/aria": "off"
+    "axe/aria": "off",
+    "axe/forms": "off"
   }
 }

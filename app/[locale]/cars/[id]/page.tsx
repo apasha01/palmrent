@@ -7,20 +7,21 @@ import { CarFeatures } from "@/components/car-detail/car-features";
 import FAQcardetail from "@/components/car-detail/Faq-car-detail";
 import { ImageGallery } from "@/components/car-detail/image-gallery";
 import { PricingCard } from "@/components/car-detail/pricing-card";
+
 import { RequiredDocuments } from "@/components/car-detail/required-documents";
-import { ReviewsSection } from "@/components/car-detail/reviews-section";
 import { SimilarCars } from "@/components/car-detail/similar-cars";
 import { TechnicalSpecs } from "@/components/car-detail/technical-specs";
 
 import { getLocale } from "next-intl/server";
-
 import { Car, Fuel, Users, Briefcase, Heart, Share2 } from "lucide-react";
 import { getCarDetail } from "@/services/car-detail/car-detail.api";
+import { MobilePriceBar } from "@/components/car-detail/mobile-price-bar";
+
+import Script from "next/script";
 
 type FeatureChip = { label: string; active: boolean };
 
 function buildFeaturesFromApi(car: any): FeatureChip[] {
-
   const depositNum = Number(car?.deposit ?? 0);
 
   return [
@@ -41,10 +42,9 @@ export default async function CarRentalPage({
 
   const car = await getCarDetail(id, locale);
 
-  // اگر از بک چیزی نیومد یا خطا شد
   if (!car) {
     return (
-      <div className="">
+      <div>
         <Header />
         <main className="max-w-7xl mx-auto px-2 md:p-0 py-10 mt-4">
           <div className="rounded-xl border p-6 text-center">
@@ -62,32 +62,96 @@ export default async function CarRentalPage({
   const features = buildFeaturesFromApi(car).filter((f) => f.active);
 
   return (
-    <div className="">
-      <Header />
+    <div className="bg-white">
+      <Header shadowLess={true} />
 
-      <main className="max-w-7xl mx-auto px-2 md:p-0  mt-2">
-        {/* Image Gallery */}
-<ImageGallery media={[car.video, ...(car.photos ?? [])]} />
+      {/* ✅ اسکریپت داخل همین صفحه (بدون کامپوننت جدا) */}
+      <Script id="pricing-sticky-top" strategy="afterInteractive">{`
+        (function () {
+          // حالت‌ها:
+          // پایین رفتن = 4px
+          // بالا برگشتن (هدر میاد) = 80px
+          var DOWN_TOP = 4;
+          var UP_TOP = 80;
 
+          // مقدار اولیه
+          document.documentElement.style.setProperty('--pricing-top', DOWN_TOP + 'px');
 
-        {/* Main Content */}
+          var lastY = window.scrollY || 0;
+          var ticking = false;
+
+          function headerVisible() {
+            var el = document.getElementById('site-fixed-header');
+            if (!el) return false;
+            var r = el.getBoundingClientRect();
+            // اگر بخشی از هدر روی صفحه دیده میشه
+            return r.bottom > 0;
+          }
+
+          function update() {
+            ticking = false;
+            var y = window.scrollY || 0;
+            var goingUp = y < lastY;
+
+            // اگر رو به بالا رفتی یا هدر visible شد => top بزرگ‌تر
+            // اگر رو به پایین رفتی و هدر قایم شد => top کوچک
+            var nextTop = (goingUp || headerVisible()) ? UP_TOP : DOWN_TOP;
+
+            document.documentElement.style.setProperty('--pricing-top', nextTop + 'px');
+            lastY = y;
+          }
+
+          function onScroll() {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(update);
+          }
+
+          window.addEventListener('scroll', onScroll, { passive: true });
+          window.addEventListener('resize', onScroll);
+
+          // یکبار هم اولش sync
+          onScroll();
+        })();
+      `}</Script>
+
+      <main className="max-w-7xl mx-auto px-2 md:p-0 mt-2">
+        <ImageGallery media={[car.video, ...(car.photos ?? [])]} />
+
         <div className="md:mt-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Side - Pricing (✅ در موبایل میاد بالا) */}
+          {/* ================== LEFT / PRICING ================== */}
           <div className="lg:col-span-1 order-1 lg:order-2">
-<PricingCard
-  car={car}
-  dailyPrice={car.daily_price}
-  deposit={car.deposit}
-  currency={car.currency}
-  offPercent={car.off_percent}
-  whatsapp={car.whatsapp}
-/>
+            {/* ✅ Desktop sticky با top داینامیک */}
+  <div
+  className="hidden lg:block self-start sticky z-10 transition-[top] duration-300 ease-out"
+  style={{ top: "var(--pricing-top, 4px)" }}
+>
 
+              <PricingCard
+                car={car}
+                dailyPrice={car.daily_price}
+                deposit={car.deposit}
+                currency={car.currency}
+                offPercent={car.off_percent}
+                whatsapp={car.whatsapp}
+              />
+            </div>
+
+            {/* ✅ Mobile: کارت قیمت داخل جریان */}
+            <div id="mobile-pricing-card" className="lg:hidden">
+              <PricingCard
+                car={car}
+                dailyPrice={car.daily_price}
+                deposit={car.deposit}
+                currency={car.currency}
+                offPercent={car.off_percent}
+                whatsapp={car.whatsapp}
+              />
+            </div>
           </div>
 
-          {/* Right Side - Main Info (✅ در موبایل میره پایین) */}
+          {/* ================== RIGHT / CONTENT ================== */}
           <div className="lg:col-span-2 space-y-2 order-2 lg:order-1">
-            {/* Title and Quick Info */}
             <div className="rounded-xl p-4">
               <div className="flex items-center justify-between mb-4">
                 <h1 className="text-xl font-bold text-gray-900">{car.title}</h1>
@@ -105,7 +169,6 @@ export default async function CarRentalPage({
                 </div>
               </div>
 
-              {/* Car Quick Specs */}
               <div className="flex gap-2 justify-between flex-col md:flex-row">
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 pb-4">
                   <div className="flex items-center gap-1">
@@ -141,38 +204,34 @@ export default async function CarRentalPage({
                 </div>
               </div>
 
-              {/* Required Documents */}
               <RequiredDocuments branch={car.branch} />
             </div>
 
-            {/* Technical Specifications */}
             <TechnicalSpecs car={car} />
-
-            {/* Features */}
             <CarFeatures car={car} />
 
-            {/* Reviews */}
-            <ReviewsSection carId={car.id} />
-
-            {/* FAQ */}
             <div className="mt-6">
               <FAQcardetail carId={car.id} />
             </div>
 
-            {/* Similar Cars */}
-            <SimilarCars items={car.similar_cars} locale={locale} />
+            <SimilarCars items={car.similar_cars} currency={car.currency} />
 
-            {/* Description */}
-        <CarDescription
-  html={car.text}
-  title={`درباره ${car.title} در ${car.branch}`}
-/>
-
+            <CarDescription
+              html={car.text}
+              title={`درباره ${car.title} در ${car.branch}`}
+            />
           </div>
         </div>
       </main>
 
       <Footer />
+
+      <MobilePriceBar
+        car={car}
+        dailyPrice={car.daily_price}
+        currency={car.currency}
+        offPercent={car.off_percent}
+      />
     </div>
   );
 }

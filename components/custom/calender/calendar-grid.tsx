@@ -1,8 +1,25 @@
-import { getDaysInMonth, jalaliMonthNames, persianNumbers, weekDaysJalali, weekDaysGregorian, jalaliToDate } from "@/lib/date-utils"
-import { cn } from "@/lib/utils"
-// اضافه کردن jalaliToDate
+'use client';
 
-export function CalendarGrid({ year, month, range, onSelect, isJalali }) {
+import {
+  getDaysInMonth,
+  jalaliMonthNames,
+  persianNumbers,
+  weekDaysJalali,
+  weekDaysGregorian,
+  jalaliToDate,
+} from "@/lib/date-utils"
+import { cn } from "@/lib/utils"
+import type { Range } from "./date-range-picker"
+
+type CalendarGridProps = {
+  year: number
+  month: number
+  range: Range
+  onSelect: (date: Date) => void
+  isJalali: boolean
+}
+
+export function CalendarGrid({ year, month, range, onSelect, isJalali }: CalendarGridProps) {
   const daysInMonth = getDaysInMonth(year, month, isJalali ? "jalali" : "gregorian")
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)
 

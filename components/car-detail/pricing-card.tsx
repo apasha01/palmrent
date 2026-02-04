@@ -10,6 +10,7 @@ import {
   Info,
   ChevronLeft,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { formatJalaliDate } from "@/lib/date-utils";
 import { DateRangePickerPopover } from "../custom/calender/date-range-picker";
@@ -46,6 +47,21 @@ function toFaDigits(input: string) {
     .join("");
 }
 
+function toEnDigits(input: string) {
+  if (!input) return "";
+  const fa = "۰۱۲۳۴۵۶۷۸۹";
+  const ar = "٠١٢٣٤٥٦٧٨٩";
+  let s = String(input);
+
+  for (let i = 0; i < 10; i++) {
+    s = s.replaceAll(fa[i], String(i)).replaceAll(ar[i], String(i));
+  }
+
+  // حذف کاراکترهای RTL/LTR و فاصله‌های نامرئی
+  s = s.replace(/[\u200E\u200F\u202A-\u202E]/g, "").trim();
+  return s;
+}
+
 function formatTimeFa(t: string) {
   return toFaDigits(t);
 }
@@ -62,7 +78,7 @@ function yesNoFa(v: any, yesText: string, noText: string) {
 function formatMoneyFa(value: any) {
   if (value === null || value === undefined) return "—";
   const str = String(value);
-  const num = Number(str);
+  const num = Number(toEnDigits(str));
   if (Number.isFinite(num)) {
     const fixed = num % 1 === 0 ? num.toFixed(0) : num.toFixed(2);
     return toFaDigits(fixed);
@@ -94,6 +110,7 @@ export type DailyPriceItem = {
 
 export type PricingCarMeta = {
   id: number;
+  branch_id?: number | null; // ✅ اضافه شد
   title?: string | null;
   branch?: string | null;
 
@@ -110,6 +127,7 @@ export type PricingCardProps = {
   currency?: string | null;
   offPercent?: number | null;
 
+  // قبلاً برای واتساپ بود، دیگه استفاده نمی‌کنیم
   whatsapp?: string | null;
 };
 
@@ -119,8 +137,8 @@ export function PricingCard({
   deposit,
   currency,
   offPercent,
-  whatsapp,
 }: PricingCardProps) {
+  const router = useRouter();
   const defaults = React.useMemo(() => buildDefault(), []);
 
   const [range, setRange] = React.useState<PickerRange>(defaults.range);
@@ -167,24 +185,41 @@ export function PricingCard({
       ? `اجاره ${car.title}`
       : "اجاره خودرو";
 
+  // ✅✅✅ رزرو: رفتن به صفحه Search با from/to/dt/rt + car_id + branch_id
   const handleReserve = () => {
-    if (whatsapp) {
-      const phone = String(whatsapp).replace(/\D/g, "");
-      const msg = car?.title
-        ? `سلام. درخواست رزرو ${car.title} را دارم.`
-        : "سلام. درخواست رزرو خودرو را دارم.";
-      const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(
-        msg
-      )}`;
-      window.open(url, "_blank", "noopener,noreferrer");
-      return;
-    }
+    const safeStart = range?.start ?? defaults.range.start;
+    const safeEnd = range?.end ?? defaults.range.end;
+
+    const fromFa = safeStart ? formatJalaliDate(safeStart) : "";
+    const toFa = safeEnd ? formatJalaliDate(safeEnd) : "";
+
+    const from = toEnDigits(fromFa);
+    const to = toEnDigits(toFa);
+
+    const dt = toEnDigits(deliveryTime || defaults.deliveryTime);
+    const rt = toEnDigits(returnTime || defaults.returnTime);
+
+    const branchId = Number(car?.branch_id ?? 0);
+    const carId = Number(car?.id ?? 0);
+
+    // ✅ اگر تاریخ‌ها به هر دلیلی خالی شدن، نرو که همون مشکل skeleton پیش میاد
+    if (!branchId || !from || !to || !dt || !rt || !carId) return;
+
+    const params = new URLSearchParams();
+    params.set("branch_id", String(branchId));
+    params.set("from", from);
+    params.set("to", to);
+    params.set("dt", dt);
+    params.set("rt", rt);
+    params.set("step", "3");
+    params.set("car_id", String(carId));
+
+    router.push(`/search?${params.toString()}`);
   };
 
   // ✅ بخش بالا (قیمت‌ها + اطلاعات)
   const TopContent = (
     <>
-      {/* Header */}
       <div className="p-4">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-gray-700 font-medium text-base">{titleText}</h2>
@@ -196,7 +231,6 @@ export function PricingCard({
           )}
         </div>
 
-        {/* Pricing Table */}
         <div className="space-y-3 mb-6">
           {pricingOptions.length === 0 ? (
             <div className="text-sm text-gray-500">قیمت‌ها موجود نیست.</div>
@@ -235,7 +269,6 @@ export function PricingCard({
 
         <div className="border-t border-gray-200 my-4" />
 
-        {/* Additional Info */}
         <div className="space-y-3 text-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -290,14 +323,13 @@ export function PricingCard({
           </div>
         </div>
 
-        {/* ✅ فقط موبایل: دو تا لینک مثل عکس */}
+        {/* ✅ فقط موبایل: لینک رزرو آنلاین + رزرو سریع */}
         <div className="mt-4 border-t md:hidden">
           <div className="pt-4 flex gap-6">
             <button
               type="button"
               className="flex items-center text-sm text-blue-500"
               onClick={() => {
-                // اسکرول به کارت رزرو (پایین)
                 const el = document.getElementById("reserve-card");
                 el?.scrollIntoView({ behavior: "smooth", block: "start" });
               }}
@@ -311,7 +343,7 @@ export function PricingCard({
               className="flex items-center text-sm text-green-600"
               onClick={handleReserve}
             >
-              <p>رزرو از طریق واتساپ</p>
+              <p>ادامه رزرو</p>
               <ChevronLeft size={18} />
             </button>
           </div>
@@ -323,88 +355,82 @@ export function PricingCard({
   // ✅ کارت رزرو (پایین)
   const ReserveContent = (
     <div className="p-2">
+      <h3 className="text-lg font-medium mb-2 md:mb-0">رزرو آنلاین</h3>
 
-      <h3 className="text-lg font-medium mb-2">رزرو آنلاین</h3>
+      <div id="reserve-card" className="p-4 border md:border-none rounded-lg">
+        <div className="text-xs text-gray-400 mb-1">اجاره آنلاین خودرو</div>
 
-    <div id="reserve-card" className="p-5 border rounded-lg">
-
-      <div className="text-xs text-gray-400 mb-1">اجاره آنلاین خودرو</div>
-
-      <div className="border border-gray-200 rounded-lg p-3 mb-4 flex items-center gap-2">
-        <MapPin className="w-5 h-5 text-gray-400" />
-        <span className="text-gray-600 text-sm">{locationLabel}</span>
-      </div>
-
-      <DateRangePickerPopover
-        initialRange={range}
-        defaultIsJalali={true}
-        initialTimes={{ deliveryTime, returnTime }}
-        onConfirm={(v) => {
-          setRange({ start: v.start, end: v.end });
-          setDeliveryTime(v.deliveryTime);
-          setReturnTime(v.returnTime);
-        }}
-        onClear={() => {
-          const d = buildDefault();
-          setRange(d.range);
-          setDeliveryTime(d.deliveryTime);
-          setReturnTime(d.returnTime);
-        }}
-        trigger={
-          <div className="flex w-full mb-4 cursor-pointer">
-            <div className="flex-1">
-              <div className="text-xs text-gray-400 mb-1">
-                تاریخ و ساعت تحویل
-              </div>
-              <div className="border border-gray-200 rounded-r-lg p-3 flex items-center justify-between">
-                <span className="text-gray-600 text-sm">{deliveryText}</span>
-              </div>
-            </div>
-
-            <div className="flex-1">
-              <div className="text-xs text-gray-400 mb-1">
-                تاریخ و ساعت عودت
-              </div>
-              <div className="border border-gray-200 rounded-l-lg gap-2 p-3 flex items-center ">
-                <Calendar className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-600 text-sm">{returnText}</span>
-              </div>
-            </div>
-          </div>
-        }
-      />
-
-      <button
-        type="button"
-        onClick={handleReserve}
-        className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 text-base font-medium rounded-md transition-colors"
-      >
-        رزرو این خودرو
-      </button>
-
-      {!whatsapp && (
-        <div className="mt-2 text-xs text-gray-400">
-          شماره واتساپ برای رزرو موجود نیست.
+        <div className="border border-gray-200 rounded-lg p-3 mb-4 flex items-center gap-2">
+          <MapPin className="w-5 h-5 text-gray-400" />
+          <span className="text-gray-600 text-sm">{locationLabel}</span>
         </div>
-      )}
-    </div>
+
+        <DateRangePickerPopover
+          initialRange={range}
+          defaultIsJalali={true}
+          initialTimes={{ deliveryTime, returnTime }}
+          onConfirm={(v) => {
+            setRange({ start: v.start, end: v.end });
+            setDeliveryTime(v.deliveryTime);
+            setReturnTime(v.returnTime);
+          }}
+          onClear={() => {
+            const d = buildDefault();
+            setRange(d.range);
+            setDeliveryTime(d.deliveryTime);
+            setReturnTime(d.returnTime);
+          }}
+          trigger={
+            <div className="flex w-full mb-4 cursor-pointer">
+              <div className="flex-1">
+                <div className="text-xs text-gray-400 mb-1">
+                  تاریخ و ساعت تحویل
+                </div>
+                <div className="border border-gray-200 rounded-r-lg p-3 flex items-center justify-between">
+                  <span className="text-gray-600 text-sm">{deliveryText}</span>
+                </div>
+              </div>
+
+              <div className="flex-1">
+                <div className="text-xs text-gray-400 mb-1">
+                  تاریخ و ساعت عودت
+                </div>
+                <div className="border border-gray-200 rounded-l-lg gap-2 p-3 flex items-center ">
+                  <Calendar className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-600 text-sm">{returnText}</span>
+                </div>
+              </div>
+            </div>
+          }
+        />
+
+        <button
+          type="button"
+          onClick={handleReserve}
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 text-base font-medium rounded-md transition-colors"
+        >
+          رزرو این خودرو
+        </button>
+
+        {/* ✅ اگر branch_id یا car_id نداشتی، بهت هشدار بده */}
+        {(!car?.branch_id || !car?.id) && (
+          <div className="mt-2 text-xs text-red-500">
+            branch_id یا car_id موجود نیست (برای رزرو باید در car پاس داده شود).
+          </div>
+        )}
+      </div>
     </div>
   );
 
   return (
     <>
-      {/* ✅ موبایل: دو کارت جدا مثل عکس */}
+      {/* ✅ موبایل: دو کارت جدا */}
       <div className="md:hidden space-y-3">
-        <div className="rounded-xl border overflow-hidden">
-          {TopContent}
-        </div>
-
-        <div className="rounded-xl overflow-hidden ">
-          {ReserveContent}
-        </div>
+        <div className="rounded-xl border overflow-hidden">{TopContent}</div>
+        <div className="rounded-xl overflow-hidden">{ReserveContent}</div>
       </div>
 
-      {/* ✅ دسکتاپ: یک کارت یک‌تکه (همون قبلی) */}
+      {/* ✅ دسکتاپ: یک کارت یک‌تکه */}
       <div className="hidden md:block">
         <div className="rounded-xl border max-w-md mx-auto overflow-hidden ">
           {TopContent}

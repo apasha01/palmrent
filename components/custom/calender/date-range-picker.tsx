@@ -5,10 +5,12 @@ import * as React from "react"
 import { CalendarGrid } from "./calendar-grid"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar, ChevronLeft, ChevronRight, X, Clock } from "lucide-react"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Calendar, ChevronLeft, ChevronRight, X, Clock, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useIsMobile } from "@/hooks/use-mobile"
+
 import { getJalaliParts, formatJalaliDate, formatGregorianDate } from "@/lib/date-utils"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 export type Range = { start: Date | null; end: Date | null }
 
@@ -68,8 +70,7 @@ export function DateRangePickerPopover({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isOpen,
-    initialRange?.start,
-    initialRange?.end,
+    initialRange,
     initialTimes?.deliveryTime,
     initialTimes?.returnTime,
   ])
@@ -150,29 +151,189 @@ export function DateRangePickerPopover({
     setIsOpen(false)
   }
 
-  return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>{trigger as any}</PopoverTrigger>
+  // محتوای مشترک تقویم
+  const calendarContent = (
+    <div
+      className={cn(
+        "overflow-hidden",
+        !isMobile && "rounded-2xl border border-gray-200 dark:border-white/10 shadow-2xl",
+        "bg-white dark:bg-background"
+      )}
+      dir="rtl"
+    >
+      {/* Top controls */}
+      <div className="flex items-center justify-between px-4 md:px-6 py-3 border-b border-gray-200 dark:border-white/10">
+        <button
+          type="button"
+          onClick={clearRange}
+          className="flex items-center gap-2 text-gray-500 dark:text-gray-300 text-sm font-semibold"
+        >
+          <X className="h-4 w-4" />
+          پاک کردن
+        </button>
 
-      <PopoverContent side="bottom" align="center" sideOffset={10} className="p-0 border-0 bg-transparent shadow-none">
+        <button
+          type="button"
+          onClick={() => setIsJalali((p) => !p)}
+          className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm font-semibold"
+        >
+          <Calendar className="h-4 w-4" />
+          {isJalali ? "تقویم میلادی" : "تقویم شمسی"}
+        </button>
+
+        <button type="button" onClick={goToToday} className="text-blue-600 dark:text-blue-400 text-sm font-semibold">
+          برو به امروز
+        </button>
+      </div>
+
+      {/* Calendar area */}
+      <div className={cn("relative", isMobile ? "px-2 py-4" : "p-4 md:p-6")}>
+        <button
+          type="button"
+          onClick={() => navigate(1)}
+          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full z-10"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full z-10"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+
         <div
           className={cn(
-            "w-[92vw] max-w-[820px] overflow-hidden rounded-2xl",
-            "border border-gray-200 dark:border-white/10",
-            "bg-white dark:bg-background",
-            "shadow-2xl"
+            "grid gap-8 md:gap-12 px-8",
+            isMobile ? "grid-cols-1" : "grid-cols-2"
           )}
-          dir="rtl"
         >
-          {/* Top controls */}
-          <div className="flex items-center justify-between px-4 md:px-6 py-3 border-b border-gray-200 dark:border-white/10">
+          <CalendarGrid
+            year={viewDate.year}
+            month={viewDate.month}
+            range={range}
+            onSelect={handleSelect}
+            isJalali={isJalali}
+          />
+
+          {!isMobile && (
+            <CalendarGrid
+              year={viewDate.month === 11 ? viewDate.year + 1 : viewDate.year}
+              month={(viewDate.month + 1) % 12}
+              range={range}
+              onSelect={handleSelect}
+              isJalali={isJalali}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Footer: dates + time inputs */}
+      <div className="border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-4">
+        <div className={cn("flex gap-3", isMobile ? "flex-col" : "flex-row items-center justify-between")}>
+          <div className="text-sm">
+            {isComplete ? (
+              <span className="font-semibold text-gray-800 dark:text-gray-100">{displayText}</span>
+            ) : range.start ? (
+              <span className="text-gray-500 dark:text-gray-300">پایان را انتخاب کنید</span>
+            ) : (
+              <span className="text-gray-500 dark:text-gray-300">شروع را انتخاب کنید</span>
+            )}
+          </div>
+
+          <div className={cn("flex gap-2", isMobile ? "flex-col" : "flex-row items-center")}>
+            <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+              <span className="inline-flex items-center gap-1 font-semibold">
+                <Clock className="h-4 w-4" />
+                ساعت تحویل
+              </span>
+              <input
+                type="time"
+                value={normalizeTimeLocal(deliveryTime)}
+                onChange={(e) => setDeliveryTime(normalizeTimeLocal(e.target.value))}
+                className={cn(
+                  "h-9 rounded-lg px-3",
+                  "border border-gray-200 dark:border-white/10",
+                  "bg-white dark:bg-background",
+                  "text-gray-900 dark:text-gray-100"
+                )}
+              />
+            </label>
+
+            <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+              <span className="inline-flex items-center gap-1 font-semibold">
+                <Clock className="h-4 w-4" />
+                ساعت عودت
+              </span>
+              <input
+                type="time"
+                value={normalizeTimeLocal(returnTime)}
+                onChange={(e) => setReturnTime(normalizeTimeLocal(e.target.value))}
+                className={cn(
+                  "h-9 rounded-lg px-3",
+                  "border border-gray-200 dark:border-white/10",
+                  "bg-white dark:bg-background",
+                  "text-gray-900 dark:text-gray-100"
+                )}
+              />
+            </label>
+
+            <Button onClick={confirm} disabled={!isComplete} className={cn("h-9 px-5", isMobile && "w-full mt-2")}>
+              تایید
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  // تولید ماه‌های اسکرولی برای موبایل (6 ماه آینده)
+  const generateScrollableMonths = () => {
+    const months: React.ReactNode[] = []
+    let currentYear = viewDate.year
+    let currentMonth = viewDate.month
+
+    for (let i = 0; i < 6; i++) {
+      months.push(
+        <CalendarGrid
+          key={`${currentYear}-${currentMonth}`}
+          year={currentYear}
+          month={currentMonth}
+          range={range}
+          onSelect={handleSelect}
+          isJalali={isJalali}
+        />
+      )
+
+      currentMonth++
+      if (currentMonth > 11) {
+        currentMonth = 0
+        currentYear++
+      }
+    }
+    return months
+  }
+
+  // موبایل: Sheet از راست با طراحی اسکرولی
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>{trigger as any}</SheetTrigger>
+        <SheetContent
+          side="right"
+          className="p-0 w-full h-full flex flex-col [&>button]:hidden"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-white/10" dir="rtl">
             <button
               type="button"
-              onClick={clearRange}
-              className="flex items-center gap-2 text-gray-500 dark:text-gray-300 text-sm font-semibold"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2 text-gray-800 dark:text-gray-100 font-semibold"
             >
-              <X className="h-4 w-4" />
-              پاک کردن
+              <ArrowRight className="h-5 w-5" />
+              انتخاب تاریخ ها
             </button>
 
             <button
@@ -181,104 +342,97 @@ export function DateRangePickerPopover({
               className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm font-semibold"
             >
               <Calendar className="h-4 w-4" />
-              {isJalali ? "تقویم میلادی" : "تقویم شمسی"}
-            </button>
-
-            <button type="button" onClick={goToToday} className="text-blue-600 dark:text-blue-400 text-sm font-semibold">
-              برو به امروز
+              {isJalali ? "تقویم شمسی" : "تقویم میلادی"}
             </button>
           </div>
 
-          {/* Calendar area */}
-          <div className="relative p-4 md:p-6">
-            <button
-              type="button"
-              onClick={() => navigate(1)}
-              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full z-10"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full z-10"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-
-            <div className={cn("grid gap-8 md:gap-12", isMobile ? "grid-cols-1" : "grid-cols-2")}>
-              <CalendarGrid year={viewDate.year} month={viewDate.month} range={range} onSelect={handleSelect} isJalali={isJalali} />
-
-              {!isMobile && (
-                <CalendarGrid
-                  year={viewDate.month === 11 ? viewDate.year + 1 : viewDate.year}
-                  month={(viewDate.month + 1) % 12}
-                  range={range}
-                  onSelect={handleSelect}
-                  isJalali={isJalali}
-                />
-              )}
+          {/* Scrollable Calendar Area */}
+          <div className="flex-1 overflow-y-auto px-4 py-4" dir="rtl">
+            <div className="flex flex-col gap-8">
+              {generateScrollableMonths()}
             </div>
           </div>
 
-          {/* Footer: dates + time inputs */}
-          <div className="border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-              <div className="text-sm">
-                {isComplete ? (
-                  <span className="font-semibold text-gray-800 dark:text-gray-100">{displayText}</span>
-                ) : range.start ? (
-                  <span className="text-gray-500 dark:text-gray-300">پایان را انتخاب کنید</span>
-                ) : (
-                  <span className="text-gray-500 dark:text-gray-300">شروع را انتخاب کنید</span>
-                )}
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
-                  <span className="inline-flex items-center gap-1 font-semibold">
-                    <Clock className="h-4 w-4" />
-                    ساعت تحویل
-                  </span>
+          {/* Sticky Footer */}
+          <div className="border-t border-gray-200 dark:border-white/10 bg-white dark:bg-background p-4" dir="rtl">
+            {/* Date and Time selection */}
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              {/* تحویل */}
+              <div className="flex flex-col gap-2">
+                <span className="text-xs text-gray-500 dark:text-gray-400">تحویل</span>
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                  {range.start ? formatDate(range.start) : "انتخاب کنید"}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-gray-400" />
                   <input
                     type="time"
                     value={normalizeTimeLocal(deliveryTime)}
                     onChange={(e) => setDeliveryTime(normalizeTimeLocal(e.target.value))}
                     className={cn(
-                      "h-9 rounded-lg px-3",
+                      "h-9 w-full rounded-lg px-3 text-sm",
                       "border border-gray-200 dark:border-white/10",
                       "bg-white dark:bg-background",
                       "text-gray-900 dark:text-gray-100"
                     )}
                   />
-                </label>
+                </div>
+              </div>
 
-                <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
-                  <span className="inline-flex items-center gap-1 font-semibold">
-                    <Clock className="h-4 w-4" />
-                    ساعت عودت
-                  </span>
+              {/* عودت */}
+              <div className="flex flex-col gap-2">
+                <span className="text-xs text-gray-500 dark:text-gray-400">عودت</span>
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                  {range.end ? formatDate(range.end) : "انتخاب کنید"}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-gray-400" />
                   <input
                     type="time"
                     value={normalizeTimeLocal(returnTime)}
                     onChange={(e) => setReturnTime(normalizeTimeLocal(e.target.value))}
                     className={cn(
-                      "h-9 rounded-lg px-3",
+                      "h-9 w-full rounded-lg px-3 text-sm",
                       "border border-gray-200 dark:border-white/10",
                       "bg-white dark:bg-background",
                       "text-gray-900 dark:text-gray-100"
                     )}
                   />
-                </label>
-
-                <Button variant="primary" onClick={confirm} disabled={!isComplete} className="h-9 px-5">
-                  تایید
-                </Button>
+                </div>
               </div>
             </div>
+
+            {/* Confirm Button */}
+            <Button
+              onClick={confirm}
+              disabled={!isComplete}
+              className="w-full h-12 text-base font-semibold rounded-xl"
+            >
+              تایید و جستجو
+            </Button>
           </div>
-        </div>
+        </SheetContent>
+      </Sheet>
+    )
+  }
+
+  // دسکتاپ: Popover با انیمیشن
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>{trigger as any}</PopoverTrigger>
+      <PopoverContent
+        side="bottom"
+        align="center"
+        sideOffset={10}
+        className={cn(
+          "p-0 border-0 bg-transparent shadow-none w-auto max-w-none",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2"
+        )}
+      >
+        <div className="w-[92vw] max-w-[820px]">{calendarContent}</div>
       </PopoverContent>
     </Popover>
   )
