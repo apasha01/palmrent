@@ -14,16 +14,13 @@ import { Info, UserSearch, Coins } from "lucide-react";
 import { api } from "@/lib/apiClient";
 import { toast } from "react-toastify";
 import { STORAGE_URL } from "../../lib/apiClient";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
 import { calcRentDaysWithGrace, normalizeTime } from "@/lib/rent-days";
-import { cn } from "@/lib/utils";
 
 import type {
   ApiCalcResponse,

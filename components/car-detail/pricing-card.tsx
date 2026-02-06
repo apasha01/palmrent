@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 
 import { formatJalaliDate } from "@/lib/date-utils";
 import { DateRangePickerPopover } from "../custom/calender/date-range-picker";
+import { AppDrawer } from "../common/AppDrawer";
 
 // ---------------- Utils ----------------
 function addDays(d: Date, days: number) {
@@ -56,8 +57,6 @@ function toEnDigits(input: string) {
   for (let i = 0; i < 10; i++) {
     s = s.replaceAll(fa[i], String(i)).replaceAll(ar[i], String(i));
   }
-
-  // حذف کاراکترهای RTL/LTR و فاصله‌های نامرئی
   s = s.replace(/[\u200E\u200F\u202A-\u202E]/g, "").trim();
   return s;
 }
@@ -110,7 +109,7 @@ export type DailyPriceItem = {
 
 export type PricingCarMeta = {
   id: number;
-  branch_id?: number | null; // ✅ اضافه شد
+  branch_id?: number | null;
   title?: string | null;
   branch?: string | null;
 
@@ -121,16 +120,14 @@ export type PricingCarMeta = {
 
 export type PricingCardProps = {
   car: PricingCarMeta;
-
   dailyPrice?: DailyPriceItem[] | null;
   deposit?: string | number | null;
   currency?: string | null;
   offPercent?: number | null;
-
-  // قبلاً برای واتساپ بود، دیگه استفاده نمی‌کنیم
   whatsapp?: string | null;
 };
 
+// ---------------- Component ----------------
 export function PricingCard({
   car,
   dailyPrice,
@@ -143,21 +140,11 @@ export function PricingCard({
 
   const [range, setRange] = React.useState<PickerRange>(defaults.range);
   const [deliveryTime, setDeliveryTime] = React.useState<string>(
-    defaults.deliveryTime
+    defaults.deliveryTime,
   );
   const [returnTime, setReturnTime] = React.useState<string>(
-    defaults.returnTime
+    defaults.returnTime,
   );
-
-  const deliveryText = React.useMemo(() => {
-    const datePart = range.start ? formatJalaliDate(range.start) : "";
-    return `${toFaDigits(datePart)} - ${formatTimeFa(deliveryTime)}`;
-  }, [range.start, deliveryTime]);
-
-  const returnText = React.useMemo(() => {
-    const datePart = range.end ? formatJalaliDate(range.end) : "";
-    return `${toFaDigits(datePart)} - ${formatTimeFa(returnTime)} `;
-  }, [range.end, returnTime]);
 
   const unit = currency || "درهم";
 
@@ -175,187 +162,323 @@ export function PricingCard({
     car?.title && car?.branch
       ? `قیمت اجاره ${car.title} در ${car.branch}`
       : car?.title
-      ? `قیمت اجاره ${car.title}`
-      : "قیمت اجاره خودرو";
+        ? `قیمت اجاره ${car.title}`
+        : "قیمت اجاره خودرو";
 
   const locationLabel =
     car?.title && car?.branch
       ? `اجاره ${car.title} در ${car.branch}`
       : car?.title
-      ? `اجاره ${car.title}`
-      : "اجاره خودرو";
+        ? `اجاره ${car.title}`
+        : "اجاره خودرو";
 
-  // ✅✅✅ رزرو: رفتن به صفحه Search با from/to/dt/rt + car_id + branch_id
-  const handleReserve = () => {
-    const safeStart = range?.start ?? defaults.range.start;
-    const safeEnd = range?.end ?? defaults.range.end;
+  // ✅ trigger ref for opening calendar programmatically
+  const calendarTriggerRef = React.useRef<HTMLButtonElement | null>(null);
 
-    const fromFa = safeStart ? formatJalaliDate(safeStart) : "";
-    const toFa = safeEnd ? formatJalaliDate(safeEnd) : "";
+  // ✅ when true -> after confirm calendar, immediately navigate
+  const autoReserveAfterConfirmRef = React.useRef(false);
 
-    const from = toEnDigits(fromFa);
-    const to = toEnDigits(toFa);
+  const reserveWith = React.useCallback(
+    (args: {
+      start?: Date | null;
+      end?: Date | null;
+      deliveryTime?: string;
+      returnTime?: string;
+    }) => {
+      const safeStart = args.start ?? defaults.range.start;
+      const safeEnd = args.end ?? defaults.range.end;
 
-    const dt = toEnDigits(deliveryTime || defaults.deliveryTime);
-    const rt = toEnDigits(returnTime || defaults.returnTime);
+      const fromFa = safeStart ? formatJalaliDate(safeStart) : "";
+      const toFa = safeEnd ? formatJalaliDate(safeEnd) : "";
 
-    const branchId = Number(car?.branch_id ?? 0);
-    const carId = Number(car?.id ?? 0);
+      const from = toEnDigits(fromFa);
+      const to = toEnDigits(toFa);
 
-    // ✅ اگر تاریخ‌ها به هر دلیلی خالی شدن، نرو که همون مشکل skeleton پیش میاد
-    if (!branchId || !from || !to || !dt || !rt || !carId) return;
+      const dt = toEnDigits(args.deliveryTime || defaults.deliveryTime);
+      const rt = toEnDigits(args.returnTime || defaults.returnTime);
 
-    const params = new URLSearchParams();
-    params.set("branch_id", String(branchId));
-    params.set("from", from);
-    params.set("to", to);
-    params.set("dt", dt);
-    params.set("rt", rt);
-    params.set("step", "3");
-    params.set("car_id", String(carId));
+      const branchId = Number(car?.branch_id ?? 0);
+      const carId = Number(car?.id ?? 0);
 
-    router.push(`/search?${params.toString()}`);
-  };
+      if (!branchId || !from || !to || !dt || !rt || !carId) return;
 
-  // ✅ بخش بالا (قیمت‌ها + اطلاعات)
+      const params = new URLSearchParams();
+      params.set("branch_id", String(branchId));
+      params.set("from", from);
+      params.set("to", to);
+      params.set("dt", dt);
+      params.set("rt", rt);
+      params.set("step", "3");
+      params.set("car_id", String(carId));
+
+      router.push(`/search?${params.toString()}`);
+    },
+    [router, car?.branch_id, car?.id, defaults],
+  );
+
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
+  const handleReserve = React.useCallback(() => {
+    reserveWith({ start: range?.start, end: range?.end, deliveryTime, returnTime });
+  }, [reserveWith, range?.start, range?.end, deliveryTime, returnTime]);
+
+  const deliveryText = React.useMemo(() => {
+    const datePart = range.start ? formatJalaliDate(range.start) : "";
+    return `${toFaDigits(datePart)} - ${formatTimeFa(deliveryTime)}`;
+  }, [range.start, deliveryTime]);
+
+  const returnText = React.useMemo(() => {
+    const datePart = range.end ? formatJalaliDate(range.end) : "";
+    return `${toFaDigits(datePart)} - ${formatTimeFa(returnTime)} `;
+  }, [range.end, returnTime]);
+
+  // ✅ Data for central AppDrawer (prices)
+  const pricesDrawerData = React.useMemo(() => {
+    return {
+      prices: pricingOptions,
+      currency: unit,
+    };
+  }, [pricingOptions, unit]);
+
   const TopContent = (
-    <>
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-gray-700 font-medium text-base">{titleText}</h2>
+    <div className="p-4">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-gray-700 font-medium text-base">{titleText}</h2>
 
-          {hasOff && (
-            <span className="bg-amber-400 text-white px-4 py-1.5 rounded-full text-sm font-medium">
-              {toFaDigits(String(off))}٪ تخفیف
-            </span>
-          )}
-        </div>
+        {hasOff && (
+          <span className="bg-amber-400 text-white px-4 py-1.5 rounded-full text-sm font-medium">
+            {toFaDigits(String(off))}٪ تخفیف
+          </span>
+        )}
+      </div>
 
-        <div className="space-y-3 mb-6">
-          {pricingOptions.length === 0 ? (
-            <div className="text-sm text-gray-500">قیمت‌ها موجود نیست.</div>
-          ) : (
-            pricingOptions.map((option, index) => (
-              <div
-                key={`${option.days}-${index}`}
-                className="flex items-center justify-between"
-              >
-                <div className="flex items-center gap-2">
-                  {index === 0 ? (
-                    <DollarSign className="w-5 h-5 text-gray-400" />
-                  ) : (
-                    <div className="w-5" />
-                  )}
-                  <span className="text-gray-600 text-sm">{option.days}</span>
-                </div>
+      {/* ✅ قیمت‌ها + Drawer مرکزی */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-sm font-semibold text-gray-800">قیمت‌های روزانه</div>
 
-                <div className="flex items-center gap-3">
-                  {option.hasOffPrice ? (
-                    <span className="text-gray-400 line-through text-sm">
-                      {formatMoneyFa(option.originalPrice)}
-                    </span>
-                  ) : (
-                    <span className="text-gray-400 text-sm"> </span>
-                  )}
-
-                  <span className="text-gray-700 font-medium">
-                    {formatMoneyFa(option.finalPrice)} {unit}
-                  </span>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="border-t border-gray-200 my-4" />
-
-        <div className="space-y-3 text-xs">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-gray-400" />
-              <span className="text-gray-600">ودیعه خلافی :</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-gray-700">
-                {formatMoneyFa(deposit)} {unit}
-              </span>
-              <Info className="w-4 h-4 text-gray-400" />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-gray-400" />
-              <span className="text-gray-600">هزینه تحویل :</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-green-600 font-medium">
-                {yesNoFa(car?.free_delivery, "تحویل رایگان", "تحویل غیر رایگان")}
-              </span>
-              <Info className="w-4 h-4 text-gray-400" />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-gray-400" />
-              <span className="text-gray-600">بیمه خودرو :</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-green-600 font-medium">
-                {yesNoFa(car?.insurance, "بیمه پایه رایگان", "بدون بیمه")}
-              </span>
-              <Info className="w-4 h-4 text-gray-400" />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Info className="w-5 h-5 text-gray-400" />
-              <span className="text-gray-600">کیلومتر :</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-green-600 font-medium">
-                {yesNoFa(car?.km, "کیلومتر نامحدود", "محدود")}
-              </span>
-              <Info className="w-4 h-4 text-gray-400" />
-            </div>
-          </div>
-        </div>
-
-        {/* ✅ فقط موبایل: لینک رزرو آنلاین + رزرو سریع */}
-        <div className="mt-4 border-t md:hidden">
-          <div className="pt-4 flex gap-6">
+        <AppDrawer
+          kind="prices"
+          data={pricesDrawerData as any}
+          trigger={({ open }) => (
             <button
               type="button"
-              className="flex items-center text-sm text-blue-500"
-              onClick={() => {
-                const el = document.getElementById("reserve-card");
-                el?.scrollIntoView({ behavior: "smooth", block: "start" });
+              className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+              onClick={(e) => {
+                e.stopPropagation();
+                open();
               }}
+              aria-label="جزئیات گروه‌های قیمتی"
             >
-              <p>رزرو آنلاین</p>
-              <ChevronLeft size={18} />
+              <Info className="w-4 h-4" />
+              جزئیات
             </button>
+          )}
+        />
+      </div>
 
-            <button
-              type="button"
-              className="flex items-center text-sm text-green-600"
-              onClick={handleReserve}
+      <div className="space-y-3 mb-6">
+        {pricingOptions.length === 0 ? (
+          <div className="text-sm text-gray-500">قیمت‌ها موجود نیست.</div>
+        ) : (
+          pricingOptions.map((option, index) => (
+            <div
+              key={`${option.days}-${index}`}
+              className="flex items-center justify-between"
             >
-              <p>ادامه رزرو</p>
-              <ChevronLeft size={18} />
-            </button>
+              <div className="flex items-center gap-2">
+                {index === 0 ? (
+                  <DollarSign className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <div className="w-5" />
+                )}
+                <span className="text-gray-600 text-sm">{option.days}</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {option.hasOffPrice ? (
+                  <span className="text-gray-400 line-through text-sm">
+                    {formatMoneyFa(option.originalPrice)}
+                  </span>
+                ) : (
+                  <span className="text-gray-400 text-sm"> </span>
+                )}
+
+                <span className="text-gray-700 font-medium">
+                  {formatMoneyFa(option.finalPrice)} {unit}
+                </span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="border-t border-gray-200 my-4" />
+
+      {/* ✅ ردیف‌های info -> AppDrawer واحد */}
+      <div className="space-y-3 text-xs">
+        {/* deposit */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-gray-400" />
+            <span className="text-gray-600">ودیعه خلافی :</span>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <span className="text-gray-700">
+              {formatMoneyFa(deposit)} {unit}
+            </span>
+
+            <AppDrawer
+              kind="deposit"
+              data={{ deposit, currency: unit } as any}
+              trigger={({ open }) => (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    open();
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                  aria-label="توضیح ودیعه خلافی"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* delivery */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MapPin className="w-5 h-5 text-gray-400" />
+            <span className="text-gray-600">هزینه تحویل :</span>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <span className="text-green-600 font-medium">
+              {yesNoFa(car?.free_delivery, "تحویل رایگان", "تحویل غیر رایگان")}
+            </span>
+
+            <AppDrawer
+              kind="delivery"
+              data={{ free_delivery: car?.free_delivery } as any}
+              trigger={({ open }) => (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    open();
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                  aria-label="توضیح هزینه تحویل"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* insurance */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-gray-400" />
+            <span className="text-gray-600">بیمه خودرو :</span>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <span className="text-green-600 font-medium">
+              {yesNoFa(car?.insurance, "بیمه پایه رایگان", "بدون بیمه")}
+            </span>
+
+            <AppDrawer
+              kind="insurance"
+              data={{ insurance: car?.insurance } as any}
+              trigger={({ open }) => (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    open();
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                  aria-label="توضیح بیمه"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* km */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Info className="w-5 h-5 text-gray-400" />
+            <span className="text-gray-600">کیلومتر :</span>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <span className="text-green-600 font-medium">
+              {yesNoFa(car?.km, "کیلومتر نامحدود", "محدود")}
+            </span>
+
+            <AppDrawer
+              kind="km"
+              data={{ km: car?.km } as any}
+              trigger={({ open }) => (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    open();
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                  aria-label="توضیح کیلومتر"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+              )}
+            />
           </div>
         </div>
       </div>
-    </>
+
+      <div className="mt-4 border-t md:hidden">
+        <div className="pt-4 flex gap-6">
+          <button
+            type="button"
+            className="flex items-center text-sm text-blue-500"
+            onClick={() => {
+              const el = document.getElementById("reserve-card");
+              el?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+          >
+            <p>رزرو آنلاین</p>
+            <ChevronLeft size={18} />
+          </button>
+
+          {/* ✅✅✅ GREEN: open calendar, confirm => direct navigate */}
+          <button
+            type="button"
+            className="flex items-center text-sm text-green-600"
+            onClick={() => {
+              autoReserveAfterConfirmRef.current = true;
+              // باز کردن تقویم با کلیک روی trigger
+              calendarTriggerRef.current?.click();
+            }}
+          >
+            <p>ادامه رزرو</p>
+            <ChevronLeft size={18} />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 
-  // ✅ کارت رزرو (پایین)
   const ReserveContent = (
     <div className="p-2">
-      <h3 className="text-lg font-medium mb-2 md:mb-0">رزرو آنلاین</h3>
+      <h3 className="text-md font-medium mb-2 md:mb-0">رزرو آنلاین</h3>
 
       <div id="reserve-card" className="p-4 border md:border-none rounded-lg">
         <div className="text-xs text-gray-400 mb-1">اجاره آنلاین خودرو</div>
@@ -370,40 +493,62 @@ export function PricingCard({
           defaultIsJalali={true}
           initialTimes={{ deliveryTime, returnTime }}
           onConfirm={(v) => {
+            // اول state ها آپدیت میشن (برای UI)
             setRange({ start: v.start, end: v.end });
             setDeliveryTime(v.deliveryTime);
             setReturnTime(v.returnTime);
+
+            // ✅ اگر از دکمه سبز اومده بودیم => مستقیم برو صفحه بعد
+            if (autoReserveAfterConfirmRef.current) {
+              autoReserveAfterConfirmRef.current = false;
+              reserveWith({
+                start: v.start,
+                end: v.end,
+                deliveryTime: v.deliveryTime,
+                returnTime: v.returnTime,
+              });
+            }
           }}
           onClear={() => {
             const d = buildDefault();
             setRange(d.range);
             setDeliveryTime(d.deliveryTime);
             setReturnTime(d.returnTime);
+            autoReserveAfterConfirmRef.current = false;
           }}
           trigger={
-            <div className="flex w-full mb-4 cursor-pointer">
-              <div className="flex-1">
-                <div className="text-xs text-gray-400 mb-1">
-                  تاریخ و ساعت تحویل
+            // ✅✅ trigger تبدیل شد به button با ref
+            <button
+              ref={calendarTriggerRef}
+              type="button"
+              className="flex w-full mb-4 cursor-pointer text-left"
+            >
+              <div className="flex w-full">
+                <div className="flex-1">
+                  <div className="text-xs text-right text-gray-400 mb-1">
+                    تاریخ و ساعت تحویل
+                  </div>
+                  <div className="border border-gray-200 rounded-r-lg p-2 flex items-center gap-2">
+                     <Calendar className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-600 text-sm">{deliveryText}</span>
+                  </div>
                 </div>
-                <div className="border border-gray-200 rounded-r-lg p-3 flex items-center justify-between">
-                  <span className="text-gray-600 text-sm">{deliveryText}</span>
-                </div>
-              </div>
 
-              <div className="flex-1">
-                <div className="text-xs text-gray-400 mb-1">
-                  تاریخ و ساعت عودت
-                </div>
-                <div className="border border-gray-200 rounded-l-lg gap-2 p-3 flex items-center ">
-                  <Calendar className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-600 text-sm">{returnText}</span>
+                <div className="flex-1">
+                  <div className="text-xs text-right text-gray-400 mb-1">
+                    تاریخ و ساعت عودت
+                  </div>
+                  <div className="border border-gray-200 rounded-l-lg gap-2 p-2 flex items-center ">
+      
+                    <span className="text-gray-600 text-sm">{returnText}</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            </button>
           }
         />
 
+        {/* دکمه اصلی رزرو (اگر کاربر خودش دستی بخواد) */}
         <button
           type="button"
           onClick={handleReserve}
@@ -412,7 +557,6 @@ export function PricingCard({
           رزرو این خودرو
         </button>
 
-        {/* ✅ اگر branch_id یا car_id نداشتی، بهت هشدار بده */}
         {(!car?.branch_id || !car?.id) && (
           <div className="mt-2 text-xs text-red-500">
             branch_id یا car_id موجود نیست (برای رزرو باید در car پاس داده شود).

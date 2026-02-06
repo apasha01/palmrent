@@ -1,9 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatJalaliDate } from "@/lib/date-utils";
+
+import { AppDrawer } from "../common/AppDrawer";
+import { DateRangePickerPopover } from "../custom/calender/date-range-picker";
 
 // ---------------- Utils ----------------
 function addDays(d: Date, days: number) {
@@ -58,7 +62,15 @@ function formatMoneyFa(value: unknown) {
   return toFaDigits(str);
 }
 
-function buildDefault() {
+type PickerRange = NonNullable<
+  React.ComponentProps<typeof DateRangePickerPopover>["initialRange"]
+>;
+
+function buildDefault(): {
+  range: PickerRange;
+  deliveryTime: string;
+  returnTime: string;
+} {
   const tomorrow = addDays(new Date(), 1);
   const end = addDays(new Date(), 6);
   return {
@@ -78,18 +90,12 @@ export type DailyPriceItem = {
 export type PricingCarMeta = {
   id: number;
   branch_id?: number | null;
-  title?: string | null;
-  branch?: string | null;
-  insurance?: "yes" | "no" | string | null;
-  free_delivery?: "yes" | "no" | string | null;
-  km?: "yes" | "no" | string | null;
 };
 
 export type MobilePriceBarProps = {
   car: PricingCarMeta;
   dailyPrice?: DailyPriceItem[] | null;
   currency?: string | null;
-  offPercent?: number | null;
 };
 
 export function MobilePriceBar({
@@ -99,106 +105,127 @@ export function MobilePriceBar({
 }: MobilePriceBarProps) {
   const router = useRouter();
   const defaults = React.useMemo(() => buildDefault(), []);
-  const [isVisible, setIsVisible] = useState(false);
-
-  const [range] = React.useState(defaults.range);
-  const [deliveryTime] = React.useState<string>(defaults.deliveryTime);
-  const [returnTime] = React.useState<string>(defaults.returnTime);
 
   const unit = currency || "درهم";
 
-  // گرفتن اولین قیمت
+  // ✅ قیمت‌ها برای AppDrawer
+  const pricingOptions = React.useMemo(() => {
+    return (dailyPrice || []).filter(Boolean).map((x) => ({
+      days: x.title,
+      originalPrice: x.price,
+      finalPrice: x.price_off ?? x.price,
+      hasOffPrice: x.price_off !== null && x.price_off !== undefined,
+    }));
+  }, [dailyPrice]);
+
+  // ✅ اولین قیمت برای نمایش
   const firstPrice = (dailyPrice || [])[0];
   const displayPrice = firstPrice?.price_off ?? firstPrice?.price ?? "—";
   const originalPrice = firstPrice?.price;
   const hasOffPrice =
     firstPrice?.price_off !== null && firstPrice?.price_off !== undefined;
 
-  // تشخیص اسکرول و نمایش نوار بعد از رد شدن از کارت قیمت
-  useEffect(() => {
-    const pricingCard = document.getElementById("mobile-pricing-card");
-    if (!pricingCard) return;
+  // ✅ وقتی کاربر تو تقویم تأیید زد => مستقیم برو سرچ
+  const goToSearch = React.useCallback(
+    (v: {
+      start?: Date | null;
+      end?: Date | null;
+      deliveryTime: string;
+      returnTime: string;
+    }) => {
+      const safeStart = v.start ?? defaults.range.start;
+      const safeEnd = v.end ?? defaults.range.end;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // وقتی کارت از viewport خارج شد (یعنی رفتیم پایین‌تر)، نوار رو نشون بده
-        setIsVisible(!entry.isIntersecting);
-      },
-      {
-        root: null,
-        rootMargin: "0px",
-        threshold: 0,
-      }
-    );
+      const fromFa = safeStart ? formatJalaliDate(safeStart) : "";
+      const toFa = safeEnd ? formatJalaliDate(safeEnd) : "";
 
-    observer.observe(pricingCard);
+      const from = toEnDigits(fromFa);
+      const to = toEnDigits(toFa);
 
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
+      const dt = toEnDigits(v.deliveryTime || defaults.deliveryTime);
+      const rt = toEnDigits(v.returnTime || defaults.returnTime);
 
-  const handleReserve = () => {
-    const safeStart = range?.start ?? defaults.range.start;
-    const safeEnd = range?.end ?? defaults.range.end;
+      const branchId = Number(car?.branch_id ?? 0);
+      const carId = Number(car?.id ?? 0);
 
-    const fromFa = safeStart ? formatJalaliDate(safeStart) : "";
-    const toFa = safeEnd ? formatJalaliDate(safeEnd) : "";
+      if (!branchId || !carId || !from || !to || !dt || !rt) return;
 
-    const from = toEnDigits(fromFa);
-    const to = toEnDigits(toFa);
+      const params = new URLSearchParams();
+      params.set("branch_id", String(branchId));
+      params.set("from", from);
+      params.set("to", to);
+      params.set("dt", dt);
+      params.set("rt", rt);
+      params.set("step", "3");
+      params.set("car_id", String(carId));
 
-    const dt = toEnDigits(deliveryTime || defaults.deliveryTime);
-    const rt = toEnDigits(returnTime || defaults.returnTime);
-
-    const branchId = Number(car?.branch_id ?? 0);
-    const carId = Number(car?.id ?? 0);
-
-    if (!branchId || !from || !to || !dt || !rt || !carId) return;
-
-    const params = new URLSearchParams();
-    params.set("branch_id", String(branchId));
-    params.set("from", from);
-    params.set("to", to);
-    params.set("dt", dt);
-    params.set("rt", rt);
-    params.set("step", "3");
-    params.set("car_id", String(carId));
-
-    router.push(`/search?${params.toString()}`);
-  };
-
-  // اگر هنوز کارت قیمت توی viewport هست، نوار رو نشون نده
-  if (!isVisible) return null;
+      router.push(`/search?${params.toString()}`);
+    },
+    [router, car?.branch_id, car?.id, defaults],
+  );
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] z-50 px-4 py-3 animate-in slide-in-from-bottom duration-300">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] z-50 px-4 py-3">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
-        {/* دکمه رزرو */}
-        {/* قیمت */}
-        <div className="flex flex-col ">
+        {/* قیمت + info */}
+        <div className="flex flex-col">
           <span className="text-xs text-gray-400">شروع قیمت از</span>
+
           <div className="flex items-center gap-2">
             {hasOffPrice && originalPrice && (
               <span className="text-gray-400 line-through text-sm">
                 {formatMoneyFa(originalPrice)}
               </span>
             )}
+
             <span className="text-blue-500 font-bold text-xl">
               {formatMoneyFa(displayPrice)}
             </span>
+
             <span className="text-gray-600 text-sm">{unit}</span>
-            <Info className="w-4 h-4 text-gray-400" />
+
+            {/* ✅ Info => گروه‌های قیمتی */}
+            <AppDrawer
+              kind="prices"
+              data={{ prices: pricingOptions, currency: unit }}
+              trigger={({ open }) => (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    open();
+                  }}
+                  className="inline-flex"
+                  aria-label="گروه‌های قیمتی"
+                >
+                  <Info className="w-4 h-4 text-gray-400" />
+                </button>
+              )}
+            />
           </div>
         </div>
-        <button
-          type="button"
-          onClick={handleReserve}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 text-base font-medium rounded-xl transition-colors"
-        >
-          رزرو آنلاین
-        </button>
 
+        {/* ✅ رزرو آنلاین => تقویم باز میشه => تایید => مستقیم میره سرچ */}
+        <DateRangePickerPopover
+          initialRange={defaults.range}
+          defaultIsJalali={true}
+          initialTimes={{
+            deliveryTime: defaults.deliveryTime,
+            returnTime: defaults.returnTime,
+          }}
+          onConfirm={(v) => {
+            // v: {start,end,deliveryTime,returnTime}
+            goToSearch(v as any);
+          }}
+          trigger={
+            <button
+              type="button"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 text-base font-medium rounded-xl transition-colors"
+            >
+              رزرو آنلاین
+            </button>
+          }
+        />
       </div>
     </div>
   );

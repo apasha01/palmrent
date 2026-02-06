@@ -7,31 +7,84 @@ import {
   weekDaysJalali,
   weekDaysGregorian,
   jalaliToDate,
-} from "@/lib/date-utils"
-import { cn } from "@/lib/utils"
-import type { Range } from "./date-range-picker"
+} from "@/lib/date-utils";
+import { cn } from "@/lib/utils";
+import type { Range } from "./date-range-picker";
 
 type CalendarGridProps = {
-  year: number
-  month: number
-  range: Range
-  onSelect: (date: Date) => void
-  isJalali: boolean
-}
+  year: number;
+  month: number; // 0..11
+  range: Range;
+  onSelect: (date: Date) => void;
+  isJalali: boolean;
 
-export function CalendarGrid({ year, month, range, onSelect, isJalali }: CalendarGridProps) {
-  const daysInMonth = getDaysInMonth(year, month, isJalali ? "jalali" : "gregorian")
-  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)
+  // hover support
+  hoverDate?: Date | null;
+  onHover?: (date: Date | null) => void;
+};
 
-  // ✅ برای محاسبه اول ماه هم باید تاریخ درست ساخته بشه
-  const monthStartDate = isJalali ? jalaliToDate(year, month, 1) : new Date(year, month, 1)
-  const firstDay = monthStartDate.getDay()
+/** ✅ جلوگیری از باگ timezone/DST: همه تاریخ‌ها را به 12 ظهر تبدیل می‌کنیم */
+const atNoon = (d: Date) => {
+  const x = new Date(d);
+  x.setHours(12, 0, 0, 0);
+  return x;
+};
 
-  const blanksCount = isJalali ? (firstDay + 1) % 7 : firstDay
-  const blanks = Array.from({ length: blanksCount })
+const isSameDaySafe = (a?: Date | null, b?: Date | null) => {
+  if (!a || !b) return false;
+  const A = atNoon(a);
+  const B = atNoon(b);
+  return (
+    A.getFullYear() === B.getFullYear() &&
+    A.getMonth() === B.getMonth() &&
+    A.getDate() === B.getDate()
+  );
+};
 
-  const isSameDay = (a?: Date | null, b?: Date | null) => a && b && a.toDateString() === b.toDateString()
-  const weekDays = isJalali ? weekDaysJalali : weekDaysGregorian
+const isGteDay = (a: Date, b: Date) => atNoon(a).getTime() >= atNoon(b).getTime();
+
+const isBetween = (d: Date, start: Date, end: Date) => {
+  const t = atNoon(d).getTime();
+  return t > atNoon(start).getTime() && t < atNoon(end).getTime();
+};
+
+export function CalendarGrid({
+  year,
+  month,
+  range,
+  onSelect,
+  isJalali,
+  hoverDate,
+  onHover,
+}: CalendarGridProps) {
+  const daysInMonth = getDaysInMonth(year, month, isJalali ? "jalali" : "gregorian");
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+  // ✅ برای محاسبه اول ماه هم تاریخ درست ساخته شود
+  const monthStartDateRaw = isJalali ? jalaliToDate(year, month, 1) : new Date(year, month, 1);
+  const monthStartDate = atNoon(monthStartDateRaw);
+  const firstDay = monthStartDate.getDay();
+
+  const blanksCount = isJalali ? (firstDay + 1) % 7 : firstDay;
+  const blanks = Array.from({ length: blanksCount });
+
+  const weekDays = isJalali ? weekDaysJalali : weekDaysGregorian;
+
+  // ✅ آخرین روز ماه برای حالت end پیش‌فرض
+  const monthEndDateRaw = isJalali
+    ? jalaliToDate(year, month, daysInMonth)
+    : new Date(year, month, daysInMonth);
+  const monthEndDate = atNoon(monthEndDateRaw);
+
+  // ✅ end موثر: اگر end نبود => hover (اگر معتبر بود) وگرنه آخر ماه
+  const effectiveEnd =
+    range.start
+      ? range.end
+        ? atNoon(range.end)
+        : hoverDate && isGteDay(hoverDate, range.start)
+          ? atNoon(hoverDate)
+          : monthEndDate
+      : null;
 
   return (
     <div className="w-full">
@@ -53,25 +106,55 @@ export function CalendarGrid({ year, month, range, onSelect, isJalali }: Calenda
         ))}
 
         {days.map((day) => {
-          // ✅ این خط مهم‌ترین اصلاحه
-          const date = isJalali ? jalaliToDate(year, month, day) : new Date(year, month, day)
+          const dateRaw = isJalali ? jalaliToDate(year, month, day) : new Date(year, month, day);
+          const date = atNoon(dateRaw);
 
-          const isStart = isSameDay(range.start, date)
-          const isEnd = isSameDay(range.end, date)
-          const inRange = range.start && range.end && date > range.start && date < range.end
+          const isStart = isSameDaySafe(range.start, date);
+
+          // ✅ end واقعی
+          const isEndReal = isSameDaySafe(range.end, date);
+
+          // ✅ end موقت hover
+          const isEndHover =
+            !range.end &&
+            !!range.start &&
+            !!hoverDate &&
+            isGteDay(hoverDate, range.start) &&
+            isSameDaySafe(hoverDate, date);
+
+          // ✅ end پیش‌فرض (آخر ماه) وقتی end نداریم و hover معتبر نداریم
+          const isEndDefault =
+            !range.end &&
+            !!range.start &&
+            (!hoverDate || !isGteDay(hoverDate, range.start)) &&
+            isSameDaySafe(monthEndDate, date);
+
+          const isEnd = isEndReal || isEndHover || isEndDefault;
+
+          const inRange =
+            range.start && effectiveEnd ? isBetween(date, range.start, effectiveEnd) : false;
 
           return (
             <button
               key={day}
-              onClick={() => onSelect(date)}
- className={cn(
-  "relative h-10 w-full flex items-center justify-center text-sm transition-all",
-  isStart && "bg-orange-400 dark:bg-orange-400 text-black font-bold rounded-r-xl z-10",
-  isEnd && "bg-orange-400 dark:bg-orange-400 text-black font-bold rounded-l-xl z-10",
-  inRange && "bg-orange-300/30 dark:bg-orange-300/20",
-  !isStart && !isEnd && !inRange && "hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl",
-)}
+              onClick={() => onSelect(dateRaw)} // ✅ بیرون همون dateRaw بفرستیم
+              onMouseEnter={() => onHover?.(dateRaw)}
+              onMouseLeave={() => onHover?.(null)}
+              className={cn(
+                "relative h-10 w-full flex items-center justify-center text-sm transition-all",
 
+                // start
+                isStart && "bg-orange-400 dark:bg-orange-400 text-black font-bold rounded-r-xl z-10",
+
+                // end (real/hover/default)
+                isEnd && "bg-orange-400 dark:bg-orange-400 text-black font-bold rounded-l-xl z-10",
+
+                // range
+                inRange && "bg-orange-300/30 dark:bg-orange-300/20",
+
+                // hover style for normal days
+                !isStart && !isEnd && !inRange && "hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl"
+              )}
             >
               {isJalali ? persianNumbers(day) : day}
 
@@ -87,9 +170,9 @@ export function CalendarGrid({ year, month, range, onSelect, isJalali }: Calenda
                 </div>
               )}
             </button>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }

@@ -1,41 +1,41 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client"
+"use client";
 
-import * as React from "react"
-import { CalendarGrid } from "./calendar-grid"
-import { Button } from "@/components/ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Calendar, ChevronLeft, ChevronRight, X, Clock, ArrowRight } from "lucide-react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { CalendarGrid } from "./calendar-grid";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Calendar, ChevronLeft, ChevronRight, X, Clock, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-import { getJalaliParts, formatJalaliDate, formatGregorianDate } from "@/lib/date-utils"
-import { useIsMobile } from "@/hooks/use-mobile"
+import { getJalaliParts, formatJalaliDate, formatGregorianDate } from "@/lib/date-utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-export type Range = { start: Date | null; end: Date | null }
+export type Range = { start: Date | null; end: Date | null };
 
 type Props = {
-  initialRange?: Range
-  defaultIsJalali?: boolean
-  initialTimes?: { deliveryTime?: string; returnTime?: string }
-  onConfirm?: (range: { start: Date; end: Date; deliveryTime: string; returnTime: string }) => void
-  onClear?: () => void
-  trigger: React.ReactNode
-}
+  initialRange?: Range;
+  defaultIsJalali?: boolean;
+  initialTimes?: { deliveryTime?: string; returnTime?: string };
+  onConfirm?: (range: { start: Date; end: Date; deliveryTime: string; returnTime: string }) => void;
+  onClear?: () => void;
+  trigger: React.ReactNode;
+};
 
-const EMPTY: Range = { start: null, end: null }
+const EMPTY: Range = { start: null, end: null };
 
 /** ✅ همیشه HH:mm برمی‌گردونه */
 function normalizeTimeLocal(t?: string | null) {
-  const s = String(t ?? "").trim()
-  if (!s) return "10:00"
+  const s = String(t ?? "").trim();
+  if (!s) return "10:00";
 
-  const m = s.match(/^(\d{1,2}):(\d{1,2})$/)
-  if (!m) return "10:00"
+  const m = s.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (!m) return "10:00";
 
-  const hh = String(Math.min(23, Math.max(0, Number(m[1])))).padStart(2, "0")
-  const mm = String(Math.min(59, Math.max(0, Number(m[2])))).padStart(2, "0")
-  return `${hh}:${mm}`
+  const hh = String(Math.min(23, Math.max(0, Number(m[1])))).padStart(2, "0");
+  const mm = String(Math.min(59, Math.max(0, Number(m[2])))).padStart(2, "0");
+  return `${hh}:${mm}`;
 }
 
 export function DateRangePickerPopover({
@@ -46,112 +46,118 @@ export function DateRangePickerPopover({
   onClear,
   trigger,
 }: Props) {
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile();
 
-  const [isJalali, setIsJalali] = React.useState(defaultIsJalali)
-  const [isOpen, setIsOpen] = React.useState(false)
+  const [isJalali, setIsJalali] = React.useState(defaultIsJalali);
+  const [isOpen, setIsOpen] = React.useState(false);
 
-  const [range, setRange] = React.useState<Range>(initialRange ?? EMPTY)
+  const [range, setRange] = React.useState<Range>(initialRange ?? EMPTY);
 
-  const [deliveryTime, setDeliveryTime] = React.useState<string>(normalizeTimeLocal(initialTimes?.deliveryTime))
-  const [returnTime, setReturnTime] = React.useState<string>(normalizeTimeLocal(initialTimes?.returnTime))
+  const [deliveryTime, setDeliveryTime] = React.useState<string>(
+    normalizeTimeLocal(initialTimes?.deliveryTime)
+  );
+  const [returnTime, setReturnTime] = React.useState<string>(
+    normalizeTimeLocal(initialTimes?.returnTime)
+  );
 
-  /**
-   * ✅✅✅ FIX اصلی:
-   * هر بار Popover باز شد، هم تاریخ هم ساعت‌ها از بیرون sync بشن
-   * (حتی اگر فقط ساعت‌ها عوض شده باشند)
-   */
+  // ✅ hover برای انتخاب end موقت
+  const [hoverDate, setHoverDate] = React.useState<Date | null>(null);
+
   React.useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen) return;
 
-    setRange(initialRange ?? EMPTY)
-    setDeliveryTime(normalizeTimeLocal(initialTimes?.deliveryTime))
-    setReturnTime(normalizeTimeLocal(initialTimes?.returnTime))
+    setRange(initialRange ?? EMPTY);
+    setDeliveryTime(normalizeTimeLocal(initialTimes?.deliveryTime));
+    setReturnTime(normalizeTimeLocal(initialTimes?.returnTime));
+
+    // ✅ مهم: hover هم ریست شود
+    setHoverDate(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    isOpen,
-    initialRange,
-    initialTimes?.deliveryTime,
-    initialTimes?.returnTime,
-  ])
+  }, [isOpen, initialRange, initialTimes?.deliveryTime, initialTimes?.returnTime]);
 
   // ویو اولیه
-  const jToday = getJalaliParts(new Date())
-  const [viewDate, setViewDate] = React.useState({ year: jToday.year, month: jToday.month })
+  const jToday = getJalaliParts(new Date());
+  const [viewDate, setViewDate] = React.useState({ year: jToday.year, month: jToday.month });
 
   React.useEffect(() => {
     if (isJalali) {
-      const currentJalali = getJalaliParts(new Date())
-      setViewDate({ year: currentJalali.year, month: currentJalali.month })
+      const currentJalali = getJalaliParts(new Date());
+      setViewDate({ year: currentJalali.year, month: currentJalali.month });
     } else {
-      const now = new Date()
-      setViewDate({ year: now.getFullYear(), month: now.getMonth() })
+      const now = new Date();
+      setViewDate({ year: now.getFullYear(), month: now.getMonth() });
     }
-  }, [isJalali])
+  }, [isJalali]);
 
   const handleSelect = (date: Date) => {
+    // اگر start نداریم یا قبلا end داشتیم => شروع جدید
     if (!range.start || range.end) {
-      setRange({ start: date, end: null })
-      return
+      setRange({ start: date, end: null });
+      setHoverDate(null);
+      return;
     }
-    if (date < range.start) return
-    setRange({ start: range.start, end: date })
-  }
+
+    // end باید بعد از start باشد
+    if (date < range.start) return;
+
+    setRange({ start: range.start, end: date });
+    setHoverDate(null);
+  };
 
   const navigate = (dir: number) => {
-    let newMonth = viewDate.month + dir
-    let newYear = viewDate.year
+    let newMonth = viewDate.month + dir;
+    let newYear = viewDate.year;
 
     if (newMonth < 0) {
-      newMonth = 11
-      newYear -= 1
+      newMonth = 11;
+      newYear -= 1;
     } else if (newMonth > 11) {
-      newMonth = 0
-      newYear += 1
+      newMonth = 0;
+      newYear += 1;
     }
 
-    setViewDate({ year: newYear, month: newMonth })
-  }
+    setViewDate({ year: newYear, month: newMonth });
+  };
 
   const goToToday = () => {
     if (isJalali) {
-      const currentJalali = getJalaliParts(new Date())
-      setViewDate({ year: currentJalali.year, month: currentJalali.month })
+      const currentJalali = getJalaliParts(new Date());
+      setViewDate({ year: currentJalali.year, month: currentJalali.month });
     } else {
-      const now = new Date()
-      setViewDate({ year: now.getFullYear(), month: now.getMonth() })
+      const now = new Date();
+      setViewDate({ year: now.getFullYear(), month: now.getMonth() });
     }
-  }
+  };
 
-  const formatDate = (date: Date) => (isJalali ? formatJalaliDate(date) : formatGregorianDate(date))
+  const formatDate = (date: Date) => (isJalali ? formatJalaliDate(date) : formatGregorianDate(date));
 
-  const isComplete = Boolean(range.start && range.end)
-  const displayText = isComplete ? `${formatDate(range.start!)} | ${formatDate(range.end!)}` : ""
+  const isComplete = Boolean(range.start && range.end);
+  const displayText = isComplete ? `${formatDate(range.start!)} | ${formatDate(range.end!)}` : "";
 
   const clearRange = () => {
-    setRange({ start: null, end: null })
-    setDeliveryTime("10:00")
-    setReturnTime("10:00")
-    onClear?.()
-  }
+    setRange({ start: null, end: null });
+    setDeliveryTime("10:00");
+    setReturnTime("10:00");
+    setHoverDate(null);
+    onClear?.();
+  };
 
   const confirm = () => {
-    if (!range.start || !range.end) return
+    if (!range.start || !range.end) return;
 
-    const dt = normalizeTimeLocal(deliveryTime)
-    const rt = normalizeTimeLocal(returnTime)
+    const dt = normalizeTimeLocal(deliveryTime);
+    const rt = normalizeTimeLocal(returnTime);
 
     onConfirm?.({
       start: range.start,
       end: range.end,
       deliveryTime: dt,
       returnTime: rt,
-    })
+    });
 
-    setIsOpen(false)
-  }
+    setIsOpen(false);
+  };
 
-  // محتوای مشترک تقویم
   const calendarContent = (
     <div
       className={cn(
@@ -204,18 +210,15 @@ export function DateRangePickerPopover({
           <ChevronLeft className="h-6 w-6" />
         </button>
 
-        <div
-          className={cn(
-            "grid gap-8 md:gap-12 px-8",
-            isMobile ? "grid-cols-1" : "grid-cols-2"
-          )}
-        >
+        <div className={cn("grid gap-8 md:gap-12 px-8", isMobile ? "grid-cols-1" : "grid-cols-2")}>
           <CalendarGrid
             year={viewDate.year}
             month={viewDate.month}
             range={range}
             onSelect={handleSelect}
             isJalali={isJalali}
+            hoverDate={hoverDate}
+            onHover={(d) => setHoverDate(d)}
           />
 
           {!isMobile && (
@@ -225,12 +228,14 @@ export function DateRangePickerPopover({
               range={range}
               onSelect={handleSelect}
               isJalali={isJalali}
+              hoverDate={hoverDate}
+              onHover={(d) => setHoverDate(d)}
             />
           )}
         </div>
       </div>
 
-      {/* Footer: dates + time inputs */}
+      {/* Footer */}
       <div className="border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-4">
         <div className={cn("flex gap-3", isMobile ? "flex-col" : "flex-row items-center justify-between")}>
           <div className="text-sm">
@@ -287,13 +292,13 @@ export function DateRangePickerPopover({
         </div>
       </div>
     </div>
-  )
+  );
 
-  // تولید ماه‌های اسکرولی برای موبایل (6 ماه آینده)
+  // موبایل
   const generateScrollableMonths = () => {
-    const months: React.ReactNode[] = []
-    let currentYear = viewDate.year
-    let currentMonth = viewDate.month
+    const months: React.ReactNode[] = [];
+    let currentYear = viewDate.year;
+    let currentMonth = viewDate.month;
 
     for (let i = 0; i < 6; i++) {
       months.push(
@@ -304,27 +309,26 @@ export function DateRangePickerPopover({
           range={range}
           onSelect={handleSelect}
           isJalali={isJalali}
+          // موبایل hover ندارد، ولی پاس دادن مشکلی ندارد
+          hoverDate={hoverDate}
+          onHover={(d) => setHoverDate(d)}
         />
-      )
+      );
 
-      currentMonth++
+      currentMonth++;
       if (currentMonth > 11) {
-        currentMonth = 0
-        currentYear++
+        currentMonth = 0;
+        currentYear++;
       }
     }
-    return months
-  }
+    return months;
+  };
 
-  // موبایل: Sheet از راست با طراحی اسکرولی
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>{trigger as any}</SheetTrigger>
-        <SheetContent
-          side="right"
-          className="p-0 w-full h-full flex flex-col [&>button]:hidden"
-        >
+        <SheetContent side="right" className="p-0 w-full h-full flex flex-col [&>button]:hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-white/10" dir="rtl">
             <button
@@ -346,18 +350,14 @@ export function DateRangePickerPopover({
             </button>
           </div>
 
-          {/* Scrollable Calendar Area */}
+          {/* Scrollable */}
           <div className="flex-1 overflow-y-auto px-4 py-4" dir="rtl">
-            <div className="flex flex-col gap-8">
-              {generateScrollableMonths()}
-            </div>
+            <div className="flex flex-col gap-8">{generateScrollableMonths()}</div>
           </div>
 
-          {/* Sticky Footer */}
+          {/* Footer */}
           <div className="border-t border-gray-200 dark:border-white/10 bg-white dark:bg-background p-4" dir="rtl">
-            {/* Date and Time selection */}
             <div className="grid grid-cols-2 gap-4 mb-4">
-              {/* تحویل */}
               <div className="flex flex-col gap-2">
                 <span className="text-xs text-gray-500 dark:text-gray-400">تحویل</span>
                 <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
@@ -379,7 +379,6 @@ export function DateRangePickerPopover({
                 </div>
               </div>
 
-              {/* عودت */}
               <div className="flex flex-col gap-2">
                 <span className="text-xs text-gray-500 dark:text-gray-400">عودت</span>
                 <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
@@ -402,21 +401,16 @@ export function DateRangePickerPopover({
               </div>
             </div>
 
-            {/* Confirm Button */}
-            <Button
-              onClick={confirm}
-              disabled={!isComplete}
-              className="w-full h-12 text-base font-semibold rounded-xl"
-            >
+            <Button onClick={confirm} disabled={!isComplete} className="w-full h-12 text-base font-semibold rounded-xl">
               تایید و جستجو
             </Button>
           </div>
         </SheetContent>
       </Sheet>
-    )
+    );
   }
 
-  // دسکتاپ: Popover با انیمیشن
+  // دسکتاپ
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>{trigger as any}</PopoverTrigger>
@@ -435,5 +429,5 @@ export function DateRangePickerPopover({
         <div className="w-[92vw] max-w-[820px]">{calendarContent}</div>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

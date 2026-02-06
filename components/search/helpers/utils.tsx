@@ -2,20 +2,15 @@
 "use client";
 
 import * as React from "react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
-import { Check, Info, Sparkles, X } from "lucide-react";
+import { Check, Info } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { ApiOption } from "@/types/rent-information";
 
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
 import { IconBag, IconGas, IconGearBox, IconPerson } from "@/components/Icons";
+import { AppDrawer } from "@/components/common/AppDrawer";
 
 // ------------------------------------
 // helpers
@@ -26,48 +21,6 @@ export function formatNum(n: number) {
   } catch {
     return String(n);
   }
-}
-
-/**
- * ✅ توضیحات ثابت برای هر آپشن (طبق ID)
- * هر آپشن جدیدی داشتی فقط اینجا اضافه کن.
- */
-const OPTION_HELP_TEXT_BY_ID: Record<number, string> = {
-  2: `صندلی کودک
-- مناسب کودکان خردسال
-- نصب و تحویل هنگام دریافت خودرو انجام می‌شود
-- مسئولیت انتخاب سایز/مدل مناسب کودک با مشتری است
-- در صورت نیاز می‌توانید قبل از رزرو با پشتیبانی هماهنگ کنید.`,
-
-  10: `راننده اضافی
-- این گزینه اجازه می‌دهد فرد دیگری هم به‌عنوان راننده خودرو ثبت شود
-- برای راننده اضافی ارائه مدارک شناسایی/گواهینامه معتبر لازم است
-- در صورت بروز خسارت یا جریمه، مسئولیت طبق قوانین قرارداد برعهده اجاره‌کننده خواهد بود.`,
-};
-
-function getOptionDescription(opt: any): string {
-  if (!opt) return "برای این آپشن توضیحی ثبت نشده است.";
-
-  const id = Number(opt?.id);
-  if (Number.isFinite(id) && OPTION_HELP_TEXT_BY_ID[id]) {
-    return OPTION_HELP_TEXT_BY_ID[id];
-  }
-
-  const raw =
-    opt?.description ??
-    opt?.desc ??
-    opt?.text ??
-    opt?.details ??
-    opt?.content ??
-    opt?.info ??
-    opt?.note ??
-    opt?.tooltip ??
-    "";
-
-  const apiText = String(raw ?? "").trim();
-  if (apiText) return apiText;
-
-  return "برای این آپشن توضیحی ثبت نشده است.";
 }
 
 export function formatMoneyOrFree(n: number, currencyLabel?: string) {
@@ -96,7 +49,6 @@ export function SummaryRow({
   valueHint?: any;
   loading?: boolean;
 }) {
-  // special case: delivery/return format
   const isDelivery = label.startsWith("محل تحویل:");
   const isReturn = label.startsWith("محل عودت:");
 
@@ -105,6 +57,7 @@ export function SummaryRow({
     : isReturn
       ? "هزینه عودت"
       : label;
+
   const normalizedSub = isDelivery
     ? label.replace("محل تحویل:", "").trim()
     : isReturn
@@ -116,7 +69,6 @@ export function SummaryRow({
   return (
     <div className="py-2">
       <div className="flex items-center justify-between gap-3">
-        {/* RIGHT */}
         <div className="flex-1 text-right">
           <div className="text-sm font-bold text-gray-800 leading-5">
             {loading ? <SkeletonLine w="w-28" /> : normalizedLabel}
@@ -129,7 +81,6 @@ export function SummaryRow({
           ) : null}
         </div>
 
-        {/* LEFT */}
         <div
           className={cn(
             "text-sm text-left font-bold leading-5 whitespace-nowrap",
@@ -233,7 +184,7 @@ function renderPriceLeft({
 }
 
 // ------------------------------------
-// ExtrasList + Drawer
+// ExtrasList (NO Drawer here)
 // ------------------------------------
 export function ExtrasList({
   options,
@@ -264,38 +215,7 @@ export function ExtrasList({
     );
   }, [options]);
 
-  const [openOptionId, setOpenOptionId] = useState<number | null>(null);
   const INS_ID = -999;
-
-  // ✅✅✅ NEW: payload ثابت برای جلوگیری از فلش متن دیفالت موقع بستن
-  const [drawerPayload, setDrawerPayload] = useState<any>(null);
-  const closeTimerRef = useRef<any>(null);
-
-  // ✅ openOption از payload میاد (نه از openOptionId)
-  const openOption = useMemo(() => {
-    return drawerPayload;
-  }, [drawerPayload]);
-
-  const openDesc = useMemo(() => getOptionDescription(openOption), [openOption]);
-
-  // ✅ هر بار روی info کلیک شد، payload ست میشه
-  function openDrawerForOption(opt: any) {
-    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-
-    if (opt?.id === INS_ID) {
-      setDrawerPayload({
-        id: INS_ID,
-        title: "بسته جامع خسارت",
-        description:
-          "با انتخاب این گزینه، پوشش کامل‌تری برای خسارت/ریسک‌های احتمالی در طول اجاره فعال می‌شود.",
-      });
-      setOpenOptionId(INS_ID);
-      return;
-    }
-
-    setDrawerPayload(opt);
-    setOpenOptionId(Number(opt?.id));
-  }
 
   function toggleOption(id: number) {
     if (!Number.isFinite(id as any)) return;
@@ -315,6 +235,18 @@ export function ExtrasList({
       {safeOptions.map((item) => {
         const checked = selected.includes(item.id);
         const rawDaily = Number((item as any)?.price ?? 0) || 0;
+
+        // ✅ description from api (optional)
+        const apiDesc =
+          (item as any)?.description ??
+          (item as any)?.desc ??
+          (item as any)?.text ??
+          (item as any)?.details ??
+          (item as any)?.content ??
+          (item as any)?.info ??
+          (item as any)?.note ??
+          (item as any)?.tooltip ??
+          "";
 
         return (
           <div
@@ -342,17 +274,28 @@ export function ExtrasList({
                   {item.title}
                 </div>
 
-                <button
-                  type="button"
-                  className="text-gray-500 hover:text-gray-700"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openDrawerForOption(item);
+                {/* ✅✅✅ ONLY AppDrawer */}
+                <AppDrawer
+                  kind="extra_option"
+                  data={{
+                    optionId: Number(item.id),
+                    optionTitle: item.title,
+                    optionDescriptionFromApi: String(apiDesc ?? ""),
                   }}
-                  aria-label="اطلاعات بیشتر"
-                >
-                  <Info size={18} />
-                </button>
+                  trigger={({ open }) => (
+                    <button
+                      type="button"
+                      className="text-gray-500 hover:text-gray-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        open();
+                      }}
+                      aria-label="اطلاعات بیشتر"
+                    >
+                      <Info size={18} />
+                    </button>
+                  )}
+                />
               </div>
             </div>
 
@@ -364,100 +307,58 @@ export function ExtrasList({
       })}
 
       {insuranceCompleteEnabled ? (
-        <>
-          <div
-            role="button"
-            tabIndex={0}
-            className={cn(
-              "flex items-center justify-between gap-3 px-4 py-2",
-              "cursor-pointer hover:bg-gray-50 active:bg-gray-100",
-            )}
-            onClick={toggleInsurance}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") toggleInsurance();
-            }}
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <RadixCheckbox
-                checked={insuranceComplete}
-                onCheckedChange={toggleInsurance}
-                className="cursor-pointer"
+        <div
+          role="button"
+          tabIndex={0}
+          className={cn(
+            "flex items-center justify-between gap-3 px-4 py-2",
+            "cursor-pointer hover:bg-gray-50 active:bg-gray-100",
+          )}
+          onClick={toggleInsurance}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") toggleInsurance();
+          }}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <RadixCheckbox
+              checked={insuranceComplete}
+              onCheckedChange={toggleInsurance}
+              className="cursor-pointer"
+            />
+
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="text-sm font-semibold text-gray-800 truncate">
+                بسته جامع خسارت
+              </div>
+
+              {/* ✅✅✅ ONLY AppDrawer */}
+              <AppDrawer
+                kind="insurance_complete"
+                trigger={({ open }) => (
+                  <button
+                    type="button"
+                    className="text-gray-500 hover:text-gray-700"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      open();
+                    }}
+                    aria-label="اطلاعات بیشتر"
+                  >
+                    <Info size={18} />
+                  </button>
+                )}
               />
-
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="text-sm font-semibold text-gray-800 truncate">
-                  بسته جامع خسارت
-                </div>
-
-                <button
-                  type="button"
-                  className="text-gray-500 hover:text-gray-700"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openDrawerForOption({ id: INS_ID });
-                  }}
-                  aria-label="اطلاعات بیشتر"
-                >
-                  <Info size={18} />
-                </button>
-              </div>
-            </div>
-
-            <div className="text-left">
-              {renderPriceLeft({
-                price: Number(insuranceCompleteDailyPrice || 0),
-                currencyLabel,
-              })}
             </div>
           </div>
-        </>
+
+          <div className="text-left">
+            {renderPriceLeft({
+              price: Number(insuranceCompleteDailyPrice || 0),
+              currencyLabel,
+            })}
+          </div>
+        </div>
       ) : null}
-
-      <Drawer
-        open={openOptionId != null}
-        onOpenChange={(v) => {
-          // ✅ وقتی می‌بندیم، openOptionId رو null میکنیم ولی payload رو کمی دیرتر پاک می‌کنیم
-          if (!v) {
-            setOpenOptionId(null);
-
-            if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-            closeTimerRef.current = setTimeout(() => {
-              setDrawerPayload(null);
-              closeTimerRef.current = null;
-            }, 250); // همزمان با انیمیشن
-          }
-        }}
-      >
-        <DrawerContent className="">
-          {/* ✅✅✅ NEW: max-w واقعی با wrapper */}
-          <div className="w-full max-w-lg md:max-w-2xl lg:max-w-4xl mx-auto">
-            <DrawerHeader className="px-5 pt-4 pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                    <Sparkles className="h-5 w-5" />
-                  </span>
-
-                  <div className="min-w-0">
-                    <DrawerTitle className="text-right text-base font-extrabold text-gray-900 truncate">
-                      {/* ✅ payload تا زمان بسته شدن باقی می‌مونه => دیفالت فلش نمی‌زنه */}
-                      {openOption?.title || "جزئیات آپشن"}
-                    </DrawerTitle>
-                  </div>
-                </div>
-              </div>
-            </DrawerHeader>
-
-            <div className="px-5 pb-4">
-              <div className="rounded-2xl p-2">
-                <p className="text-right text-sm leading-7 text-gray-700 whitespace-pre-line">
-                  {openDesc}
-                </p>
-              </div>
-            </div>
-          </div>
-        </DrawerContent>
-      </Drawer>
     </div>
   );
 }
