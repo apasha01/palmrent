@@ -38,6 +38,21 @@ function normalizeTimeLocal(t?: string | null) {
   return `${hh}:${mm}`;
 }
 
+/** ✅ ضد DST/Timezone: تاریخ‌ها را روی 12:00 قفل می‌کنیم */
+const atNoon = (d: Date) => {
+  const x = new Date(d);
+  x.setHours(12, 0, 0, 0);
+  return x;
+};
+
+const normalizeRange = (r?: Range | null): Range => {
+  if (!r) return EMPTY;
+  return {
+    start: r.start ? atNoon(r.start) : null,
+    end: r.end ? atNoon(r.end) : null,
+  };
+};
+
 export function DateRangePickerPopover({
   initialRange = EMPTY,
   defaultIsJalali = true,
@@ -51,7 +66,7 @@ export function DateRangePickerPopover({
   const [isJalali, setIsJalali] = React.useState(defaultIsJalali);
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const [range, setRange] = React.useState<Range>(initialRange ?? EMPTY);
+  const [range, setRange] = React.useState<Range>(() => normalizeRange(initialRange));
 
   const [deliveryTime, setDeliveryTime] = React.useState<string>(
     normalizeTimeLocal(initialTimes?.deliveryTime)
@@ -66,12 +81,12 @@ export function DateRangePickerPopover({
   React.useEffect(() => {
     if (!isOpen) return;
 
-    setRange(initialRange ?? EMPTY);
+    // ✅ وقتی باز میشه، از props دوباره بارگیری کن و نرمال کن
+    setRange(normalizeRange(initialRange ?? EMPTY));
     setDeliveryTime(normalizeTimeLocal(initialTimes?.deliveryTime));
     setReturnTime(normalizeTimeLocal(initialTimes?.returnTime));
-
-    // ✅ مهم: hover هم ریست شود
     setHoverDate(null);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, initialRange, initialTimes?.deliveryTime, initialTimes?.returnTime]);
 
@@ -90,17 +105,21 @@ export function DateRangePickerPopover({
   }, [isJalali]);
 
   const handleSelect = (date: Date) => {
+    const d = atNoon(date);
+
     // اگر start نداریم یا قبلا end داشتیم => شروع جدید
     if (!range.start || range.end) {
-      setRange({ start: date, end: null });
+      setRange({ start: d, end: null });
       setHoverDate(null);
       return;
     }
 
-    // end باید بعد از start باشد
-    if (date < range.start) return;
+    const s = atNoon(range.start);
 
-    setRange({ start: range.start, end: date });
+    // end باید بعد از start باشد
+    if (d.getTime() < s.getTime()) return;
+
+    setRange({ start: s, end: d });
     setHoverDate(null);
   };
 
@@ -129,7 +148,8 @@ export function DateRangePickerPopover({
     }
   };
 
-  const formatDate = (date: Date) => (isJalali ? formatJalaliDate(date) : formatGregorianDate(date));
+  const formatDate = (date: Date) =>
+    isJalali ? formatJalaliDate(date) : formatGregorianDate(date);
 
   const isComplete = Boolean(range.start && range.end);
   const displayText = isComplete ? `${formatDate(range.start!)} | ${formatDate(range.end!)}` : "";
@@ -148,9 +168,10 @@ export function DateRangePickerPopover({
     const dt = normalizeTimeLocal(deliveryTime);
     const rt = normalizeTimeLocal(returnTime);
 
+    // ✅ خروجی هم نرمال‌شده و امن
     onConfirm?.({
-      start: range.start,
-      end: range.end,
+      start: atNoon(range.start),
+      end: atNoon(range.end),
       deliveryTime: dt,
       returnTime: rt,
     });
@@ -187,7 +208,11 @@ export function DateRangePickerPopover({
           {isJalali ? "تقویم میلادی" : "تقویم شمسی"}
         </button>
 
-        <button type="button" onClick={goToToday} className="text-blue-600 dark:text-blue-400 text-sm font-semibold">
+        <button
+          type="button"
+          onClick={goToToday}
+          className="text-blue-600 dark:text-blue-400 text-sm font-semibold"
+        >
           برو به امروز
         </button>
       </div>
@@ -218,7 +243,7 @@ export function DateRangePickerPopover({
             onSelect={handleSelect}
             isJalali={isJalali}
             hoverDate={hoverDate}
-            onHover={(d) => setHoverDate(d)}
+            onHover={(d) => setHoverDate(d ? atNoon(d) : null)}
           />
 
           {!isMobile && (
@@ -229,7 +254,7 @@ export function DateRangePickerPopover({
               onSelect={handleSelect}
               isJalali={isJalali}
               hoverDate={hoverDate}
-              onHover={(d) => setHoverDate(d)}
+              onHover={(d) => setHoverDate(d ? atNoon(d) : null)}
             />
           )}
         </div>
@@ -285,7 +310,11 @@ export function DateRangePickerPopover({
               />
             </label>
 
-            <Button onClick={confirm} disabled={!isComplete} className={cn("h-9 px-5", isMobile && "w-full mt-2")}>
+            <Button
+              onClick={confirm}
+              disabled={!isComplete}
+              className={cn("h-9 px-5", isMobile && "w-full mt-2")}
+            >
               تایید
             </Button>
           </div>
@@ -309,9 +338,8 @@ export function DateRangePickerPopover({
           range={range}
           onSelect={handleSelect}
           isJalali={isJalali}
-          // موبایل hover ندارد، ولی پاس دادن مشکلی ندارد
           hoverDate={hoverDate}
-          onHover={(d) => setHoverDate(d)}
+          onHover={(d) => setHoverDate(d ? atNoon(d) : null)}
         />
       );
 
@@ -330,7 +358,10 @@ export function DateRangePickerPopover({
         <SheetTrigger asChild>{trigger as any}</SheetTrigger>
         <SheetContent side="right" className="p-0 w-full h-full flex flex-col [&>button]:hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-white/10" dir="rtl">
+          <div
+            className="flex items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-white/10"
+            dir="rtl"
+          >
             <button
               type="button"
               onClick={() => setIsOpen(false)}
@@ -401,7 +432,11 @@ export function DateRangePickerPopover({
               </div>
             </div>
 
-            <Button onClick={confirm} disabled={!isComplete} className="w-full h-12 text-base font-semibold rounded-xl">
+            <Button
+              onClick={confirm}
+              disabled={!isComplete}
+              className="w-full h-12 text-base font-semibold rounded-xl"
+            >
               تایید و جستجو
             </Button>
           </div>

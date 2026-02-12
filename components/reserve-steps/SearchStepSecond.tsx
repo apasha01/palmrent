@@ -53,6 +53,7 @@ import {
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store";
 import { PriceGroupsResponsive } from "../search/extra/PriceGroupsResponsive";
 import SummaryRow from "../search/extra/SummarySection";
+import { signIn, signOut, useSession } from "next-auth/react";
 
 // ✅ cache & inflight (key باید dt/rt داشته باشه)
 const calcCache = new Map<string, ApiCalcResponse>();
@@ -212,6 +213,43 @@ export default function InformationStep(): JSX.Element {
       pendingTimersRef.current = {};
     };
   }, []);
+
+  const { data: session, status: sessionStatus } = useSession();
+
+function normalizePhone(p: any) {
+  const s = String(p ?? "")
+    .replace(/[^\d+]/g, "")
+    .trim();
+  if (!s) return "";
+  if (s.startsWith("0098")) return "+98" + s.slice(4);
+  if (s.startsWith("098")) return "+98" + s.slice(3);
+  if (s.startsWith("98") && !s.startsWith("+98")) return "+98" + s.slice(2);
+  if (s.startsWith("0") && s.length === 11) return "+98" + s.slice(1);
+  return s;
+}
+
+useEffect(() => {
+  if (sessionStatus !== "authenticated") return;
+
+  const u: any = (session as any)?.user ?? {};
+
+  const fullName =
+    (u?.name && String(u.name).trim()) ||
+    [u?.first_name, u?.last_name].filter(Boolean).join(" ").trim() ||
+    "";
+
+  const phoneRaw = u?.phone ?? u?.username ?? u?.mobile ?? "";
+  const phone = normalizePhone(phoneRaw);
+
+  const email = (u?.email && String(u.email).trim()) || "";
+
+  // ✅ فقط فیلدهای خالی رو پر کن (تایپ کاربر از بین نره)
+  setUserInfo((prev) => ({
+    name: prev.name?.trim() ? prev.name : fullName,
+    phone: prev.phone?.trim() ? prev.phone : phone,
+    email: prev.email?.trim() ? prev.email : email,
+  }));
+}, [sessionStatus, session]);
 
   // ✅ وقتی ماشین عوض شد، state های قیمت‌ساز رو reset کن تا قیمت “ارثی” نشه
   const prevCarRef = useRef<string | null>(null);
@@ -648,119 +686,208 @@ if (Array.isArray(apiData.places)) {
   // ✅ اجاره پایه (کل) قبل/بعد تخفیف از API
   const baseRentAfter = pricing.totalAfter;
 
-  const handleSubmit = async () => {
-    if (isSubmitting) return;
+const handleSubmit = async () => {
+  if (isSubmitting) return;
 
-    if (!userInfo.name || !userInfo.phone) {
-      toast.warning("لطفا نام و شماره تماس را وارد کنید");
-      return;
-    }
-    if (!deliveryLocation?.location) {
-      toast.warning("لطفا محل تحویل را انتخاب کنید");
-      return;
-    }
-    if (returnDifferent && !returnLocation?.location) {
-      toast.warning("لطفا محل عودت را انتخاب کنید");
-      return;
-    }
+  // ------- validations -------
+  if (!userInfo.name || !userInfo.phone) {
+    toast.warning("لطفا نام و شماره تماس را وارد کنید");
+    return;
+  }
+  if (!deliveryLocation?.location) {
+    toast.warning("لطفا محل تحویل را انتخاب کنید");
+    return;
+  }
+  if (returnDifferent && !returnLocation?.location) {
+    toast.warning("لطفا محل عودت را انتخاب کنید");
+    return;
+  }
 
-    setIsSubmitting(true);
-    try {
-      if (!carDates?.[0] || !carDates?.[1] || !branchIdFromUrl) {
-        toast.error("اطلاعات رزرو نامعتبر است");
-        return;
-      }
-      if (!selectedCarId) {
-        toast.error("خودرو انتخاب نشده است");
-        return;
-      }
+  setIsSubmitting(true);
 
-      // ✅ فقط از API: نیاز به آدرس؟
-      const places = Array.isArray(apiData?.places)
-        ? apiData!.places!.filter(Boolean)
-        : [];
-      const findPlace = (id: any) =>
-        places.find((p: any) => String(p?.id) === String(id));
-
-      const delObj = findPlace((deliveryLocation as any).location);
-      const delNeed = delObj?.need_address === "yes";
-
-      const retId = returnDifferent
-        ? (returnLocation as any).location || (deliveryLocation as any).location
-        : (deliveryLocation as any).location;
-
-      const retObj = findPlace(retId);
-      const retNeed = retObj?.need_address === "yes";
-
-      const payload = {
-        branch_id: branchIdFromUrl || 1,
-        from: carDates[0],
-        to: carDates[1],
-
-        // ✅✅✅ اضافه شد: ساعت تحویل/عودت
-        dt: normalizeTime(dt),
-        rt: normalizeTime(rt),
-
-        place_delivery: (deliveryLocation as any).location,
-        address_delivery: delNeed ? (deliveryLocation as any).address || "" : "",
-
-        place_return: returnDifferent
-          ? (returnLocation as any).location ||
-            (deliveryLocation as any).location
-          : (deliveryLocation as any).location,
-
-        address_return: retNeed
-          ? returnDifferent
-            ? (returnLocation as any).address || ""
-            : (deliveryLocation as any).address || ""
-          : "",
-
-        // ✅ اگر بک‌اندت از این استفاده می‌کنه حتما بفرست (تو کد بک‌اند هست)
-        place_r_custom: returnDifferent ? "yes" : "no",
-
-        first_name: userInfo.name,
-        last_name: ".",
-        phone: userInfo.phone,
-        email: userInfo.email,
-        option_check: selectedOptions,
-        insurance_complete: insuranceComplete ? "yes" : "no",
-      };
-
-
-      const res: any = await api.post(
-        `/car/rent/${selectedCarId}/${locale}/registration`,
-        payload,
-      );
-      const data: any = res?.data ?? res;
-
-      const status = res?.status ?? data?.status;
-      if (status && Number(status) !== 200) {
-        throw new Error(data?.message || "خطا در ثبت رزرو");
-      }
-
-      const rentId = data?.item?.rent_id ?? data?.rent_id;
-      if (!rentId) {
-        toast.warning("رزرو ثبت شد ولی rent_id دریافت نشد");
-        return;
-      }
-
-      const paymentUrl = data?.payment_url || data?.item?.payment_url;
-      if (paymentUrl) {
-        const cb = encodeURIComponent(`/rent/${rentId}`);
-        const joiner = paymentUrl.includes("?") ? "&" : "?";
-        window.location.href = `${paymentUrl}${joiner}callback=${cb}`;
-        return;
-      }
-
-      toast.success("درخواست رزرو انجام شد");
-      router.push(`/rent/reservation?status=initialize&rentid=${rentId}`);
-    } catch (error: any) {
-      console.error("Booking Error:", error);
-      toast.error(error?.message || "خطا در ثبت رزرو");
-    } finally {
-      setIsSubmitting(false);
-    }
+  // ------- helpers -------
+  const normalizePhone = (p: any) => {
+    const s = String(p ?? "").replace(/[^\d+]/g, "").trim();
+    if (!s) return "";
+    if (s.startsWith("0098")) return "+98" + s.slice(4);
+    if (s.startsWith("098")) return "+98" + s.slice(3);
+    if (s.startsWith("98") && !s.startsWith("+98")) return "+98" + s.slice(2);
+    if (s.startsWith("0") && s.length === 11) return "+98" + s.slice(1);
+    return s;
   };
+
+  const getSessionPhone = (sess: any) => {
+    const u = sess?.user ?? {};
+    // طبق دیتای خودت: mobile / username
+    return normalizePhone(u?.mobile ?? u?.username ?? u?.phone ?? "");
+  };
+
+  // ------- logout decision (ONLY if user was logged in) -------
+  const wasLoggedIn = sessionStatus === "authenticated";
+  const sessionPhone = wasLoggedIn ? getSessionPhone(session) : "";
+  const formPhone = normalizePhone(userInfo.phone);
+
+  const shouldLogout =
+    Boolean(wasLoggedIn && sessionPhone && formPhone && sessionPhone !== formPhone);
+
+  // ✅ لاگ‌اوت بی‌صدا و بدون redirect/callback
+  // مهم: next-auth بعضی وقتا حتی با redirect:false هم می‌تونه middleware/guard رو تحریک کنه
+  // این کارو بعد از خروج از صفحه انجام می‌دیم
+  const logoutSilentlyAfterNavigation = () => {
+    if (!shouldLogout) return;
+
+    const startPath = window.location.pathname + window.location.search;
+    let tries = 0;
+
+    const timer = window.setInterval(() => {
+      tries += 1;
+
+      const nowPath = window.location.pathname + window.location.search;
+
+      // وقتی مسیر عوض شد => signOut
+      if (nowPath !== startPath) {
+        window.clearInterval(timer);
+
+        // بدون await و بدون redirect
+        signOut({ redirect: false })
+          .catch(() => {})
+          .finally(() => {
+            // هیچ کاری نکن، فقط سشن پاک شود
+          });
+
+        return;
+      }
+
+      // جلوگیری از لوپ
+      if (tries >= 80) {
+        window.clearInterval(timer);
+      }
+    }, 25);
+  };
+
+  try {
+    if (!carDates?.[0] || !carDates?.[1] || !branchIdFromUrl) {
+      toast.error("اطلاعات رزرو نامعتبر است");
+      return;
+    }
+    if (!selectedCarId) {
+      toast.error("خودرو انتخاب نشده است");
+      return;
+    }
+
+    const places = Array.isArray(apiData?.places)
+      ? apiData!.places!.filter(Boolean)
+      : [];
+
+    const findPlace = (id: any) =>
+      places.find((p: any) => String(p?.id) === String(id));
+
+    const delObj = findPlace((deliveryLocation as any).location);
+    const delNeed = delObj?.need_address === "yes";
+
+    const retId = returnDifferent
+      ? (returnLocation as any).location || (deliveryLocation as any).location
+      : (deliveryLocation as any).location;
+
+    const retObj = findPlace(retId);
+    const retNeed = retObj?.need_address === "yes";
+
+    // ⚠️ last_name:
+    // اگر بک‌اند required هست، اینجا باید یه مقدار بی‌اثر بفرستی تا گیر نده.
+    // اگر بک‌اند رو درست کردی و optional شد، می‌تونی "" بفرستی.
+    const lastNameForApi = ""; // ← اگر بک‌اند required هست: "." بذار
+
+    const payload = {
+      branch_id: branchIdFromUrl || 1,
+      from: carDates[0],
+      to: carDates[1],
+
+      dt: normalizeTime(dt),
+      rt: normalizeTime(rt),
+
+      place_delivery: (deliveryLocation as any).location,
+      address_delivery: delNeed ? (deliveryLocation as any).address || "" : "",
+
+      place_return: returnDifferent
+        ? (returnLocation as any).location || (deliveryLocation as any).location
+        : (deliveryLocation as any).location,
+
+      address_return: retNeed
+        ? returnDifferent
+          ? (returnLocation as any).address || ""
+          : (deliveryLocation as any).address || ""
+        : "",
+
+      place_r_custom: returnDifferent ? "yes" : "no",
+
+      first_name: userInfo.name,
+      last_name: lastNameForApi, // ✅ همون چیزی که گفتی (ولی اگر required باشه باید "." بدی)
+      phone: userInfo.phone,
+      email: userInfo.email,
+      option_check: selectedOptions,
+      insurance_complete: insuranceComplete ? "yes" : "no",
+    };
+
+    const res: any = await api.post(
+      `/car/rent/${selectedCarId}/${locale}/registration`,
+      payload
+    );
+
+    const raw: any = res?.data ?? res;
+    const status = res?.status ?? raw?.status;
+
+    if (status && Number(status) !== 200) {
+      throw new Error(raw?.message || "خطا در ثبت رزرو");
+    }
+
+    const payloadData: any = raw?.data ?? raw;
+
+    const rentId =
+      payloadData?.item?.rent_id ??
+      payloadData?.item?.id ??
+      payloadData?.rent_id ??
+      payloadData?.id;
+
+    if (!rentId) {
+      toast.warning("رزرو ثبت شد ولی rent_id دریافت نشد");
+      return;
+    }
+
+    // ✅ مهم: تو گفتی «هیچ لاگین/کال‌بک نمی‌خوام»
+    // پس این بخش رو کلاً حذف/غیرفعال می‌کنیم تا برای غیرلاگین‌ها هم لاگین خودکار انجام نشه
+    // (اگر لازم داری فقط برای new user لاگین کنه، بهم بگو شرط دقیقش چیه)
+    // --- AUTO LOGIN DISABLED ---
+
+    const paymentUrl =
+      payloadData?.payment_url || payloadData?.item?.payment_url;
+
+    if (paymentUrl) {
+      // پرداخت خارجی: چون داریم از سایت می‌ریم بیرون، اگر mismatch بود همینجا signOut مشکلی نداره
+      if (shouldLogout) {
+        signOut({ redirect: false }).catch(() => {});
+      }
+
+      const cb = encodeURIComponent(`/rent/${rentId}`);
+      const joiner = String(paymentUrl).includes("?") ? "&" : "?";
+      window.location.href = `${paymentUrl}${joiner}callback=${cb}`;
+      return;
+    }
+
+    toast.success("درخواست رزرو انجام شد");
+
+    // ✅ اول برو صفحه بعد
+    router.push(`/rent/reservation?status=initialize&rentid=${rentId}`);
+
+    // ✅ بعدش (وقتی صفحه عوض شد) سشن رو بی‌صدا پاک کن
+    logoutSilentlyAfterNavigation();
+  } catch (error: any) {
+    console.error("Booking Error:", error);
+    toast.error(error?.message || "خطا در ثبت رزرو");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   const handleSelectUser = (user: {
     name?: string;

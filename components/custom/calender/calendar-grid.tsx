@@ -60,7 +60,6 @@ export function CalendarGrid({
   const daysInMonth = getDaysInMonth(year, month, isJalali ? "jalali" : "gregorian");
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-  // ✅ برای محاسبه اول ماه هم تاریخ درست ساخته شود
   const monthStartDateRaw = isJalali ? jalaliToDate(year, month, 1) : new Date(year, month, 1);
   const monthStartDate = atNoon(monthStartDateRaw);
   const firstDay = monthStartDate.getDay();
@@ -70,20 +69,14 @@ export function CalendarGrid({
 
   const weekDays = isJalali ? weekDaysJalali : weekDaysGregorian;
 
-  // ✅ آخرین روز ماه برای حالت end پیش‌فرض
-  const monthEndDateRaw = isJalali
-    ? jalaliToDate(year, month, daysInMonth)
-    : new Date(year, month, daysInMonth);
-  const monthEndDate = atNoon(monthEndDateRaw);
-
-  // ✅ end موثر: اگر end نبود => hover (اگر معتبر بود) وگرنه آخر ماه
+  // ✅ end موثر: فقط وقتی end واقعی داریم یا hover معتبر داریم
   const effectiveEnd =
     range.start
       ? range.end
         ? atNoon(range.end)
         : hoverDate && isGteDay(hoverDate, range.start)
           ? atNoon(hoverDate)
-          : monthEndDate
+          : null
       : null;
 
   return (
@@ -114,7 +107,7 @@ export function CalendarGrid({
           // ✅ end واقعی
           const isEndReal = isSameDaySafe(range.end, date);
 
-          // ✅ end موقت hover
+          // ✅ end موقت hover (فقط وقتی end هنوز انتخاب نشده)
           const isEndHover =
             !range.end &&
             !!range.start &&
@@ -122,22 +115,17 @@ export function CalendarGrid({
             isGteDay(hoverDate, range.start) &&
             isSameDaySafe(hoverDate, date);
 
-          // ✅ end پیش‌فرض (آخر ماه) وقتی end نداریم و hover معتبر نداریم
-          const isEndDefault =
-            !range.end &&
-            !!range.start &&
-            (!hoverDate || !isGteDay(hoverDate, range.start)) &&
-            isSameDaySafe(monthEndDate, date);
+          // ✅ دیگه end پیش‌فرض نداریم
+          const isEnd = isEndReal || isEndHover;
 
-          const isEnd = isEndReal || isEndHover || isEndDefault;
-
+          // ✅ فقط وقتی effectiveEnd داریم، رنج روشن میشه
           const inRange =
             range.start && effectiveEnd ? isBetween(date, range.start, effectiveEnd) : false;
 
           return (
             <button
               key={day}
-              onClick={() => onSelect(dateRaw)} // ✅ بیرون همون dateRaw بفرستیم
+              onClick={() => onSelect(dateRaw)}
               onMouseEnter={() => onHover?.(dateRaw)}
               onMouseLeave={() => onHover?.(null)}
               className={cn(
@@ -146,10 +134,10 @@ export function CalendarGrid({
                 // start
                 isStart && "bg-orange-400 dark:bg-orange-400 text-black font-bold rounded-r-xl z-10",
 
-                // end (real/hover/default)
+                // end (real/hover)
                 isEnd && "bg-orange-400 dark:bg-orange-400 text-black font-bold rounded-l-xl z-10",
 
-                // range
+                // range (فقط با hover یا end واقعی)
                 inRange && "bg-orange-300/30 dark:bg-orange-300/20",
 
                 // hover style for normal days

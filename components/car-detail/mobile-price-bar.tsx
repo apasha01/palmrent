@@ -96,6 +96,7 @@ export type MobilePriceBarProps = {
   car: PricingCarMeta;
   dailyPrice?: DailyPriceItem[] | null;
   currency?: string | null;
+  offPercent?: number | null; // ✅ اضافه شد
 };
 
 export function MobilePriceBar({

@@ -1,18 +1,38 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useMemo, useRef, useState, useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronDown, Download, Camera, X } from "lucide-react";
+import {
+  ChevronDown,
+  Download,
+  Camera,
+  X,
+  Lock,
+  ShieldCheck,
+  RefreshCcw,
+  Loader2,
+  CheckCircle2,
+  Home,
+  Headset,
+} from "lucide-react";
 import Lottie from "lottie-react";
 import SuccessPayment from "@/public/lottie/PaymentSuccess.json";
 import Image from "next/image";
 import { toast } from "react-toastify";
 
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+
 import SummaryRow from "../search/extra/SummarySection";
+import { getUserDocuments, uploadUserDocuments, uploadUserDocumentsFormData } from "@/services/user-document/UserDocument";
+import { otpRequest } from "@/services/auth/auth.api";
 
 function toFaNumber(n: number | string) {
   const num = typeof n === "string" ? Number(n) : n;
@@ -49,16 +69,38 @@ function formatDateTimeFa(input?: string) {
   }).format(d);
 }
 
-type UploadKey =
-  | "id_card"
-  | "dl_front"
-  | "dl_back"
-  | "intl_dl_front"
-  | "intl_dl_back"
-  | "visa";
+function normalizeMobile(m: string) {
+  const s = String(m ?? "").trim();
+  if (s.startsWith("+98")) return "0" + s.slice(3);
+  if (s.startsWith("0098")) return "0" + s.slice(4);
+  return s;
+}
+
+type UploadKey = "id_card" | "dl_front" | "dl_back" | "intl_dl_front" | "intl_dl_back" | "visa";
 
 type FilesState = Partial<Record<UploadKey, File | null>>;
 type ErrorState = Partial<Record<UploadKey, boolean>>;
+
+type UploadedDoc =
+  | {
+      id?: number;
+      status?: string;
+      file_path?: string | null;
+      file_url?: string | null;
+      rejection_reason?: string | null;
+    }
+  | null;
+
+type ServerDocsState = Partial<Record<UploadKey, UploadedDoc>>;
+
+const MAP: Record<UploadKey, readonly [string, string]> = {
+  id_card: ["identity", "single"],
+  dl_front: ["driver_license", "front"],
+  dl_back: ["driver_license", "back"],
+  intl_dl_front: ["international_driver_license", "front"],
+  intl_dl_back: ["international_driver_license", "back"],
+  visa: ["visa", "single"],
+};
 
 function logFormData(fd: FormData) {
   console.group("SUBMIT: FORMDATA");
@@ -72,45 +114,341 @@ function logFormData(fd: FormData) {
   console.groupEnd();
 }
 
+/** ✅ دیالوگ قفل OTP - غیر قابل بستن */
+function OtpLockDialog({
+  open,
+  mobile,
+  onAuthed,
+}: {
+  open: boolean;
+  mobile: string;
+  onAuthed: () => void;
+}) {
+  const fixedMobile = useMemo(() => normalizeMobile(mobile), [mobile]);
+
+  const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (!open) return;
+    if (!fixedMobile) return;
+
+    let mounted = true;
+
+    (async () => {
+      setLoading(true);
+      try {
+        await otpRequest(fixedMobile);
+        if (!mounted) return;
+        toast.success("کد تایید ارسال شد");
+        setCooldown(60);
+      } catch (e: any) {
+        if (!mounted) return;
+        toast.error(e?.message ?? "خطا در ارسال کد");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [open, fixedMobile]);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setInterval(() => setCooldown((s) => s - 1), 1000);
+    return () => clearInterval(t);
+  }, [cooldown]);
+
+  const resend = async () => {
+    if (!fixedMobile) return;
+    setLoading(true);
+    try {
+      await otpRequest(fixedMobile);
+      toast.success("کد دوباره ارسال شد");
+      setCooldown(60);
+      setOtp("");
+    } catch (e: any) {
+      toast.error(e?.message ?? "ارسال مجدد ناموفق بود");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verify = async (code: string) => {
+    if (!fixedMobile) return;
+    if (code.length !== 5) return;
+
+    setLoading(true);
+    try {
+      const res = await signIn("otp", {
+        redirect: false,
+        mobile: fixedMobile,
+        code,
+      });
+
+      if (!res?.ok) {
+        toast.error("کد وارد شده صحیح نیست");
+        setOtp("");
+        return;
+      }
+
+      toast.success("ورود انجام شد");
+      onAuthed();
+    } catch (e: any) {
+      toast.error(e?.message ?? "خطا در تایید کد");
+      setOtp("");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={() => {}}>
+      <DialogContent
+        className="sm:max-w-md p-0 overflow-hidden border-none rounded-3xl shadow-[0_40px_120px_-20px_rgba(0,0,0,0.35)] bg-background/95 backdrop-blur-2xl"
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        <DialogTitle className="sr-only">ورود اجباری</DialogTitle>
+
+        <div className="p-7 sm:p-10 text-center space-y-7">
+          <div className="inline-flex items-center gap-2 justify-center text-sm text-muted-foreground">
+            <Lock className="h-4 w-4" />
+            <span>این مرحله قفل است</span>
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-foreground">برای ادامه باید وارد شوید</h2>
+            <p className="text-sm text-muted-foreground">
+              شماره رزرو از قبل ثبت شده و قابل تغییر نیست. کد تایید برای همین شماره ارسال می‌شود.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-right text-xs text-muted-foreground">شماره همراه (غیرقابل تغییر)</div>
+            <Input
+              dir="ltr"
+              value={fixedMobile}
+              readOnly
+              className="h-12 text-center text-base font-bold tracking-wide rounded-2xl bg-secondary/30 border-transparent"
+            />
+          </div>
+
+          <div className="space-y-5 pt-2 flex flex-col items-center">
+            <div className="flex items-center justify-center">
+              <div className="bg-primary text-primary-foreground p-4 rounded-2xl shadow">
+                <ShieldCheck className="h-7 w-7" />
+              </div>
+            </div>
+
+            <InputOTP
+              dir="ltr"
+              maxLength={5}
+              value={otp}
+              onChange={(val) => {
+                setOtp(val);
+                if (val.length === 5) verify(val);
+              }}
+              autoFocus
+            >
+              <InputOTPGroup className="gap-3" dir="ltr">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <InputOTPSlot
+                    key={i}
+                    index={i}
+                    className="w-12 h-14 bg-gray-200 dark:bg-gray-800 text-xl font-semibold shadow-inner transition-all border-2 border-transparent focus-within:border-primary/30 focus-within:ring-4 focus-within:ring-primary/5"
+                  />
+                ))}
+              </InputOTPGroup>
+            </InputOTP>
+
+            <Button
+              type="button"
+              className="w-full h-12 rounded-2xl font-extrabold"
+              disabled={loading || otp.length !== 5}
+              onClick={() => verify(otp)}
+            >
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "تایید و ادامه"}
+            </Button>
+
+            <Button
+              variant="ghost"
+              disabled={cooldown > 0 || loading}
+              onClick={resend}
+              className="w-full h-11 rounded-xl font-medium gap-2 text-muted-foreground hover:text-primary"
+            >
+              <RefreshCcw className={cn("h-4 w-4", cooldown > 0 && "animate-spin-slow opacity-40")} />
+              {cooldown > 0 ? <span className="tabular-nums">ارسال مجدد ({cooldown})</span> : "ارسال دوباره کد"}
+            </Button>
+
+            <div className="text-[11px] text-muted-foreground">
+              {cooldown > 0 ? `تا ارسال مجدد ${cooldown} ثانیه` : "در صورت عدم دریافت، ارسال مجدد را بزنید"}
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function cn(...classes: (string | false | null | undefined)[]) {
+  return classes.filter(Boolean).join(" ");
+}
+
+/** ✅ تایمر ۵ ثانیه‌ای برای دیالوگ تشکر */
+function CountdownRing({ secondsLeft, total = 5 }: { secondsLeft: number; total?: number }) {
+  const size = 120;
+  const stroke = 10;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const progress = Math.min(1, Math.max(0, secondsLeft / total));
+  const dash = c * progress;
+
+  return (
+    <div className="relative flex items-center justify-center">
+      <svg width={size} height={size} className="block">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          strokeWidth={stroke}
+          className="text-gray-200 dark:text-gray-800"
+          stroke="currentColor"
+          fill="none"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          strokeWidth={stroke}
+          className="text-green-600"
+          stroke="currentColor"
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={`${dash} ${c - dash}`}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </svg>
+
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+  
+        <div className="text-3xl font-black tabular-nums text-gray-900 dark:text-white">{toFaNumber(secondsLeft)}</div>
+        <div className="text-[11px] text-gray-500 dark:text-gray-400">ثانیه</div>
+      </div>
+    </div>
+  );
+}
+
+/** ✅ دیالوگ تشکر قفل + تایمر + هدایت خودکار */
+function UploadThanksLockedDialog({
+  open,
+  secondsLeft,
+  onGoHome,
+}: {
+  open: boolean;
+  secondsLeft: number;
+  onGoHome: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={() => {}}>
+      <DialogContent
+        className="sm:max-w-md p-0 overflow-hidden border-none rounded-3xl shadow-[0_40px_120px_-20px_rgba(0,0,0,0.35)] bg-background/95 backdrop-blur-2xl"
+        // ✅ قفل کامل: هیچ راهی برای بستن
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        <DialogTitle className="sr-only">ثبت مدارک</DialogTitle>
+
+        <div className="p-7 sm:p-9 space-y-6 text-center">
+          <CountdownRing secondsLeft={secondsLeft} total={10} />
+
+          <div className="space-y-2">
+            <h3 className="text-xl font-black text-gray-900 dark:text-white">مدارک ثبت شد</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 leading-7">
+              ممنون 🙏 مدارک شما دریافت شد و در حال بررسی است.
+              <br />
+              تا چند لحظه دیگر به صفحه اصلی هدایت می‌شوید…
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-800/30 p-4 text-right">
+            <div className="flex items-start gap-2">
+              <div className="mt-0.5">
+                <Headset className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+              </div>
+              <div className="text-xs text-gray-700 dark:text-gray-200 leading-6">
+                <div className="font-black mb-1">پشتیبانی</div>
+                اگر عکس‌ها خوانا نبود یا مشکلی داشت (نور، برش، تاری و ...)، با پشتیبانی هماهنگ کنید تا سریع‌تر بررسی شود.
+              </div>
+            </div>
+          </div>
+
+          {/* دکمه دستی (اختیاری) */}
+          <Button type="button" onClick={onGoHome} className="w-full h-12 rounded-2xl font-extrabold gap-2">
+            <Home className="h-5 w-5" />
+            همین الان برو صفحه اصلی
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function UploadTile({
   label,
   file,
+  serverUrl,
   onPick,
   onRemove,
   hasError,
   gridOneSlot,
+  disabled,
 }: {
   label: string;
   file?: File | null;
+  serverUrl?: string | null;
   onPick: () => void;
   onRemove?: () => void;
   hasError?: boolean;
   gridOneSlot?: boolean;
+  disabled?: boolean;
 }) {
   const [preview, setPreview] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!file) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPreview(null);
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPreview(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    if (serverUrl) {
+      setPreview(serverUrl);
       return;
     }
-    const url = URL.createObjectURL(file);
-    setPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
+    setPreview(null);
+  }, [file, serverUrl]);
+
+  const hasAnyPreview = Boolean(preview);
 
   return (
     <div className={gridOneSlot ? "col-span-1" : "w-full"}>
       <div className="relative">
         <button
           type="button"
-          onClick={onPick}
+          onClick={() => {
+            if (disabled) return;
+            onPick();
+          }}
           className={[
             "w-full rounded-2xl border relative overflow-hidden",
             hasError ? "border-red-500" : "border-gray-200 dark:border-gray-800",
             "bg-gray-100/70 dark:bg-gray-800/60",
-            "hover:bg-gray-100 dark:hover:bg-gray-800",
+            disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-gray-100 dark:hover:bg-gray-800",
             "transition",
             "h-[108px] sm:h-[120px]",
             "flex items-center justify-center",
@@ -118,16 +456,10 @@ function UploadTile({
           ].join(" ")}
         >
           {preview ? (
-            <Image
-              src={preview}
-              alt={label}
-              fill
-              className="object-cover"
-              sizes="(max-width: 640px) 50vw, 240px"
-            />
+            <Image src={preview} alt={label} fill className="object-cover" sizes="(max-width: 640px) 50vw, 240px" />
           ) : null}
 
-          <div className={["absolute inset-0", preview ? "bg-black/10" : "bg-transparent"].join(" ")} />
+          <div className={["absolute inset-0", hasAnyPreview ? "bg-black/10" : "bg-transparent"].join(" ")} />
 
           <div className="relative z-10 flex flex-col items-center justify-center gap-2">
             <div className="h-11 w-11 flex items-center justify-center rounded-2xl">
@@ -136,7 +468,7 @@ function UploadTile({
           </div>
         </button>
 
-        {file && onRemove ? (
+        {hasAnyPreview && onRemove && !disabled ? (
           <button
             type="button"
             onClick={onRemove}
@@ -149,13 +481,30 @@ function UploadTile({
       </div>
 
       <div className="mt-2 text-center text-xs text-gray-700 dark:text-gray-200">{label}</div>
-
       {hasError ? <div className="mt-1 text-center text-[11px] text-red-600">این مورد الزامی است</div> : null}
     </div>
   );
 }
 
 export function PaymentSuccessCard({ rentData, trace, onDownloadVoucher, onSubmitUpload }: any) {
+  const router = useRouter();
+
+  // ✅ وضعیت session
+  const { status } = useSession();
+  const isAuthed = status === "authenticated";
+
+  // ✅ شرط قفل از بک
+  const authRequired = rentData?.auth?.auth_required === true;
+
+  // ✅ شماره رزرو (فقط نمایش و OTP)
+  const readonlyPhoneRaw =
+    String(rentData?.auth?.phone ?? rentData?.rent_info?.phone ?? rentData?.summary?.phone ?? rentData?.phone ?? "") ||
+    "";
+  const readonlyPhone = useMemo(() => normalizeMobile(readonlyPhoneRaw), [readonlyPhoneRaw]);
+
+  // ✅ کنترل قفل
+  const mustLock = authRequired && !isAuthed;
+
   const payment = rentData?.payment || {};
   const car = rentData?.car || {};
   const info = rentData?.rent_info || {};
@@ -164,10 +513,11 @@ export function PaymentSuccessCard({ rentData, trace, onDownloadVoucher, onSubmi
 
   const currency = details?.currency || summary?.currency || "";
 
-  const carTitle = useMemo(
-    () => [car?.brand, car?.model, car?.year].filter(Boolean).join(" "),
-    [car?.brand, car?.model, car?.year]
-  );
+  const carTitle = useMemo(() => [car?.brand, car?.model, car?.year].filter(Boolean).join(" "), [
+    car?.brand,
+    car?.model,
+    car?.year,
+  ]);
 
   const fromText = formatDateTimeFa(info?.from_date);
   const toText = formatDateTimeFa(info?.to_date);
@@ -180,54 +530,126 @@ export function PaymentSuccessCard({ rentData, trace, onDownloadVoucher, onSubmi
     payment?.remain ??
     rentData?.remain_to_pay;
 
-  const prePay =
-    details?.totals?.pre_pay ??
-    payment?.pre_pay ??
-    payment?.prepay ??
-    rentData?.pre_pay;
+  const prePay = details?.totals?.pre_pay ?? payment?.pre_pay ?? payment?.prepay ?? rentData?.pre_pay;
 
-  const sumAll =
-    details?.totals?.sum_all ??
-    summary?.total ??
-    details?.sum_all ??
-    rentData?.sum_all;
+  const sumAll = details?.totals?.sum_all ?? summary?.total ?? details?.sum_all ?? rentData?.sum_all;
 
   const [openInfo, setOpenInfo] = useState(true);
 
-  // ===== files
+  // ===== uploads
   const [files, setFiles] = useState<FilesState>({});
+  const [serverDocs, setServerDocs] = useState<ServerDocsState>({});
   const [noIntl, setNoIntl] = useState<boolean>(false);
   const [noVisa, setNoVisa] = useState<boolean>(false);
+
   const [loading, setLoading] = useState(false);
   const [downloadingVoucher, setDownloadingVoucher] = useState(false);
 
   const [err, setErr] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<ErrorState>({});
 
+  // ✅ دیالوگ قفل تشکر + تایمر
+  const [openThanks, setOpenThanks] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(5);
+
   const inputs = useRef<Record<string, HTMLInputElement | null>>({});
-  const pick = (k: UploadKey) => inputs.current[k]?.click();
 
   const onFile = (k: UploadKey, f: File | null) => {
+    if (mustLock) {
+      toast.info("برای ادامه باید وارد شوید");
+      return;
+    }
     setFiles((p) => ({ ...p, [k]: f }));
     setFieldErrors((p) => ({ ...p, [k]: false }));
   };
 
-  const removeFile = (k: UploadKey) => setFiles((p) => ({ ...p, [k]: null }));
+  const removeFile = (k: UploadKey) => {
+    if (mustLock) return;
+    setFiles((p) => ({ ...p, [k]: null }));
+    setServerDocs((p) => ({ ...p, [k]: null }));
+  };
+
+  // ✅ وقتی دیالوگ تشکر باز شد: تایمر ۵ ثانیه‌ای شروع + هدایت خودکار
+  useEffect(() => {
+    if (!openThanks) return;
+
+    setSecondsLeft(5);
+    let mounted = true;
+
+    const interval = setInterval(() => {
+      if (!mounted) return;
+      setSecondsLeft((s) => {
+        const next = s - 1;
+        return next;
+      });
+    }, 1000);
+
+    const timeout = setTimeout(() => {
+      if (!mounted) return;
+      router.push("/");
+    }, 5000);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [openThanks, router]);
+
+  // ✅ load existing docs from server فقط اگر لاگین هست
+  useEffect(() => {
+    if (mustLock) return;
+
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await getUserDocuments();
+        if (!mounted) return;
+
+        const next: ServerDocsState = {};
+        (Object.keys(MAP) as UploadKey[]).forEach((k) => {
+          const [type, side] = MAP[k];
+          next[k] = data?.[type]?.[side] ?? null;
+        });
+
+        setServerDocs(next);
+
+        const hasIntl = Boolean(next.intl_dl_front?.file_url) || Boolean(next.intl_dl_back?.file_url);
+        if (!hasIntl) setNoIntl(false);
+
+        const hasVisa = Boolean(next.visa?.file_url);
+        if (!hasVisa) setNoVisa(false);
+      } catch (e) {
+        console.error("load documents failed", e);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [mustLock]);
+
+  const hasServer = (k: UploadKey) => Boolean(serverDocs[k]?.file_url);
 
   const validate = () => {
+    if (mustLock) {
+      toast.info("برای آپلود مدارک باید وارد شوید");
+      return false;
+    }
+
     const next: ErrorState = {};
 
-    if (!files.id_card) next.id_card = true;
-    if (!files.dl_front) next.dl_front = true;
-    if (!files.dl_back) next.dl_back = true;
+    if (!files.id_card && !hasServer("id_card")) next.id_card = true;
+    if (!files.dl_front && !hasServer("dl_front")) next.dl_front = true;
+    if (!files.dl_back && !hasServer("dl_back")) next.dl_back = true;
 
     if (!noIntl) {
-      if (!files.intl_dl_front) next.intl_dl_front = true;
-      if (!files.intl_dl_back) next.intl_dl_back = true;
+      if (!files.intl_dl_front && !hasServer("intl_dl_front")) next.intl_dl_front = true;
+      if (!files.intl_dl_back && !hasServer("intl_dl_back")) next.intl_dl_back = true;
     }
 
     if (!noVisa) {
-      if (!files.visa) next.visa = true;
+      if (!files.visa && !hasServer("visa")) next.visa = true;
     }
 
     setFieldErrors(next);
@@ -240,52 +662,82 @@ export function PaymentSuccessCard({ rentData, trace, onDownloadVoucher, onSubmi
     return true;
   };
 
-  const submit = async () => {
-    try {
-      setErr(null);
-      if (!validate()) return;
-
-      setLoading(true);
-
-      const fd = new FormData();
-      fd.append("id_card", files.id_card as File);
-      fd.append("dl_front", files.dl_front as File);
-      fd.append("dl_back", files.dl_back as File);
-
-      if (!noIntl) {
-        fd.append("intl_dl_front", files.intl_dl_front as File);
-        fd.append("intl_dl_back", files.intl_dl_back as File);
-      } else {
-        fd.append("no_intl", "1");
-      }
-
-      if (!noVisa) {
-        fd.append("visa", files.visa as File);
-      } else {
-        fd.append("no_visa", "1");
-      }
-
-      const rentCode = rentData?.rent_code ?? "";
-      const traceCode = trace ?? rentData?.tracing_code ?? "";
-      if (rentCode) fd.append("rent_code", String(rentCode));
-      if (traceCode) fd.append("trace_code", String(traceCode));
-
-      logFormData(fd);
-
-      if (typeof onSubmitUpload === "function") {
-        await onSubmitUpload(fd);
-      }
-
-      toast.success("آپلود انجام شد");
-    } catch (e: any) {
-      setErr(e?.message || "خطا در آپلود مدارک");
-      toast.warn(e?.message || "آپلود انجام نشد");
-    } finally {
-      setLoading(false);
+const submit = async () => {
+  try {
+    if (mustLock) {
+      toast.info("برای آپلود مدارک باید وارد شوید");
+      return;
     }
-  };
 
-  // ✅ دانلود وچر
+    setErr(null);
+    if (!validate()) return;
+
+    setLoading(true);
+
+    const fd = new FormData();
+
+    // فقط فایل‌های جدید را append کن
+    if (files.id_card) fd.append("identity_file", files.id_card);
+    if (files.dl_front) fd.append("driver_license_front", files.dl_front);
+    if (files.dl_back) fd.append("driver_license_back", files.dl_back);
+
+    if (!noIntl) {
+      if (files.intl_dl_front) fd.append("intl_driver_license_front", files.intl_dl_front);
+      if (files.intl_dl_back) fd.append("intl_driver_license_back", files.intl_dl_back);
+    }
+
+    if (!noVisa) {
+      if (files.visa) fd.append("visa_file", files.visa);
+    }
+
+    const hasAnyNewFile = [...fd.keys()].length > 0;
+
+    // ✅ اگر هیچ تغییری نداده، درخواست نزن، فقط دیالوگ تشکر
+    if (!hasAnyNewFile) {
+      setOpenThanks(true);
+      return;
+    }
+
+    // ✅ اگر لازم داری rent_code/trace_code هم بفرستی همینجا اضافه کن
+    const rentCode = rentData?.rent_code ?? "";
+    const traceCode = trace ?? rentData?.tracing_code ?? "";
+    if (rentCode) fd.append("rent_code", String(rentCode));
+    if (traceCode) fd.append("trace_code", String(traceCode));
+
+    logFormData(fd);
+
+    // ✅ ارسال درست: FormData مستقیم
+    if (typeof onSubmitUpload === "function") {
+      await onSubmitUpload(fd);
+    } else {
+      await uploadUserDocumentsFormData(fd);
+    }
+
+    // refresh from server
+    try {
+      const data = await getUserDocuments();
+      const next: ServerDocsState = {};
+      (Object.keys(MAP) as UploadKey[]).forEach((k) => {
+        const [type, side] = MAP[k];
+        next[k] = data?.[type]?.[side] ?? null;
+      });
+      setServerDocs(next);
+      setFiles({});
+    } catch {
+      setFiles({});
+    }
+
+    toast.success("آپلود انجام شد");
+    setOpenThanks(true);
+  } catch (e: any) {
+    setErr(e?.message || "خطا در آپلود مدارک");
+    toast.warn(e?.message || "آپلود انجام نشد");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
   const handleDownloadVoucher = async () => {
     const rentId = rentData?.rent_id ?? rentData?.rentId ?? rentData?.id;
     if (!rentId) {
@@ -332,40 +784,25 @@ export function PaymentSuccessCard({ rentData, trace, onDownloadVoucher, onSubmi
     }
   };
 
-  // =========================
-  // ✅ ریزفاکتور دقیق مثل "جزئیات حساب"
-  // =========================
   const invoiceRows = useMemo(() => {
     const rows: { label: string; value: string; subLabel?: React.ReactNode; valueHint?: React.ReactNode }[] = [];
 
     const base = details?.base_rent || {};
-
-    const baseAfter =
-      Number(base?.rent_total_after_discount ?? base?.price ?? 0) || 0;
-
-    const baseBefore =
-      Number(base?.rent_total_before_discount ?? 0) || 0;
-
+    const baseAfter = Number(base?.rent_total_after_discount ?? base?.price ?? 0) || 0;
+    const baseBefore = Number(base?.rent_total_before_discount ?? 0) || 0;
     const offPercent = Number(base?.off_percent ?? 0) || 0;
 
-    const dailyAfter =
-      Number(base?.rent_price_day_after_discount ?? 0) ||
-      (days > 0 ? baseAfter / days : 0);
-
+    const dailyAfter = Number(base?.rent_price_day_after_discount ?? 0) || (days > 0 ? baseAfter / days : 0);
     const dailyBefore =
-      Number(base?.rent_price_day_before_discount ?? 0) ||
-      (days > 0 ? baseBefore / days : dailyAfter);
+      Number(base?.rent_price_day_before_discount ?? 0) || (days > 0 ? baseBefore / days : dailyAfter);
 
-    // ✅ ردیف اجاره + subLabel تخفیف دقیقاً مثل همون صفحه
     rows.push({
       label: `قیمت اجاره ${toFaNumber(days || summary?.days || 0)} روز`,
       value: formatMoneyOrFree(baseAfter, currency),
       subLabel:
         offPercent > 0 ? (
           <span className="inline-flex items-center gap-1 flex-wrap justify-end">
-            <span className="line-through text-gray-400">
-              {toFaNumber(Math.round(dailyBefore))}
-            </span>
+            <span className="line-through text-gray-400">{toFaNumber(Math.round(dailyBefore))}</span>
             <span>
               {toFaNumber(Math.round(dailyAfter))} {currency}
             </span>
@@ -384,102 +821,58 @@ export function PaymentSuccessCard({ rentData, trace, onDownloadVoucher, onSubmi
         ),
     });
 
-    // ✅ services (هزینه تحویل/عودت/ودیعه/...) - بیمه رایگان حذف میشه چون بک حذفش کرده
     const services = Array.isArray(details?.services) ? details.services : [];
     for (const s of services) {
       const priceNum = Number(s?.price ?? 0) || 0;
-
-      // ✅ اگر هر چیزی رایگان بود، ننویس (طبق حرفت)
-      // (به جز جاهایی که خودت بخوای؛ اینجا همه خدمات رایگان حذف)
       if (priceNum <= 0) continue;
+      rows.push({ label: s?.title || "—", value: formatMoneyOrFree(priceNum, currency) });
+    }
+
+    const optItems = Array.isArray(details?.options?.items) ? details.options.items : [];
+    const safeDays = Math.max(1, Number(days || summary?.days || 1) || 1);
+
+    for (const o of optItems) {
+      const num = Math.max(1, Number(o?.num ?? 1) || 1);
+      const title = String(o?.title ?? "آپشن");
+      const sumPrice = Number(o?.sum_price ?? 0) || 0;
+      if (sumPrice <= 0) continue;
+
+      const unitPrice = Number(o?.unit_price ?? 0) || 0;
+      const expected = unitPrice * safeDays * num;
+      const isUnitDaily =
+        unitPrice > 0 && expected > 0 && Math.abs(expected - sumPrice) <= Math.max(1, sumPrice * 0.02);
+
+      const dailyPerOne = isUnitDaily ? unitPrice : sumPrice / safeDays / num;
+      const dailyAll = dailyPerOne * num;
 
       rows.push({
-        label: s?.title || "—",
-        value: formatMoneyOrFree(priceNum, currency),
-      });
-    }
-// ✅ options items + daily detail
-const optItems = Array.isArray(details?.options?.items) ? details.options.items : [];
-const safeDays = Math.max(1, Number(days || summary?.days || 1) || 1);
-
-for (const o of optItems) {
-  const num = Math.max(1, Number(o?.num ?? 1) || 1);
-  const title = String(o?.title ?? "آپشن");
-  const sumPrice = Number(o?.sum_price ?? 0) || 0;
-  if (sumPrice <= 0) continue;
-
-  const unitPrice = Number(o?.unit_price ?? 0) || 0;
-
-  // اگر unit_price واقعا روزانه بود از خودش استفاده کن
-  // شرط: unit * days * num تقریبا برابر sum باشه
-  const expected = unitPrice * safeDays * num;
-  const isUnitDaily =
-    unitPrice > 0 && expected > 0 && Math.abs(expected - sumPrice) <= Math.max(1, sumPrice * 0.02);
-
-  const dailyPerOne = isUnitDaily
-    ? unitPrice
-    : sumPrice / safeDays / num; // روزانه برای ۱ عدد
-
-  const dailyAll = dailyPerOne * num; // روزانه برای کل تعداد
-
-  rows.push({
-    label: `${title} × ${toFaNumber(num)}`,
-    value: formatMoneyOrFree(sumPrice, currency),
-    subLabel: (
-      <span className="inline-flex items-center gap-1 text-gray-500 dark:text-gray-200 flex-wrap justify-end">
-        <span className="">قیمت روزانه:</span>
-        <span className=" dark:text-gray-200">
-          {formatMoneyFa(dailyAll, currency)}
-        </span>
-
-        {/* اگر تعداد > 1، ریز هم بده */}
-        {num > 1 ? (
-          <span className="text-gray-500">
-            (هر عدد {formatMoneyFa(dailyPerOne, currency)})
+        label: `${title} × ${toFaNumber(num)}`,
+        value: formatMoneyOrFree(sumPrice, currency),
+        subLabel: (
+          <span className="inline-flex items-center gap-1 text-gray-500 dark:text-gray-200 flex-wrap justify-end">
+            <span>قیمت روزانه:</span>
+            <span className="dark:text-gray-200">{formatMoneyFa(dailyAll, currency)}</span>
+            {num > 1 ? <span className="text-gray-500">(هر عدد {formatMoneyFa(dailyPerOne, currency)})</span> : null}
           </span>
-        ) : null}
-      </span>
-    ),
-  });
-}
-
-    // ✅ جمع آپشن‌ها (اگر >0)
-    const optSum = Number(details?.options?.sum ?? 0) || 0;
-    if (optSum > 0) {
-      rows.push({
-        label: "جمع آپشن‌ها",
-        value: formatMoneyOrFree(optSum, currency),
+        ),
       });
     }
 
-    // ✅ tax (اگر >0)
+    const optSum = Number(details?.options?.sum ?? 0) || 0;
+    if (optSum > 0) rows.push({ label: "جمع آپشن‌ها", value: formatMoneyOrFree(optSum, currency) });
+
     const taxPercent = Number(details?.tax?.percent ?? 0) || 0;
     const taxPrice = Number(details?.tax?.price ?? 0) || 0;
-    if (taxPrice > 0) {
-      rows.push({
-        label: `مالیات (${toFaNumber(taxPercent)}٪)`,
-        value: formatMoneyOrFree(taxPrice, currency),
-      });
-    }
+    if (taxPrice > 0) rows.push({ label: `مالیات (${toFaNumber(taxPercent)}٪)`, value: formatMoneyOrFree(taxPrice, currency) });
 
-    // ✅ پیش پرداخت (پرداخت شده) - همیشه نمایش
     if (typeof prePay !== "undefined" && prePay !== null) {
-      rows.push({
-        label: "پیش پرداخت",
-        value: `${formatMoneyFa(prePay, currency)} (پرداخت شده)`,
-      });
+      rows.push({ label: "پیش پرداخت", value: `${formatMoneyFa(prePay, currency)} (پرداخت شده)` });
     }
 
-    // ✅ مانده حساب (مثل همون صفحه)
     if (typeof remainAtDelivery !== "undefined" && remainAtDelivery !== null) {
-      rows.push({
-        label: "مانده حساب",
-        value: formatMoneyFa(remainAtDelivery, currency),
-      });
+      rows.push({ label: "مانده حساب", value: formatMoneyFa(remainAtDelivery, currency) });
     }
 
-    // ✅ (اختیاری) هزینه نهایی برای X روز - اگر خواستی داخل ریزفاکتور هم بیاد
-    // اگر نمیخوای، این بخش رو کامنت کن
     if (typeof sumAll !== "undefined" && sumAll !== null) {
       rows.push({
         label: `هزینه نهایی برای ${toFaNumber(days || summary?.days || 0)} روز`,
@@ -492,6 +885,24 @@ for (const o of optItems) {
 
   return (
     <div className="w-full bg-white dark:bg-gray-900">
+      {/* ✅ دیالوگ قفل OTP */}
+      {mustLock ? (
+        <OtpLockDialog
+          open={true}
+          mobile={readonlyPhone}
+          onAuthed={() => {
+            toast.success("قفل باز شد");
+          }}
+        />
+      ) : null}
+
+      {/* ✅ دیالوگ تشکر قفل + تایمر */}
+      <UploadThanksLockedDialog
+        open={openThanks}
+        secondsLeft={Math.max(0, secondsLeft)}
+        onGoHome={() => router.push("/")}
+      />
+
       <div className="mx-auto w-full px-4 max-w-5xl pb-24">
         <div className="flex flex-col items-center text-center">
           <Lottie animationData={SuccessPayment} style={{ height: "148px" }} loop={false} />
@@ -518,7 +929,6 @@ for (const o of optItems) {
           </button>
         </div>
 
-        {/* ✅ کارت اصلی (خلاصه + ریزفاکتور) */}
         <Card className="mt-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-none">
           <CardContent className="p-0">
             <button
@@ -545,15 +955,9 @@ for (const o of optItems) {
                 </div>
               </div>
 
-              <ChevronDown
-                className={[
-                  "h-5 w-5 text-gray-500 transition-transform",
-                  openInfo ? "rotate-180" : "rotate-0",
-                ].join(" ")}
-              />
+              <ChevronDown className={["h-5 w-5 text-gray-500 transition-transform", openInfo ? "rotate-180" : "rotate-0"].join(" ")} />
             </button>
 
-            {/* ✅ ریزفاکتور - دقیقا با SummaryRow */}
             {openInfo ? (
               <div className="px-4 pb-4">
                 <div className="mt-2 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
@@ -563,13 +967,7 @@ for (const o of optItems) {
 
                   <div className="px-3 divide-y divide-gray-100 dark:divide-gray-800">
                     {invoiceRows.map((row, idx) => (
-                      <SummaryRow
-                        key={idx}
-                        label={row.label}
-                        value={row.value}
-                        subLabel={row.subLabel}
-                        valueHint={row.valueHint}
-                      />
+                      <SummaryRow key={idx} label={row.label} value={row.value} subLabel={row.subLabel} valueHint={row.valueHint} />
                     ))}
                   </div>
                 </div>
@@ -578,7 +976,6 @@ for (const o of optItems) {
           </CardContent>
         </Card>
 
-        {/* ===== Upload docs header ===== */}
         <div className="mt-6 text-xs md:text-sm text-gray-900 dark:text-white">
           برای صرفه‌جویی در زمان تحویل، عکس‌های مدارک خود را آپلود کنید
         </div>
@@ -591,10 +988,12 @@ for (const o of optItems) {
             <UploadTile
               label="عکس"
               file={files.id_card}
-              onPick={() => pick("id_card")}
+              serverUrl={serverDocs.id_card?.file_url ?? null}
+              onPick={() => inputs.current["id_card"]?.click()}
               onRemove={() => removeFile("id_card")}
               hasError={fieldErrors.id_card}
               gridOneSlot
+              disabled={mustLock}
             />
             <div className="hidden" />
           </div>
@@ -606,6 +1005,7 @@ for (const o of optItems) {
             type="file"
             accept="image/*"
             className="hidden"
+            disabled={mustLock}
             onChange={(e) => onFile("id_card", (e.target as HTMLInputElement).files?.[0] ?? null)}
           />
         </div>
@@ -619,9 +1019,11 @@ for (const o of optItems) {
               <UploadTile
                 label="سمت عقب"
                 file={files.dl_back}
-                onPick={() => pick("dl_back")}
+                serverUrl={serverDocs.dl_back?.file_url ?? null}
+                onPick={() => inputs.current["dl_back"]?.click()}
                 onRemove={() => removeFile("dl_back")}
                 hasError={fieldErrors.dl_back}
+                disabled={mustLock}
               />
               <Input
                 ref={(el) => {
@@ -630,6 +1032,7 @@ for (const o of optItems) {
                 type="file"
                 accept="image/*"
                 className="hidden"
+                disabled={mustLock}
                 onChange={(e) => onFile("dl_back", (e.target as HTMLInputElement).files?.[0] ?? null)}
               />
             </div>
@@ -638,9 +1041,11 @@ for (const o of optItems) {
               <UploadTile
                 label="جبهه"
                 file={files.dl_front}
-                onPick={() => pick("dl_front")}
+                serverUrl={serverDocs.dl_front?.file_url ?? null}
+                onPick={() => inputs.current["dl_front"]?.click()}
                 onRemove={() => removeFile("dl_front")}
                 hasError={fieldErrors.dl_front}
+                disabled={mustLock}
               />
               <Input
                 ref={(el) => {
@@ -649,6 +1054,7 @@ for (const o of optItems) {
                 type="file"
                 accept="image/*"
                 className="hidden"
+                disabled={mustLock}
                 onChange={(e) => onFile("dl_front", (e.target as HTMLInputElement).files?.[0] ?? null)}
               />
             </div>
@@ -657,25 +1063,19 @@ for (const o of optItems) {
 
         {/* ===== International DL ===== */}
         <div className="mt-6">
-          <div className="text-lg font-black text-gray-900 dark:text-white border-b">
-            گواهینامه رانندگی بین المللی
-          </div>
+          <div className="text-lg font-black text-gray-900 dark:text-white border-b">گواهینامه رانندگی بین المللی</div>
 
           <div className="mt-2 flex items-center justify-between">
             <div className="text-sm text-gray-600 dark:text-gray-300">گواهینامه رانندگی بین المللی ندارم</div>
 
             <Checkbox
               checked={noIntl}
+              disabled={mustLock}
               onCheckedChange={(checked) => {
+                if (mustLock) return;
                 const v = checked === true;
                 setNoIntl(v);
-                if (v) {
-                  setFieldErrors((p) => ({
-                    ...p,
-                    intl_dl_front: false,
-                    intl_dl_back: false,
-                  }));
-                }
+                if (v) setFieldErrors((p) => ({ ...p, intl_dl_front: false, intl_dl_back: false }));
               }}
               className="h-5 w-5"
             />
@@ -687,9 +1087,11 @@ for (const o of optItems) {
                 <UploadTile
                   label="سمت عقب"
                   file={files.intl_dl_back}
-                  onPick={() => pick("intl_dl_back")}
+                  serverUrl={serverDocs.intl_dl_back?.file_url ?? null}
+                  onPick={() => inputs.current["intl_dl_back"]?.click()}
                   onRemove={() => removeFile("intl_dl_back")}
                   hasError={fieldErrors.intl_dl_back}
+                  disabled={mustLock}
                 />
                 <Input
                   ref={(el) => {
@@ -698,6 +1100,7 @@ for (const o of optItems) {
                   type="file"
                   accept="image/*"
                   className="hidden"
+                  disabled={mustLock}
                   onChange={(e) => onFile("intl_dl_back", (e.target as HTMLInputElement).files?.[0] ?? null)}
                 />
               </div>
@@ -706,9 +1109,11 @@ for (const o of optItems) {
                 <UploadTile
                   label="جبهه"
                   file={files.intl_dl_front}
-                  onPick={() => pick("intl_dl_front")}
+                  serverUrl={serverDocs.intl_dl_front?.file_url ?? null}
+                  onPick={() => inputs.current["intl_dl_front"]?.click()}
                   onRemove={() => removeFile("intl_dl_front")}
                   hasError={fieldErrors.intl_dl_front}
+                  disabled={mustLock}
                 />
                 <Input
                   ref={(el) => {
@@ -717,6 +1122,7 @@ for (const o of optItems) {
                   type="file"
                   accept="image/*"
                   className="hidden"
+                  disabled={mustLock}
                   onChange={(e) => onFile("intl_dl_front", (e.target as HTMLInputElement).files?.[0] ?? null)}
                 />
               </div>
@@ -733,7 +1139,9 @@ for (const o of optItems) {
 
             <Checkbox
               checked={noVisa}
+              disabled={mustLock}
               onCheckedChange={(checked) => {
+                if (mustLock) return;
                 const v = checked === true;
                 setNoVisa(v);
                 if (v) setFieldErrors((p) => ({ ...p, visa: false }));
@@ -748,10 +1156,12 @@ for (const o of optItems) {
                 <UploadTile
                   label="عکس"
                   file={files.visa}
-                  onPick={() => pick("visa")}
+                  serverUrl={serverDocs.visa?.file_url ?? null}
+                  onPick={() => inputs.current["visa"]?.click()}
                   onRemove={() => removeFile("visa")}
                   hasError={fieldErrors.visa}
                   gridOneSlot
+                  disabled={mustLock}
                 />
                 <div className="hidden" />
               </div>
@@ -763,6 +1173,7 @@ for (const o of optItems) {
                 type="file"
                 accept="image/*"
                 className="hidden"
+                disabled={mustLock}
                 onChange={(e) => onFile("visa", (e.target as HTMLInputElement).files?.[0] ?? null)}
               />
             </>
@@ -776,10 +1187,10 @@ for (const o of optItems) {
         <div className="mx-auto w-full max-w-[560px] px-4 py-3">
           <Button
             onClick={submit}
-            disabled={loading}
+            disabled={loading || mustLock || openThanks}
             className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black disabled:opacity-50"
           >
-            {loading ? "در حال آپلود..." : "آپلود مدارک"}
+            {mustLock ? "ابتدا وارد شوید" : loading ? "در حال ارسال..." : "ارسال مدارک"}
           </Button>
         </div>
       </div>

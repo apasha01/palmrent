@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/preserve-manual-memoization */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -100,6 +101,47 @@ function buildDefault(): {
   return { range, deliveryTime: "10:00", returnTime: "10:00" };
 }
 
+/** ✅ واتساپ: نرمال‌سازی شماره (فقط عدد، و حذف 00 اگر داشت) */
+function normalizeWhatsappPhone(phone?: string | null) {
+  if (!phone) return "";
+  const digits = toEnDigits(String(phone)).replace(/[^\d]/g, "");
+  if (!digits) return "";
+  return digits.startsWith("00") ? digits.slice(2) : digits;
+}
+
+/** ✅ تعداد روز (حداقل ۱) */
+function diffDays(start?: Date | null, end?: Date | null) {
+  if (!start || !end) return 1;
+  const s = new Date(start);
+  const e = new Date(end);
+  s.setHours(0, 0, 0, 0);
+  e.setHours(0, 0, 0, 0);
+  const ms = e.getTime() - s.getTime();
+  const d = Math.round(ms / (1000 * 60 * 60 * 24));
+  return Math.max(1, d);
+}
+
+/** ✅ متن واتساپ مثل نمونه */
+function buildWhatsappText(args: {
+  title?: string | null;
+  branch?: string | null;
+  start?: Date | null;
+  end?: Date | null;
+  deliveryTime?: string;
+  returnTime?: string;
+}) {
+  const carTitle = args.title || "این خودرو";
+  const branchPart = args.branch ? ` در ${args.branch}` : "";
+
+  const fromFa = args.start ? formatJalaliDate(args.start) : "";
+  const toFa = args.end ? formatJalaliDate(args.end) : "";
+  const dt = args.deliveryTime || "10:00";
+  const rt = args.returnTime || "10:00";
+  const days = diffDays(args.start ?? null, args.end ?? null);
+
+  return `سلام، مایل هستم خودروی ${carTitle}${branchPart} را از تاریخ ${fromFa} (${dt}) تا ${toFa} (${rt}) به مدت ${days} روز رزرو کنم.`;
+}
+
 // ---------------- Types ----------------
 export type DailyPriceItem = {
   title: string;
@@ -134,6 +176,7 @@ export function PricingCard({
   deposit,
   currency,
   offPercent,
+  whatsapp,
 }: PricingCardProps) {
   const router = useRouter();
   const defaults = React.useMemo(() => buildDefault(), []);
@@ -175,9 +218,46 @@ export function PricingCard({
   // ✅ trigger ref for opening calendar programmatically
   const calendarTriggerRef = React.useRef<HTMLButtonElement | null>(null);
 
-  // ✅ when true -> after confirm calendar, immediately navigate
-  const autoReserveAfterConfirmRef = React.useRef(false);
+  // ✅ اکشن تایید تقویم: پیش‌فرض = آنلاین (یعنی اگر کاربر روی اینپوت تاریخ زد و تایید کرد، بره مرحله بعدی)
+  const reserveActionRef = React.useRef<"online" | "whatsapp">("online");
 
+  /** ✅ واتساپ: ساخت لینک نهایی */
+  const waPhone = React.useMemo(
+    () => normalizeWhatsappPhone(whatsapp),
+    [whatsapp],
+  );
+
+  const whatsappLink = React.useMemo(() => {
+    if (!waPhone) return "";
+
+    const safeStart = range?.start ?? defaults.range.start;
+    const safeEnd = range?.end ?? defaults.range.end;
+
+    const text = buildWhatsappText({
+      title: car?.title,
+      branch: car?.branch,
+      start: safeStart ?? null,
+      end: safeEnd ?? null,
+      deliveryTime: deliveryTime || defaults.deliveryTime,
+      returnTime: returnTime || defaults.returnTime,
+    });
+
+    return `https://wa.me/${waPhone}?text=${encodeURIComponent(text)}`;
+  }, [
+    waPhone,
+    car?.title,
+    car?.branch,
+    range?.start,
+    range?.end,
+    deliveryTime,
+    returnTime,
+    defaults.range.start,
+    defaults.range.end,
+    defaults.deliveryTime,
+    defaults.returnTime,
+  ]);
+
+  /** ✅ رفتن به صفحه بعدی رزرو (همون /search?...) */
   const reserveWith = React.useCallback(
     (args: {
       start?: Date | null;
@@ -216,9 +296,13 @@ export function PricingCard({
     [router, car?.branch_id, car?.id, defaults],
   );
 
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const handleReserve = React.useCallback(() => {
-    reserveWith({ start: range?.start, end: range?.end, deliveryTime, returnTime });
+    reserveWith({
+      start: range?.start,
+      end: range?.end,
+      deliveryTime,
+      returnTime,
+    });
   }, [reserveWith, range?.start, range?.end, deliveryTime, returnTime]);
 
   const deliveryText = React.useMemo(() => {
@@ -233,10 +317,7 @@ export function PricingCard({
 
   // ✅ Data for central AppDrawer (prices)
   const pricesDrawerData = React.useMemo(() => {
-    return {
-      prices: pricingOptions,
-      currency: unit,
-    };
+    return { prices: pricingOptions, currency: unit };
   }, [pricingOptions, unit]);
 
   const TopContent = (
@@ -444,31 +525,32 @@ export function PricingCard({
         </div>
       </div>
 
+      {/* ✅ موبایل پایین کارت */}
       <div className="mt-4 border-t md:hidden">
-        <div className="pt-4 flex gap-6">
+        <div className="pt-4 flex gap-2">
+          {/* آبی: تقویم باز شود و بعد از تایید برود مرحله بعد */}
           <button
             type="button"
             className="flex items-center text-sm text-blue-500"
             onClick={() => {
-              const el = document.getElementById("reserve-card");
-              el?.scrollIntoView({ behavior: "smooth", block: "start" });
+              reserveActionRef.current = "online";
+              calendarTriggerRef.current?.click();
             }}
           >
             <p>رزرو آنلاین</p>
             <ChevronLeft size={18} />
           </button>
 
-          {/* ✅✅✅ GREEN: open calendar, confirm => direct navigate */}
+          {/* ✅✅ سبز: مستقیم برود واتساپ با متن (بدون باز شدن تقویم) */}
           <button
             type="button"
             className="flex items-center text-sm text-green-600"
             onClick={() => {
-              autoReserveAfterConfirmRef.current = true;
-              // باز کردن تقویم با کلیک روی trigger
-              calendarTriggerRef.current?.click();
+              if (!whatsappLink) return;
+              window.open(whatsappLink, "_blank", "noopener,noreferrer");
             }}
           >
-            <p>ادامه رزرو</p>
+            <p>ادامه رزرو در واتساپ</p>
             <ChevronLeft size={18} />
           </button>
         </div>
@@ -493,14 +575,13 @@ export function PricingCard({
           defaultIsJalali={true}
           initialTimes={{ deliveryTime, returnTime }}
           onConfirm={(v) => {
-            // اول state ها آپدیت میشن (برای UI)
             setRange({ start: v.start, end: v.end });
             setDeliveryTime(v.deliveryTime);
             setReturnTime(v.returnTime);
 
-            // ✅ اگر از دکمه سبز اومده بودیم => مستقیم برو صفحه بعد
-            if (autoReserveAfterConfirmRef.current) {
-              autoReserveAfterConfirmRef.current = false;
+            // ✅ اگر کاربر از روی اینپوت‌های تاریخ تایید کرد => برود مرحله بعد (مثل رزرو آنلاین)
+            const action = reserveActionRef.current;
+            if (action === "online") {
               reserveWith({
                 start: v.start,
                 end: v.end,
@@ -514,14 +595,17 @@ export function PricingCard({
             setRange(d.range);
             setDeliveryTime(d.deliveryTime);
             setReturnTime(d.returnTime);
-            autoReserveAfterConfirmRef.current = false;
+            reserveActionRef.current = "online";
           }}
           trigger={
-            // ✅✅ trigger تبدیل شد به button با ref
             <button
               ref={calendarTriggerRef}
               type="button"
               className="flex w-full mb-4 cursor-pointer text-left"
+              onClick={() => {
+                // ✅ کلیک روی اینپوت تاریخ = آنلاین
+                reserveActionRef.current = "online";
+              }}
             >
               <div className="flex w-full">
                 <div className="flex-1">
@@ -529,8 +613,10 @@ export function PricingCard({
                     تاریخ و ساعت تحویل
                   </div>
                   <div className="border border-gray-200 rounded-r-lg p-2 flex items-center gap-2">
-                     <Calendar className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-600 text-sm">{deliveryText}</span>
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-600 text-sm">
+                      {deliveryText}
+                    </span>
                   </div>
                 </div>
 
@@ -538,8 +624,7 @@ export function PricingCard({
                   <div className="text-xs text-right text-gray-400 mb-1">
                     تاریخ و ساعت عودت
                   </div>
-                  <div className="border border-gray-200 rounded-l-lg gap-2 p-2 flex items-center ">
-      
+                  <div className="border border-gray-200 rounded-l-lg gap-2 p-2 flex items-center">
                     <span className="text-gray-600 text-sm">{returnText}</span>
                   </div>
                 </div>
@@ -548,7 +633,6 @@ export function PricingCard({
           }
         />
 
-        {/* دکمه اصلی رزرو (اگر کاربر خودش دستی بخواد) */}
         <button
           type="button"
           onClick={handleReserve}
@@ -576,7 +660,7 @@ export function PricingCard({
 
       {/* ✅ دسکتاپ: یک کارت یک‌تکه */}
       <div className="hidden md:block">
-        <div className="rounded-xl border max-w-md mx-auto overflow-hidden ">
+        <div className="rounded-xl border max-w-md mx-auto overflow-hidden">
           {TopContent}
           <div className="border-t border-gray-200" />
           {ReserveContent}

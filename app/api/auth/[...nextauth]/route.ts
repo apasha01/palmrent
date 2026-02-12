@@ -1,42 +1,83 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { otpVerify } from "@/services/auth/auth.api";
+import axios from "axios";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_BASE_URL) {
+  throw new Error("NEXT_PUBLIC_API_URL is missing");
+}
+
+type VerifyPayload = {
+  success: boolean;
+  message?: string | null;
+  data?: {
+    access_token?: string;
+    expires_in?: number;
+    user?: any;
+  };
+};
 
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
+      id: "otp",
       name: "OTP",
       credentials: {
         mobile: { label: "mobile", type: "text" },
         code: { label: "code", type: "text" },
       },
+
       async authorize(credentials) {
         const mobile = (credentials?.mobile ?? "").toString().trim();
         const code = (credentials?.code ?? "").toString().trim();
 
         if (!mobile || !code) return null;
 
-        // پاسخ بک‌اند: انتظار { access_token: string, user: {...} }
-        const data = await otpVerify(mobile, code);
+        try {
+          // ✅ مستقیم به بک‌اند (نه axios instance پروژه)
+          const { data } = await axios.post<VerifyPayload>(
+            `${API_BASE_URL.replace(/\/$/, "")}/auth/otp/verify`,
+            { mobile, code },
+            {
+              headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+              },
+            }
+          );
 
-        if (!data?.access_token) return null;
+          if (!data?.success) {
+            // 👇 این باعث میشه signIn().error همین متن رو بگیره
+            throw new Error(data?.message || "OTP_VERIFY_FAILED");
+          }
 
-        const backendUser = data?.user ?? {};
+          const accessToken = data?.data?.access_token;
+          const user = data?.data?.user;
 
-        // ✅ کاربر را فلت برگردان (بدون user توی user)
-        // NextAuth الزاماً id می‌خواهد
-        const flatUser = {
-          ...(backendUser as any),
-          id: String((backendUser as any)?.id ?? mobile),
-          mobile: (backendUser as any)?.mobile ?? mobile,
-        };
+          if (!accessToken || !user) {
+            throw new Error("OTP_VERIFY_FAILED");
+          }
 
-        // چیزی که از authorize برمی‌گردانی، به jwt callback به عنوان `user` می‌آید
-        return {
-          ...flatUser,
-          accessToken: data.access_token,
-        } as any;
+          // ✅ user object که داخل session.user میره
+          return {
+            ...(user as any),
+            id: String((user as any)?.id ?? mobile),
+            mobile: (user as any)?.mobile ?? mobile,
+            accessToken,
+          } as any;
+        } catch (e: any) {
+          // ✅ اگر بک‌اند 422/401 داد اینجا میفهمیم دقیقاً چی بوده
+          const backendMsg =
+            e?.response?.data?.message ||
+            e?.response?.data?.msg ||
+            e?.message ||
+            "OTP_VERIFY_FAILED";
+
+          // این throw => توی signIn به صورت res.error میاد
+          throw new Error(backendMsg);
+        }
       },
     }),
   ],
@@ -45,12 +86,8 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     async jwt({ token, user }) {
-      // user فقط هنگام signIn وجود دارد
       if (user) {
-        // ✅ accessToken جدا
-        token.accessToken = (user as any).accessToken;
-
-        // ✅ user فلت (بدون accessToken داخلش)
+        token.accessToken = (user as any).accessToken ?? null;
         const { accessToken, ...rest } = user as any;
         token.user = rest;
       }
@@ -58,19 +95,14 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }) {
-      // ✅ session.user = user فلت
-      (session as any).user = (token as any).user ?? null;
-
-      // ✅ session.accessToken = توکن
       (session as any).accessToken = (token as any).accessToken ?? null;
-
+      (session as any).user = (token as any).user ?? null;
       return session;
     },
   },
 
-  pages: {
-    signIn: "/login",
-  },
+  pages: { signIn: "/login" },
+  debug: true,
 };
 
 const handler = NextAuth(authOptions);

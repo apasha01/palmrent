@@ -2,14 +2,13 @@
 "use client";
 
 import Link from "next/link";
-import { User, LogOut, CreditCard } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -19,103 +18,93 @@ export default function UserAvatarPopover() {
 
   if (!isAuthenticated) return null;
 
-  const avatarUrl = user?.avatar || user?.image || null;
-  const displayName = (user?.name || "").trim();
-  const fallbackLetter = displayName ? displayName[0]?.toUpperCase() : "";
+  const avatarUrl = user?.avatar || user?.image || "";
+  const displayName = String(user?.name ?? "").trim() || "کاربر";
+  const fallbackLetter = displayName?.[0]?.toUpperCase?.() || "U";
 
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button type="button" className="outline-none">
-          <Avatar className="w-9 h-9">
+          <Avatar className="h-9 w-9">
             {avatarUrl ? (
-              <AvatarImage src={avatarUrl} alt={displayName || "کاربر"} />
+              <AvatarImage src={avatarUrl} alt={displayName} />
             ) : (
-              <AvatarFallback className="bg-secondary font-black">
-                {fallbackLetter ? (
-                  <span className="text-sm leading-none">{fallbackLetter}</span>
-                ) : (
-                  <User className="h-5 w-5 text-muted-foreground" />
-                )}
+              <AvatarFallback className="bg-muted text-sm font-bold">
+                {fallbackLetter}
               </AvatarFallback>
             )}
           </Avatar>
         </button>
       </PopoverTrigger>
 
-      <PopoverContent  className="w-72 ">
-        <p className="font-black text-xl mb-3">{displayName || "کاربر"}</p>
-
-        <div className="space-y-1">
-          <MenuItem href="/profile" icon={User} label="پروفایل کاربری" />
-          <MenuItem href="/billing" icon={CreditCard} label="پرداخت‌ها / کیف پول" />
-          <MenuItem
-            icon={LogOut}
-            label="خروج از حساب"
-            intent="danger"
-            onClick={logout}
-          />
+      <PopoverContent
+        align="end"
+        className="w-56 p-3 rounded-xl shadow-md"
+      >
+        {/* اسم کاربر */}
+        <div className="mb-2">
+          <p className="text-sm font-semibold text-foreground">
+            {displayName}
+          </p>
         </div>
+
+        <div className="h-px bg-border my-2" />
+
+        {/* پروفایل */}
+        <MenuLink href="/profile" icon={User} label="پروفایل" />
+
+        {/* خروج */}
+        <MenuAction
+          icon={LogOut}
+          label="خروج"
+          onClick={logout}
+        />
       </PopoverContent>
     </Popover>
   );
 }
 
-type MenuItemProps =
-  | {
-      href: string;
-      icon: any;
-      label: string;
-      intent?: "default" | "danger";
-      onClick?: never;
-    }
-  | {
-      href?: never;
-      icon: any;
-      label: string;
-      intent?: "default" | "danger";
-      onClick: () => void;
-    };
-
-function MenuItem({ href, icon: Icon, label, intent = "default", onClick }: MenuItemProps) {
-  const isDanger = intent === "danger";
-
-  const baseBtn =
-    "w-full justify-start gap-3 h-12 rounded-2xl transition-all border border-transparent hover:border-primary/5";
-  const baseHover = "hover:bg-primary/5";
-  const dangerHover = "hover:bg-destructive/10";
-
-  const iconBox =
-    "inline-flex items-center justify-center w-9 h-9 rounded-xl bg-secondary/50";
-  const iconColor = isDanger ? "text-destructive" : "text-muted-foreground";
-  const labelColor = isDanger ? "text-destructive font-bold" : "text-foreground/80 font-semibold";
-
-  // ✅ آیتم لینک‌دار
-  if (href) {
-    return (
-      <Button asChild variant="ghost" className={cn(baseBtn, baseHover, isDanger && dangerHover)}>
-        <Link href={href}>
-          <span className={iconBox}>
-            <Icon className={cn("h-5 w-5", iconColor)} />
-          </span>
-          <span className={cn("text-sm", labelColor)}>{label}</span>
-        </Link>
-      </Button>
-    );
-  }
-
-  // ✅ آیتم اکشن (مثل خروج)
+function MenuLink({
+  href,
+  icon: Icon,
+  label,
+}: {
+  href: string;
+  icon: any;
+  label: string;
+}) {
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      onClick={onClick}
-      className={cn(baseBtn, baseHover, isDanger && dangerHover)}
+    <Link
+      href={href}
+      className="flex items-center gap-2 h-9 px-2 rounded-lg hover:bg-muted/60 transition"
     >
-      <span className={iconBox}>
-        <Icon className={cn("h-5 w-5", iconColor)} />
-      </span>
-      <span className={cn("text-sm", labelColor)}>{label}</span>
-    </Button>
+      <Icon className="h-4 w-4 text-muted-foreground" />
+      <span className="text-sm text-foreground/90">{label}</span>
+    </Link>
+  );
+}
+
+function MenuAction({
+  icon: Icon,
+  label,
+  onClick,
+}: {
+  icon: any;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "w-full flex items-center gap-2 h-9 px-2 rounded-lg",
+        "hover:bg-destructive/10 transition"
+      )}
+    >
+      <Icon className="h-4 w-4 text-destructive" />
+      <span className="text-sm text-destructive">{label}</span>
+    </button>
   );
 }

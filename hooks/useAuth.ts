@@ -2,22 +2,21 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 export function useAuth() {
   const { data, status } = useSession();
-  console.log( data?.user );
+  const router = useRouter();
 
   const isAuthenticated = status === "authenticated";
   const isLoading = status === "loading";
   const user = isAuthenticated ? (data as any)?.user ?? null : null;
-
-  // ✅ اگر لازم شد توکن هم در دسترس
   const accessToken = isAuthenticated ? (data as any)?.accessToken ?? null : null;
 
+  // ✅ logout بدون ریدایرکت (پیش‌فرض)
   const logout = async () => {
-    toast.success("خارج شدید، به امید دیدار مجدد 👋");
-    await signOut({ redirect: true, callbackUrl: "/login" });
+    await signOut({ redirect: false });
+    router.refresh(); // ✅ کمک به sync UI در App Router
   };
 
   return {
@@ -27,7 +26,6 @@ export function useAuth() {
     user,
     accessToken,
     ...(user ?? {}),
-
     logout,
   };
 }
