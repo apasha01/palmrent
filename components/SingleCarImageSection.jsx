@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { changeSingleGalleryStatus } from "@/redux/slices/globalSlice";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
 
 export function SingleCarImageSection({data}){
     const [carPhotos,setCarPhotos] = useState(data.photos)

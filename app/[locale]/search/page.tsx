@@ -1,40 +1,44 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, {
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 
 import SearchHeader from "@/components/search/search-header";
 import Footer from "@/components/Footer";
 import Header from "@/components/layouts/Header";
-import InformationStep from "@/components/reserve-steps/SearchStepSecond";
 import SearchFilterSheet from "@/components/search/SearchFilterSheet";
 import SearchPopup from "@/components/SearchPopup";
 import StepRent from "@/components/search/StepsRent";
 import DescriptionPopup from "@/components/DescriptionPopup";
-import SearchStepOne from "@/components/reserve-steps/SearchStepOne";
-
+import ReserveInformation from "@/components/reserve/ReserveInformation";
+import { SerarchSection } from "@/components/search/SearchSection";
+import SingleCar from "@/components/card/CarsCard";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowRight, Info, RefreshCcw } from "lucide-react";
 import { useInfiniteCarFilter } from "@/services/car-filter/car-filter.hooks";
 import type { CarFilterParams } from "@/services/car-filter/car-filter.types";
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store";
-import { normalizeTime } from "@/lib/rent-days";
-
-import { ArrowRight } from "lucide-react";
-import { Sheet, SheetClose, SheetContent } from "@/components/ui/sheet";
+import { calcRentDaysWithGrace, normalizeTime } from "@/lib/rent-days";
+import jalaali from "jalaali-js";
+import SearchMetaClient from "@/services/seo/SearchMetaClient";
+import { getBranchNameById } from "@/helpers/BranchNameHelper";
+import { useMobileSheet } from "@/providers/mobile-sheet-provider";
+import { SheetClose } from "@/components/ui/sheet";
+import { useSearchParams } from "next/navigation";
 
 const MOBILE_BREAKPOINT = 768;
 
-/**
- * ✅ پایدار: فقط header fixed اصلی رو با id می‌گیره
- */
+function toQueryObject(params: URLSearchParams): Record<string, string> {
+  const obj: Record<string, string> = {};
+  params.forEach((value, key) => {
+    obj[key] = value;
+  });
+  return obj;
+}
+
 function useHeaderOffsetPx(defaultPx = 64) {
   const [offset, setOffset] = useState(defaultPx);
 
@@ -79,19 +83,64 @@ function useHeaderOffsetPx(defaultPx = 64) {
   return offset;
 }
 
+function SkeletonCarCard() {
+  return (
+    <div className="w-full">
+      <div className="rounded-2xl border border-border bg-card p-0 md:p-2.5 h-full overflow-hidden">
+        <Skeleton className="w-full aspect-16/10 md:rounded-lg rounded-none bg-gray-200/80 dark:bg-white/10" />
+        <div className="pt-3 flex flex-col gap-2 px-2 md:px-0">
+          <div className="flex items-center justify-between gap-2">
+            <Skeleton className="h-5 w-2/3 rounded-md bg-gray-200/80 dark:bg-white/10" />
+            <Skeleton className="h-5 w-5 rounded-md bg-gray-200/80 dark:bg-white/10" />
+          </div>
+          <div className="grid grid-cols-4 gap-2 pt-2 border-t border-border">
+            <Skeleton className="h-4 rounded-md bg-gray-200/80 dark:bg-white/10" />
+            <Skeleton className="h-4 rounded-md bg-gray-200/80 dark:bg-white/10" />
+            <Skeleton className="h-4 rounded-md bg-gray-200/80 dark:bg-white/10" />
+            <Skeleton className="h-4 rounded-md bg-gray-200/80 dark:bg-white/10" />
+          </div>
+          <div className="pt-2 border-t border-border flex items-center justify-between">
+            <Skeleton className="h-4 w-1/2 rounded-md bg-gray-200/80 dark:bg-white/10" />
+            <div className="flex flex-col items-end gap-1">
+              <Skeleton className="h-3 w-16 rounded-md bg-gray-200/80 dark:bg-white/10" />
+              <Skeleton className="h-5 w-24 rounded-md bg-gray-200/80 dark:bg-white/10" />
+            </div>
+          </div>
+          <div className="flex gap-2 mt-1 pb-2">
+            <Skeleton className="h-10 flex-1 rounded-xl bg-gray-200/80 dark:bg-white/10" />
+            <Skeleton className="h-10 w-12 rounded-xl bg-gray-200/80 dark:bg-white/10" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SearchResultPageContent() {
-  const t = useTranslations();
+  const tGlobal = useTranslations();
+  const t = useTranslations("SearchResultPage");
+  const tBranches = useTranslations("branches");
+  const tReserve = useTranslations("global");
+
   const locale = useLocale();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
+  const { openSheet } = useMobileSheet();
+
+  // =========================================================
+  // ✅ URL<->Store بدون loop
+  // =========================================================
+  const freezeUrlSyncRef = useRef(false);
+  const lastPushedRef = useRef<string>("");
+  const sheetOpenedRef = useRef(false);
+
   // =========================================================
   // ✅ isMobile
   // =========================================================
   const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window !== "undefined")
-      return window.innerWidth < MOBILE_BREAKPOINT;
+    if (typeof window !== "undefined") return window.innerWidth < MOBILE_BREAKPOINT;
     return false;
   });
 
@@ -102,53 +151,58 @@ function SearchResultPageContent() {
     return () => window.removeEventListener("resize", update as any);
   }, []);
 
+  // =========================================================
+  // ✅ Zustand
+  // =========================================================
   const {
     roadMapStep,
     setRoadMapStep,
+
     isSearchOpen,
     isFilterOpen,
+
     carDates,
     setCarDates,
     deliveryTime,
     setDeliveryTime,
     returnTime,
     setReturnTime,
+
     sort,
     setSort,
     search_title,
     setSearchTitle,
+
     selectedCategories,
     setSelectedCategories,
     selectedPriceRange,
     setSelectedPriceRange,
+
     selectedCarId,
     setSelectedCarId,
+
     descriptionPopup,
+
     carList,
     addCarList,
     clearCarList,
+
     setIsAnySheetOpen,
-    isMobileInfoOpen,
-    setIsMobileInfoOpen,
+
+    setBranchId,
   } = useSearchPageStore();
 
-  const topOffset = useHeaderOffsetPx(64);
-
-  // ✅ freeze offset while sheet open
-  const [frozenOffset, setFrozenOffset] = useState(64);
+  // ✅ شروع صفحه: شیت بسته
   useEffect(() => {
-    if (!isMobileInfoOpen) setFrozenOffset(topOffset);
-  }, [topOffset, isMobileInfoOpen]);
-
-  const effectiveTopOffset = isMobileInfoOpen ? frozenOffset : topOffset;
-  const marginTop = Math.max(0, effectiveTopOffset);
-
-  // ✅ app global state: is sheet open?
-  useEffect(() => {
-    const open = Boolean(isMobile && isMobileInfoOpen);
-    setIsAnySheetOpen(open);
+    setIsAnySheetOpen(false);
     return () => setIsAnySheetOpen(false);
-  }, [isMobile, isMobileInfoOpen, setIsAnySheetOpen]);
+  }, [setIsAnySheetOpen]);
+
+  // =========================================================
+  // ✅ Header offset
+  // =========================================================
+  const topOffset = useHeaderOffsetPx(64);
+  const marginTop = Math.max(0, topOffset);
 
   // ========= branch_id فقط از URL =========
   const branchIdFromUrl = useMemo(() => {
@@ -159,7 +213,14 @@ function SearchResultPageContent() {
     return n;
   }, [searchParams]);
 
-  // ========= Sticky sentinel =========
+  const branchName = useMemo(() => {
+    const id = searchParams.get("branch_id");
+    return getBranchNameById(tBranches, id, "");
+  }, [searchParams, tBranches]);
+
+  // =========================================================
+  // ✅ Sticky sentinel
+  // =========================================================
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const [stuck, setStuck] = useState(false);
   const [playFade, setPlayFade] = useState(false);
@@ -192,71 +253,18 @@ function SearchResultPageContent() {
   }, [marginTop]);
 
   // =========================================================
-  // ✅ Navigation helpers
-  // =========================================================
-  const lastPushedRef = useRef<string>("");
-  const navModeRef = useRef<"replace" | "push">("replace");
-  const prevStepRef = useRef<number>(1);
-
-  const navigateTo = useCallback(
-    (nextQuery: string) => {
-      lastPushedRef.current = nextQuery;
-
-      const url = `${pathname}?${nextQuery}`;
-      const mode = navModeRef.current;
-
-      navModeRef.current = "replace";
-
-      if (mode === "push") router.push(url, { scroll: false });
-      else router.replace(url, { scroll: false });
-    },
-    [pathname, router],
-  );
-
-  // =========================================================
-  // ✅✅✅ FIX: بستن شیت => برگشت به step 2 (نه step 1)
-  // =========================================================
-  const closeSheetToStep2 = useCallback(() => {
-    setIsMobileInfoOpen(false);
-    setSelectedCarId(null);
-
-    // ✅ برگرد به لیست
-    setRoadMapStep(2);
-
-    // ✅ موبایل: URL رو دست نزن
-    if (isMobile) return;
-
-    // ✅ دسکتاپ: step=2 و حذف car_id
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("step", "2");
-    params.delete("car_id");
-
-    navModeRef.current = "push";
-    navigateTo(params.toString());
-  }, [
-    isMobile,
-    navigateTo,
-    searchParams,
-    setIsMobileInfoOpen,
-    setRoadMapStep,
-    setSelectedCarId,
-  ]);
-
-  // =========================================================
-  // ✅ prevent "initial onOpenChange(false)" bug
-  // =========================================================
-  const wasSheetOpenRef = useRef(false);
-  useEffect(() => {
-    wasSheetOpenRef.current = Boolean(isMobile && isMobileInfoOpen);
-  }, [isMobile, isMobileInfoOpen]);
-
-  // =========================================================
-  // ✅ syncFromUrl (URL -> store)  [SAFE]
+  // ✅ syncFromUrl (URL -> store) فقط با تغییر URL
   // =========================================================
   const sp = searchParams.toString();
 
   useEffect(() => {
+    if (freezeUrlSyncRef.current) return;
     if (sp === lastPushedRef.current) return;
+
+    const stepParam = searchParams.get("step");
+    const stepNum = stepParam ? Number(stepParam) : NaN;
+    const safeStep = Number.isFinite(stepNum) && stepNum > 0 ? Math.min(4, stepNum) : 1;
+    const isReserveMode = safeStep >= 3;
 
     const fromQ = searchParams.get("from");
     const toQ = searchParams.get("to");
@@ -272,14 +280,10 @@ function SearchResultPageContent() {
     const minP = searchParams.get("min_p");
     const maxP = searchParams.get("max_p");
 
-    if (fromQ && toQ) {
-      const curFrom = (carDates as any)?.[0] ?? null;
-      const curTo = (carDates as any)?.[1] ?? null;
-      if (curFrom !== fromQ || curTo !== toQ) setCarDates([fromQ, toQ]);
-    }
+    if (fromQ && toQ) setCarDates([fromQ, toQ]);
 
-    if (dtRaw && normalizeTime(deliveryTime) !== dt) setDeliveryTime(dt);
-    if (rtRaw && normalizeTime(returnTime) !== rt) setReturnTime(rt);
+    if (dtRaw) setDeliveryTime(dt);
+    if (rtRaw) setReturnTime(rt);
 
     if (cats) {
       const parsed = cats
@@ -299,83 +303,77 @@ function SearchResultPageContent() {
       const b = Number(maxP);
       if (Number.isFinite(a) && Number.isFinite(b)) {
         setSelectedPriceRange([Math.min(a, b), Math.max(a, b)]);
+      } else {
+        setSelectedPriceRange(null);
       }
     } else {
       setSelectedPriceRange(null);
     }
 
     const carIdParam = searchParams.get("car_id");
-
-    if (isMobile) {
-      // موبایل: فقط car_id رو بخون
-      if (carIdParam) {
-        const id = Number(carIdParam);
-        if (Number.isFinite(id)) setSelectedCarId(id);
-      }
-      return;
-    }
-
-    // Desktop
-    const stepParam = searchParams.get("step");
-    const stepNum = stepParam ? Number(stepParam) : NaN;
-    const safeStep =
-      Number.isFinite(stepNum) && stepNum > 0 ? Math.min(4, stepNum) : 1;
-
-    if (roadMapStep !== safeStep) setRoadMapStep(safeStep);
-
     if (carIdParam) {
       const id = Number(carIdParam);
       if (Number.isFinite(id)) setSelectedCarId(id);
-    } else {
+    } else if (!isReserveMode) {
       setSelectedCarId(null);
     }
-  }, [
-    sp,
-    isMobile,
-    searchParams,
-    carDates,
-    deliveryTime,
-    returnTime,
-    roadMapStep,
-    setCarDates,
-    setDeliveryTime,
-    setReturnTime,
-    setSelectedCategories,
-    setSort,
-    setSearchTitle,
-    setSelectedPriceRange,
-    setRoadMapStep,
-    setSelectedCarId,
-  ]);
+
+    setRoadMapStep(safeStep);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sp]);
 
   const from = (carDates as any)?.[0];
   const to = (carDates as any)?.[1];
-
   const step1Done = Boolean(from && to);
-  const step2Done = Boolean(selectedCarId);
 
-  // ✅ when car selected => open sheet on mobile / go step=3 on desktop
-  useEffect(() => {
-    if (!selectedCarId) return;
-
-    if (isMobile) {
-      setFrozenOffset(topOffset);
-      setIsMobileInfoOpen(true);
-      return;
+  // =========================================================
+  // ✅ meta calc
+  // =========================================================
+  const rentDays = useMemo(() => {
+    if (!from || !to) return 0;
+    try {
+      return calcRentDaysWithGrace({
+        fromDateJalali: from,
+        toDateJalali: to,
+        deliveryTime: normalizeTime(deliveryTime) || "10:00",
+        returnTime: normalizeTime(returnTime) || "10:00",
+        graceMinutes: 90,
+        jalaliToDate: (jy, jm, jd) => {
+          const g = jalaali.toGregorian(jy, jm + 1, jd);
+          return new Date(g.gy, g.gm - 1, g.gd);
+        },
+      });
+    } catch {
+      return 0;
     }
+  }, [from, to, deliveryTime, returnTime]);
 
-    if (roadMapStep < 3) {
-      navModeRef.current = "push";
-      setRoadMapStep(3);
-    }
-  }, [
-    selectedCarId,
-    isMobile,
-    topOffset,
-    roadMapStep,
-    setIsMobileInfoOpen,
-    setRoadMapStep,
-  ]);
+  const branchPart = useMemo(() => {
+    return branchName ? t("meta.parts.branch", { branch: branchName }) : "";
+  }, [branchName, t]);
+
+  const daysPart = useMemo(() => {
+    return rentDays > 0 ? t("meta.parts.days", { days: String(rentDays) }) : "";
+  }, [rentDays, t]);
+
+  const uiStep = useMemo(() => {
+    if (!step1Done) return 1;
+    return 2;
+  }, [step1Done]);
+
+  const dynamicTitle = useMemo(() => {
+    if (uiStep === 1) return t("meta.step1.title", { branchPart, brand: "PalmRent" });
+    return t("meta.step2.title", { branchPart, daysPart, brand: "PalmRent" });
+  }, [uiStep, branchPart, daysPart, t]);
+
+  const dynamicDesc = useMemo(() => {
+    if (uiStep === 1) return t("meta.step1.desc");
+    return t("meta.step2.desc", {
+      branchName: branchName || "",
+      rentDays: rentDays ? String(rentDays) : "",
+    });
+  }, [uiStep, t, branchName, rentDays]);
 
   const filterKey = useMemo(() => {
     const dt = normalizeTime(deliveryTime);
@@ -407,35 +405,18 @@ function SearchResultPageContent() {
     locale,
   ]);
 
-  // ✅ history push on derived step change (DESKTOP ONLY)
-  useEffect(() => {
-    if (isMobile) return;
-
-    const derivedStepForHistory = Math.min(4, Math.max(1, roadMapStep || 1));
-    const prev = prevStepRef.current;
-    if (prev !== derivedStepForHistory) navModeRef.current = "push";
-    prevStepRef.current = derivedStepForHistory;
-  }, [roadMapStep, isMobile]);
-
   // =========================================================
-  // ✅ GUARD برای جلوگیری از خراب کردن URL
-  // =========================================================
-  const urlFrom = searchParams.get("from");
-  const urlTo = searchParams.get("to");
-  const urlCarId = searchParams.get("car_id");
-
-  // =========================================================
-  // ✅ sync URL from store (store -> URL)
+  // ✅ store -> URL sync (با router.replace نوع‌دار)
   // =========================================================
   useEffect(() => {
-    const needsHydration =
-      (urlFrom && urlTo && (!from || !to)) || (urlCarId && !selectedCarId);
+    if (freezeUrlSyncRef.current) return;
 
-    if (needsHydration) return;
+    const currentStep = searchParams.get("step");
+    if (currentStep === "3") return;
 
     const params = new URLSearchParams(searchParams.toString());
-    const dt = normalizeTime(deliveryTime);
-    const rt = normalizeTime(returnTime);
+    const dt = normalizeTime(deliveryTime) || "10:00";
+    const rt = normalizeTime(returnTime) || "10:00";
 
     if (from && to) {
       params.set("from", from);
@@ -454,8 +435,7 @@ function SearchResultPageContent() {
     if (search_title) params.set("search_title", search_title);
     else params.delete("search_title");
 
-    if (selectedCategories?.length)
-      params.set("categories", selectedCategories.join(","));
+    if (selectedCategories?.length) params.set("categories", selectedCategories.join(","));
     else params.delete("categories");
 
     if (selectedPriceRange?.length === 2) {
@@ -466,48 +446,51 @@ function SearchResultPageContent() {
       params.delete("max_p");
     }
 
-    const derivedStepForUrl =
-      isMobile && isMobileInfoOpen
-        ? 3
-        : Math.min(4, Math.max(1, roadMapStep || 1));
+    params.set("step", String(step1Done ? 2 : 1));
 
-    if (!isMobile) {
-      params.set("step", String(derivedStepForUrl));
-      if (selectedCarId) params.set("car_id", String(selectedCarId));
-      else params.delete("car_id");
-    } else {
-      // ✅ موبایل: step حذف شود
-      params.delete("step");
-      if (selectedCarId) params.set("car_id", String(selectedCarId));
-      else params.delete("car_id");
-    }
+    if (selectedCarId) params.set("car_id", String(selectedCarId));
+    else params.delete("car_id");
 
     const next = params.toString();
     if (next === lastPushedRef.current) return;
     if (next === searchParams.toString()) return;
 
-    navigateTo(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    lastPushedRef.current = next;
+
+    freezeUrlSyncRef.current = true;
+
+    // ✅ مهم: با فرم object تایپ i18n-router اوکی میشه
+    router.replace(
+      {
+        pathname,
+        query: toQueryObject(params) as any,
+      } as any,
+      { scroll: false } as any,
+    );
+
+    setTimeout(() => {
+      freezeUrlSyncRef.current = false;
+    }, 0);
   }, [
     filterKey,
-    roadMapStep,
     selectedCarId,
-    isMobileInfoOpen,
-
-    urlFrom,
-    urlTo,
-    urlCarId,
+    step1Done,
     from,
     to,
+    deliveryTime,
+    returnTime,
+    sort,
+    search_title,
+    selectedCategories,
+    selectedPriceRange,
+    pathname,
+    searchParams,
+    router,
   ]);
 
-  const uiStep = useMemo(() => {
-    if (isMobile && isMobileInfoOpen) return 3;
-    if (!step1Done) return 1;
-    if (step1Done && !step2Done) return 2;
-    return isMobile ? 2 : 3; // ✅ موبایل پشت شیت همیشه ۲ بمونه
-  }, [isMobile, isMobileInfoOpen, step1Done, step2Done]);
-
+  // =========================================================
+  // ✅ data fetch
+  // =========================================================
   const canFetch = Boolean(step1Done && branchIdFromUrl && from && to);
 
   const rqParamsSafe: CarFilterParams = useMemo(
@@ -540,7 +523,6 @@ function SearchResultPageContent() {
 
   const q = useInfiniteCarFilter(rqParamsSafe, canFetch);
 
-  // clear list on filterKey changes
   const lastQueryKeyRef = useRef<string>("");
   useEffect(() => {
     if (lastQueryKeyRef.current !== filterKey) {
@@ -550,7 +532,6 @@ function SearchResultPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterKey]);
 
-  // merge pages to store
   useEffect(() => {
     if (!canFetch) return;
     const pages = q.data?.pages || [];
@@ -562,10 +543,7 @@ function SearchResultPageContent() {
   }, [q.data, canFetch]);
 
   const metaPage = useMemo(() => {
-    return (
-      q.data?.pages?.find((p: any) => p?.currency || p?.rate_to_rial != null) ??
-      null
-    );
+    return q.data?.pages?.find((p: any) => p?.currency || p?.rate_to_rial != null) ?? null;
   }, [q.data]);
 
   const currency = canFetch ? (metaPage?.currency ?? "") : "";
@@ -595,181 +573,268 @@ function SearchResultPageContent() {
     [q, canFetch],
   );
 
-  useEffect(() => {
-    return () => observerRef.current?.disconnect();
-  }, []);
+  useEffect(() => () => observerRef.current?.disconnect(), []);
 
   const isLoading = canFetch ? q.isLoading : false;
   const isLoadingMore = canFetch ? q.isFetchingNextPage : false;
+
   const error =
-    canFetch && q.isError
-      ? ((q.error as any)?.message ?? t("errorLoading"))
-      : null;
+    canFetch && q.isError ? ((q.error as any)?.message ?? tGlobal("errorLoading")) : null;
 
-  const renderCarsStep = () =>
-    !canFetch ? null : (
-      <SearchStepOne
-        topOffset={marginTop}
-        stuck={stuck}
-        playFade={playFade}
-        isLoading={isLoading}
-        isLoadingMore={isLoadingMore}
-        error={error}
-        carList={carList || []}
-        sentinelRef={sentinelRef}
-        lastElementRef={lastElementRef}
-        onRetry={() => q.refetch()}
-        t={(key: string) => t(key)}
-        currency={currency}
-        rateToRial={rateToRial}
-      />
+  // =========================================================
+  // ✅ DESKTOP => /reserve (i18n router خودش locale رو prefix می‌کنه)
+  // =========================================================
+  const goToReserve = useCallback(() => {
+    if (!selectedCarId || !branchIdFromUrl || !from || !to) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("branch_id", String(branchIdFromUrl));
+    params.set("from", String(from));
+    params.set("to", String(to));
+    params.set("dt", normalizeTime(deliveryTime) || "10:00");
+    params.set("rt", normalizeTime(returnTime) || "10:00");
+    params.set("car_id", String(selectedCarId));
+    params.delete("step");
+
+    router.push(
+      {
+        pathname: "/reserve",
+        query: toQueryObject(params) as any,
+      } as any,
+      { scroll: true } as any,
     );
-
-  const renderInfoStep = () => (
-    <div className="sm:w-[90vw] max-w-334 m-auto px-0 sm:px-2">
-      <InformationStep />
-    </div>
-  );
-
-  const shouldRenderOuterChrome = !(isMobile && isMobileInfoOpen);
+  }, [
+    selectedCarId,
+    branchIdFromUrl,
+    from,
+    to,
+    deliveryTime,
+    returnTime,
+    router,
+    searchParams,
+  ]);
 
   // =========================================================
-  // ✅ Step click
+  // ✅ MOBILE => Sheet
   // =========================================================
-  const handleStepClick = useCallback(
-    (targetStep: number) => {
-      const stepSafe = Number.isFinite(targetStep)
-        ? Math.min(4, Math.max(1, targetStep))
-        : 1;
+  const openReserveSheet = useCallback(
+    (carId: number) => {
+      if (!Number.isFinite(carId) || carId <= 0) return;
+      if (!branchIdFromUrl || !from || !to) return;
 
-      navModeRef.current = "push";
+      const dt = normalizeTime(deliveryTime) || "10:00";
+      const rt = normalizeTime(returnTime) || "10:00";
 
-      // موبایل: Step3 یعنی باز کردن شیت
-      if (isMobile && stepSafe === 3) {
-        setFrozenOffset(topOffset);
-        setIsMobileInfoOpen(true);
-        if (roadMapStep !== 2) setRoadMapStep(2);
-        return;
-      }
+      if (sheetOpenedRef.current) return;
+      sheetOpenedRef.current = true;
 
-      // رفتن به step 1 فقط وقتی کاربر خودش زد
-      if (stepSafe === 1) {
-        setIsMobileInfoOpen(false);
-        setSelectedCarId(null);
-        setRoadMapStep(1);
+      freezeUrlSyncRef.current = true;
 
-        if (isMobile) return;
+      // 1) hydrate store
+      setSelectedCarId(carId);
+      setRoadMapStep(3);
+      setBranchId(branchIdFromUrl);
+      setIsAnySheetOpen(true);
+      setCarDates([from, to]);
+      setDeliveryTime(dt);
+      setReturnTime(rt);
 
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("step", "1");
-        params.delete("car_id");
+      // 2) hydrate URL
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("branch_id", String(branchIdFromUrl));
+      params.set("from", String(from));
+      params.set("to", String(to));
+      params.set("dt", String(dt));
+      params.set("rt", String(rt));
+      params.set("car_id", String(carId));
+      params.set("step", "3");
 
-        navigateTo(params.toString());
-        return;
-      }
+      const next = params.toString();
+      lastPushedRef.current = next;
 
-      if (isMobile) setIsMobileInfoOpen(false);
-      setRoadMapStep(stepSafe);
+      router.replace(
+        {
+          pathname,
+          query: toQueryObject(params) as any,
+        } as any,
+        { scroll: false } as any,
+      );
+
+      setTimeout(() => {
+        freezeUrlSyncRef.current = false;
+
+        openSheet({
+          title: tReserve("reserve"),
+          content: (
+            <div>
+              <div className="flex items-center bg-white">
+                <SheetClose>
+                  <ArrowRight className="size-8 px-2" />
+                </SheetClose>
+                <SearchHeader stepSecond />
+              </div>
+
+              <StepRent step={3} />
+              <ReserveInformation />
+            </div>
+          ),
+          onClose: () => {
+            freezeUrlSyncRef.current = true;
+
+            setRoadMapStep(2);
+            setIsAnySheetOpen(false);
+
+            const p = new URLSearchParams(window.location.search);
+            p.set("step", "2");
+            p.delete("car_id");
+
+            const back = p.toString();
+            lastPushedRef.current = back;
+
+            router.replace(
+              {
+                pathname,
+                query: toQueryObject(p) as any,
+              } as any,
+              { scroll: false } as any,
+            );
+
+            setTimeout(() => {
+              freezeUrlSyncRef.current = false;
+              sheetOpenedRef.current = false;
+            }, 0);
+          },
+        });
+      }, 0);
     },
     [
-      isMobile,
-      topOffset,
-      roadMapStep,
-      setRoadMapStep,
-      setIsMobileInfoOpen,
-      setSelectedCarId,
+      branchIdFromUrl,
+      from,
+      to,
+      deliveryTime,
+      returnTime,
+      pathname,
       searchParams,
-      navigateTo,
+      router,
+      openSheet,
+      tReserve,
+      setSelectedCarId,
+      setRoadMapStep,
+      setBranchId,
+      setIsAnySheetOpen,
+      setCarDates,
+      setDeliveryTime,
+      setReturnTime,
     ],
+  );
+
+  const handleMobileReserve = useCallback(
+    (carData: any) => {
+      const carId = Number(carData?.id);
+      openReserveSheet(carId);
+    },
+    [openReserveSheet],
   );
 
   return (
     <>
-      {shouldRenderOuterChrome && (
-        <>
-          <Header shadowLess />
+      <SearchMetaClient title={dynamicTitle} description={dynamicDesc} />
 
-          <div className="bg-white dark:bg-background">
-            <SearchHeader />
-          </div>
-
-          <div className="sm:w-[90vw] max-w-334 m-auto relative my-4 px-0 sm:px-2">
-            {(!searchParams.get("step") ||
-              Number(searchParams.get("step")) < 4) && (
-              <StepRent
-                step={uiStep}
-                onStepClick={handleStepClick}
-                step1Done={step1Done}
-                step2Done={step2Done}
-              />
-            )}
-          </div>
-        </>
-      )}
-
-      <div className="step-stage">
-        {/* ✅ موبایل: حتی وقتی ماشین انتخاب شد هم لیست باید بمونه */}
-        {step1Done && (isMobile ? true : !selectedCarId) && (
-          <div className="step-layer">{renderCarsStep()}</div>
-        )}
-
-        {/* ✅ دسکتاپ: وقتی ماشین انتخاب شد info بیاد */}
-        {!isMobile && selectedCarId && (
-          <div className="step-layer">{renderInfoStep()}</div>
-        )}
+      <Header shadowLess />
+      <div className="bg-white dark:bg-background">
+        <SearchHeader />
       </div>
 
-      {/* ===================== MOBILE SHEET ===================== */}
-      <Sheet
-        open={Boolean(isMobileInfoOpen)}
-        onOpenChange={(open) => {
-          // ✅ فقط اگر واقعا قبلاً باز بوده و الان بسته شد
-          if (wasSheetOpenRef.current && !open) closeSheetToStep2();
-        }}
-      >
-        <SheetContent
-          showCloseButton={false}
-          side="right"
-          onOpenAutoFocus={(e) => e.preventDefault()}
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onInteractOutside={(e) => e.preventDefault()}
-          className="
-            p-0
-            fixed inset-0
-            w-screen h-screen
-            max-w-none
-            rounded-none
-            overflow-y-auto
-            overscroll-contain
-            bg-white dark:bg-background
-          "
-        >
-          <div className="min-h-full">
-            <div className="sticky top-0 z-50 bg-white dark:bg-background border-b">
-              <div className="flex items-center">
-                <SheetClose className="pr-4" onClick={() => closeSheetToStep2()}>
-                  <ArrowRight />
-                </SheetClose>
+      <div className="sm:w-[90vw] max-w-334 m-auto relative my-4 px-0 sm:px-2">
+        <StepRent step={2} />
+      </div>
 
-                <div className="flex-1">
-                  <SearchHeader stepSecond={true} isSticky />
-                </div>
+      <div className="step-stage">
+        {step1Done && (
+          <div className="step-layer">
+            <div ref={sentinelRef} className="h-px w-full" />
+
+            <div
+              className={`
+                sticky top-0 z-40
+                transition-[transform,background-color,box-shadow,backdrop-filter]
+                duration-500 ease-out
+                ${playFade ? "animate-fade-in" : ""}
+              `}
+              style={{
+                transform: stuck ? `translateY(${marginTop}px)` : "translateY(0px)",
+                willChange: "transform",
+              }}
+            >
+              <div className="sm:w-[90vw] max-w-334 m-auto px-0 sm:px-2">
+                <SerarchSection
+                  searchDisable={isLoading && !isLoadingMore}
+                  containerClassName={
+                    stuck
+                      ? "shadow-lg shadow-black/5 dark:shadow-black/20 border-b border-gray-200/80 dark:border-gray-700/80"
+                      : ""
+                  }
+                />
               </div>
             </div>
 
-            <div className="sm:w-full max-w-334 m-auto relative my-2 px-0 sm:px-2">
-              <StepRent
-                step={3}
-                onStepClick={handleStepClick}
-                step1Done={step1Done}
-                step2Done={step2Done}
-              />
-            </div>
+            <div className="md:w-[90vw] max-w-334 m-auto relative min-h-[50vh] px-0 md:px-2 mt-4">
+              {error && !isLoading && (
+                <div className="flex flex-col items-center justify-center py-20 text-red-500 bg-red-50 dark:bg-red-950/30 rounded-xl border border-red-100 dark:border-red-900/40">
+                  <Info size={48} className="opacity-80" />
+                  <span className="mt-2 font-bold">{error}</span>
 
-            {renderInfoStep()}
+                  <Button
+                    onClick={() => q.refetch()}
+                    className="mt-4 flex items-center gap-2"
+                    variant="default"
+                  >
+                    <RefreshCcw className="size-4" />
+                    {tGlobal("tryAgain")}
+                  </Button>
+                </div>
+              )}
+
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                {!isLoading &&
+                  (carList || []).map((item: any, index: number) => {
+                    const isLast = (carList || []).length === index + 1;
+                    return (
+                      <div
+                        ref={isLast ? lastElementRef : undefined}
+                        key={`${item.id}-${index}`}
+                        className="flex w-full"
+                      >
+                        <SingleCar
+                          data={item}
+                          currency={currency}
+                          rateToRial={rateToRial}
+                          onMobileReserve={handleMobileReserve}
+                        />
+                      </div>
+                    );
+                  })}
+
+                {(isLoading || isLoadingMore) &&
+                  Array(6)
+                    .fill(null)
+                    .map((_, index) => (
+                      <div key={`skeleton-${index}`} className="flex w-full">
+                        <SkeletonCarCard />
+                      </div>
+                    ))}
+              </div>
+
+              {!isLoading && !isLoadingMore && !error && (carList || []).length === 0 && (
+                <div className="text-center py-20 text-gray-500 dark:text-gray-400 flex flex-col items-center gap-2">
+                  <Info size={40} className="opacity-30" />
+                  <span>{tGlobal("noCarsFound")}</span>
+                </div>
+              )}
+            </div>
           </div>
-        </SheetContent>
-      </Sheet>
+        )}
+      </div>
 
       {isSearchOpen && <SearchPopup />}
       {isFilterOpen && <SearchFilterSheet />}

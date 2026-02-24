@@ -3,6 +3,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 import {
   Info,
   ArrowRight,
@@ -17,26 +18,10 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 
 import type { LocationState } from "@/types/rent-information";
 
@@ -51,7 +36,6 @@ type PlaceRow = {
 };
 
 type Props = {
-  // فقط برای Mobile Sheet (optional کنترل از بیرون)
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 
@@ -63,7 +47,7 @@ type Props = {
   value: LocationState;
   onChange: (next: LocationState) => void;
 
-  placeholder?: string;
+  placeholder?: string; // ✅ will fallback to i18n if not provided
   triggerClassName?: string;
 };
 
@@ -91,7 +75,6 @@ function oneLine(s: string) {
   return String(s || "").replace(/\s+/g, " ").trim();
 }
 
-// ✅ کوتاه کردن آدرس برای نمایش داخل Trigger
 function shortText(s: string, max = 44) {
   const x = oneLine(s);
   if (!x) return "";
@@ -106,14 +89,18 @@ export default function ResponsiveLocationPicker({
   places,
   value,
   onChange,
-  placeholder = "انتخاب کنید",
+  placeholder,
   triggerClassName,
 }: Props) {
+  const t = useTranslations("ResponsiveLocationPicker");
+
   const isMobile = useIsMobile(1024);
   const placesSafe = React.useMemo(
     () => (Array.isArray(places) ? places : []),
     [places],
   );
+
+  const fallbackPlaceholder = placeholder ?? t("trigger.placeholder");
 
   // ===== selected from value (only committed selection) =====
   const selectedKey = value?.location != null ? String(value.location) : "";
@@ -127,8 +114,8 @@ export default function ResponsiveLocationPicker({
     String((selectedPlace as any)?.need_address || "no") === "yes";
 
   const addressLabel = selectedPlace
-    ? String((selectedPlace as any)?.address_title || "آدرس")
-    : "آدرس";
+    ? String((selectedPlace as any)?.address_title || t("address.defaultLabel"))
+    : t("address.defaultLabel");
 
   // ===== open states =====
   const [mobileOpen, setMobileOpen] = React.useState<boolean>(Boolean(open));
@@ -152,24 +139,22 @@ export default function ResponsiveLocationPicker({
   const [pendingKey, setPendingKey] = React.useState<string>("");
   const [pendingTitle, setPendingTitle] = React.useState<string>("");
   const [pendingAddressLabel, setPendingAddressLabel] =
-    React.useState<string>("آدرس");
+    React.useState<string>(t("address.defaultLabel"));
   const [pendingAddress, setPendingAddress] = React.useState<string>("");
 
   const resetPending = React.useCallback(() => {
     setPendingKey("");
     setPendingTitle("");
-    setPendingAddressLabel("آدرس");
+    setPendingAddressLabel(t("address.defaultLabel"));
     setPendingAddress("");
-  }, []);
+  }, [t]);
 
-  // ✅ Back inside address sheet: اگر آدرس ثبت نشده -> هیچ انتخابی ثبت نشده، برگرد به لیست
   const backFromAddress = React.useCallback(() => {
     setAddressSheetOpen(false);
     resetPending();
     emitOpenChange(true);
   }, [emitOpenChange, resetPending]);
 
-  // ✅ Close address sheet completely (x / overlay): مثل back عمل کن
   const closeAddress = React.useCallback(() => {
     setAddressSheetOpen(false);
     resetPending();
@@ -184,7 +169,7 @@ export default function ResponsiveLocationPicker({
 
       const needAddress = String((p as any)?.need_address || "no") === "yes";
 
-      // ✅ اگر آدرس نمی‌خواهد: همان لحظه commit
+      // ✅ if no address: commit immediately
       if (!needAddress) {
         onChange({
           ...value,
@@ -198,10 +183,12 @@ export default function ResponsiveLocationPicker({
         return;
       }
 
-      // ✅ اگر آدرس می‌خواهد:
+      // ✅ needs address
       setPendingKey(String(key));
       setPendingTitle(String((p as any)?.title ?? ""));
-      setPendingAddressLabel(String((p as any)?.address_title || "آدرس"));
+      setPendingAddressLabel(
+        String((p as any)?.address_title || t("address.defaultLabel")),
+      );
 
       const isSameCommitted =
         value?.location != null && String(value.location) === String(key);
@@ -215,7 +202,7 @@ export default function ResponsiveLocationPicker({
         setAddressSheetOpen(true);
       });
     },
-    [emitOpenChange, onChange, placesSafe, value],
+    [emitOpenChange, onChange, placesSafe, t, value],
   );
 
   const confirmAddress = React.useCallback(() => {
@@ -233,7 +220,7 @@ export default function ResponsiveLocationPicker({
     resetPending();
   }, [onChange, pendingAddress, pendingKey, resetPending, value]);
 
-  // اگر گزینه committed تغییر کرد و نیاز به آدرس نداشت، آدرس رو پاک کن (safe)
+  // if committed option doesn't need address, clear any saved address
   React.useEffect(() => {
     if (!selectedKey) return;
     if (
@@ -245,16 +232,22 @@ export default function ResponsiveLocationPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedNeedAddress, selectedKey]);
 
-  // ✅✅✅ فقط موبایل: اگر نیاز آدرس داشت، داخل همون Trigger آدرس/placeholder آدرس نمایش بده
   const mobileCommittedAddress = oneLine(String((value as any)?.address || ""));
 
+  // ✅ Button label logic (mobile: show "enter address" hint)
   const buttonLabel = selectedPlace
     ? isMobile && selectedNeedAddress
       ? mobileCommittedAddress
-        ? `${String((selectedPlace as any)?.title ?? "")} — ${shortText(mobileCommittedAddress)}`
-        : `${String((selectedPlace as any)?.title ?? "")} — ${addressLabel} را وارد کنید`
+        ? t("trigger.selectedWithAddress", {
+            place: String((selectedPlace as any)?.title ?? ""),
+            address: shortText(mobileCommittedAddress),
+          })
+        : t("trigger.selectedNeedsAddress", {
+            place: String((selectedPlace as any)?.title ?? ""),
+            addressLabel,
+          })
       : String((selectedPlace as any)?.title ?? "")
-    : placeholder;
+    : fallbackPlaceholder;
 
   const TriggerButton = (
     <Button
@@ -272,14 +265,16 @@ export default function ResponsiveLocationPicker({
     </Button>
   );
 
-  // ✅ Desktop inline address ONLY (همون کد خودت، دست نخورده)
+  // ✅ Desktop inline address (i18n)
   const DesktopAddressInline =
     !isMobile && selectedNeedAddress ? (
       <div className="mt-2">
         <div className="flex items-center justify-between mb-2">
-          <Label className="text-xs text-gray-600 text-right">{addressLabel}</Label>
+          <Label className="text-xs text-gray-600 text-right">
+            {addressLabel}
+          </Label>
           <div className="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
-            نیاز به آدرس
+            {t("badges.needsAddress")}
           </div>
         </div>
 
@@ -298,7 +293,7 @@ export default function ResponsiveLocationPicker({
 
         <div className="text-[11px] text-gray-500 text-right mt-2 flex items-start gap-2">
           <Info size={14} className="mt-0.5 text-gray-400" />
-          <span>برای ثبت این گزینه، وارد کردن آدرس الزامی است.</span>
+          <span>{t("address.requiredHint")}</span>
         </div>
       </div>
     ) : null;
@@ -311,7 +306,7 @@ export default function ResponsiveLocationPicker({
           type="button"
           onClick={() => emitOpenChange(false)}
           className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-gray-100"
-          aria-label="بازگشت"
+          aria-label={t("a11y.back")}
         >
           <ArrowRight size={20} className="text-gray-700" />
         </button>
@@ -349,19 +344,25 @@ export default function ResponsiveLocationPicker({
 
                 <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
                   <span>
-                    هزینه: {isFree ? "رایگان" : `${priceNum.toLocaleString()} ${currencyLabel}`}
+                    {t("rows.cost")}{" "}
+                    {isFree
+                      ? t("common.free")
+                      : t("common.priceWithCurrency", {
+                          price: priceNum.toLocaleString(),
+                          currency: currencyLabel,
+                        })}
                   </span>
 
                   {needAddress ? (
                     <span className="inline-flex items-center gap-1 text-[11px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
-                      نیاز به آدرس
+                      {t("badges.needsAddress")}
                     </span>
                   ) : null}
                 </div>
               </div>
 
               <Badge variant="secondary" className="rounded-full whitespace-nowrap shrink-0">
-                {isFree ? "رایگان" : `${priceNum.toLocaleString()}`}
+                {isFree ? t("common.free") : priceNum.toLocaleString()}
               </Badge>
             </div>
 
@@ -370,7 +371,9 @@ export default function ResponsiveLocationPicker({
                 <div className="flex items-start gap-2 rounded-xl bg-gray-50 px-3 py-2 border border-gray-100">
                   <MapPin className="size-4 text-gray-400 mt-0.5" />
                   <div className="min-w-0">
-                    <div className="text-[11px] text-gray-500">آدرس ثبت‌شده</div>
+                    <div className="text-[11px] text-gray-500">
+                      {t("address.savedTitle")}
+                    </div>
                     <div className="text-xs text-gray-800 truncate">
                       {oneLine(String((value as any)?.address || ""))}
                     </div>
@@ -391,14 +394,14 @@ export default function ResponsiveLocationPicker({
           type="button"
           onClick={backFromAddress}
           className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-gray-100"
-          aria-label="بازگشت"
+          aria-label={t("a11y.back")}
         >
           <ArrowRight size={20} className="text-gray-700" />
         </button>
 
         <div className="flex-1 mr-2">
           <div className="font-extrabold text-gray-900 text-right truncate">
-            {pendingTitle || "آدرس"}
+            {pendingTitle || t("address.defaultLabel")}
           </div>
           <div className="text-xs text-gray-500 text-right mt-0.5">
             {pendingAddressLabel}
@@ -411,7 +414,9 @@ export default function ResponsiveLocationPicker({
   const AddressMobileContent = (
     <div className="p-4 space-y-4">
       <div className="space-y-2">
-        <Label className="text-xs text-gray-600 text-right">{pendingAddressLabel}</Label>
+        <Label className="text-xs text-gray-600 text-right">
+          {pendingAddressLabel}
+        </Label>
         <div className="relative">
           <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
@@ -424,7 +429,7 @@ export default function ResponsiveLocationPicker({
 
         <div className="text-[11px] text-gray-500 text-right flex items-start gap-2">
           <Info size={14} className="mt-0.5 text-gray-400" />
-          <span>برای ثبت انتخاب، وارد کردن آدرس الزامی است.</span>
+          <span>{t("address.requiredHint")}</span>
         </div>
       </div>
 
@@ -434,13 +439,18 @@ export default function ResponsiveLocationPicker({
         disabled={oneLine(pendingAddress).length === 0}
         onClick={confirmAddress}
       >
-        ثبت
+        {t("actions.save")}
       </Button>
     </div>
   );
 
   // ✅ RENDER
   if (isMobile) {
+    const needsAddrAndEmpty =
+      Boolean(selectedPlace) &&
+      Boolean(selectedNeedAddress) &&
+      oneLine(String((value as any)?.address || "")).length === 0;
+
     return (
       <>
         <Button
@@ -456,7 +466,7 @@ export default function ResponsiveLocationPicker({
             className={cn(
               "truncate",
               selectedPlace
-                ? selectedNeedAddress && oneLine(String((value as any)?.address || "")).length === 0
+                ? needsAddrAndEmpty
                   ? "text-gray-500"
                   : "text-gray-800"
                 : "text-gray-500",
@@ -472,7 +482,12 @@ export default function ResponsiveLocationPicker({
           <SheetContent
             showCloseButton={false}
             side="right"
-            className={cn("p-0", "h-dvh w-screen max-w-none", "rounded-none border-0", "overflow-hidden")}
+            className={cn(
+              "p-0",
+              "h-dvh w-screen max-w-none",
+              "rounded-none border-0",
+              "overflow-hidden",
+            )}
           >
             <SheetHeader className="sr-only">
               <SheetTitle>{title}</SheetTitle>
@@ -487,12 +502,20 @@ export default function ResponsiveLocationPicker({
           </SheetContent>
         </Sheet>
 
-        {/* ADDRESS SHEET (OVER IT) */}
-        <Sheet open={addressSheetOpen} onOpenChange={(v) => (v ? setAddressSheetOpen(true) : closeAddress())}>
+        {/* ADDRESS SHEET */}
+        <Sheet
+          open={addressSheetOpen}
+          onOpenChange={(v) => (v ? setAddressSheetOpen(true) : closeAddress())}
+        >
           <SheetContent
             showCloseButton={false}
             side="right"
-            className={cn("p-0", "h-dvh w-screen max-w-none", "rounded-none border-0", "overflow-hidden")}
+            className={cn(
+              "p-0",
+              "h-dvh w-screen max-w-none",
+              "rounded-none border-0",
+              "overflow-hidden",
+            )}
           >
             <div className="h-dvh w-full flex flex-col overflow-hidden">
               {AddressMobileHeader}
@@ -504,7 +527,7 @@ export default function ResponsiveLocationPicker({
     );
   }
 
-  // ✅ Desktop (دست نخورده)
+  // ✅ Desktop
   return (
     <>
       <Popover open={desktopOpen} onOpenChange={setDesktopOpen}>
@@ -519,19 +542,22 @@ export default function ResponsiveLocationPicker({
           )}
         >
           <div className="px-4 py-3">
-            <div className="text-right font-extrabold text-gray-900">{title}</div>
+            <div className="text-right font-extrabold text-gray-900">
+              {title}
+            </div>
           </div>
 
           <Command className="w-full">
             <CommandList className="w-full max-h-125 overflow-auto">
-              <CommandEmpty>موردی پیدا نشد</CommandEmpty>
+              <CommandEmpty>{t("rows.empty")}</CommandEmpty>
 
               <CommandGroup className="w-full">
                 {placesSafe.map((item, idx) => {
                   const id = String((item as any)?.id ?? idx);
                   const priceNum = toPriceNumber((item as any)?.price_pay);
                   const isFree = priceNum <= 0;
-                  const needAddress = String((item as any)?.need_address || "no") === "yes";
+                  const needAddress =
+                    String((item as any)?.need_address || "no") === "yes";
                   const active = selectedKey === id;
 
                   return (
@@ -557,21 +583,32 @@ export default function ResponsiveLocationPicker({
 
                           {needAddress ? (
                             <span className="text-[11px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 shrink-0">
-                              نیاز به آدرس
+                              {t("badges.needsAddress")}
                             </span>
                           ) : null}
                         </div>
 
                         <div className="text-xs text-gray-500 mt-1">
-                          هزینه: {isFree ? "رایگان" : `${priceNum.toLocaleString()} ${currencyLabel}`}
+                          {t("rows.cost")}{" "}
+                          {isFree
+                            ? t("common.free")
+                            : t("common.priceWithCurrency", {
+                                price: priceNum.toLocaleString(),
+                                currency: currencyLabel,
+                              })}
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
-                        <Badge variant="secondary" className="rounded-full whitespace-nowrap shrink-0">
-                          {isFree ? "رایگان" : `${priceNum.toLocaleString()}`}
+                        <Badge
+                          variant="secondary"
+                          className="rounded-full whitespace-nowrap shrink-0"
+                        >
+                          {isFree ? t("common.free") : priceNum.toLocaleString()}
                         </Badge>
-                        {active ? <Check className="h-4 w-4 text-blue-600 shrink-0" /> : null}
+                        {active ? (
+                          <Check className="h-4 w-4 text-blue-600 shrink-0" />
+                        ) : null}
                       </div>
                     </CommandItem>
                   );

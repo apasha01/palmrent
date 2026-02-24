@@ -4,7 +4,7 @@
 
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,9 +18,9 @@ import {
   ShieldCheck,
   RefreshCcw,
   Loader2,
-  CheckCircle2,
   Home,
   Headset,
+  Send,
 } from "lucide-react";
 import Lottie from "lottie-react";
 import SuccessPayment from "@/public/lottie/PaymentSuccess.json";
@@ -31,8 +31,12 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 import SummaryRow from "../search/extra/SummarySection";
-import { getUserDocuments, uploadUserDocuments, uploadUserDocumentsFormData } from "@/services/user-document/UserDocument";
+import { getUserDocuments, uploadUserDocumentsFormData } from "@/services/user-document/UserDocument";
 import { otpRequest } from "@/services/auth/auth.api";
+
+function cn(...classes: (string | false | null | undefined)[]) {
+  return classes.filter(Boolean).join(" ");
+}
 
 function toFaNumber(n: number | string) {
   const num = typeof n === "string" ? Number(n) : n;
@@ -114,46 +118,30 @@ function logFormData(fd: FormData) {
   console.groupEnd();
 }
 
-/** ✅ دیالوگ قفل OTP - غیر قابل بستن */
+/** ✅ دیالوگ قفل OTP - پس‌زمینه کاملاً سفید/محو + ارسال کد با دکمه */
 function OtpLockDialog({
   open,
   mobile,
-  onAuthed,
+
 }: {
   open: boolean;
   mobile: string;
-  onAuthed: () => void;
 }) {
   const fixedMobile = useMemo(() => normalizeMobile(mobile), [mobile]);
 
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // ✅ مرحله‌ها: اول ارسال کد، بعد تایید
+  const [step, setStep] = useState<"send" | "verify">("send");
   const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
     if (!open) return;
-    if (!fixedMobile) return;
-
-    let mounted = true;
-
-    (async () => {
-      setLoading(true);
-      try {
-        await otpRequest(fixedMobile);
-        if (!mounted) return;
-        toast.success("کد تایید ارسال شد");
-        setCooldown(60);
-      } catch (e: any) {
-        if (!mounted) return;
-        toast.error(e?.message ?? "خطا در ارسال کد");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
+    setOtp("");
+    setLoading(false);
+    setCooldown(0);
+    setStep("send");
   }, [open, fixedMobile]);
 
   useEffect(() => {
@@ -162,14 +150,33 @@ function OtpLockDialog({
     return () => clearInterval(t);
   }, [cooldown]);
 
+  const sendCode = async () => {
+    if (!fixedMobile) return;
+    setLoading(true);
+    try {
+      await otpRequest(fixedMobile);
+      toast.success("کد تایید ارسال شد");
+      setCooldown(60);
+      setStep("verify");
+      setOtp("");
+    } catch (e: any) {
+      toast.error(e?.message ?? "خطا در ارسال کد");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resend = async () => {
     if (!fixedMobile) return;
+    if (cooldown > 0) return;
+
     setLoading(true);
     try {
       await otpRequest(fixedMobile);
       toast.success("کد دوباره ارسال شد");
       setCooldown(60);
       setOtp("");
+      setStep("verify");
     } catch (e: any) {
       toast.error(e?.message ?? "ارسال مجدد ناموفق بود");
     } finally {
@@ -196,7 +203,7 @@ function OtpLockDialog({
       }
 
       toast.success("ورود انجام شد");
-      onAuthed();
+
     } catch (e: any) {
       toast.error(e?.message ?? "خطا در تایید کد");
       setOtp("");
@@ -206,97 +213,181 @@ function OtpLockDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent
-        className="sm:max-w-md p-0 overflow-hidden border-none rounded-3xl shadow-[0_40px_120px_-20px_rgba(0,0,0,0.35)] bg-background/95 backdrop-blur-2xl"
-        onEscapeKeyDown={(e) => e.preventDefault()}
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-      >
-        <DialogTitle className="sr-only">ورود اجباری</DialogTitle>
+    <>
+      {/* ✅ لایه‌ی جدا برای محو/سفید کردن کامل پشت صفحه */}
+      {open ? (
+        <div
+          className={cn(
+            "fixed inset-0 z-[60]",
+            "bg-white/95 dark:bg-black/80",
+            "backdrop-blur-[14px]"
+          )}
+        />
+      ) : null}
 
-        <div className="p-7 sm:p-10 text-center space-y-7">
-          <div className="inline-flex items-center gap-2 justify-center text-sm text-muted-foreground">
-            <Lock className="h-4 w-4" />
-            <span>این مرحله قفل است</span>
-          </div>
+      <Dialog open={open} onOpenChange={() => {}}>
+        <DialogContent
+          className={cn(
+            "z-[70] sm:max-w-md p-0 overflow-hidden border-none rounded-[28px]",
+            "shadow-[0_60px_160px_-30px_rgba(0,0,0,0.55)]",
+            "bg-white/95 dark:bg-gray-950/92 backdrop-blur-2xl"
+          )}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogTitle className="sr-only">ورود اجباری</DialogTitle>
 
-          <div className="space-y-2">
-            <h2 className="text-2xl font-black text-foreground">برای ادامه باید وارد شوید</h2>
-            <p className="text-sm text-muted-foreground">
-              شماره رزرو از قبل ثبت شده و قابل تغییر نیست. کد تایید برای همین شماره ارسال می‌شود.
-            </p>
-          </div>
+          {/* Header */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-b from-blue-500/12 to-transparent pointer-events-none" />
+            <div className="p-7 sm:p-8 text-center space-y-5">
+              <div className="inline-flex items-center justify-center gap-2 px-3 py-1 rounded-full bg-gray-900/5 dark:bg-white/5 text-xs text-gray-700 dark:text-gray-200">
+                <Lock className="h-4 w-4" />
+                <span>این مرحله قفل است</span>
+              </div>
 
-          <div className="space-y-2">
-            <div className="text-right text-xs text-muted-foreground">شماره همراه (غیرقابل تغییر)</div>
-            <Input
-              dir="ltr"
-              value={fixedMobile}
-              readOnly
-              className="h-12 text-center text-base font-bold tracking-wide rounded-2xl bg-secondary/30 border-transparent"
-            />
-          </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-black text-gray-900 dark:text-white">
+                  برای ادامه باید وارد شوید
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-300 leading-7">
+                  شماره رزرو از قبل ثبت شده و قابل تغییر نیست.
+                  <br />
+                  کد تایید فقط برای همین شماره ارسال می‌شود.
+                </p>
+              </div>
 
-          <div className="space-y-5 pt-2 flex flex-col items-center">
-            <div className="flex items-center justify-center">
-              <div className="bg-primary text-primary-foreground p-4 rounded-2xl shadow">
-                <ShieldCheck className="h-7 w-7" />
+              <div className="space-y-2">
+                <div className="text-right text-xs text-gray-500 dark:text-gray-400">
+                  شماره همراه (غیرقابل تغییر)
+                </div>
+                <Input
+                  dir="ltr"
+                  value={fixedMobile}
+                  readOnly
+                  className={cn(
+                    "h-12 text-center text-base font-black tracking-wide rounded-2xl",
+                    "bg-gray-100/80 dark:bg-white/5",
+                    "border border-gray-200/70 dark:border-white/10"
+                  )}
+                />
               </div>
             </div>
+          </div>
 
-            <InputOTP
-              dir="ltr"
-              maxLength={5}
-              value={otp}
-              onChange={(val) => {
-                setOtp(val);
-                if (val.length === 5) verify(val);
-              }}
-              autoFocus
-            >
-              <InputOTPGroup className="gap-3" dir="ltr">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <InputOTPSlot
-                    key={i}
-                    index={i}
-                    className="w-12 h-14 bg-gray-200 dark:bg-gray-800 text-xl font-semibold shadow-inner transition-all border-2 border-transparent focus-within:border-primary/30 focus-within:ring-4 focus-within:ring-primary/5"
-                  />
-                ))}
-              </InputOTPGroup>
-            </InputOTP>
+          {/* Body */}
+          <div className="px-7 pb-7 sm:px-8 sm:pb-8">
+            <div className="rounded-3xl border border-gray-200/70 dark:border-white/10 bg-white/70 dark:bg-white/5 p-5 sm:p-6">
+              <div className="flex items-center justify-center mb-4">
+                <div className="p-4 rounded-2xl bg-blue-600 text-white shadow-[0_18px_50px_-20px_rgba(37,99,235,0.9)]">
+                  <ShieldCheck className="h-7 w-7" />
+                </div>
+              </div>
 
-            <Button
-              type="button"
-              className="w-full h-12 rounded-2xl font-extrabold"
-              disabled={loading || otp.length !== 5}
-              onClick={() => verify(otp)}
-            >
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "تایید و ادامه"}
-            </Button>
+              {/* مرحله ارسال */}
+              {step === "send" ? (
+                <div className="space-y-4">
+                  <div className="text-center text-sm text-gray-700 dark:text-gray-200 leading-7">
+                    برای دریافت کد تایید، روی دکمه زیر بزنید.
+                  </div>
 
-            <Button
-              variant="ghost"
-              disabled={cooldown > 0 || loading}
-              onClick={resend}
-              className="w-full h-11 rounded-xl font-medium gap-2 text-muted-foreground hover:text-primary"
-            >
-              <RefreshCcw className={cn("h-4 w-4", cooldown > 0 && "animate-spin-slow opacity-40")} />
-              {cooldown > 0 ? <span className="tabular-nums">ارسال مجدد ({cooldown})</span> : "ارسال دوباره کد"}
-            </Button>
+                  <Button
+                    type="button"
+                    className="w-full h-12 rounded-2xl font-extrabold gap-2"
+                    disabled={loading || !fixedMobile}
+                    onClick={sendCode}
+                  >
+                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                    ارسال کد تایید
+                  </Button>
 
-            <div className="text-[11px] text-muted-foreground">
-              {cooldown > 0 ? `تا ارسال مجدد ${cooldown} ثانیه` : "در صورت عدم دریافت، ارسال مجدد را بزنید"}
+        
+                </div>
+              ) : null}
+
+              {/* مرحله تایید */}
+              {step === "verify" ? (
+                <div className="space-y-4 ">
+                  <div className="text-center text-sm text-gray-700 dark:text-gray-200 leading-7">
+                    کد ۵ رقمی ارسال‌شده را وارد کنید
+                  </div>
+
+<div className="flex items-center justify-center ">
+
+                  <InputOTP
+                    dir="ltr"
+                    maxLength={5}
+                    value={otp}
+                    onChange={(val) => {
+                      setOtp(val);
+                      if (val.length === 5) verify(val);
+                    }}
+                    autoFocus
+                  >
+              <InputOTP dir="ltr" maxLength={5} value={otp} onChange={(val) => {
+  setOtp(val);
+  if (val.length === 5) verify(val);
+}} autoFocus>
+  <InputOTPGroup
+    dir="ltr"
+    className="flex flex-nowrap items-center justify-center gap-3"
+  >
+    {[0, 1, 2, 3, 4].map((i) => (
+      <InputOTPSlot
+        key={i}
+        index={i}
+        className={cn(
+          "w-12 h-14 rounded-2xl text-xl font-extrabold",
+          "shrink-0",                 // ✅ نذاره جمع بشه و بره خط بعد
+          "bg-gray-100 dark:bg-white/5",
+          "shadow-inner border",
+          "focus-within:border-blue-500/40 focus-within:ring-4 focus-within:ring-blue-500/10"
+        )}
+      />
+    ))}
+  </InputOTPGroup>
+</InputOTP>
+
+                  </InputOTP>
+</div>
+
+                  <Button
+                    type="button"
+                    className="w-full h-12 rounded-2xl font-extrabold"
+                    disabled={loading || otp.length !== 5}
+                    onClick={() => verify(otp)}
+                  >
+                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "تایید و ادامه"}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full h-11 rounded-xl font-bold gap-2 text-gray-600 dark:text-gray-300 hover:text-blue-600"
+                    disabled={loading || cooldown > 0}
+                    onClick={resend}
+                  >
+                    <RefreshCcw className={cn("h-4 w-4", cooldown > 0 && "opacity-40")} />
+                    {cooldown > 0 ? `ارسال مجدد (${cooldown})` : "ارسال دوباره کد"}
+                  </Button>
+
+                  <div className="text-[11px] text-center text-gray-500 dark:text-gray-400">
+                    {cooldown > 0 ? `تا ارسال مجدد ${cooldown} ثانیه` : "اگر کد را نگرفتید، ارسال دوباره را بزنید"}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="mt-5 h-px bg-gray-200/70 dark:bg-white/10" />
+            <div className="mt-4 text-center text-[11px] text-gray-500 dark:text-gray-400 leading-6">
+              تا زمانی که وارد نشوید، آپلود مدارک غیرفعال است.
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
-}
-
-function cn(...classes: (string | false | null | undefined)[]) {
-  return classes.filter(Boolean).join(" ");
 }
 
 /** ✅ تایمر ۵ ثانیه‌ای برای دیالوگ تشکر */
@@ -311,15 +402,7 @@ function CountdownRing({ secondsLeft, total = 5 }: { secondsLeft: number; total?
   return (
     <div className="relative flex items-center justify-center">
       <svg width={size} height={size} className="block">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          strokeWidth={stroke}
-          className="text-gray-200 dark:text-gray-800"
-          stroke="currentColor"
-          fill="none"
-        />
+        <circle cx={size / 2} cy={size / 2} r={r} strokeWidth={stroke} className="text-gray-200 dark:text-gray-800" stroke="currentColor" fill="none" />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -335,7 +418,6 @@ function CountdownRing({ secondsLeft, total = 5 }: { secondsLeft: number; total?
       </svg>
 
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-  
         <div className="text-3xl font-black tabular-nums text-gray-900 dark:text-white">{toFaNumber(secondsLeft)}</div>
         <div className="text-[11px] text-gray-500 dark:text-gray-400">ثانیه</div>
       </div>
@@ -357,7 +439,6 @@ function UploadThanksLockedDialog({
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent
         className="sm:max-w-md p-0 overflow-hidden border-none rounded-3xl shadow-[0_40px_120px_-20px_rgba(0,0,0,0.35)] bg-background/95 backdrop-blur-2xl"
-        // ✅ قفل کامل: هیچ راهی برای بستن
         onEscapeKeyDown={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
@@ -388,7 +469,6 @@ function UploadThanksLockedDialog({
             </div>
           </div>
 
-          {/* دکمه دستی (اختیاری) */}
           <Button type="button" onClick={onGoHome} className="w-full h-12 rounded-2xl font-extrabold gap-2">
             <Home className="h-5 w-5" />
             همین الان برو صفحه اصلی
@@ -489,20 +569,15 @@ function UploadTile({
 export function PaymentSuccessCard({ rentData, trace, onDownloadVoucher, onSubmitUpload }: any) {
   const router = useRouter();
 
-  // ✅ وضعیت session
   const { status } = useSession();
   const isAuthed = status === "authenticated";
 
-  // ✅ شرط قفل از بک
   const authRequired = rentData?.auth?.auth_required === true;
 
-  // ✅ شماره رزرو (فقط نمایش و OTP)
   const readonlyPhoneRaw =
-    String(rentData?.auth?.phone ?? rentData?.rent_info?.phone ?? rentData?.summary?.phone ?? rentData?.phone ?? "") ||
-    "";
+    String(rentData?.auth?.phone ?? rentData?.rent_info?.phone ?? rentData?.summary?.phone ?? rentData?.phone ?? "") || "";
   const readonlyPhone = useMemo(() => normalizeMobile(readonlyPhoneRaw), [readonlyPhoneRaw]);
 
-  // ✅ کنترل قفل
   const mustLock = authRequired && !isAuthed;
 
   const payment = rentData?.payment || {};
@@ -531,7 +606,6 @@ export function PaymentSuccessCard({ rentData, trace, onDownloadVoucher, onSubmi
     rentData?.remain_to_pay;
 
   const prePay = details?.totals?.pre_pay ?? payment?.pre_pay ?? payment?.prepay ?? rentData?.pre_pay;
-
   const sumAll = details?.totals?.sum_all ?? summary?.total ?? details?.sum_all ?? rentData?.sum_all;
 
   const [openInfo, setOpenInfo] = useState(true);
@@ -548,7 +622,6 @@ export function PaymentSuccessCard({ rentData, trace, onDownloadVoucher, onSubmi
   const [err, setErr] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<ErrorState>({});
 
-  // ✅ دیالوگ قفل تشکر + تایمر
   const [openThanks, setOpenThanks] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(5);
 
@@ -569,7 +642,6 @@ export function PaymentSuccessCard({ rentData, trace, onDownloadVoucher, onSubmi
     setServerDocs((p) => ({ ...p, [k]: null }));
   };
 
-  // ✅ وقتی دیالوگ تشکر باز شد: تایمر ۵ ثانیه‌ای شروع + هدایت خودکار
   useEffect(() => {
     if (!openThanks) return;
 
@@ -578,10 +650,7 @@ export function PaymentSuccessCard({ rentData, trace, onDownloadVoucher, onSubmi
 
     const interval = setInterval(() => {
       if (!mounted) return;
-      setSecondsLeft((s) => {
-        const next = s - 1;
-        return next;
-      });
+      setSecondsLeft((s) => s - 1);
     }, 1000);
 
     const timeout = setTimeout(() => {
@@ -596,7 +665,7 @@ export function PaymentSuccessCard({ rentData, trace, onDownloadVoucher, onSubmi
     };
   }, [openThanks, router]);
 
-  // ✅ load existing docs from server فقط اگر لاگین هست
+  // load existing docs فقط اگر قفل نیست
   useEffect(() => {
     if (mustLock) return;
 
@@ -662,81 +731,74 @@ export function PaymentSuccessCard({ rentData, trace, onDownloadVoucher, onSubmi
     return true;
   };
 
-const submit = async () => {
-  try {
-    if (mustLock) {
-      toast.info("برای آپلود مدارک باید وارد شوید");
-      return;
-    }
-
-    setErr(null);
-    if (!validate()) return;
-
-    setLoading(true);
-
-    const fd = new FormData();
-
-    // فقط فایل‌های جدید را append کن
-    if (files.id_card) fd.append("identity_file", files.id_card);
-    if (files.dl_front) fd.append("driver_license_front", files.dl_front);
-    if (files.dl_back) fd.append("driver_license_back", files.dl_back);
-
-    if (!noIntl) {
-      if (files.intl_dl_front) fd.append("intl_driver_license_front", files.intl_dl_front);
-      if (files.intl_dl_back) fd.append("intl_driver_license_back", files.intl_dl_back);
-    }
-
-    if (!noVisa) {
-      if (files.visa) fd.append("visa_file", files.visa);
-    }
-
-    const hasAnyNewFile = [...fd.keys()].length > 0;
-
-    // ✅ اگر هیچ تغییری نداده، درخواست نزن، فقط دیالوگ تشکر
-    if (!hasAnyNewFile) {
-      setOpenThanks(true);
-      return;
-    }
-
-    // ✅ اگر لازم داری rent_code/trace_code هم بفرستی همینجا اضافه کن
-    const rentCode = rentData?.rent_code ?? "";
-    const traceCode = trace ?? rentData?.tracing_code ?? "";
-    if (rentCode) fd.append("rent_code", String(rentCode));
-    if (traceCode) fd.append("trace_code", String(traceCode));
-
-    logFormData(fd);
-
-    // ✅ ارسال درست: FormData مستقیم
-    if (typeof onSubmitUpload === "function") {
-      await onSubmitUpload(fd);
-    } else {
-      await uploadUserDocumentsFormData(fd);
-    }
-
-    // refresh from server
+  const submit = async () => {
     try {
-      const data = await getUserDocuments();
-      const next: ServerDocsState = {};
-      (Object.keys(MAP) as UploadKey[]).forEach((k) => {
-        const [type, side] = MAP[k];
-        next[k] = data?.[type]?.[side] ?? null;
-      });
-      setServerDocs(next);
-      setFiles({});
-    } catch {
-      setFiles({});
+      if (mustLock) {
+        toast.info("برای آپلود مدارک باید وارد شوید");
+        return;
+      }
+
+      setErr(null);
+      if (!validate()) return;
+
+      setLoading(true);
+
+      const fd = new FormData();
+
+      if (files.id_card) fd.append("identity_file", files.id_card);
+      if (files.dl_front) fd.append("driver_license_front", files.dl_front);
+      if (files.dl_back) fd.append("driver_license_back", files.dl_back);
+
+      if (!noIntl) {
+        if (files.intl_dl_front) fd.append("intl_driver_license_front", files.intl_dl_front);
+        if (files.intl_dl_back) fd.append("intl_driver_license_back", files.intl_dl_back);
+      }
+
+      if (!noVisa) {
+        if (files.visa) fd.append("visa_file", files.visa);
+      }
+
+      const hasAnyNewFile = [...fd.keys()].length > 0;
+      if (!hasAnyNewFile) {
+        setOpenThanks(true);
+        return;
+      }
+
+      const rentCode = rentData?.rent_code ?? "";
+      const traceCode = trace ?? rentData?.tracing_code ?? "";
+      if (rentCode) fd.append("rent_code", String(rentCode));
+      if (traceCode) fd.append("trace_code", String(traceCode));
+
+      logFormData(fd);
+
+      if (typeof onSubmitUpload === "function") {
+        await onSubmitUpload(fd);
+      } else {
+        await uploadUserDocumentsFormData(fd);
+      }
+
+      try {
+        const data = await getUserDocuments();
+        const next: ServerDocsState = {};
+        (Object.keys(MAP) as UploadKey[]).forEach((k) => {
+          const [type, side] = MAP[k];
+          next[k] = data?.[type]?.[side] ?? null;
+        });
+        setServerDocs(next);
+        setFiles({});
+      } catch {
+        setFiles({});
+      }
+
+      toast.success("آپلود انجام شد");
+      setOpenThanks(true);
+    } catch (e: any) {
+      setErr(e?.message || "خطا در آپلود مدارک");
+      toast.warn(e?.message || "آپلود انجام نشد");
+    } finally {
+      setLoading(false);
     }
-
-    toast.success("آپلود انجام شد");
-    setOpenThanks(true);
-  } catch (e: any) {
-    setErr(e?.message || "خطا در آپلود مدارک");
-    toast.warn(e?.message || "آپلود انجام نشد");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   const handleDownloadVoucher = async () => {
     const rentId = rentData?.rent_id ?? rentData?.rentId ?? rentData?.id;
@@ -837,24 +899,9 @@ const submit = async () => {
       const sumPrice = Number(o?.sum_price ?? 0) || 0;
       if (sumPrice <= 0) continue;
 
-      const unitPrice = Number(o?.unit_price ?? 0) || 0;
-      const expected = unitPrice * safeDays * num;
-      const isUnitDaily =
-        unitPrice > 0 && expected > 0 && Math.abs(expected - sumPrice) <= Math.max(1, sumPrice * 0.02);
-
-      const dailyPerOne = isUnitDaily ? unitPrice : sumPrice / safeDays / num;
-      const dailyAll = dailyPerOne * num;
-
       rows.push({
         label: `${title} × ${toFaNumber(num)}`,
         value: formatMoneyOrFree(sumPrice, currency),
-        subLabel: (
-          <span className="inline-flex items-center gap-1 text-gray-500 dark:text-gray-200 flex-wrap justify-end">
-            <span>قیمت روزانه:</span>
-            <span className="dark:text-gray-200">{formatMoneyFa(dailyAll, currency)}</span>
-            {num > 1 ? <span className="text-gray-500">(هر عدد {formatMoneyFa(dailyPerOne, currency)})</span> : null}
-          </span>
-        ),
       });
     }
 
@@ -890,9 +937,7 @@ const submit = async () => {
         <OtpLockDialog
           open={true}
           mobile={readonlyPhone}
-          onAuthed={() => {
-            toast.success("قفل باز شد");
-          }}
+
         />
       ) : null}
 
@@ -955,7 +1000,9 @@ const submit = async () => {
                 </div>
               </div>
 
-              <ChevronDown className={["h-5 w-5 text-gray-500 transition-transform", openInfo ? "rotate-180" : "rotate-0"].join(" ")} />
+              <ChevronDown
+                className={["h-5 w-5 text-gray-500 transition-transform", openInfo ? "rotate-180" : "rotate-0"].join(" ")}
+              />
             </button>
 
             {openInfo ? (

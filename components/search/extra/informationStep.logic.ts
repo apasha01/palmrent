@@ -5,11 +5,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import jalaali from "jalaali-js";
 import { toast } from "react-toastify";
 import { useLocale, useTranslations } from "next-intl";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { api } from "@/lib/apiClient";
 import { calcRentDaysWithGrace, normalizeTime } from "@/lib/rent-days";
 
-import type { ApiCalcResponse, ApiOption, LocationState, Totals } from "@/types/rent-information";
+import type {
+  ApiCalcResponse,
+  ApiOption,
+  LocationState,
+  Totals,
+} from "@/types/rent-information";
+import { useSearchParams } from "next/navigation";
 
 const calcCache = new Map<string, ApiCalcResponse>();
 const calcInflight = new Map<string, Promise<ApiCalcResponse>>();
@@ -20,7 +26,12 @@ function safeNum(v: any, fallback = 0): number {
 }
 
 export function useInformationStepLogic() {
-  const t = useTranslations();
+  // ✅ local namespace
+  const t = useTranslations("InformationStepLogic");
+
+  // ✅ if you still want global keys available, you can keep another tGlobal too
+  // const tGlobal = useTranslations();
+
   const locale = useLocale();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -29,7 +40,6 @@ export function useInformationStepLogic() {
   const urlFrom = searchParams.get("from");
   const urlTo = searchParams.get("to");
 
-  // ✅ dt/rt normalize
   const dt = normalizeTime(searchParams.get("dt") || "10:00");
   const rt = normalizeTime(searchParams.get("rt") || "10:00");
 
@@ -47,7 +57,8 @@ export function useInformationStepLogic() {
 
   // ================== API fetch key ==================
   const fetchKey = useMemo(() => {
-    const carId = selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : "";
+    const carId =
+      selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : "";
     const branchId = branchIdFromUrl ? String(branchIdFromUrl) : "";
     const from = urlFrom || "";
     const to = urlTo || "";
@@ -61,20 +72,21 @@ export function useInformationStepLogic() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const carIdRaw = selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : null;
+    const carIdRaw =
+      selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : null;
     const branchIdRaw = branchIdFromUrl != null ? String(branchIdFromUrl) : null;
 
     if (!carIdRaw) return;
 
     if (!branchIdRaw) {
-      toast.error("شعبه نامعتبر است");
+      toast.error(t("errors.invalidBranch"));
       setIsLoading(false);
       setApiData(null);
       return;
     }
 
     if (!urlFrom || !urlTo) {
-      toast.error("تاریخ رزرو نامعتبر است");
+      toast.error(t("errors.invalidDates"));
       setIsLoading(false);
       setApiData(null);
       return;
@@ -120,9 +132,9 @@ export function useInformationStepLogic() {
           const status = res?.status ?? (payload as any)?.status;
 
           if (status && Number(status) !== 200) {
-            throw new Error((payload as any)?.message || "خطا در دریافت اطلاعات.");
+            throw new Error((payload as any)?.message || t("errors.fetchFailed"));
           }
-          if (!payload?.item) throw new Error("پاسخ سرور نامعتبر است.");
+          if (!payload?.item) throw new Error(t("errors.invalidServerResponse"));
           return payload;
         })();
 
@@ -136,7 +148,7 @@ export function useInformationStepLogic() {
       } catch (error: any) {
         calcInflight.delete(fetchKey);
         console.error("Calculation Error:", error);
-        toast.error(error?.message || "خطا در ارتباط با سرور.");
+        toast.error(error?.message || t("errors.network"));
       } finally {
         if (alive) setIsLoading(false);
       }
@@ -146,7 +158,7 @@ export function useInformationStepLogic() {
     return () => {
       alive = false;
     };
-  }, [fetchKey, selectedCarId, urlFrom, urlTo, branchIdFromUrl, locale, dt, rt]);
+  }, [fetchKey, selectedCarId, urlFrom, urlTo, branchIdFromUrl, locale, dt, rt, t]);
 
   // ================== Places safe ==================
   const activePlaces = useMemo(() => {
@@ -164,7 +176,16 @@ export function useInformationStepLogic() {
     returnLocation: LocationState;
     returnDifferent: boolean;
   }): Totals {
-    const { apiData, carDates, dt, rt, selectedOptions, deliveryLocation, returnLocation, returnDifferent } = args;
+    const {
+      apiData,
+      carDates,
+      dt,
+      rt,
+      selectedOptions,
+      deliveryLocation,
+      returnLocation,
+      returnDifferent,
+    } = args;
 
     const safeTotals: Totals = {
       total: 0,
@@ -207,11 +228,12 @@ export function useInformationStepLogic() {
       safeNum((apiData.item as any).final_price, 0) ||
       0;
 
-    const dailyPrice = serverDaily > 0 ? serverDaily : totalPrice > 0 ? totalPrice / rentDays : 0;
+    const dailyPrice =
+      serverDaily > 0 ? serverDaily : totalPrice > 0 ? totalPrice / rentDays : 0;
 
     const extraItems: { title: string; price: number }[] = [];
 
-    // ✅ Options (از API)
+    // ✅ Options
     if (Array.isArray(apiData.options)) {
       const safeOptions = apiData.options.filter(
         (o): o is ApiOption => Boolean(o) && typeof (o as any).id !== "undefined",
@@ -231,10 +253,11 @@ export function useInformationStepLogic() {
       });
     }
 
-    // ✅ Places (فقط از API — بدون desired)
+    // ✅ Places
     if (Array.isArray(apiData.places)) {
       const places = apiData.places.filter(Boolean);
-      const getPlaceById = (id: any) => places.find((p) => p && String((p as any).id) === String(id));
+      const getPlaceById = (id: any) =>
+        places.find((p) => p && String((p as any).id) === String(id));
 
       // delivery
       if (deliveryLocation?.location != null) {
@@ -246,7 +269,9 @@ export function useInformationStepLogic() {
         prePayPrice += delPre;
 
         extraItems.push({
-          title: `محل تحویل: ${(del as any)?.title || "نامشخص"}`,
+          title: t("rows.deliveryPrefix", {
+            place: (del as any)?.title || t("common.unknown"),
+          }),
           price: delPrice,
         });
       }
@@ -265,7 +290,9 @@ export function useInformationStepLogic() {
         }
 
         extraItems.push({
-          title: `محل عودت: ${(ret as any)?.title || "نامشخص"}`,
+          title: t("rows.returnPrefix", {
+            place: (ret as any)?.title || t("common.unknown"),
+          }),
           price: retPrice,
         });
       }
@@ -297,7 +324,6 @@ export function useInformationStepLogic() {
     router,
     searchParams,
 
-    // url/meta
     selectedCarId,
     urlFrom,
     urlTo,
@@ -306,12 +332,10 @@ export function useInformationStepLogic() {
     carDates,
     branchIdFromUrl,
 
-    // data
     apiData,
     isLoading,
     activePlaces,
 
-    // helpers
     calcTotals,
   };
 }

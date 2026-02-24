@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import {
   Accordion,
@@ -9,6 +11,7 @@ import {
   AccordionTrigger,
 } from "../ui/accordion";
 import { Button } from "../ui/button";
+
 import { PhoneCall } from "lucide-react";
 import { IconWhatsapp } from "../Icons";
 
@@ -40,10 +43,12 @@ function buildTelUrl(raw?: string | null) {
 }
 
 const ImportantQuestions = ({
-  onlySupportView,
+  onlySupportView = false,
   whatsappNumber = "989211284055",
   phoneNumber = "02191097811",
 }: Props) => {
+  const t = useTranslations("ImportantQuestions");
+
   const whatsappUrl = buildWhatsAppUrl(whatsappNumber);
   const telUrl = buildTelUrl(phoneNumber);
 
@@ -54,77 +59,89 @@ const ImportantQuestions = ({
     <div>
       {!onlySupportView && (
         <>
+          {/* Title (mobile+desktop) */}
           <p className="md:block px-4 font-bold mb-4 mt-1 text-gray-900 dark:text-gray-100">
-            سوالات متداول
+            {t("faqTitle")}
           </p>
 
           <div className="bg-white dark:bg-gray-900 shadow rounded-3xl">
-            <div className="p-4 m-0!">
+            <div className="p-4">
               <p className="font-bold hidden md:block text-lg text-center text-gray-900 dark:text-gray-100">
-                سوالات متداول
+                {t("faqTitle")}
               </p>
 
               <div className="mt-2">
-                <Tabs defaultValue="delivary">
+                {/* ✅ FIX: tab values are corrected and consistent */}
+                <Tabs defaultValue="delivery">
                   <div className="flex justify-end md:justify-center">
-                    <TabsList className="bg-transparent p-0! m-0! gap-2">
+                    <TabsList className="bg-transparent p-0 gap-2">
+                      {/* ✅ Delivery */}
                       <TabsTrigger
-                        value="general"
-                        className="px-4 py-2
+                        value="delivery"
+                        className="
+                          px-4 py-2
                           data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-blue-950/40
                           data-[state=active]:border-blue-500
                           data-[state=active]:shadow-none
                           data-[state=active]:text-blue-500 dark:data-[state=active]:text-blue-400
                           border border-gray-400 dark:border-gray-700
                           bg-transparent shadow-none
-                          text-gray-600 dark:text-gray-300"
+                          text-gray-600 dark:text-gray-300
+                        "
                       >
-                        تحویل و عودت
+                        {t("tabs.delivery")}
                       </TabsTrigger>
 
+                      {/* ✅ General */}
                       <TabsTrigger
-                        value="delivary"
-                        className="px-4 py-2
+                        value="general"
+                        className="
+                          px-4 py-2
                           data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-blue-950/40
                           data-[state=active]:border-blue-500
                           data-[state=active]:shadow-none
                           data-[state=active]:text-blue-500 dark:data-[state=active]:text-blue-400
                           border border-gray-400 dark:border-gray-700
                           bg-transparent shadow-none
-                          text-gray-600 dark:text-gray-300"
+                          text-gray-600 dark:text-gray-300
+                        "
                       >
-                        عمومی
+                        {t("tabs.general")}
                       </TabsTrigger>
                     </TabsList>
                   </div>
 
-                  <TabsContent value="general" className="mt-5">
+                  {/* ✅ Delivery / Return */}
+                  <TabsContent value="delivery" className="mt-5">
                     <Accordion type="single" collapsible>
                       <AccordionItem
-                        value="item-1"
+                        value="delivery-1"
                         className="border-b border-gray-200 dark:border-gray-800"
                       >
                         <AccordionTrigger className="text-gray-900 dark:text-gray-100">
-                          چگونه میتوانم در پالم رنت خودرو رزرو کنم؟
+                          {t("delivery.q1.title")}
                         </AccordionTrigger>
                         <AccordionContent className="text-gray-600 dark:text-gray-300">
-                          <p>...</p>
+                          <p>{t("delivery.q1.body")}</p>
                         </AccordionContent>
                       </AccordionItem>
+
+                      {/* اگر سوال‌های بیشتری داری همین الگو رو ادامه بده */}
                     </Accordion>
                   </TabsContent>
 
-                  <TabsContent value="delivary" className="mt-5">
+                  {/* ✅ General */}
+                  <TabsContent value="general" className="mt-5">
                     <Accordion type="single" collapsible>
                       <AccordionItem
-                        value="item-1"
+                        value="general-1"
                         className="border-b border-gray-200 dark:border-gray-800"
                       >
                         <AccordionTrigger className="text-gray-900 dark:text-gray-100">
-                          چرا میتوانم به پالم رنت اعتماد کنم؟
+                          {t("general.q1.title")}
                         </AccordionTrigger>
                         <AccordionContent className="text-gray-600 dark:text-gray-300">
-                          <p>...</p>
+                          <p>{t("general.q1.body")}</p>
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
@@ -136,70 +153,70 @@ const ImportantQuestions = ({
         </>
       )}
 
-      {/* ✅ بخش پایین */}
+      {/* ✅ Support Box */}
       <div className="mt-6 px-4 md:px-0">
         <div className="p-5 bg-white dark:bg-gray-900 shadow rounded-xl">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-right">
               <p className="font-bold md:font-medium text-gray-900 dark:text-gray-100">
-                سوالی دارید ؟ از ما بپرسید!
+                {t("support.title")}
               </p>
 
               <p className="text-gray-600 dark:text-gray-300 text-xs">
-                پشتیبانی و همراهی ۲۴ ساعته پالم رنت
+                {t("support.subtitle")}
               </p>
             </div>
 
             <div className="flex gap-3 w-full md:w-auto">
-              {/* ✅ واتساپ */}
+              {/* ✅ WhatsApp */}
               {whatsappDisabled ? (
                 <Button
                   variant="outline-success"
                   className="flex-1 md:flex-none"
                   disabled
                 >
-                  <IconWhatsapp className={undefined} />
-                  مشاوره واتساپ
+                  <IconWhatsapp className="mr-2" />
+                  {t("support.whatsapp")}
                 </Button>
               ) : (
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Button
+                  asChild
+                  variant="outline-success"
                   className="flex-1 md:flex-none"
                 >
-                  <Button
-                    variant="outline-success"
-                    className="w-full"
-                    type="button"
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={t("support.whatsappAria")}
                   >
-                    <IconWhatsapp className={undefined} />
-                    مشاوره واتساپ
-                  </Button>
-                </a>
+                    <IconWhatsapp className="mr-2" />
+                    {t("support.whatsapp")}
+                  </a>
+                </Button>
               )}
 
-              {/* ✅ تماس */}
+              {/* ✅ Phone */}
               {telDisabled ? (
                 <Button
                   variant="outline-primary"
-                  className="flex items-center flex-1 md:flex-none"
+                  className="flex-1 md:flex-none"
                   disabled
                 >
-                  <PhoneCall />
-                  مشاوره تلفنی
+                  <PhoneCall className="mr-2" />
+                  {t("support.phone")}
                 </Button>
               ) : (
-                <a href={telUrl} className="flex-1 md:flex-none">
-                  <Button
-                    variant="outline-primary"
-                    className="w-full flex items-center"
-                    type="button"
-                  >
-                    <PhoneCall />
-                    مشاوره تلفنی
-                  </Button>
-                </a>
+                <Button
+                  asChild
+                  variant="outline-primary"
+                  className="flex-1 md:flex-none"
+                >
+                  <a href={telUrl} aria-label={t("support.phoneAria")}>
+                    <PhoneCall className="mr-2" />
+                    {t("support.phone")}
+                  </a>
+                </Button>
               )}
             </div>
           </div>

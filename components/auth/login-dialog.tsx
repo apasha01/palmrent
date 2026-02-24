@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { signIn, getSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { toast } from "react-toastify";
 import {
   ArrowRight,
@@ -30,6 +30,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { PhoneInput } from "react-international-phone";
 import "react-international-phone/style.css";
 
+import { useTranslations, useLocale } from "next-intl";
+
 function normalizeMobileE164(input: string): string {
   const raw = (input ?? "").toString().trim();
   if (!raw) return "";
@@ -51,6 +53,8 @@ function normalizeMobileE164(input: string): string {
 export default function LoginDialog() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const t = useTranslations("Auth.LoginDialog");
+  const locale = useLocale();
 
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"mobile" | "otp">("mobile");
@@ -66,8 +70,8 @@ export default function LoginDialog() {
 
   useEffect(() => {
     if (cooldown <= 0) return;
-    const t = setInterval(() => setCooldown((s) => s - 1), 1000);
-    return () => clearInterval(t);
+    const tt = setInterval(() => setCooldown((s) => s - 1), 1000);
+    return () => clearInterval(tt);
   }, [cooldown]);
 
   if (isAuthenticated) return <UserAvatarPopover />;
@@ -82,19 +86,19 @@ export default function LoginDialog() {
 
   const sendOtp = async () => {
     if (!isPhoneValid) {
-      toast.error("لطفاً شماره موبایل معتبر وارد کنید");
+      toast.error(t("toast.invalidMobile"));
       return;
     }
 
     setLoading(true);
     try {
       await otpRequest(mobileE164);
-      toast.success("کد تایید ارسال شد");
+      toast.success(t("toast.otpSent"));
       setStep("otp");
       setCooldown(60);
     } catch (e: any) {
       console.log("[sendOtp]", e?.response?.status, e?.response?.data, e);
-      toast.error(e?.response?.data?.message ?? e?.message ?? "خطا در ارسال کد");
+      toast.error(e?.response?.data?.message ?? e?.message ?? t("toast.sendError"));
     } finally {
       setLoading(false);
     }
@@ -114,20 +118,20 @@ export default function LoginDialog() {
       console.log("[signIn otp result]", res);
 
       if (!res?.ok) {
-        toast.error(res?.error || "کد وارد شده صحیح نیست");
+        toast.error(res?.error || t("toast.wrongOtp"));
         setOtp("");
         return;
       }
 
       await getSession();
-      toast.success("ورود با موفقیت انجام شد");
+      toast.success(t("toast.loginSuccess"));
 
       setOpen(false);
       router.refresh();
       setTimeout(() => resetAll(), 250);
     } catch (e: any) {
       console.log("[verifyOtp]", e);
-      toast.error(e?.message ?? "خطا در تایید کد");
+      toast.error(e?.message ?? t("toast.verifyError"));
       setOtp("");
     } finally {
       setLoading(false);
@@ -136,12 +140,8 @@ export default function LoginDialog() {
 
   return (
     <>
-      <Button
-        variant="outline"
-        onClick={() => setOpen(true)}
-        className="rounded-full border-primary/20 hover:bg-primary/5 transition-all duration-300"
-      >
-        ورود / عضویت سریع
+      <Button variant="outline" onClick={() => setOpen(true)} size={"sm"}>
+        {t("button.open")}
       </Button>
 
       <Dialog
@@ -152,15 +152,15 @@ export default function LoginDialog() {
         }}
       >
         <DialogContent className="sm:max-w-md p-0 overflow-hidden border-none rounded-2xl shadow-2xl bg-background">
-          <DialogTitle className="sr-only">ورود</DialogTitle>
+          <DialogTitle className="sr-only">{t("srTitle")}</DialogTitle>
 
-          {/* ✅ Header: ساده + تمیز */}
+          {/* Header */}
           <div className="px-6 pt-6">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">حساب کاربری</p>
+                <p className="text-sm text-muted-foreground">{t("header.kicker")}</p>
                 <h2 className="text-xl font-extrabold tracking-tight">
-                  {step === "mobile" ? "ورود / عضویت" : "تایید کد"}
+                  {step === "mobile" ? t("header.titleMobile") : t("header.titleOtp")}
                 </h2>
               </div>
 
@@ -170,9 +170,7 @@ export default function LoginDialog() {
             </div>
 
             <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
-              {step === "mobile"
-                ? "شماره همراه را وارد کنید تا کد تایید ارسال شود."
-                : "کد ۵ رقمی ارسال‌شده را وارد کنید تا وارد شوید."}
+              {step === "mobile" ? t("hint.mobile") : t("hint.otp")}
             </p>
 
             {step === "otp" && (mobileE164 || mobile) ? (
@@ -183,21 +181,16 @@ export default function LoginDialog() {
             ) : null}
           </div>
 
-          <div className="px-6 pb-6 ">
+          <div className="px-6 pb-6">
             {step === "mobile" ? (
-              <div className="space-y-">
-                {/* ✅ PhoneInput کاملاً یک‌دست با Input shadcn */}
+              <div className="space-y-4">
                 <div className="space-y-1">
-                  <div
-                  className="my-4"
-                    dir="ltr"
-                  >
+                  <div className="my-4" dir="ltr">
                     <PhoneInput
                       defaultCountry="ir"
                       value={mobile}
                       onChange={(phone: string) => setMobile(phone)}
                       className="w-full"
-                      // 🔥 این دو تا باعث میشه 100% مثل input بشه
                       inputClassName={cn(
                         "!h-11 !w-full !border-0 !bg-transparent",
                         "!text-sm !outline-none !shadow-none !ring-0",
@@ -213,8 +206,6 @@ export default function LoginDialog() {
                       }}
                     />
                   </div>
-
-         
                 </div>
 
                 <Button
@@ -227,14 +218,13 @@ export default function LoginDialog() {
                   ) : (
                     <KeyRound className="h-5 w-5" />
                   )}
-                  دریافت کد تایید
+                  {t("button.sendOtp")}
                 </Button>
               </div>
             ) : (
               <div className="space-y-5">
                 <div className="flex justify-center">
                   <InputOTP
-
                     maxLength={5}
                     value={otp}
                     onChange={(val) => {
@@ -252,7 +242,6 @@ export default function LoginDialog() {
                             "w-12 h-12 rounded-xl text-xl font-bold",
                             "bg-muted/70 dark:bg-muted",
                             "border-2",
-                       
                             "transition"
                           )}
                         />
@@ -271,7 +260,7 @@ export default function LoginDialog() {
                   ) : (
                     <ShieldCheck className="h-5 w-5" />
                   )}
-                  تایید و ورود
+                  {t("button.verify")}
                 </Button>
 
                 <Button
@@ -284,9 +273,11 @@ export default function LoginDialog() {
                     className={cn("h-4 w-4", cooldown > 0 && "animate-spin-slow opacity-40")}
                   />
                   {cooldown > 0 ? (
-                    <span className="tabular-nums">ارسال مجدد کد ({cooldown})</span>
+                    <span className="tabular-nums">
+                      {t("button.resendWithCountdown", { seconds: String(cooldown) })}
+                    </span>
                   ) : (
-                    "ارسال دوباره کد"
+                    t("button.resend")
                   )}
                 </Button>
 
@@ -299,7 +290,7 @@ export default function LoginDialog() {
                   className="text-xs font-semibold hover:text-primary transition-all flex items-center justify-center gap-1.5 opacity-80 hover:opacity-100"
                 >
                   <ArrowRight className="h-3.5 w-3.5 rotate-180" />
-                  ویرایش شماره همراه
+                  {t("button.editMobile")}
                 </button>
               </div>
             )}

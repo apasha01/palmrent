@@ -2,12 +2,18 @@
 "use client";
 
 import React from "react";
-import { Info } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Info, ArrowRight } from "lucide-react";
+import { usePathname, useRouter } from "@/i18n/navigation";
+import { useLocale } from "next-intl";
 import { formatJalaliDate } from "@/lib/date-utils";
-
 import { AppDrawer } from "../common/AppDrawer";
 import { DateRangePickerPopover } from "../custom/calender/date-range-picker";
+import { useMobileSheet } from "@/providers/mobile-sheet-provider";
+import SearchHeader from "@/components/search/search-header";
+import StepRent from "@/components/search/StepsRent";
+import ReserveInformation from "@/components/reserve/ReserveInformation";
+import { SheetClose } from "@/components/ui/sheet";
+import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store";
 
 // ---------------- Utils ----------------
 function addDays(d: Date, days: number) {
@@ -96,18 +102,68 @@ export type MobilePriceBarProps = {
   car: PricingCarMeta;
   dailyPrice?: DailyPriceItem[] | null;
   currency?: string | null;
-  offPercent?: number | null; // ✅ اضافه شد
+  offPercent?: number | null;
 };
 
-export function MobilePriceBar({
-  car,
-  dailyPrice,
-  currency,
-}: MobilePriceBarProps) {
+export function MobilePriceBar({ car, dailyPrice, currency }: MobilePriceBarProps) {
   const router = useRouter();
-  const defaults = React.useMemo(() => buildDefault(), []);
+  const pathname = usePathname();
+  const locale = useLocale();
+  const { openSheet } = useMobileSheet();
 
+  const defaults = React.useMemo(() => buildDefault(), []);
   const unit = currency || "درهم";
+
+  // ✅ Zustand setters (مثل سرچ/رزرو)
+  const setSelectedCarId = useSearchPageStore((s: any) => s.setSelectedCarId);
+  const setRoadMapStep = useSearchPageStore((s: any) => s.setRoadMapStep);
+  const setBranchId = useSearchPageStore((s: any) => s.setBranchId);
+
+  const setCarDatesStore = useSearchPageStore((s: any) => s.setCarDates);
+  const setDeliveryTimeStore = useSearchPageStore((s: any) => s.setDeliveryTime);
+  const setReturnTimeStore = useSearchPageStore((s: any) => s.setReturnTime);
+
+  const setIsAnySheetOpen = useSearchPageStore((s: any) => s.setIsAnySheetOpen);
+
+  const hydrateReserveStore = React.useCallback(
+    (args: { branchId: number; carId: number; from: string; to: string; dt: string; rt: string }) => {
+      setSelectedCarId(args.carId);
+      setBranchId(args.branchId);
+
+      setCarDatesStore([args.from, args.to]);
+      setDeliveryTimeStore(args.dt);
+      setReturnTimeStore(args.rt);
+
+      setRoadMapStep(3);
+      if (typeof setIsAnySheetOpen === "function") setIsAnySheetOpen(true);
+    },
+    [
+      setSelectedCarId,
+      setBranchId,
+      setCarDatesStore,
+      setDeliveryTimeStore,
+      setReturnTimeStore,
+      setRoadMapStep,
+      setIsAnySheetOpen,
+    ],
+  );
+
+  const hydrateUrl = React.useCallback(
+    (args: { branchId: number; carId: number; from: string; to: string; dt: string; rt: string }) => {
+      const params = new URLSearchParams();
+      params.set("branch_id", String(args.branchId));
+      params.set("from", String(args.from));
+      params.set("to", String(args.to));
+      params.set("dt", String(args.dt));
+      params.set("rt", String(args.rt));
+      params.set("car_id", String(args.carId));
+      params.set("step", "3");
+
+      // ✅ روی همین صفحه‌ی جزئیات ماشین پارامتر می‌نشونه (بدون رفتن به سرچ)
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [router, pathname],
+  );
 
   // ✅ قیمت‌ها برای AppDrawer
   const pricingOptions = React.useMemo(() => {
@@ -119,21 +175,18 @@ export function MobilePriceBar({
     }));
   }, [dailyPrice]);
 
-  // ✅ اولین قیمت برای نمایش
   const firstPrice = (dailyPrice || [])[0];
   const displayPrice = firstPrice?.price_off ?? firstPrice?.price ?? "—";
   const originalPrice = firstPrice?.price;
-  const hasOffPrice =
-    firstPrice?.price_off !== null && firstPrice?.price_off !== undefined;
+  const hasOffPrice = firstPrice?.price_off !== null && firstPrice?.price_off !== undefined;
 
-  // ✅ وقتی کاربر تو تقویم تأیید زد => مستقیم برو سرچ
-  const goToSearch = React.useCallback(
-    (v: {
-      start?: Date | null;
-      end?: Date | null;
-      deliveryTime: string;
-      returnTime: string;
-    }) => {
+  /**
+   * ✅ رزرو:
+   * - موبایل: شیت + store + url
+   * - دسکتاپ: برو /reserve
+   */
+  const reserveWith = React.useCallback(
+    (v: { start?: Date | null; end?: Date | null; deliveryTime: string; returnTime: string }) => {
       const safeStart = v.start ?? defaults.range.start;
       const safeEnd = v.end ?? defaults.range.end;
 
@@ -151,18 +204,61 @@ export function MobilePriceBar({
 
       if (!branchId || !carId || !from || !to || !dt || !rt) return;
 
+      const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
+      if (isMobile) {
+        const payload = { branchId, carId, from, to, dt, rt };
+
+        hydrateReserveStore(payload);
+        hydrateUrl(payload);
+
+        openSheet({
+          title: "رزرو",
+          content: (
+            <div>
+              <div className="flex items-center bg-white">
+                <SheetClose>
+                  <ArrowRight className="size-8 px-2" />
+                </SheetClose>
+                <SearchHeader stepSecond />
+              </div>
+
+              <StepRent step={3} />
+              <ReserveInformation />
+            </div>
+          ),
+          onClose: () => {
+            setRoadMapStep(2);
+            if (typeof setIsAnySheetOpen === "function") setIsAnySheetOpen(false);
+          },
+        });
+
+        return;
+      }
+
+      // ✅ دسکتاپ
       const params = new URLSearchParams();
       params.set("branch_id", String(branchId));
       params.set("from", from);
       params.set("to", to);
       params.set("dt", dt);
       params.set("rt", rt);
-      params.set("step", "3");
       params.set("car_id", String(carId));
 
-      router.push(`/search?${params.toString()}`);
+      router.push(`/${locale}/reserve?${params.toString()}`, { scroll: true });
     },
-    [router, car?.branch_id, car?.id, defaults],
+    [
+      defaults,
+      car?.branch_id,
+      car?.id,
+      router,
+      locale,
+      openSheet,
+      hydrateReserveStore,
+      hydrateUrl,
+      setRoadMapStep,
+      setIsAnySheetOpen,
+    ],
   );
 
   return (
@@ -174,18 +270,12 @@ export function MobilePriceBar({
 
           <div className="flex items-center gap-2">
             {hasOffPrice && originalPrice && (
-              <span className="text-gray-400 line-through text-sm">
-                {formatMoneyFa(originalPrice)}
-              </span>
+              <span className="text-gray-400 line-through text-sm">{formatMoneyFa(originalPrice)}</span>
             )}
 
-            <span className="text-blue-500 font-bold text-xl">
-              {formatMoneyFa(displayPrice)}
-            </span>
-
+            <span className="text-blue-500 font-bold text-xl">{formatMoneyFa(displayPrice)}</span>
             <span className="text-gray-600 text-sm">{unit}</span>
 
-            {/* ✅ Info => گروه‌های قیمتی */}
             <AppDrawer
               kind="prices"
               data={{ prices: pricingOptions, currency: unit }}
@@ -206,7 +296,7 @@ export function MobilePriceBar({
           </div>
         </div>
 
-        {/* ✅ رزرو آنلاین => تقویم باز میشه => تایید => مستقیم میره سرچ */}
+        {/* ✅ رزرو آنلاین => تقویم باز میشه => تایید => رزرو (شیت/رزرو) */}
         <DateRangePickerPopover
           initialRange={defaults.range}
           defaultIsJalali={true}
@@ -215,8 +305,7 @@ export function MobilePriceBar({
             returnTime: defaults.returnTime,
           }}
           onConfirm={(v) => {
-            // v: {start,end,deliveryTime,returnTime}
-            goToSearch(v as any);
+            reserveWith(v as any);
           }}
           trigger={
             <button
@@ -228,6 +317,12 @@ export function MobilePriceBar({
           }
         />
       </div>
+
+      {(!car?.branch_id || !car?.id) && (
+        <div className="mt-2 text-xs text-red-500">
+          branch_id یا car_id موجود نیست (برای رزرو باید در car پاس داده شود).
+        </div>
+      )}
     </div>
   );
 }

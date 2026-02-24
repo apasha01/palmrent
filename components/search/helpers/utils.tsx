@@ -1,70 +1,73 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
+"use client"
 
-import * as React from "react";
-import { useMemo } from "react";
-import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
-import { Check, Info } from "lucide-react";
+import React, { useMemo, useRef, useState } from "react"
+import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
+import { Check, Info } from "lucide-react"
 
-import { cn } from "@/lib/utils";
-import { ApiOption } from "@/types/rent-information";
+import { cn } from "@/lib/utils"
+import { ApiOption } from "@/types/rent-information"
 
-import { IconBag, IconGas, IconGearBox, IconPerson } from "@/components/Icons";
-import { AppDrawer } from "@/components/common/AppDrawer";
+import { IconBag, IconGas, IconGearBox, IconPerson } from "@/components/Icons"
+import { AppDrawer } from "@/components/common/AppDrawer"
+import { useTranslations } from "next-intl"
 
 // ------------------------------------
 // helpers
 // ------------------------------------
 export function formatNum(n: number) {
   try {
-    return n.toLocaleString();
+    return n.toLocaleString()
   } catch {
-    return String(n);
+    return String(n)
   }
 }
 
-export function formatMoneyOrFree(n: number, currencyLabel?: string) {
-  const v = Number(n || 0);
-  if (!Number.isFinite(v) || v <= 0) return "رایگان";
-  return currencyLabel ? `${formatNum(v)} ${currencyLabel}` : `${formatNum(v)}`;
+/**
+ * ✅ i18n-safe money formatter (supports "free")
+ */
+export function formatMoneyOrFree(n: number, tCommon: (key: string, values?: any) => string, currencyLabel?: string) {
+  const v = Number(n || 0)
+  if (!Number.isFinite(v) || v <= 0) return tCommon("free")
+  return currencyLabel ? `${formatNum(v)} ${currencyLabel}` : `${formatNum(v)}`
 }
 
 // ------------------------------------
 // SummaryRow (supports skeleton)
 // ------------------------------------
 function SkeletonLine({ w = "w-24" }: { w?: string }) {
-  return <div className={cn("h-3 rounded bg-gray-200 animate-pulse", w)} />;
+  return <div className={cn("h-3 rounded bg-gray-200 animate-pulse", w)} />
 }
 
+/**
+ * ✅ kind: avoids language-dependent parsing like startsWith("محل تحویل")
+ * - "delivery" -> delivery fee row
+ * - "return"   -> return fee row
+ * - undefined  -> normal row
+ */
 export function SummaryRow({
   label,
   value,
   subLabel,
   valueHint,
   loading,
+  kind,
 }: {
-  label: string;
-  value: string;
-  subLabel?: any;
-  valueHint?: any;
-  loading?: boolean;
+  label: string
+  value: string
+  subLabel?: any
+  valueHint?: any
+  loading?: boolean
+  kind?: "delivery" | "return"
 }) {
-  const isDelivery = label.startsWith("محل تحویل:");
-  const isReturn = label.startsWith("محل عودت:");
+  const t = useTranslations("RentCommon") // ✅ add translations here
 
-  const normalizedLabel = isDelivery
-    ? "هزینه تحویل"
-    : isReturn
-      ? "هزینه عودت"
-      : label;
+  const normalizedLabel =
+    kind === "delivery" ? t("summary.deliveryFee") : kind === "return" ? t("summary.returnFee") : label
 
-  const normalizedSub = isDelivery
-    ? label.replace("محل تحویل:", "").trim()
-    : isReturn
-      ? label.replace("محل عودت:", "").trim()
-      : subLabel || "";
+  const normalizedSub = subLabel || ""
 
-  const isFree = !loading && value.includes("رایگان");
+  const isFree = !loading && value.includes(t("free")) // ✅ matches current locale word
 
   return (
     <div className="py-2">
@@ -75,33 +78,23 @@ export function SummaryRow({
           </div>
 
           {normalizedSub ? (
-            <div className="text-xs text-gray-500 mt-1 leading-4">
-              {loading ? <SkeletonLine w="w-40" /> : normalizedSub}
-            </div>
+            <div className="text-xs text-gray-500 mt-1 leading-4">{loading ? <SkeletonLine w="w-40" /> : normalizedSub}</div>
           ) : null}
         </div>
 
         <div
           className={cn(
             "text-sm text-left font-bold leading-5 whitespace-nowrap",
-            loading
-              ? "text-gray-400"
-              : isFree
-                ? "text-gray-500"
-                : "text-gray-800",
+            loading ? "text-gray-400" : isFree ? "text-gray-500" : "text-gray-800",
           )}
         >
           {loading ? <SkeletonLine w="w-20" /> : value}
 
-          {valueHint ? (
-            <div className="text-[10px] font-medium text-blue-600 mt-0.5">
-              {valueHint}
-            </div>
-          ) : null}
+          {valueHint ? <div className="text-[10px] font-medium text-blue-600 mt-0.5">{valueHint}</div> : null}
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // ------------------------------------
@@ -112,9 +105,9 @@ function RadixCheckbox({
   onCheckedChange,
   className,
 }: {
-  checked: boolean;
-  onCheckedChange: (next: boolean) => void;
-  className?: string;
+  checked: boolean
+  onCheckedChange: (next: boolean) => void
+  className?: string
 }) {
   return (
     <CheckboxPrimitive.Root
@@ -138,53 +131,34 @@ function RadixCheckbox({
         <Check className="h-4 w-4" />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
-  );
+  )
 }
-
-// ------------------------------------
-// Price label (قدیمی - نگه داشتم چون گفتی پاک نکن)
-// ------------------------------------
-const PriceLeft = ({ price }: { price: number }) => {
-  const n = Number(price || 0);
-  if (!Number.isFinite(n) || n <= 0) {
-    return (
-      <span className="text-sm text-gray-600 whitespace-nowrap">رایگان</span>
-    );
-  }
-
-  return (
-    <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">
-      {formatNum(n)} <span className="font-medium">درهم</span>{" "}
-      <span className="text-gray-500 font-medium">روزانه</span>
-    </span>
-  );
-};
 
 function renderPriceLeft({
   price,
   currencyLabel,
+  tCommon,
 }: {
-  price: number;
-  currencyLabel: string;
+  price: number
+  currencyLabel: string
+  tCommon: (key: string, values?: any) => string
 }) {
-  const n = Number(price || 0);
+  const n = Number(price || 0)
 
   if (!Number.isFinite(n) || n <= 0) {
-    return (
-      <span className="text-sm text-gray-600 whitespace-nowrap">رایگان</span>
-    );
+    return <span className="text-sm text-gray-600 whitespace-nowrap">{tCommon("free")}</span>
   }
 
   return (
     <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">
       {formatNum(n)} <span className="font-medium">{currencyLabel}</span>{" "}
-      <span className="text-gray-500 font-medium">روزانه</span>
+      <span className="text-gray-500 font-medium">{tCommon("daily")}</span>
     </span>
-  );
+  )
 }
 
 // ------------------------------------
-// ExtrasList (NO Drawer here)
+// ExtrasList
 // ------------------------------------
 export function ExtrasList({
   options,
@@ -194,49 +168,83 @@ export function ExtrasList({
   setInsuranceComplete,
   insuranceCompleteEnabled,
   insuranceCompleteDailyPrice,
-  currencyLabel = "درهم",
+  currencyLabel = "",
   onSelectionVisualChange,
 }: {
-  options: ApiOption[];
-  selected: number[];
-  setSelected: (v: number[]) => void;
+  options: ApiOption[]
+  selected: number[]
+  setSelected: (v: number[]) => void
 
-  insuranceComplete: boolean;
-  setInsuranceComplete: (v: boolean) => void;
-  insuranceCompleteEnabled: boolean;
-  insuranceCompleteDailyPrice?: number;
-  currencyLabel?: string;
+  insuranceComplete: boolean
+  setInsuranceComplete: (v: boolean) => void
+  insuranceCompleteEnabled: boolean
+  insuranceCompleteDailyPrice?: number
+  currencyLabel?: string
 
-  onSelectionVisualChange?: (changedOptionId: number) => void;
+  onSelectionVisualChange?: (changedOptionId: number) => void
 }) {
+  const t = useTranslations("RentCommon") // ✅ common texts (free/daily/moreInfo/insurance...)
+  const tCommon = (key: string, values?: any) => t(key, values)
+
   const safeOptions = useMemo(() => {
     return (Array.isArray(options) ? options : []).filter(
       (x): x is ApiOption => Boolean(x) && typeof (x as any).id !== "undefined",
-    );
-  }, [options]);
+    )
+  }, [options])
 
-  const INS_ID = -999;
+  const INS_ID = -999
+
+  // ✅ drawer state + cooldown after close
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const blockUntilRef = useRef<number>(0)
+  const closeTimerRef = useRef<any>(null)
+
+  const handleDrawerOpenChange = (open: boolean) => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+
+    if (open) {
+      setIsDrawerOpen(true)
+      return
+    }
+
+    blockUntilRef.current = Date.now() + 450
+
+    closeTimerRef.current = setTimeout(() => {
+      setIsDrawerOpen(false)
+      closeTimerRef.current = null
+    }, 300)
+  }
+
+  const canToggleNow = () => {
+    if (isDrawerOpen) return false
+    // eslint-disable-next-line react-hooks/purity
+    if (Date.now() < blockUntilRef.current) return false
+    return true
+  }
 
   function toggleOption(id: number) {
-    if (!Number.isFinite(id as any)) return;
-    onSelectionVisualChange?.(id);
+    if (!canToggleNow()) return
+    if (!Number.isFinite(id as any)) return
 
-    if (selected.includes(id)) setSelected(selected.filter((i) => i !== id));
-    else setSelected([...selected, id]);
+    onSelectionVisualChange?.(id)
+
+    if (selected.includes(id)) setSelected(selected.filter((i) => i !== id))
+    else setSelected([...selected, id])
   }
 
   function toggleInsurance() {
-    onSelectionVisualChange?.(INS_ID);
-    setInsuranceComplete(!insuranceComplete);
+    if (!canToggleNow()) return
+
+    onSelectionVisualChange?.(INS_ID)
+    setInsuranceComplete(!insuranceComplete)
   }
 
   return (
     <div>
       {safeOptions.map((item) => {
-        const checked = selected.includes(item.id);
-        const rawDaily = Number((item as any)?.price ?? 0) || 0;
+        const checked = selected.includes(item.id)
+        const rawDaily = Number((item as any)?.price ?? 0) || 0
 
-        // ✅ description from api (optional)
         const apiDesc =
           (item as any)?.description ??
           (item as any)?.desc ??
@@ -246,35 +254,26 @@ export function ExtrasList({
           (item as any)?.info ??
           (item as any)?.note ??
           (item as any)?.tooltip ??
-          "";
+          ""
 
         return (
           <div
             key={item.id}
             role="button"
             tabIndex={0}
-            className={cn(
-              "flex items-center justify-between gap-3 px-4 py-2",
-              "cursor-pointer hover:bg-gray-50 active:bg-gray-100",
-            )}
+            className={cn("flex items-center justify-between gap-3 px-4 py-2", "cursor-pointer hover:bg-gray-50 active:bg-gray-100")}
             onClick={() => toggleOption(item.id)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") toggleOption(item.id);
+              if (!canToggleNow()) return
+              if (e.key === "Enter" || e.key === " ") toggleOption(item.id)
             }}
           >
             <div className="flex items-center gap-3 min-w-0">
-              <RadixCheckbox
-                checked={checked}
-                onCheckedChange={() => toggleOption(item.id)}
-                className="cursor-pointer"
-              />
+              <RadixCheckbox checked={checked} onCheckedChange={() => toggleOption(item.id)} className="cursor-pointer" />
 
               <div className="flex items-center gap-2 min-w-0">
-                <div className="text-sm font-semibold text-gray-800 truncate">
-                  {item.title}
-                </div>
+                <div className="text-sm font-semibold text-gray-800 truncate">{item.title}</div>
 
-                {/* ✅✅✅ ONLY AppDrawer */}
                 <AppDrawer
                   kind="extra_option"
                   data={{
@@ -282,15 +281,18 @@ export function ExtrasList({
                     optionTitle: item.title,
                     optionDescriptionFromApi: String(apiDesc ?? ""),
                   }}
+                  onOpenChange={handleDrawerOpenChange}
                   trigger={({ open }) => (
                     <button
                       type="button"
                       className="text-gray-500 hover:text-gray-700"
+                      onPointerDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
-                        e.stopPropagation();
-                        open();
+                        e.stopPropagation()
+                        open()
                       }}
-                      aria-label="اطلاعات بیشتر"
+                      aria-label={tCommon("a11y.moreInfo")}
+                      title={tCommon("a11y.moreInfo")}
                     >
                       <Info size={18} />
                     </button>
@@ -299,50 +301,42 @@ export function ExtrasList({
               </div>
             </div>
 
-            <div className="text-left">
-              {renderPriceLeft({ price: rawDaily, currencyLabel })}
-            </div>
+            <div className="text-left">{renderPriceLeft({ price: rawDaily, currencyLabel: currencyLabel || "", tCommon })}</div>
           </div>
-        );
+        )
       })}
 
       {insuranceCompleteEnabled ? (
         <div
           role="button"
           tabIndex={0}
-          className={cn(
-            "flex items-center justify-between gap-3 px-4 py-2",
-            "cursor-pointer hover:bg-gray-50 active:bg-gray-100",
-          )}
+          className={cn("flex items-center justify-between gap-3 px-4 py-2", "cursor-pointer hover:bg-gray-50 active:bg-gray-100")}
           onClick={toggleInsurance}
           onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") toggleInsurance();
+            if (!canToggleNow()) return
+            if (e.key === "Enter" || e.key === " ") toggleInsurance()
           }}
         >
           <div className="flex items-center gap-3 min-w-0">
-            <RadixCheckbox
-              checked={insuranceComplete}
-              onCheckedChange={toggleInsurance}
-              className="cursor-pointer"
-            />
+            <RadixCheckbox checked={insuranceComplete} onCheckedChange={toggleInsurance} className="cursor-pointer" />
 
             <div className="flex items-center gap-2 min-w-0">
-              <div className="text-sm font-semibold text-gray-800 truncate">
-                بسته جامع خسارت
-              </div>
+              <div className="text-sm font-semibold text-gray-800 truncate">{tCommon("extras.insuranceCompleteTitle")}</div>
 
-              {/* ✅✅✅ ONLY AppDrawer */}
               <AppDrawer
                 kind="insurance_complete"
+                onOpenChange={handleDrawerOpenChange}
                 trigger={({ open }) => (
                   <button
                     type="button"
                     className="text-gray-500 hover:text-gray-700"
+                    onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => {
-                      e.stopPropagation();
-                      open();
+                      e.stopPropagation()
+                      open()
                     }}
-                    aria-label="اطلاعات بیشتر"
+                    aria-label={tCommon("a11y.moreInfo")}
+                    title={tCommon("a11y.moreInfo")}
                   >
                     <Info size={18} />
                   </button>
@@ -354,13 +348,14 @@ export function ExtrasList({
           <div className="text-left">
             {renderPriceLeft({
               price: Number(insuranceCompleteDailyPrice || 0),
-              currencyLabel,
+              currencyLabel: currencyLabel || "",
+              tCommon,
             })}
           </div>
         </div>
       ) : null}
     </div>
-  );
+  )
 }
 
 // ------------------------------------
@@ -372,21 +367,23 @@ export function SelectedCarMeta({
   baggage,
   passengers,
 }: {
-  fuel?: string | null;
-  gearbox?: string | null;
-  baggage?: number | string | null;
-  passengers?: number | string | null;
+  fuel?: string | null
+  gearbox?: string | null
+  baggage?: number | string | null
+  passengers?: number | string | null
 }) {
-  const safeFuel = fuel ?? "بنزین";
+  const t = useTranslations("RentCommon")
 
-  const g = String(gearbox ?? "");
+  const safeFuel = fuel ?? t("car.fuelDefault")
+
+  const g = String(gearbox ?? "")
   const safeGearbox =
     g.toLowerCase().includes("auto") || g.includes("اتوماتیک")
-      ? "اتوماتیک"
-      : "دنده‌ای";
+      ? t("car.gearboxAuto")
+      : t("car.gearboxManual")
 
-  const safeBaggage = baggage ?? 0;
-  const safePassengers = passengers ?? 0;
+  const safeBaggage = baggage ?? 0
+  const safePassengers = passengers ?? 0
 
   return (
     <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[11px] text-gray-500">
@@ -408,15 +405,19 @@ export function SelectedCarMeta({
         <span className="w-4 h-4 flex items-center justify-center">
           <IconBag />
         </span>
-        <span className="text-gray-600">{safeBaggage} چمدان</span>
+        <span className="text-gray-600">
+          {safeBaggage} {t("car.baggageUnit")}
+        </span>
       </span>
 
       <span className="inline-flex items-center gap-0.5">
         <span className="w-4 h-4 flex items-center justify-center">
           <IconPerson />
         </span>
-        <span className="text-gray-600">{safePassengers} نفر</span>
+        <span className="text-gray-600">
+          {safePassengers} {t("car.passengersUnit")}
+        </span>
       </span>
     </div>
-  );
+  )
 }

@@ -21,6 +21,7 @@ type VerifyPayload = {
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    // ---------------- OTP ----------------
     CredentialsProvider({
       id: "otp",
       name: "OTP",
@@ -28,15 +29,12 @@ export const authOptions: NextAuthOptions = {
         mobile: { label: "mobile", type: "text" },
         code: { label: "code", type: "text" },
       },
-
       async authorize(credentials) {
         const mobile = (credentials?.mobile ?? "").toString().trim();
         const code = (credentials?.code ?? "").toString().trim();
-
         if (!mobile || !code) return null;
 
         try {
-          // ✅ مستقیم به بک‌اند (نه axios instance پروژه)
           const { data } = await axios.post<VerifyPayload>(
             `${API_BASE_URL.replace(/\/$/, "")}/auth/otp/verify`,
             { mobile, code },
@@ -48,19 +46,12 @@ export const authOptions: NextAuthOptions = {
             }
           );
 
-          if (!data?.success) {
-            // 👇 این باعث میشه signIn().error همین متن رو بگیره
-            throw new Error(data?.message || "OTP_VERIFY_FAILED");
-          }
+          if (!data?.success) throw new Error(data?.message || "OTP_VERIFY_FAILED");
 
           const accessToken = data?.data?.access_token;
           const user = data?.data?.user;
+          if (!accessToken || !user) throw new Error("OTP_VERIFY_FAILED");
 
-          if (!accessToken || !user) {
-            throw new Error("OTP_VERIFY_FAILED");
-          }
-
-          // ✅ user object که داخل session.user میره
           return {
             ...(user as any),
             id: String((user as any)?.id ?? mobile),
@@ -68,16 +59,40 @@ export const authOptions: NextAuthOptions = {
             accessToken,
           } as any;
         } catch (e: any) {
-          // ✅ اگر بک‌اند 422/401 داد اینجا میفهمیم دقیقاً چی بوده
           const backendMsg =
             e?.response?.data?.message ||
             e?.response?.data?.msg ||
             e?.message ||
             "OTP_VERIFY_FAILED";
-
-          // این throw => توی signIn به صورت res.error میاد
           throw new Error(backendMsg);
         }
+      },
+    }),
+
+    // ---------------- Token Login ----------------
+    CredentialsProvider({
+      id: "token",
+      name: "Token",
+      credentials: {
+        accessToken: { label: "accessToken", type: "text" },
+        user_id: { label: "user_id", type: "text" },
+        username: { label: "username", type: "text" },
+        phone: { label: "phone", type: "text" },
+        name: { label: "name", type: "text" },
+        email: { label: "email", type: "text" },
+      },
+      async authorize(credentials) {
+        const accessToken = (credentials?.accessToken ?? "").toString().trim();
+        if (!accessToken) return null;
+
+        return {
+          id: String(credentials?.user_id ?? credentials?.username ?? "token-user"),
+          username: credentials?.username ?? "",
+          phone: credentials?.phone ?? "",
+          name: credentials?.name ?? "",
+          email: credentials?.email ?? null,
+          accessToken,
+        } as any;
       },
     }),
   ],
@@ -85,12 +100,21 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      // ✅ موقع لاگین
       if (user) {
         token.accessToken = (user as any).accessToken ?? null;
         const { accessToken, ...rest } = user as any;
         token.user = rest;
       }
+
+      // ✅ موقع useSession().update(...)
+      if (trigger === "update" && session) {
+        // session شکلش همون چیزیه که update(...) پاس میدی
+        if ((session as any)?.user) token.user = (session as any).user;
+        if ((session as any)?.accessToken) token.accessToken = (session as any).accessToken;
+      }
+
       return token;
     },
 

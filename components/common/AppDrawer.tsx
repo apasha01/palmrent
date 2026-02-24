@@ -3,13 +3,8 @@
 "use client";
 
 import * as React from "react";
-import { Info, Sparkles } from "lucide-react";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { Sparkles } from "lucide-react";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Separator } from "@/components/ui/separator";
 
 // ===========================
@@ -20,8 +15,7 @@ const UI = {
   wrap: "w-full max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto",
   header: "px-5 pt-4 pb-2",
   title: "text-right text-base font-extrabold text-gray-900 truncate",
-  iconWrap:
-    "inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600",
+  iconWrap: "inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600",
   body: "px-5 pb-4",
   bodyText: "text-right text-sm leading-7 text-gray-700 whitespace-pre-line",
   hint: "text-xs text-gray-500 leading-6",
@@ -187,18 +181,16 @@ function moneyFa(value: any) {
   return toFaDigits(str);
 }
 
-// ===========================
-// ✅ TRIGGER typing: NO TS ERROR
-// render-prop trigger gets {open} callback
-// ===========================
 export function AppDrawer({
   kind,
   data,
   trigger,
+  onOpenChange, // ✅ جدید
 }: {
   kind: AppDrawerKind;
   data?: AppDrawerData;
   trigger: (args: { open: () => void }) => React.ReactNode;
+  onOpenChange?: (open: boolean) => void; // ✅ جدید
 }) {
   const [open, setOpen] = React.useState(false);
 
@@ -212,7 +204,8 @@ export function AppDrawer({
     setStickyKind(kind);
     setStickyData(data);
     setOpen(true);
-  }, [kind, data]);
+    onOpenChange?.(true); // ✅
+  }, [kind, data, onOpenChange]);
 
   const title = React.useMemo(() => {
     const d = stickyData;
@@ -250,7 +243,7 @@ export function AppDrawer({
 
       return (
         <div className={UI.body + " text-right"}>
-<div className={UI.hint}>{d.pricesSubtitle || COPY.prices.desc}</div>
+          <div className={UI.hint}>{d.pricesSubtitle || COPY.prices.desc}</div>
 
           <Separator className="my-3" />
 
@@ -365,13 +358,23 @@ export function AppDrawer({
       <Drawer
         open={open}
         onOpenChange={(v) => {
-          if (!v) {
-            setOpen(false);
+          onOpenChange?.(Boolean(v)); // ✅
+
+          if (v) {
+            // اگر با gesture باز شد، sticky sync
             if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-            closeTimerRef.current = setTimeout(() => {
-              closeTimerRef.current = null;
-            }, 250);
+            setStickyKind(kind);
+            setStickyData(data);
+            setOpen(true);
+            return;
           }
+
+          // close
+          setOpen(false);
+          if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+          closeTimerRef.current = setTimeout(() => {
+            closeTimerRef.current = null;
+          }, 250);
         }}
       >
         <DrawerContent dir="rtl" className={UI.content}>

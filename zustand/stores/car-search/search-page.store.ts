@@ -33,6 +33,23 @@ type CarCardModel = {
 
 type ReelItem = any;
 
+// ✅ NEW: فقط برای رزرو داخل Sheet (ایزوله، بدون دخالت توی بقیه stateها)
+type ReserveDraft = {
+  branch_id: number | null;
+  car_id: number | null;
+  from: string | null;
+  to: string | null;
+  dt: string | null;
+  rt: string | null;
+
+  // (اختیاری) اگر خواستی همراهش ببری
+  sort?: string | null;
+  search_title?: string | null;
+  categories?: number[];
+  min_p?: number | null;
+  max_p?: number | null;
+};
+
 type SearchPageState = {
   // ===== UI =====
   roadMapStep: number;
@@ -40,18 +57,21 @@ type SearchPageState = {
   isSearchOpen: boolean;
   isFilterOpen: boolean;
 
-  // ✅ NEW: وقتی هر Sheet/Modal بازه، هدر auto-hide نباید کار کنه
+  // ✅ وقتی هر Sheet/Modal بازه، هدر auto-hide نباید کار کنه
   isAnySheetOpen: boolean;
 
-  // ✅ NEW: برای باز کردن شیت موبایل از SingleCar
+  // ✅ برای باز کردن شیت موبایل از SingleCar
   isMobileInfoOpen: boolean;
 
-  // ===== Required (dates) =====
-  carDates: [string | null, string | null] | null;
+  // ✅ NEW: branch_id برای deep-link/refresh
+  branchId: number | null;
 
-  // ✅ Times
-  deliveryTime: string | null;
-  returnTime: string | null;
+  // ===== Required (dates) =====
+  carDates: [string | null, string | null];
+
+  // ===== Times =====
+  deliveryTime: string;
+  returnTime: string;
 
   // ===== Filters =====
   sort: string | null;
@@ -73,20 +93,24 @@ type SearchPageState = {
   // ===== Extra =====
   descriptionPopup: DescriptionPopupState;
 
+  // ✅ NEW: رزرو داخل شیت (بدون وابستگی به URL)
+  reserveDraft: ReserveDraft;
+  setReserveDraft: (patch: Partial<ReserveDraft>) => void;
+  resetReserveDraft: () => void;
+
   // ===== Actions =====
   setRoadMapStep: (n: number) => void;
   setIsHeaderClose: (v: boolean) => void;
   setIsSearchOpen: (v: boolean) => void;
   setIsFilterOpen: (v: boolean) => void;
 
-  // ✅ NEW
   setIsAnySheetOpen: (v: boolean) => void;
-
-  // ✅ NEW: برای باز کردن شیت موبایل از SingleCar
   setIsMobileInfoOpen: (v: boolean) => void;
 
-  setCarDates: (v: [string | null, string | null] | null) => void;
+  // ✅ NEW
+  setBranchId: (v: number | null) => void;
 
+  setCarDates: (v: [string | null, string | null] | null) => void;
   setDeliveryTime: (v: string | null) => void;
   setReturnTime: (v: string | null) => void;
 
@@ -102,7 +126,6 @@ type SearchPageState = {
   setCurrency: (v: string | null) => void;
 
   setSelectedCarId: (v: number | null) => void;
-
   setDescriptionPopup: (v: DescriptionPopupState) => void;
 
   // ===== Cars actions =====
@@ -237,6 +260,29 @@ const sameDatePair = (
   return a[0] === b[0] && a[1] === b[1];
 };
 
+// ✅ برای جلوگیری از rerender وقتی order دسته‌ها تغییر می‌کنه
+function normalizeCategoryList(arr: number[]) {
+  return (Array.isArray(arr) ? arr : [])
+    .map(Number)
+    .filter((n) => Number.isFinite(n) && n > 0)
+    .sort((x, y) => x - y);
+}
+
+// ✅ NEW: initial reserve draft (ایزوله)
+const initialReserveDraft: ReserveDraft = {
+  branch_id: null,
+  car_id: null,
+  from: null,
+  to: null,
+  dt: null,
+  rt: null,
+  sort: null,
+  search_title: null,
+  categories: [],
+  min_p: null,
+  max_p: null,
+};
+
 // --------- Initial State ---------
 const initialState = {
   roadMapStep: 1,
@@ -244,16 +290,16 @@ const initialState = {
   isSearchOpen: false,
   isFilterOpen: false,
 
-  // ✅ NEW
   isAnySheetOpen: false,
-
-  // ✅ NEW: برای باز کردن شیت موبایل از SingleCar
   isMobileInfoOpen: false,
 
-  carDates: null as [string | null, string | null] | null,
+  // ✅ NEW
+  branchId: null as number | null,
 
-  deliveryTime: null as string | null,
-  returnTime: null as string | null,
+  carDates: [null, null] as [string | null, string | null],
+
+  deliveryTime: "10:00",
+  returnTime: "10:00",
 
   sort: null as string | null,
   search_title: "",
@@ -270,55 +316,96 @@ const initialState = {
   activeIndex: 0,
 
   descriptionPopup: null as DescriptionPopupState,
+
+  // ✅ NEW
+  reserveDraft: initialReserveDraft as ReserveDraft,
 };
 
 export const useSearchPageStore = create<SearchPageState>((set, get) => ({
   ...initialState,
+
+  // ✅ NEW: رزرو داخل sheet (هیچ چیز دیگه رو دست نمیزنه)
+  setReserveDraft: (patch) => {
+    const cur = get().reserveDraft;
+    const next = { ...cur, ...patch };
+
+    // اگر واقعاً تغییری نیست، set نزن
+    const same =
+      cur.branch_id === next.branch_id &&
+      cur.car_id === next.car_id &&
+      cur.from === next.from &&
+      cur.to === next.to &&
+      cur.dt === next.dt &&
+      cur.rt === next.rt &&
+      (cur.sort ?? null) === (next.sort ?? null) &&
+      (cur.search_title ?? null) === (next.search_title ?? null) &&
+      sameArrayNumbers(cur.categories || [], next.categories || []) &&
+      (cur.min_p ?? null) === (next.min_p ?? null) &&
+      (cur.max_p ?? null) === (next.max_p ?? null);
+
+    if (same) return;
+    set({ reserveDraft: next });
+  },
+
+  resetReserveDraft: () => {
+    set({ reserveDraft: { ...initialReserveDraft } });
+  },
 
   // ===== UI =====
   setRoadMapStep: (n) => {
     if (get().roadMapStep === n) return;
     set({ roadMapStep: n });
   },
+
   setIsHeaderClose: (v) => {
     if (get().isHeaderClose === v) return;
     set({ isHeaderClose: v });
   },
+
   setIsSearchOpen: (v) => {
     if (get().isSearchOpen === v) return;
     set({ isSearchOpen: v });
   },
+
   setIsFilterOpen: (v) => {
     if (get().isFilterOpen === v) return;
     set({ isFilterOpen: v });
   },
 
-  // ✅ NEW
   setIsAnySheetOpen: (v) => {
     if (get().isAnySheetOpen === v) return;
     set({ isAnySheetOpen: v });
   },
 
-  // ✅ NEW: برای باز کردن شیت موبایل از SingleCar
   setIsMobileInfoOpen: (v) => {
     if (get().isMobileInfoOpen === v) return;
     set({ isMobileInfoOpen: v });
   },
 
+  // ✅ NEW
+  setBranchId: (v) => {
+    if (get().branchId === v) return;
+    set({ branchId: v });
+  },
+
   // ===== Dates & Times =====
   setCarDates: (v) => {
+    const next: [string | null, string | null] = v ?? [null, null];
     const cur = get().carDates;
-    if (sameDatePair(cur, v)) return;
-    set({ carDates: v });
+    if (sameDatePair(cur, next)) return;
+    set({ carDates: next });
   },
 
   setDeliveryTime: (v) => {
-    if (get().deliveryTime === v) return;
-    set({ deliveryTime: v });
+    const next = v ? String(v) : "10:00";
+    if (get().deliveryTime === next) return;
+    set({ deliveryTime: next });
   },
+
   setReturnTime: (v) => {
-    if (get().returnTime === v) return;
-    set({ returnTime: v });
+    const next = v ? String(v) : "10:00";
+    if (get().returnTime === next) return;
+    set({ returnTime: next });
   },
 
   // ===== Filters =====
@@ -333,18 +420,23 @@ export const useSearchPageStore = create<SearchPageState>((set, get) => ({
   },
 
   setSelectedCategories: (v) => {
-    const next = Array.isArray(v) ? v : [];
-    const cur = get().selectedCategories || [];
+    const next = normalizeCategoryList(v || []);
+    const cur = normalizeCategoryList(get().selectedCategories || []);
     if (sameArrayNumbers(cur, next)) return;
     set({ selectedCategories: next });
   },
 
   toggleSelectedCategory: (id) => {
-    const cur = get().selectedCategories || [];
-    const exists = cur.includes(id);
-    const next = exists ? cur.filter((x) => x !== id) : [...cur, id];
-    if (sameArrayNumbers(cur, next)) return;
-    set({ selectedCategories: next });
+    const nid = Number(id);
+    if (!Number.isFinite(nid) || nid <= 0) return;
+
+    const cur = normalizeCategoryList(get().selectedCategories || []);
+    const exists = cur.includes(nid);
+    const next = exists ? cur.filter((x) => x !== nid) : [...cur, nid];
+    const nextNorm = normalizeCategoryList(next);
+
+    if (sameArrayNumbers(cur, nextNorm)) return;
+    set({ selectedCategories: nextNorm });
   },
 
   resetCategories: () => {
@@ -425,6 +517,7 @@ export const useSearchPageStore = create<SearchPageState>((set, get) => ({
 
   // ===== Resets =====
   resetFilters: () => {
+    // ✅ فقط فیلترها و انتخاب‌ها ریست می‌شن
     set({
       sort: null,
       search_title: "",
@@ -435,5 +528,5 @@ export const useSearchPageStore = create<SearchPageState>((set, get) => ({
     });
   },
 
-  resetAll: () => set({ ...initialState }),
+  resetAll: () => set({ ...(initialState as any) }),
 }));

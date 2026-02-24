@@ -3,9 +3,10 @@
 import { getData } from "@/lib/getData";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+
 import { IconDate, IconPerson2 } from "@/components/Icons";
 import { BASE_URL, STORAGE_URL } from "../../../../lib/apiClient";
+import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 

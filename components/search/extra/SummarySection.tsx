@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslations } from "next-intl";
 
 /* ================= SummaryRow ================= */
 export default function SummaryRow({
@@ -18,21 +19,30 @@ export default function SummaryRow({
   valueHint?: React.ReactNode;
   loading?: boolean;
 }) {
-  const isFree = value.includes("رایگان");
+  const t = useTranslations("SummaryRow");
 
-  const isDelivery = label.startsWith("محل تحویل:");
-  const isReturn = label.startsWith("محل عودت:");
+  // ✅ Free detection: try to detect based on i18n keyword + legacy string
+  const freeWord = t("common.free");
+  const isFree = String(value).includes(freeWord) || String(value).includes("رایگان");
+
+  // ✅ Normalize delivery/return labels for ALL languages:
+  // We avoid `startsWith("محل تحویل")` and instead normalize by prefixes defined in i18n.
+  const deliveryPrefix = t("prefix.delivery"); // e.g. "محل تحویل:"
+  const returnPrefix = t("prefix.return"); // e.g. "محل عودت:"
+
+  const isDelivery = String(label).startsWith(deliveryPrefix);
+  const isReturn = String(label).startsWith(returnPrefix);
 
   const normalizedLabel = isDelivery
-    ? "هزینه تحویل"
+    ? t("normalized.deliveryFee")
     : isReturn
-      ? "هزینه عودت"
+      ? t("normalized.returnFee")
       : label;
 
   const normalizedSub: React.ReactNode = isDelivery
-    ? label.replace("محل تحویل:", "").trim()
+    ? String(label).replace(deliveryPrefix, "").trim()
     : isReturn
-      ? label.replace("محل عودت:", "").trim()
+      ? String(label).replace(returnPrefix, "").trim()
       : subLabel ?? null;
 
   const hasSub = Boolean(normalizedSub);
@@ -42,7 +52,6 @@ export default function SummaryRow({
     <div className="py-2">
       <div className="flex items-center justify-between gap-3">
         <div className="flex-1 text-right">
-          {/* ✅ Title skeleton too */}
           <div className="text-sm text-gray-800 leading-5">
             {loading ? (
               <div className="h-4 w-28 rounded bg-gray-200 animate-pulse" />
@@ -51,7 +60,6 @@ export default function SummaryRow({
             )}
           </div>
 
-          {/* ✅ Daily price line */}
           {hasDaily ? (
             loading ? (
               <div className="mt-1 h-3 w-40 rounded bg-gray-200 animate-pulse" />
@@ -62,7 +70,6 @@ export default function SummaryRow({
             )
           ) : null}
 
-          {/* ✅ Sub label */}
           {hasSub ? (
             loading ? (
               <div className="mt-1 h-3 w-48 rounded bg-gray-200 animate-pulse" />
@@ -75,7 +82,6 @@ export default function SummaryRow({
         </div>
 
         <div className="text-left">
-          {/* ✅ ONLY AMOUNT skeleton (mablagh) */}
           <div className="flex items-center gap-2 whitespace-nowrap">
             {loading ? (
               <div className="h-4 w-24 rounded bg-gray-200 animate-pulse" />

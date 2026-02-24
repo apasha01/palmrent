@@ -1,10 +1,9 @@
 {
-
-    "branchs": {
+  "branchs": {
     "dubai": "Dubai",
     "istanbul": "Istanbul",
     "oman": "Oman",
-    "kisk": "Kisk",
+    "kisk": "Kish",
     "izmir": "Izmir",
     "ankara": "Ankara",
     "antalya": "Antalya",
@@ -13,7 +12,38 @@
     "georgia": "Georgia"
   },
 
-    "AED": "AED",
+
+  "dateRangePicker": {
+    "clear": "Clear",
+    "switchToGregorian": "Gregorian calendar",
+    "switchToJalali": "Jalali calendar",
+    "goToToday": "Go to today",
+    "selectStart": "Select a start date",
+    "selectEnd": "Select an end date",
+    "deliveryTime": "Delivery time",
+    "returnTime": "Return time",
+    "confirm": "Confirm",
+    "mobileTitle": "Select dates",
+    "delivery": "Delivery",
+    "return": "Return",
+    "pick": "Select",
+    "confirmAndSearch": "Confirm & search"
+  },
+
+
+    "calendarGrid": {
+    "tooltips": {
+      "start": "Pickup date",
+      "end": "Return date"
+    },
+    "aria": {
+      "start": "Start date",
+      "end": "End date",
+      "day": "Day"
+    }
+  },
+
+  "AED": "AED",
   "day": "day",
   "reserve": "reservation",
   "daily": "Daily",
@@ -23,122 +53,121 @@
   "settings": "Settings",
   "chooselang": "Choose language",
   "choosecurrency": "Currency selection",
-  "language":"English",
-  "dubai":"Dubai",
-  "istanbul":"Istanbul",
-  "kayseri":"Kayseri",
-  "kish":"Kisk",
-  "izmir":"Izmir",
-  "georgia":"Georgia",
-  "oman":"Oman",
-  "samsun":"Samsun",
-  "antalya":"Antalya",
-  "ankara":"Ankara",
-  "AED":"AED",
-  "USD":"USD",
-  "home":"Home",
-  "branches":"Palm Rent branches",
-  "carList":"Cars List",
-  "contactUs":"Contact us",
-  "aboutUs":"About us",
-  "more":"More",
-  "blog":"Palm Rent blog",
-  "gallery":"Image Gallary",
-  "commonQ":"Frequently Asked Questions",
-  "rules":" Car Rental Rules",
-  "documents":"Required Documents",
-  "loginHeader":"Login / Register",
-  "palmRent":"Palm Rent",
-  "FSectionF":"Guaranteed best price and easiest way to rent a car",
-  "searchBarTitle":"Online car rental in all cities at the best price",
-  "searchBarB":"Online car rental in",
-  "searchBarA":"at the best price",
-  "city":"City",
-  "date":"Date",
-  "time":"Time",
-  "deliveryTD":"Delivery date and time",
-  "returnTD":"Return date and time",
-  "deliveryT":"Delivery time",
-  "returnT":"Return time",
-  "delivery":"Delivery",
-  "return":"Return",
-  "done":"Done",
-  "searchCar":"Search for cars",
-  "jaliliDate":"Jalili Date",
-  "gregorianDate":"Gregorian Date",
-  "choose":"Choose",
-  "chooseTime":"Choose Time",
-  "goneDate":"Gone Date",
-  "returnDate":"Return Date",
-  "whoAreWe":"Who are we?",
-  "whyB":"Why should we choose",
-  "whyA":"for car rental?",
-  "applicationTitle":"Palm Rent application",
-  "slogan":"Faster and more reliable online car rental",
-  "downloadLink":"View download links",
-  "downloadScan":"Scan to download",
-  "androidIos":"Ability to install on Android and iOS",
-  "commentSectionTitle":"Dear customers' comments",
-  "whySection2Title":"Why should you rent a car from us?",
-  "whySection2Sub":"The #1 car rental company on Google",
-  "rate":"Rate it!",
-  "slogan2":"Palm Rent is a leading car rental company.",
-  "reasonTitle1":"Luxury or economy",
-  "reasonTitle2":"Excellent choice.",
-  "reasonTitle3":"Car rental platform",
-  "reasonDescription1":"There are many reasons to rent a car in Dubai. Business professionals often rent a car, such as a sleek motorbike, to impress clients and convey a sense of wealth and success. Many tourists rent a car to experience the luxury lifestyle of Dubai. But our list doesn’t just include high-end supercars like Ferraris and Lamborghinis. We also offer a diverse range of SUVs and economy cars that are perfect for exploring all that Dubai has to offer. Best Car Rental Companies",
-  "reasonDescription2":"Renty’s integrated service offers customers exceptional choice and the best value in the industry. All cars listed on Renty are fully vetted and of the highest quality. We implement strict quality control procedures. And we only work with dealerships that guarantee excellent service and great value. Drivers can be assured of the highest standards when renting a car on Renty. Our platform provides you with a simple and straightforward car rental process. If you want to rent a luxury car,",
-  "reasonDescription3":"Palm Rent is a leading online car rental service specializing in luxury cars, economy cars, commercial vehicles and vans. We cater to both casual tourists and business professionals looking for a fully tested luxury car rental in Dubai and the UAE. Our platform offers a comprehensive selection of premium cars from all the major service providers in Dubai, Abu Dhabi, Sharjah and Ras Al Khaimah.",
-  "whyOption1":"Best car rental prices",
-  "whyOption2":"The easiest way to rent a car",
-  "whyOption3":"Wide range of rental cars",
-  "whyOption4":"The best car rental company",
-  "latestBlogs":"Latest Palm Rent articles",
-  "viewAll":"View all",
-  "subscribeTitle":"Subscribe to receive the latest news.",
-  "subscribe":"Subscribe",
-  "email":"Email",
-  "pages":"Pages",
-  "licenses":"Our licenses",
-  "phoneNumber":"Contact number",
-  "followUs":"Follow us:",
-  "copyright":"All rights to this service (website and mobile applications) are reserved and belong to Palm Rent Company. (Version 1.100)",
-  "carCategoryTitle":"Car categories",
-  "categoryLux":"Luxury car",
-  "categoryEconomic":"Economic",
-  "categorySport":"Sport",
-  "categoryOffRoad":"Off-road",
-  "categoryCrooked":"Crooked car",
-  "categoryBusiness":"Business",
-  "categoryElectric":"Electric car",
-  "categoryVan":"Van",
-  "carSearch":"Car search",
-  "sort":"Sorting",
-  "sort1":"Most recent",
-  "price_min":"Lowest price",
-  "price_max":"Highest price",
-  "luxCar":"Luxury car",
-  "economicCar":"Economy car",
-  "noDeposite":"No deposit",
-  "freeinsurance":"Free insurance",
-  "freeDelivery":"Free Delivery",
-  "unlimitedKilometers":"unlimited Kilometers",
-  "discount":"Discount",
-  "chooseCar":"Choose Car",
-  "whatsapp":"Whatsapp",
-  "filters":"Filters",
-  "morePic":"More photos",
-  "suitCase":"suitcases",
-  "geared":"Manual",
-  "automatic":"Automatic",
+  "language": "English",
+
+  "dubai": "Dubai",
+  "istanbul": "Istanbul",
+  "kayseri": "Kayseri",
+  "kish": "Kish",
+  "izmir": "Izmir",
+  "georgia": "Georgia",
+  "oman": "Oman",
+  "samsun": "Samsun",
+  "antalya": "Antalya",
+  "ankara": "Ankara",
+
+  "USD": "USD",
+  "home": "Home",
+  "branches": "Palm Rent branches",
+  "carList": "Cars List",
+  "contactUs": "Contact us",
+  "aboutUs": "About us",
+  "more": "More",
+  "blog": "Palm Rent blog",
+  "gallery": "Image Gallary",
+  "commonQ": "Frequently Asked Questions",
+  "rules": " Car Rental Rules",
+  "documents": "Required Documents",
+  "loginHeader": "Login / Register",
+  "palmRent": "Palm Rent",
+  "FSectionF": "Guaranteed best price and easiest way to rent a car",
+  "searchBarTitle": "Online car rental in all cities at the best price",
+  "searchBarB": "Online car rental in",
+  "searchBarA": "at the best price",
+  "city": "City",
+  "date": "Date",
+  "time": "Time",
+  "deliveryTD": "Delivery date and time",
+  "returnTD": "Return date and time",
+  "deliveryT": "Delivery time",
+  "returnT": "Return time",
+  "delivery": "Delivery",
+  "return": "Return",
+  "done": "Done",
+  "searchCar": "Search for cars",
+  "jaliliDate": "Jalili Date",
+  "gregorianDate": "Gregorian Date",
+  "choose": "Choose",
+  "chooseTime": "Choose Time",
+  "goneDate": "Gone Date",
+  "returnDate": "Return Date",
+  "whoAreWe": "Who are we?",
+  "whyB": "Why should we choose",
+  "whyA": "for car rental?",
+  "applicationTitle": "Palm Rent application",
+  "slogan": "Faster and more reliable online car rental",
+  "downloadLink": "View download links",
+  "downloadScan": "Scan to download",
+  "androidIos": "Ability to install on Android and iOS",
+  "commentSectionTitle": "Dear customers' comments",
+  "whySection2Title": "Why should you rent a car from us?",
+  "whySection2Sub": "The #1 car rental company on Google",
+  "rate": "Rate it!",
+  "slogan2": "Palm Rent is a leading car rental company.",
+  "reasonTitle1": "Luxury or economy",
+  "reasonTitle2": "Excellent choice.",
+  "reasonTitle3": "Car rental platform",
+  "reasonDescription1": "There are many reasons to rent a car in Dubai. Business professionals often rent a car, such as a sleek motorbike, to impress clients and convey a sense of wealth and success. Many tourists rent a car to experience the luxury lifestyle of Dubai. But our list doesn’t just include high-end supercars like Ferraris and Lamborghinis. We also offer a diverse range of SUVs and economy cars that are perfect for exploring all that Dubai has to offer. Best Car Rental Companies",
+  "reasonDescription2": "Renty’s integrated service offers customers exceptional choice and the best value in the industry. All cars listed on Renty are fully vetted and of the highest quality. We implement strict quality control procedures. And we only work with dealerships that guarantee excellent service and great value. Drivers can be assured of the highest standards when renting a car on Renty. Our platform provides you with a simple and straightforward car rental process. If you want to rent a luxury car,",
+  "reasonDescription3": "Palm Rent is a leading online car rental service specializing in luxury cars, economy cars, commercial vehicles and vans. We cater to both casual tourists and business professionals looking for a fully tested luxury car rental in Dubai and the UAE. Our platform offers a comprehensive selection of premium cars from all the major service providers in Dubai, Abu Dhabi, Sharjah and Ras Al Khaimah.",
+  "whyOption1": "Best car rental prices",
+  "whyOption2": "The easiest way to rent a car",
+  "whyOption3": "Wide range of rental cars",
+  "whyOption4": "The best car rental company",
+  "latestBlogs": "Latest Palm Rent articles",
+  "viewAll": "View all",
+  "subscribeTitle": "Subscribe to receive the latest news.",
+  "subscribe": "Subscribe",
+  "email": "Email",
+  "pages": "Pages",
+  "licenses": "Our licenses",
+  "phoneNumber": "Contact number",
+  "followUs": "Follow us:",
+  "copyright": "All rights to this service (website and mobile applications) are reserved and belong to Palm Rent Company. (Version 1.100)",
+  "carCategoryTitle": "Car categories",
+  "categoryLux": "Luxury car",
+  "categoryEconomic": "Economic",
+  "categorySport": "Sport",
+  "categoryOffRoad": "Off-road",
+  "categoryCrooked": "Crooked car",
+  "categoryBusiness": "Business",
+  "categoryElectric": "Electric car",
+  "categoryVan": "Van",
+  "carSearch": "Car search",
+  "sort": "Sorting",
+  "sort1": "Most recent",
+  "price_min": "Lowest price",
+  "price_max": "Highest price",
+  "luxCar": "Luxury car",
+  "economicCar": "Economy car",
+  "noDeposite": "No deposit",
+  "freeinsurance": "Free insurance",
+  "freeDelivery": "Free Delivery",
+  "unlimitedKilometers": "unlimited Kilometers",
+  "discount": "Discount",
+  "chooseCar": "Choose Car",
+  "whatsapp": "Whatsapp",
+  "filters": "Filters",
+  "morePic": "More photos",
+  "suitCase": "suitcases",
+  "geared": "Manual",
+  "automatic": "Automatic",
   "people": "people",
   "gasoline": "gasoline",
   "BSPrice": "daily price for",
-  "day": "day",
   "from": "from",
   "to": "to",
   "moreThan": "more than",
-  "daily": "daily",
   "rentDurationB": "Rental duration:",
   "rentDurationA": "Unforgettable days at",
   "changeSearch": "Change search",
@@ -179,8 +208,8 @@
   "location1": "At Palm Rent office (free)",
   "company location": "At company location (free)",
   "Istanbul Airport IST": "Istanbul New Airport (free)",
-  "optionalLocation": "Your preferred location (USD 50)",
-  "optionalTitle":"Please enter your hotel name or location.",
+  "optionalLocation": "Your preferred location (USD 50)",
+  "optionalTitle": "Please enter your hotel name or location.",
   "chooseDelLoc": "Choose delivery location",
   "chooseRetLoc": "Choose return location",
   "days": "days",
@@ -189,7 +218,7 @@
   "BSPrice2": "Daily price",
   "gotDiscount": "I have a discount code!",
   "rules2": "Terms & Conditions",
-  "location":"Location",
+  "location": "Location",
   "resTitle": "Your reservation has been successfully confirmed",
   "resSubtitle": "Your reservation details are listed below",
   "bannerTitle": "Palm Rent International Car Rental - Voucher",
@@ -199,7 +228,7 @@
   "branch": "Branch",
   "qrText": "This receipt is only valid upon payment",
   "downloadVoucher": "Download voucher",
-  "deliveryLoc": "Pick‑up location:",
+  "deliveryLoc": "Pick-up location:",
   "returnLoc": "Return location:",
   "resDetail": "Reservation details",
   "resDayCount": "Number of days reserved:",
@@ -209,8 +238,8 @@
   "additionalInfo3": "Airport parking fees are not included in the rental amount and are the customer's responsibility. Please pay these fees when picking up or returning the car. Also, presenting original passport and international driver’s license is mandatory.",
   "additionalInfo4": "Please ensure you select the correct terminal number. If it does not match, additional charges apply and delivery may be delayed.",
   "additionalInfo5": "Airport parking fees are not included in the rental amount and are the customer's responsibility. Please pay these parking charges when picking up or returning the car.",
-  "for":"for",
-  "carListTitle":"car list",
+  "for": "for",
+  "carListTitle": "car list",
   "documentItem1": "Sample image for identifying cars without the need for a deposit",
   "documentItem2": "Sample photo of an international driving license",
   "documentItem3": "Sample photo of an Iranian passport",
@@ -236,6 +265,7 @@
   "yourEmail": "Your Email*",
   "message": "Message*",
   "send": "Send",
+
   "ruleQ1": "Palm Rent, Car Rental Company",
   "ruleQ2": "Required Documents",
   "ruleQ3": "Fuel",
@@ -250,6 +280,7 @@
   "ruleA5": "The customer is responsible for paying parking fees. Even if the car is delivered for free, any parking fees, including airport parking at the time of car delivery, must be paid by the customer.",
   "ruleA6": "Paying the deposit on the website is considered a final reservation, and in case of cancellation, the paid amount is non-refundable. Note that there is no need to pay a deposit initially to make a reservation.",
   "ruleA7": "Age requirements: The driver must be at least 19 years old and have held a driving license for at least one year.\nInternational driving license: Iranian citizens must have a valid international driving license to rent a car in Dubai. Only the person who rents the car is allowed to drive. If a second or third driver is needed, their international driving license information must be registered, and there will be an additional fee. Requesting a child seat also incurs an additional fee.\nCar insurance: All cars are delivered with full insurance.",
+
   "commonQ1": "What is the price of fuel in Dubai?",
   "commonQ2": "Can I rent a car in Dubai without a driving license?",
   "commonQ3": "How and where can I buy a SIM card? And do I really need it?",
@@ -274,8 +305,10 @@
   "commonA10": "Individuals who rent a car from Palm Rent and, after paying the deposit and completing the reservation, cancel one day, the amount for canceling that day will be deducted from the paid amount.",
   "commonA11": "In Dubai, the transfer cost to various destinations, including the airport, hotel, or any other location, is 50 dirhams for each one-way trip and 50 dirhams for the return. However, in Sharjah, the cost for each round trip is 200 dirhams.",
   "commonA12": "Regarding car rental in Istanbul, the price is determined based on the type of rental car and whether it is daily or monthly.",
-  "rent":"Rent",
-  "readMore":"read More",
+
+  "rent": "Rent",
+  "readMore": "read More",
+
   "qHead1": "General",
   "qHead2": "Refund",
   "qHead3": "Payment Terms",
@@ -286,6 +319,7 @@
   "faqText4": "Send us your message!",
   "yourMessage": "Your message",
   "sendMessage": "Send Message",
+
   "logout": "Logout",
   "logoutDescription": "Are you sure you want to logout from the application?!",
   "exit": "Exit",
@@ -299,11 +333,13 @@
   "requestBackup": "Support Request",
   "moneyBalance": "Account Balance",
   "increaseBalance": "Increase Balance",
+
   "Dubai International Airport - Terminal 1": "Dubai International Airport - Terminal 1",
   "Dubai International Airport - Terminal 2": "Dubai International Airport - Terminal 2",
   "Dubai International Airport - Terminal 3": "Dubai International Airport - Terminal 3",
   "Delivery at the hotel door in Dubai": "Delivery at the hotel door in Dubai",
   "Izmir Airport": "Izmir Airport",
+
   "tax Title": "Tax fee",
   "percent": "Percent",
   "Extra driver": "Extra driver",
@@ -313,6 +349,7 @@
   "At the company location": "At the company location (Free)",
   "petrol or diesel": "Petrol or diesel",
   "diesel": "Diesel",
+
   "sevenplus": "7+ seater",
   "sport": "Sport",
   "business": "Business",
@@ -320,10 +357,401 @@
   "standard": "Standard",
   "suv": "SUV",
   "coupe": "Coupe",
+
   "sum": "Total",
   "dayres": "Reservation day",
   "toman": "Toman",
   "moredetail": "More details",
   "price": "Price",
-  "hour": "Hour"
+  "hour": "Hour",
+
+  "InformationStep": {
+    "meta": {
+      "title": "Choose delivery location{branch}{car}{days} | PalmRent",
+      "desc": "Choose the car delivery and return locations{branchPart}{daysPart}{carPart} and complete your reservation.",
+      "branchIn": " in {branch}",
+      "forDays": " for {days} days",
+      "carInParens": " ({car})"
+    },
+    "currency": {
+      "IRR": "Toman",
+      "IRT": "Toman",
+      "USD": "USD",
+      "EUR": "EUR",
+      "AED": "AED"
+    },
+    "common": {
+      "days": "{count} days",
+      "daily": "per day",
+      "dailyPrice": "Daily price",
+      "unknown": "Unknown",
+      "finalSubmit": "Finalize reservation",
+      "submitting": "Submitting..."
+    },
+    "toast": {
+      "enterNamePhone": "Please enter your name and phone number",
+      "selectDeliveryPlace": "Please select a delivery location",
+      "selectReturnPlace": "Please select a return location",
+      "invalidReservationInfo": "Invalid reservation information",
+      "carNotSelected": "No car selected",
+      "reserveSubmitError": "Failed to submit reservation",
+      "reservedButNoRentCode": "Reservation submitted but rent_code was not received",
+      "reserveRequestDone": "Reservation request submitted",
+      "serverConnectionError": "Server connection error.",
+      "fetchInfoError": "Failed to fetch information.",
+      "invalidServerResponse": "Invalid server response."
+    },
+    "selectedCar": {
+      "title": "Selected car",
+      "dailyPriceFor": "Daily price for",
+      "discountBadge": "{percent}% OFF"
+    },
+    "badges": {
+      "unlimitedKm": "Unlimited mileage",
+      "freeDelivery": "Free delivery",
+      "freeInsurance": "Free insurance",
+      "noDeposit": "No deposit"
+    },
+    "deposit": {
+      "title": "Deposit",
+      "trafficDepositLabel": "Traffic/penalty deposit:",
+      "hint21Days": "The deposit is refunded 21 days after returning the car and is separate from the rental fee."
+    },
+    "noDepositBanner": {
+      "title": "No deposit",
+      "desc": "No deposit is required for this car. You only pay the rental fee."
+    },
+    "deliveryCard": {
+      "title": "Where would you like to receive the car?",
+      "deliveryPickerTitle": "Select delivery location",
+      "deliveryPickerPlaceholder": "Choose where to receive the car",
+      "returnDifferentLabel": "I will return the car to a different location",
+      "returnPickerTitle": "Select return location",
+      "returnPickerPlaceholder": "Choose where to return the car"
+    },
+    "extras": {
+      "title": "Select extra options",
+      "insuranceCompleteTitle": "Full damage coverage package"
+    },
+    "personalInfo": {
+      "title": "Enter your details",
+      "alreadyRegistered": "I already have an account",
+      "placeholders": {
+        "fullName": "Full name",
+        "email": "Email"
+      }
+    },
+    "rules": {
+      "rulesB": "By submitting the reservation, you accept",
+      "rules2": "PalmRent rules",
+      "rulesA": "."
+    },
+    "summary": {
+      "title": "Billing details",
+      "rentPriceLabel": "Rental price for {days} days",
+      "haveCoupon": "I have a coupon code",
+      "discountInline": "{percent}% off",
+      "tax": "Tax",
+      "taxPercent": "{percent}%",
+      "finalCostForDays": "Final cost for {days} days",
+      "acceptRulesHint": "By submitting, you accept PalmRent rules"
+    },
+    "coupon": {
+      "title": "Coupon code",
+      "enterLabel": "Enter your coupon code",
+      "placeholder": "e.g. PALM15",
+      "invalidText": "Invalid coupon code.",
+      "invalidToast": "Invalid coupon code",
+      "checking": "Checking...",
+      "apply": "Apply code"
+    },
+    "mobileBar": {
+      "payableAmount": "Payable amount"
+    },
+    "places": {
+      "deliveryPrefix": "Delivery",
+      "returnPrefix": "Return"
+    }
+  },
+
+  "Auth": {
+    "LoginDialog": {
+      "srTitle": "Login",
+      "button": {
+        "open": "Login / Sign up",
+        "sendOtp": "Get verification code",
+        "verify": "Verify & login",
+        "resend": "Resend code",
+        "resendWithCountdown": "Resend code ({seconds})",
+        "editMobile": "Edit phone number"
+      },
+      "header": {
+        "kicker": "Account",
+        "titleMobile": "Login / Sign up",
+        "titleOtp": "Verify code"
+      },
+      "hint": {
+        "mobile": "Enter your phone number to receive a verification code.",
+        "otp": "Enter the 5-digit code we sent to log in."
+      },
+      "toast": {
+        "invalidMobile": "Please enter a valid phone number",
+        "otpSent": "Verification code sent",
+        "sendError": "Failed to send code",
+        "wrongOtp": "The code you entered is incorrect",
+        "loginSuccess": "Logged in successfully",
+        "verifyError": "Failed to verify code"
+      }
+    }
+  },
+
+  "SearchHeader": {
+    "actions": {
+      "search": "Search"
+    },
+    "common": {
+      "emptyDate": "---",
+      "shortDate": "{day} {month}"
+    },
+"months": {
+  "1": "January",
+  "2": "February",
+  "3": "March",
+  "4": "April",
+  "5": "May",
+  "6": "June",
+  "7": "July",
+  "8": "August",
+  "9": "September",
+  "10": "October",
+  "11": "November",
+  "12": "December"
+},
+    "formats": {
+      "mobileRange": "From {start} at {dt} to {end} at {rt}",
+      "stepSecondRange": "{start} {dt} - {end} {rt} ({days} days)"
+    },
+    "stepSecond": {
+      "title": "Enter details and finalize reservation"
+    },
+    "desktop": {
+      "deliveryTitle": "Delivery date & time",
+      "returnTitle": "Return date & time",
+      "hour": "at"
+    },
+    "rentalDuration": {
+      "prefix": "Rental duration:",
+      "daysSuffix": "days",
+      "branchSuffix": "Don’t forget at"
+    }
+  },
+
+  "SearchResultPage": {
+    "meta": {
+      "parts": {
+        "branch": " - {branch}",
+        "days": " - {days} days"
+      },
+      "step1": {
+        "title": "Car search{branchPart} | {brand}",
+        "desc": "Select dates and branch to see available cars."
+      },
+      "step2": {
+        "title": "Choose a car{branchPart}{daysPart} | {brand}",
+        "desc": "Available rental cars{branchName, select,  { } other{ in {branchName}}}{rentDays, select,  { } other{ for {rentDays} days}}."
+      },
+      "step3": {
+        "title": "Choose delivery location{branchPart}{daysPart} | {brand}",
+        "desc": "Select delivery & return locations and complete your reservation."
+      }
+    }
+  },
+
+  "ResponsiveLocationPicker": {
+    "trigger": {
+      "placeholder": "Select",
+      "selectedNeedsAddress": "{place} — enter {addressLabel}",
+      "selectedWithAddress": "{place} — {address}"
+    },
+    "address": {
+      "defaultLabel": "Address",
+      "requiredHint": "To save your selection, entering the address is required.",
+      "savedTitle": "Saved address"
+    },
+    "badges": {
+      "needsAddress": "Address required"
+    },
+    "actions": {
+      "save": "Save"
+    },
+    "rows": {
+      "empty": "Nothing found",
+      "cost": "Cost:"
+    },
+    "common": {
+      "free": "Free",
+      "priceWithCurrency": "{price} {currency}"
+    },
+    "a11y": {
+      "back": "Back"
+    }
+  },
+
+  "SummaryRow": {
+    "common": {
+      "free": "Free"
+    },
+    "prefix": {
+      "delivery": "Pick-up location:",
+      "return": "Return location:"
+    },
+    "normalized": {
+      "deliveryFee": "Delivery fee",
+      "returnFee": "Return fee"
+    }
+  },
+
+  "InformationStepLogic": {
+    "errors": {
+      "invalidBranch": "Invalid branch",
+      "invalidDates": "Invalid reservation dates",
+      "fetchFailed": "Failed to fetch information.",
+      "invalidServerResponse": "Invalid server response.",
+      "network": "Server connection error."
+    },
+    "common": {
+      "unknown": "Unknown"
+    },
+    "rows": {
+      "deliveryPrefix": "Pick-up location: {place}",
+      "returnPrefix": "Return location: {place}"
+    }
+  },
+
+  "Home": {
+    "hero": {
+      "title": "PalmRent | Online car rental booking in selected cities",
+      "subtitle": "Online booking, coordinated delivery, 24/7 Persian support"
+    }
+  },
+  "ActiveRentCities": {
+    "title": "Active PalmRent cities for car rental",
+    "subtitle": "Choose a city to see available cars and booking conditions in that city.",
+    "viewAll": "View all car rental cities",
+    "viewAllAria": "View all active car rental cities",
+    "cityButtonAria": "View rental cars in {city}"
+  },
+  "GuidesSection": {
+    "title": "Guides & Articles",
+    "prev": "Previous",
+    "next": "Next",
+    "openArticleAria": "Open article {title}"
+  },
+
+  "ImportantQuestions": {
+    "faqTitle": "Frequently Asked Questions",
+    "tabs": {
+      "delivery": "Delivery & Return",
+      "general": "General"
+    },
+    "delivery": {
+      "q1": {
+        "title": "How can I book a car on PalmRent?",
+        "body": "..."
+      }
+    },
+    "general": {
+      "q1": {
+        "title": "Why can I trust PalmRent?",
+        "body": "..."
+      }
+    },
+    "support": {
+      "title": "Have a question? Ask us!",
+      "subtitle": "PalmRent 24/7 support and assistance",
+      "whatsapp": "WhatsApp support",
+      "phone": "Phone support",
+      "whatsappAria": "Start a WhatsApp chat with PalmRent support",
+      "phoneAria": "Call PalmRent support"
+    }
+  },
+
+  "NavSection": {
+    "heroAlt": "Header image",
+    "defaultTitle": "PalmRent | Online car rental booking",
+    "defaultSubtitle1": "Online booking, coordinated delivery, 24/7 support",
+    "loadingCities": "Loading...",
+    "cityLocked": "City selected",
+    "fields": {
+      "city": "City",
+      "delivery": "Delivery date & time",
+      "return": "Return date & time"
+    },
+    "placeholders": {
+      "city": "Select a city",
+      "deliveryDate": "Delivery date",
+      "deliveryTime": "Delivery time",
+      "returnDate": "Return date",
+      "returnTime": "Return time"
+    },
+    "actions": {
+      "search": "Search cars"
+    },
+    "months": {
+      "1": "January",
+      "2": "February",
+      "3": "March",
+      "4": "April",
+      "5": "May",
+      "6": "June",
+      "7": "July",
+      "8": "August",
+      "9": "September",
+      "10": "October",
+      "11": "November",
+      "12": "December"
+    }
+  },
+
+  
+  "whatsappMessage": {
+     "reserve": "Hello\nI am interested in reserving the ({car}) in ({city}) and would like to request additional information and rental terms.\n{url}",
+    "reserveWithDate": "Hello\nI am interested in reserving the ({car}) in ({city}) from {from} ({dt}) to {to} ({rt}).\nPlease share the rental terms and availability.\n{url}"
+ },
+
+
+  "branchLanding": {
+    "heroTitle": "Car rental in <Branch></Branch> with no deposit",
+    "heroSubtitle1": "Fast delivery at the airport or hotel, plus free insurance",
+    "heroSubtitle2": "Quick online booking, pay on delivery, 24/7 support",
+
+    "loadingMore": "Loading…",
+    "viewMore": "View more",
+
+    "noCarsFound": "No cars found",
+    "noMoreResults": "No more results",
+    "fetchError": "Failed to fetch information"
+  },
+
+    "RentCommon": {
+    "free": "Free",
+    "daily": "Daily",
+    "a11y": {
+      "moreInfo": "More info"
+    },
+    "extras": {
+      "insuranceCompleteTitle": "Full damage coverage"
+    },
+    "summary": {
+      "deliveryFee": "Delivery fee",
+      "returnFee": "Return fee"
+    },
+    "car": {
+      "fuelDefault": "Gasoline",
+      "gearboxAuto": "Automatic",
+      "gearboxManual": "Manual",
+      "baggageUnit": "bags",
+      "passengersUnit": "people"
+    }
+  }
 }

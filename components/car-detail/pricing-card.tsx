@@ -10,12 +10,21 @@ import {
   Shield,
   Info,
   ChevronLeft,
+  ArrowRight,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
+import { usePathname, useRouter } from "@/i18n/navigation";
 
 import { formatJalaliDate } from "@/lib/date-utils";
 import { DateRangePickerPopover } from "../custom/calender/date-range-picker";
 import { AppDrawer } from "../common/AppDrawer";
+
+import { useMobileSheet } from "@/providers/mobile-sheet-provider";
+import SearchHeader from "@/components/search/search-header";
+import StepRent from "@/components/search/StepsRent";
+import ReserveInformation from "@/components/reserve/ReserveInformation";
+import { SheetClose } from "@/components/ui/sheet";
+import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store";
 
 // ---------------- Utils ----------------
 function addDays(d: Date, days: number) {
@@ -90,11 +99,7 @@ type PickerRange = NonNullable<
   React.ComponentProps<typeof DateRangePickerPopover>["initialRange"]
 >;
 
-function buildDefault(): {
-  range: PickerRange;
-  deliveryTime: string;
-  returnTime: string;
-} {
+function buildDefault(): { range: PickerRange; deliveryTime: string; returnTime: string } {
   const tomorrow = addDays(new Date(), 1);
   const end = addDays(new Date(), 6);
   const range: PickerRange = { start: tomorrow, end };
@@ -179,15 +184,15 @@ export function PricingCard({
   whatsapp,
 }: PricingCardProps) {
   const router = useRouter();
-  const defaults = React.useMemo(() => buildDefault(), []);
+  const pathname = usePathname();
+  const locale = useLocale();
 
+  const { openSheet } = useMobileSheet();
+
+  const defaults = React.useMemo(() => buildDefault(), []);
   const [range, setRange] = React.useState<PickerRange>(defaults.range);
-  const [deliveryTime, setDeliveryTime] = React.useState<string>(
-    defaults.deliveryTime,
-  );
-  const [returnTime, setReturnTime] = React.useState<string>(
-    defaults.returnTime,
-  );
+  const [deliveryTime, setDeliveryTime] = React.useState<string>(defaults.deliveryTime);
+  const [returnTime, setReturnTime] = React.useState<string>(defaults.returnTime);
 
   const unit = currency || "درهم";
 
@@ -218,14 +223,11 @@ export function PricingCard({
   // ✅ trigger ref for opening calendar programmatically
   const calendarTriggerRef = React.useRef<HTMLButtonElement | null>(null);
 
-  // ✅ اکشن تایید تقویم: پیش‌فرض = آنلاین (یعنی اگر کاربر روی اینپوت تاریخ زد و تایید کرد، بره مرحله بعدی)
+  // ✅ اکشن تایید تقویم
   const reserveActionRef = React.useRef<"online" | "whatsapp">("online");
 
   /** ✅ واتساپ: ساخت لینک نهایی */
-  const waPhone = React.useMemo(
-    () => normalizeWhatsappPhone(whatsapp),
-    [whatsapp],
-  );
+  const waPhone = React.useMemo(() => normalizeWhatsappPhone(whatsapp), [whatsapp]);
 
   const whatsappLink = React.useMemo(() => {
     if (!waPhone) return "";
@@ -257,20 +259,77 @@ export function PricingCard({
     defaults.returnTime,
   ]);
 
-  /** ✅ رفتن به صفحه بعدی رزرو (همون /search?...) */
+  // ===============================
+  // ✅ Zustand setters (مثل Search)
+  // ===============================
+  const setSelectedCarId = useSearchPageStore((s: any) => s.setSelectedCarId);
+  const setRoadMapStep = useSearchPageStore((s: any) => s.setRoadMapStep);
+  const setBranchId = useSearchPageStore((s: any) => s.setBranchId);
+
+  // ✅ مهم: ReserveInformation از اینا می‌خونه
+  const setCarDatesStore = useSearchPageStore((s: any) => s.setCarDates);
+  const setDeliveryTimeStore = useSearchPageStore((s: any) => s.setDeliveryTime);
+  const setReturnTimeStore = useSearchPageStore((s: any) => s.setReturnTime);
+
+  const setIsAnySheetOpen = useSearchPageStore((s: any) => s.setIsAnySheetOpen);
+
+  // ✅ 1) hydrate store
+  const hydrateReserveStore = React.useCallback(
+    (args: { branchId: number; carId: number; from: string; to: string; dt: string; rt: string }) => {
+      setSelectedCarId(args.carId);
+      setBranchId(args.branchId);
+
+      setCarDatesStore([args.from, args.to]);
+      setDeliveryTimeStore(args.dt);
+      setReturnTimeStore(args.rt);
+
+      setRoadMapStep(3);
+      if (typeof setIsAnySheetOpen === "function") setIsAnySheetOpen(true);
+    },
+    [
+      setSelectedCarId,
+      setBranchId,
+      setCarDatesStore,
+      setDeliveryTimeStore,
+      setReturnTimeStore,
+      setRoadMapStep,
+      setIsAnySheetOpen,
+    ],
+  );
+
+  // ✅ 2) hydrate URL (مثل سرچ) => خیلی‌ها داخل شیت از searchParams می‌خونن
+  const hydrateUrl = React.useCallback(
+    (args: { branchId: number; carId: number; from: string; to: string; dt: string; rt: string }) => {
+      const params = new URLSearchParams();
+      params.set("branch_id", String(args.branchId));
+      params.set("from", String(args.from));
+      params.set("to", String(args.to));
+      params.set("dt", String(args.dt));
+      params.set("rt", String(args.rt));
+      params.set("car_id", String(args.carId));
+      params.set("step", "3");
+
+      // مسیر صفحه فعلی + پارامترها (بدون ناوبری واقعی)
+      // اگر صفحه شما داخل /[locale]/... هست، pathname خودش شامل لوکاله
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [router, pathname],
+  );
+
+  /**
+   * ✅ رزرو:
+   * - موبایل: شیت + store + url هیدریت
+   * - دسکتاپ: برو /reserve با پارامترها
+   */
   const reserveWith = React.useCallback(
-    (args: {
-      start?: Date | null;
-      end?: Date | null;
-      deliveryTime?: string;
-      returnTime?: string;
-    }) => {
+    (args: { start?: Date | null; end?: Date | null; deliveryTime?: string; returnTime?: string }) => {
       const safeStart = args.start ?? defaults.range.start;
       const safeEnd = args.end ?? defaults.range.end;
 
       const fromFa = safeStart ? formatJalaliDate(safeStart) : "";
       const toFa = safeEnd ? formatJalaliDate(safeEnd) : "";
 
+      // ✅ فرمت مشابه سرچ: جلالی ولی رقم انگلیسی
       const from = toEnDigits(fromFa);
       const to = toEnDigits(toFa);
 
@@ -280,29 +339,71 @@ export function PricingCard({
       const branchId = Number(car?.branch_id ?? 0);
       const carId = Number(car?.id ?? 0);
 
-      if (!branchId || !from || !to || !dt || !rt || !carId) return;
+      if (!branchId || !carId || !from || !to || !dt || !rt) return;
 
+      const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
+      // ✅ موبایل => مثل سرچ: اول store + url، بعد openSheet
+      if (isMobile) {
+        const payload = { branchId, carId, from, to, dt, rt };
+
+        hydrateReserveStore(payload);
+        hydrateUrl(payload);
+
+        // Debug: اگر لازم شد
+        // console.log("AFTER HYDRATE", useSearchPageStore.getState());
+
+        openSheet({
+          title: "رزرو",
+          content: (
+            <div>
+              <div className="flex items-center bg-white">
+                <SheetClose>
+                  <ArrowRight className="size-8 px-2" />
+                </SheetClose>
+                <SearchHeader stepSecond />
+              </div>
+
+              <StepRent step={3} />
+              <ReserveInformation />
+            </div>
+          ),
+          onClose: () => {
+            setRoadMapStep(2);
+            if (typeof setIsAnySheetOpen === "function") setIsAnySheetOpen(false);
+          },
+        });
+
+        return;
+      }
+
+      // ✅ دسکتاپ => برو صفحه رزرو (مثل SingleCar)
       const params = new URLSearchParams();
       params.set("branch_id", String(branchId));
       params.set("from", from);
       params.set("to", to);
       params.set("dt", dt);
       params.set("rt", rt);
-      params.set("step", "3");
       params.set("car_id", String(carId));
 
-      router.push(`/search?${params.toString()}`);
+      router.push(`/${locale}/reserve?${params.toString()}`, { scroll: true });
     },
-    [router, car?.branch_id, car?.id, defaults],
+    [
+      defaults,
+      car?.branch_id,
+      car?.id,
+      locale,
+      router,
+      openSheet,
+      hydrateReserveStore,
+      hydrateUrl,
+      setRoadMapStep,
+      setIsAnySheetOpen,
+    ],
   );
 
   const handleReserve = React.useCallback(() => {
-    reserveWith({
-      start: range?.start,
-      end: range?.end,
-      deliveryTime,
-      returnTime,
-    });
+    reserveWith({ start: range?.start, end: range?.end, deliveryTime, returnTime });
   }, [reserveWith, range?.start, range?.end, deliveryTime, returnTime]);
 
   const deliveryText = React.useMemo(() => {
@@ -315,7 +416,6 @@ export function PricingCard({
     return `${toFaDigits(datePart)} - ${formatTimeFa(returnTime)} `;
   }, [range.end, returnTime]);
 
-  // ✅ Data for central AppDrawer (prices)
   const pricesDrawerData = React.useMemo(() => {
     return { prices: pricingOptions, currency: unit };
   }, [pricingOptions, unit]);
@@ -332,7 +432,6 @@ export function PricingCard({
         )}
       </div>
 
-      {/* ✅ قیمت‌ها + Drawer مرکزی */}
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm font-semibold text-gray-800">قیمت‌های روزانه</div>
 
@@ -361,24 +460,15 @@ export function PricingCard({
           <div className="text-sm text-gray-500">قیمت‌ها موجود نیست.</div>
         ) : (
           pricingOptions.map((option, index) => (
-            <div
-              key={`${option.days}-${index}`}
-              className="flex items-center justify-between"
-            >
+            <div key={`${option.days}-${index}`} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {index === 0 ? (
-                  <DollarSign className="w-5 h-5 text-gray-400" />
-                ) : (
-                  <div className="w-5" />
-                )}
+                {index === 0 ? <DollarSign className="w-5 h-5 text-gray-400" /> : <div className="w-5" />}
                 <span className="text-gray-600 text-sm">{option.days}</span>
               </div>
 
               <div className="flex items-center gap-3">
                 {option.hasOffPrice ? (
-                  <span className="text-gray-400 line-through text-sm">
-                    {formatMoneyFa(option.originalPrice)}
-                  </span>
+                  <span className="text-gray-400 line-through text-sm">{formatMoneyFa(option.originalPrice)}</span>
                 ) : (
                   <span className="text-gray-400 text-sm"> </span>
                 )}
@@ -394,9 +484,7 @@ export function PricingCard({
 
       <div className="border-t border-gray-200 my-4" />
 
-      {/* ✅ ردیف‌های info -> AppDrawer واحد */}
       <div className="space-y-3 text-xs">
-        {/* deposit */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-gray-400" />
@@ -428,7 +516,6 @@ export function PricingCard({
           </div>
         </div>
 
-        {/* delivery */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-gray-400" />
@@ -460,7 +547,6 @@ export function PricingCard({
           </div>
         </div>
 
-        {/* insurance */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-gray-400" />
@@ -492,7 +578,6 @@ export function PricingCard({
           </div>
         </div>
 
-        {/* km */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Info className="w-5 h-5 text-gray-400" />
@@ -525,10 +610,9 @@ export function PricingCard({
         </div>
       </div>
 
-      {/* ✅ موبایل پایین کارت */}
+      {/* موبایل پایین */}
       <div className="mt-4 border-t md:hidden">
         <div className="pt-4 flex gap-2">
-          {/* آبی: تقویم باز شود و بعد از تایید برود مرحله بعد */}
           <button
             type="button"
             className="flex items-center text-sm text-blue-500"
@@ -541,7 +625,6 @@ export function PricingCard({
             <ChevronLeft size={18} />
           </button>
 
-          {/* ✅✅ سبز: مستقیم برود واتساپ با متن (بدون باز شدن تقویم) */}
           <button
             type="button"
             className="flex items-center text-sm text-green-600"
@@ -579,9 +662,7 @@ export function PricingCard({
             setDeliveryTime(v.deliveryTime);
             setReturnTime(v.returnTime);
 
-            // ✅ اگر کاربر از روی اینپوت‌های تاریخ تایید کرد => برود مرحله بعد (مثل رزرو آنلاین)
-            const action = reserveActionRef.current;
-            if (action === "online") {
+            if (reserveActionRef.current === "online") {
               reserveWith({
                 start: v.start,
                 end: v.end,
@@ -603,27 +684,20 @@ export function PricingCard({
               type="button"
               className="flex w-full mb-4 cursor-pointer text-left"
               onClick={() => {
-                // ✅ کلیک روی اینپوت تاریخ = آنلاین
                 reserveActionRef.current = "online";
               }}
             >
               <div className="flex w-full">
                 <div className="flex-1">
-                  <div className="text-xs text-right text-gray-400 mb-1">
-                    تاریخ و ساعت تحویل
-                  </div>
+                  <div className="text-xs text-right text-gray-400 mb-1">تاریخ و ساعت تحویل</div>
                   <div className="border border-gray-200 rounded-r-lg p-2 flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-600 text-sm">
-                      {deliveryText}
-                    </span>
+                    <span className="text-gray-600 text-sm">{deliveryText}</span>
                   </div>
                 </div>
 
                 <div className="flex-1">
-                  <div className="text-xs text-right text-gray-400 mb-1">
-                    تاریخ و ساعت عودت
-                  </div>
+                  <div className="text-xs text-right text-gray-400 mb-1">تاریخ و ساعت عودت</div>
                   <div className="border border-gray-200 rounded-l-lg gap-2 p-2 flex items-center">
                     <span className="text-gray-600 text-sm">{returnText}</span>
                   </div>
@@ -652,13 +726,11 @@ export function PricingCard({
 
   return (
     <>
-      {/* ✅ موبایل: دو کارت جدا */}
       <div className="md:hidden space-y-3">
         <div className="rounded-xl border overflow-hidden">{TopContent}</div>
         <div className="rounded-xl overflow-hidden">{ReserveContent}</div>
       </div>
 
-      {/* ✅ دسکتاپ: یک کارت یک‌تکه */}
       <div className="hidden md:block">
         <div className="rounded-xl border max-w-md mx-auto overflow-hidden">
           {TopContent}

@@ -4,12 +4,14 @@
 
 import Image from "next/image";
 import { useMemo, useCallback, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 
 import { useBlogs } from "@/services/blog/blogs.queries";
 import { STORAGE_URL } from "@/lib/apiClient";
+
+import { useParams, useRouter } from "next/navigation";
 
 export default function GuidesSection() {
   const router = useRouter();

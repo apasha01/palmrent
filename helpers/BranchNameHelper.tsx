@@ -1,14 +1,33 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import React from "react";
+import { usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 
+/**
+ * ✅ کلیدهای مشترک ترجمه‌ی شعبه‌ها
+ * هرجا branch لازم بود => از t(`branches.${key}`) استفاده می‌کنیم
+ */
+export type BranchKey =
+  | "dubai"
+  | "istanbul"
+  | "oman"
+  | "kish"
+  | "izmir"
+  | "ankara"
+  | "antalya"
+  | "samsun"
+  | "kayseri"
+  | "georgia";
 
-
-const BRANCH_KEYS: Record<string, string> = {
+/**
+ * ✅ از slug آخر مسیر (مثلاً /fa/branches/dubai) => key ترجمه
+ */
+const BRANCH_KEY_BY_SLUG: Record<string, BranchKey> = {
   dubai: "dubai",
-  turkey: "istanbul",
+  turkey: "istanbul", // ✅ اگر slug شما turkey هست ولی اسمش استانبوله
+  istanbul: "istanbul",
   oman: "oman",
   kish: "kish",
   izmir: "izmir",
@@ -19,48 +38,86 @@ const BRANCH_KEYS: Record<string, string> = {
   georgia: "georgia",
 };
 
+/**
+ * ✅ از branch_id توی query => key ترجمه
+ * (قبلاً متن فارسی داشتی؛ الان فقط key نگه می‌داریم)
+ */
+export const BRANCH_KEY_BY_ID: Record<string, BranchKey> = {
+  "1": "dubai",
+  "2": "istanbul",
+  "6": "oman",
+  "7": "kish",
+  "8": "izmir",
+  "9": "ankara",
+  "10": "antalya",
+  "11": "samsun",
+  "12": "kayseri",
+  "13": "georgia",
+};
+
+/**
+ * ✅ Helper برای جاهایی که JSX نمی‌خوان و string لازم دارن
+ * مثل meta/title builder
+ *
+ * استفاده:
+ * const t = useTranslations("branches")
+ * const name = getBranchNameById(t, branchId, "")
+ */
+export function getBranchNameById(
+  tBranches: (key: string) => string,
+  branchId: string | null | undefined,
+  fallback = "",
+) {
+  if (!branchId) return fallback;
+  const key = BRANCH_KEY_BY_ID[String(branchId)];
+  if (!key) return fallback;
+  return tBranches(key);
+}
+
+/**
+ * ✅ Helper برای slug (اگر لازم شد بیرون کامپوننت)
+ */
+export function getBranchNameBySlug(
+  tBranches: (key: string) => string,
+  slug: string | null | undefined,
+  fallback = "",
+) {
+  if (!slug) return fallback;
+  const key = BRANCH_KEY_BY_SLUG[String(slug)];
+  if (!key) return fallback;
+  return tBranches(key);
+}
+
+/**
+ * ✅ کامپوننت: اسم شعبه از آخر مسیر (slug)
+ * مثال: /fa/branches/dubai => branches.dubai
+ */
 export default function BranchName({ fallback = "" }: { fallback?: string }) {
   const pathname = usePathname();
-  const t = useTranslations("branchs");
+  const tBranches = useTranslations("branchs");
 
   if (!pathname) return <>{fallback}</>;
 
-  // آخر path رو می‌گیریم
   const slug = pathname.split("/").filter(Boolean).at(-1);
-
   if (!slug) return <>{fallback}</>;
 
-  const key = BRANCH_KEYS[slug];
-  if (!key) return <>{fallback}</>;
+  const name = getBranchNameBySlug(tBranches, slug, "");
+  if (!name) return <>{fallback}</>;
 
-  return <>{t(key)}</>;
+  return <>{name}</>;
 }
 
-
-
-
-const BRANCH_BY_ID: Record<string, string> = {
-  "1": "دبی",
-  "2": "استانبول",
-  "6": "شعبه عمان",
-  "7": "شعبه کیش",
-  "8": "ازمیر ترکیه",
-  "9": "آنکارا ترکیه",
-  "10": "آتالیا ترکیه",
-  "11": "سامسون ترکیه",
-  "12": "قیصریه ترکیه",
-  "13": "گرجستان ترکیه",
-};
-
+/**
+ * ✅ کامپوننت: اسم شعبه از branch_id توی query
+ * مثال: ?branch_id=2 => branches.istanbul
+ */
 export function BranchById({ fallback = "" }: { fallback?: string }) {
   const searchParams = useSearchParams();
+  const tBranches = useTranslations("branchs");
+
   const branchId = searchParams.get("branch_id");
+  const name = getBranchNameById(tBranches, branchId, "");
 
-  if (!branchId) return <>{fallback}</>;
-
-  const branchName = BRANCH_BY_ID[branchId];
-
-  if (!branchName) return <>{fallback}</>;
-
-  return <>{branchName}</>;
+  if (!name) return <>{fallback}</>;
+  return <>{name}</>;
 }

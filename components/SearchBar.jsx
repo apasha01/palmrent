@@ -8,7 +8,7 @@ import DateObject from 'react-date-object';
 import { changeCarDates, changeDeliveryTime, changeIsDateJalili, changeIsDateSelectOpen, changeIsSearchPopupOpen, changePCarDates, changeReturnTime, changeSelectedCity } from '@/redux/slices/globalSlice';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { useParams, usePathname, useSearchParams } from 'next/navigation';
+import { useParams, usePathname, useSearchParams } from '@/i18n/navigation';
 import gregorian from 'react-date-object/calendars/gregorian';
 import persian from 'react-date-object/calendars/persian';
 import gregorian_en from 'react-date-object/locales/gregorian_en';

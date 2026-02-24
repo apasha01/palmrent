@@ -2,10 +2,10 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 
 export function useAuth() {
-  const { data, status } = useSession();
+  const { data, status, update } = useSession();
   const router = useRouter();
 
   const isAuthenticated = status === "authenticated";
@@ -13,10 +13,21 @@ export function useAuth() {
   const user = isAuthenticated ? (data as any)?.user ?? null : null;
   const accessToken = isAuthenticated ? (data as any)?.accessToken ?? null : null;
 
-  // ✅ logout بدون ریدایرکت (پیش‌فرض)
   const logout = async () => {
     await signOut({ redirect: false });
-    router.refresh(); // ✅ کمک به sync UI در App Router
+    router.refresh();
+  };
+
+  // ✅ این رو اضافه کن: برای sync کردن user داخل next-auth
+  const setSessionUser = async (nextUser: any) => {
+    // next-auth update => session callback دوباره اجرا میشه
+    await update({
+      user: nextUser,
+      accessToken,
+    } as any);
+
+    // این اختیاریه، بعضی وقتا برای RSC کمک می‌کنه
+    router.refresh();
   };
 
   return {
@@ -27,5 +38,6 @@ export function useAuth() {
     accessToken,
     ...(user ?? {}),
     logout,
+    setSessionUser,
   };
 }

@@ -1,15 +1,13 @@
 import { defineRouting } from "next-intl/routing";
 
 export const routing = defineRouting({
-  locales: ["fa", "en", "ar", "tr"],
+  locales: ["en", "ar", "fa", 'tr'], // Add your RTL locales
   defaultLocale: "fa",
   localePrefix: "as-needed",
+  // pathnames: {
+  //   "/": "/",
+  // },
   localeDetection: false,
-  pathnames: {
-    "/": "/",
-    "/about": "/about",
-    "/contact": "/contact",
-  },
 });
 
 export const isRTLLocale = (locale: string): boolean => {

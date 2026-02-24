@@ -9,7 +9,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { changeSearchTitle, changeSort, toggleSelectedCategory } from "@/redux/slices/searchSlice";
 import { useQueryParams } from "@/hooks/useAddQueryParam";
 import { getUrlParamsEasy } from "../app/[locale]/search/page";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
 import { getLangUrl } from "@/lib/getLangUrl";
 import useDisableScroll from "@/hooks/useDisableScroll";
 

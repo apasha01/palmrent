@@ -2,7 +2,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { IconDownload } from "@/components/Icons";
 
 import {
   FinalDetail,
@@ -11,11 +10,11 @@ import {
   SocialBox,
   VoucherHead,
 } from "@/components/VoucherStep";
-import { useParams, notFound } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import QRCode from "react-qr-code";
 import { BASE_URL } from "../../../../lib/apiClient";
 import { Download } from "lucide-react";
+import { notFound, useParams } from "next/navigation";
 
 /** ✅ types */
 type VoucherOption =
@@ -131,6 +130,7 @@ export default function VoucherPage() {
   }, [data]);
 
   if (is404) {
+    
     notFound();
   }
 

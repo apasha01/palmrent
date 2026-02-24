@@ -1,22 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Header from "@/components/layouts/Header";
 import Footer from "@/components/Footer";
-
 import { CarDescription } from "@/components/car-detail/car-description";
 import { CarFeatures } from "@/components/car-detail/car-features";
 import FAQcardetail from "@/components/car-detail/Faq-car-detail";
 import { ImageGallery } from "@/components/car-detail/image-gallery";
 import { PricingCard } from "@/components/car-detail/pricing-card";
-
 import { RequiredDocuments } from "@/components/car-detail/required-documents";
 import { SimilarCars } from "@/components/car-detail/similar-cars";
 import { TechnicalSpecs } from "@/components/car-detail/technical-specs";
-
 import { getLocale } from "next-intl/server";
 import { Car, Fuel, Users, Briefcase, Heart, Share2 } from "lucide-react";
 import { getCarDetail } from "@/services/car-detail/car-detail.api";
 import { MobilePriceBar } from "@/components/car-detail/mobile-price-bar";
-
 import Script from "next/script";
 
 type FeatureChip = { label: string; active: boolean };
@@ -25,7 +21,10 @@ function buildFeaturesFromApi(car: any): FeatureChip[] {
   const depositNum = Number(car?.deposit ?? 0);
 
   return [
-    { label: "بدون ودیعه", active: !Number.isNaN(depositNum) && depositNum === 0 },
+    {
+      label: "بدون ودیعه",
+      active: !Number.isNaN(depositNum) && depositNum === 0,
+    },
     { label: "تحویل رایگان", active: String(car?.free_delivery) === "yes" },
     { label: "کیلومتر نامحدود", active: String(car?.km) === "yes" },
     { label: "بیمه", active: String(car?.insurance) === "yes" },
@@ -122,11 +121,10 @@ export default async function CarRentalPage({
           {/* ================== LEFT / PRICING ================== */}
           <div className="lg:col-span-1 order-1 lg:order-2">
             {/* ✅ Desktop sticky با top داینامیک */}
-  <div
-  className="hidden lg:block self-start sticky z-10 transition-[top] duration-300 ease-out"
-  style={{ top: "var(--pricing-top, 4px)" }}
->
-
+            <div
+              className="hidden lg:block self-start sticky z-10 transition-[top] duration-300 ease-out"
+              style={{ top: "var(--pricing-top, 4px)" }}
+            >
               <PricingCard
                 car={car}
                 dailyPrice={car.daily_price}
@@ -164,7 +162,9 @@ export default async function CarRentalPage({
 
                   <button className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition-colors">
                     <Heart className="w-4 h-4 text-accent-foreground md:text-blue-600" />
-                    <span className="hidden md:block">افزودن به علاقه‌مندی‌ها</span>
+                    <span className="hidden md:block">
+                      افزودن به علاقه‌مندی‌ها
+                    </span>
                   </button>
                 </div>
               </div>
@@ -210,9 +210,11 @@ export default async function CarRentalPage({
             <TechnicalSpecs car={car} />
             <CarFeatures car={car} />
 
-            <div className="mt-6">
-              <FAQcardetail carId={car.id} />
-            </div>
+            {Array.isArray(car.faqs) && car.faqs.length > 0 ? (
+              <div className="mt-6">
+                <FAQcardetail faqs={car.faqs} />
+              </div>
+            ) : null}
 
             <SimilarCars items={car.similar_cars} currency={car.currency} />
 

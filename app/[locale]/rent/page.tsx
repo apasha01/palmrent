@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocale } from 'next-intl';
-import { useSearchParams, useRouter } from 'next/navigation';
+
 import { api } from '@/lib/apiClient';
 import { Loader2, RefreshCcw, ArrowRight, CheckCircle2, Clock, XCircle, Hash } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 
 type StatusApiResponse = {
   status: number;
@@ -42,6 +44,12 @@ export default function RentStatusPage() {
   const [error, setError] = useState<string>('');
   const [data, setData] = useState<StatusApiResponse['data'] | null>(null);
 
+  // ✅ FIX: از ref استفاده میکنیم تا interval به data قدیمی (stale closure) دسترسی نداشته باشه
+  const dataRef = useRef<StatusApiResponse['data'] | null>(null);
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+
   const fetchStatus = async (silent = false) => {
     if (!hasRequired) {
       setError('rent_code وجود ندارد.');
@@ -53,12 +61,7 @@ export default function RentStatusPage() {
     setError('');
 
     try {
-      // ✅ این URL رو مطابق routes خودت تنظیم کن
-      // طبق تابع شما: rent_status($lang, $rent_code)
-      // مثال:
-      // GET /car/rent/{lang}/status/{rent_code}
       const res = await api.get(`/car/rent/${locale}/status/${encodeURIComponent(rent_code)}`);
-
       const body = res.data as StatusApiResponse;
 
       if (res.status === 200 && body?.status === 200 && body?.data) {
@@ -76,10 +79,18 @@ export default function RentStatusPage() {
 
   useEffect(() => {
     fetchStatus(true);
-    // اگر pending بود هر 5 ثانیه چک کن
+
+    // ✅ FIX: از dataRef استفاده میکنیم تا stale closure نداشته باشیم
+    // قبلاً data داخل interval همیشه null بود چون closure قدیمی بود
     const i = setInterval(() => {
-      const st = data?.rent_status;
-      if (!st || st === 'pending') fetchStatus(true);
+      const st = dataRef.current?.rent_status;
+      // فقط اگه هنوز pending بود یا هنوز لود نشده، poll کن
+      if (!st || st === 'pending') {
+        fetchStatus(true);
+      } else {
+        // وضعیت نهایی شده، interval رو پاک کن
+        clearInterval(i);
+      }
     }, 5000);
 
     return () => clearInterval(i);
@@ -186,7 +197,6 @@ export default function RentStatusPage() {
             برگشت
           </button>
 
-          {/* این دکمه اختیاریه */}
           <button
             onClick={() => router.push(`/${locale}`)}
             className="px-4 py-2 rounded-xl bg-[#3B82F6] text-white hover:bg-[#2563EB] transition text-sm"

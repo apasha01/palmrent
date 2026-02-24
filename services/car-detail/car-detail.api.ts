@@ -19,6 +19,7 @@ export async function getCarDetail(
 ) {
   const url = `/car/show/${id}/${locale}`;
   const res = await axios.get(url);
+  console.log(res);
 
   // خروجی بک: { status: 200, data: {...} }
   return res.data?.data;

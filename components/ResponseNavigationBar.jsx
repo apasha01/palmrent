@@ -1,7 +1,7 @@
 'use client'
 import Link from "next/link";
 import { IconCalender, IconHome, IconLocation, IconPerson, IconPerson2 } from "./Icons";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
 import React, { ReactElement } from 'react'
  
 export function ResNavigationBar(){

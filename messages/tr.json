@@ -1,6 +1,5 @@
 {
-
-    "branchs": {
+  "branchs": {
     "dubai": "Dubai",
     "istanbul": "İstanbul",
     "oman": "Umman",
@@ -13,7 +12,9 @@
     "georgia": "Gürcistan"
   },
 
-    "AED": "AED",
+  "AED": "Dirhem",
+  "USD": "Dolar",
+
   "day": "gün",
   "reserve": "rezervasyon",
   "daily": "Günlük",
@@ -23,219 +24,270 @@
   "settings": "Ayarlar",
   "chooselang": "Dil seçimi",
   "choosecurrency": "Para birimi seçimi",
-  "language":"Türkiye",
-  "dubai":"Dubai",
-  "istanbul":"İstanbul",
-  "kayseri":"Kayseri, Türkiye",
-  "kish":"Kiş",
-  "izmir":"İzmir, Türkiye",
-  "georgia":"Georgia",
-  "oman":"Umman",
-  "samsun":"Samsun, Türkiye",
-  "antalya":"Antalya, Türkiye",
-  "ankara":"Ankara, Türkiye",
-  "AED":"Dirhem",
-  "USD":"Dolar",
-  "home":"ana menü",
-  "branches":"Palm Rent şubeleri",
-  "carList":"Araba listesi",
-  "contactUs":"bize Ulaşın",
-  "aboutUs":"Kiralık Palm Hakkında",
-  "more":"Daha",
-  "blog":"Palm Rent blogu",
-  "gallery":"Resim Galerisi",
-  "commonQ":"Sıkça Sorulan Sorular",
-  "rules":"Araç kiralama kuralları",
-  "documents":"Gerekli belgeler",
-  "loginHeader":"Giriş Yap / Kayıt Ol",
-  "palmRent":"Palmiye Kiralama",
-  "FSectionF":"En iyi fiyatı garantileyin ve araba kiralamanın en kolay yolunu bulun",
-  "searchBarTitle":"Tüm şehirlerde en iyi fiyatlarla online araç kiralama",
-  "searchBarB":"Çevrimiçi araç kiralama",
-  "searchBarA":"En iyi fiyata",
-  "city":"Şehir",
-  "date":"tarih",
-  "time":"zaman",
-  "deliveryTD":"Teslimat tarihi ve saati",
-  "returnTD":"Dönüşünüzün tarihi ve saati",
-  "deliveryT":"Teslimat süresi",
-  "returnT":"Dönüş zamanı",
-  "delivery":"Teslimat",
-  "return":"Geri dönmek",
-  "done":"Tamamlandı",
-  "searchCar":"Araba araması",
-  "jaliliDate":"jalili Tarih",
-  "gregorianDate":"Gregoryen Tarih",
-  "choose":"seçmek",
-  "chooseTime":"Zamanı seçin",
-  "goneDate":"Tarih gitti",
-  "returnDate":"Dönüş tarihi",
-  "whoAreWe":"Biz kimiz?",
-  "whyB":"Araç kiralamada neden",
-  "whyA":"tercih etmeliyiz?",
-  "applicationTitle":"Palm Rent uygulaması",
-  "slogan":"Daha hızlı ve daha güvenilir çevrimiçi araç kiralama",
-  "downloadLink":"İndirme bağlantılarını görüntüle",
-  "downloadScan":"İndirmek için tarayın",
-  "androidIos":"Android ve iOS'a kurulum olanağı",
-  "commentSectionTitle":"Değerli müşterilerimizin yorumları",
-  "whySection2Title":"Neden bizden araba kiralamalısınız?",
-  "whySection2Sub":"Google'daki 1 numaralı araç kiralama şirketi",
-  "rate":"Oy verin!",
-  "slogan2":"Palm Rent, önde gelen araç kiralama şirketlerinden biridir.",
-  "reasonTitle1":"Lüks veya ekonomi",
-  "reasonTitle2":"Mükemmel bir seçim.",
-  "reasonTitle3":"Araba kiralama platformu",
-  "reasonDescription1":"Dubai'de araba kiralamak için birçok sebep var. İş insanları, müşterilerini etkilemek ve zenginlik ve başarı duygusunu yansıtmak için genellikle şık bir motosiklet gibi bir araba kiralar. Birçok turist, Dubai'nin lüks yaşam tarzını deneyimlemek için araba kiralar. Ancak listemiz sadece Ferrari ve Lamborghini gibi üst düzey süper otomobilleri içermiyor. Ayrıca, Dubai'nin sunduğu her şeyi keşfetmek için mükemmel olan çeşitli SUV ve ekonomik araçlar da sunuyoruz. En İyi Araç Kiralama Şirketleri",
-  "reasonDescription2":"Renty'nin entegre hizmeti, müşterilere olağanüstü seçenekler ve sektördeki en iyi değeri sunar. Renty'de listelenen tüm araçlar eksiksiz bir şekilde incelenmiş ve en yüksek kalitededir. Sıkı kalite kontrol prosedürleri uyguluyoruz. Ayrıca, yalnızca mükemmel hizmet ve harika değer garantisi veren bayilerle çalışıyoruz. Sürücüler, Renty'de araç kiralarken en yüksek standartlardan emin olabilirler. Platformumuz size basit ve anlaşılır bir araç kiralama süreci sunar. Lüks bir araç kiralamak istiyorsanız,",
-  "reasonDescription3":"Palm Rent, lüks, ekonomik, ticari ve minibüs araçlarda uzmanlaşmış lider bir online araç kiralama hizmetidir. Dubai ve BAE'de eksiksiz bir lüks araç kiralama arayan hem günlük turistlere hem de iş profesyonellerine hitap ediyoruz. Platformumuz, Dubai, Abu Dabi, Şarika ve Ras Al Hayme'deki tüm büyük hizmet sağlayıcılarından kapsamlı bir premium araç yelpazesi sunmaktadır.",
-  "whyOption1":"En iyi araç kiralama fiyatları",
-  "whyOption2":"Araba kiralamanın en kolay yolu",
-  "whyOption3":"Geniş kiralık araç yelpazesi",
-  "whyOption4":"En iyi araç kiralama şirketi",
-  "latestBlogs":"Palm Rent'in son makaleleri",
-  "viewAll":"Tümünü görüntüle",
-  "subscribeTitle":"En son haberleri almak için abone olun.",
-  "subscribe":"Üyelik",
-  "email":"E-posta",
-  "pages":"Sayfalar",
-  "licenses":"Lisanslarımız",
-  "phoneNumber":"İletişim numarası",
-  "followUs":"Bizi takip edin:",
-  "copyright":"Bu hizmetin (web sitesi ve mobil uygulama) tüm hakları saklıdır ve Palm Rent Company'ye aittir. (Sürüm 1.100)",
-  "carCategoryTitle":"Araba kategorileri",
-  "categoryLux":"Lüks araba",
-  "categoryEconomic":"Ekonomik",
-  "categorySport":"Spor",
-  "categoryOffRoad":"Arazi dışı",
-  "categoryCrooked":"Çarpık araba",
-  "categoryBusiness":"İşletme",
-  "categoryElectric":"Elektrikli araba",
-  "categoryVan":"Kamyonet",
-  "carSearch":"Araba araması",
-  "sort":"Sıralama",
-  "sort1":"En son",
-  "price_min":"En düşük fiyat",
-  "price_max":"En yüksek fiyat",
-  "luxCar":"Lüks araba",
-  "economicCar":"Ekonomik araba",
-  "noDeposite":"Hiçbir depozito yok",
-  "freeinsurance":"Ücretsiz sigorta",
-  "freeDelivery":"Ücretsiz teslimat",
-  "unlimitedKilometers":"Sınırsız kilometre",
-  "discount":"İndirim",
-  "chooseCar":"Araba seçimi",
-  "whatsapp":"WhatsApp",
-  "filters":"Filtreler",
-  "morePic":"Daha fazla fotoğraf",
-  "suitCase":"bavul",
-  "geared":"Manuel",
-  "automatic":"Otomatik",
-  "people": "kişi",
-  "gasoline": "benzin",
-  "BSPrice": "günlük fiyatı",
-  "day": "gün",
-  "from": "başlangıç",
-  "to": "bitiş",
-  "moreThan": "fazla",
-  "daily": "günlük",
+  "language": "Türkiye",
+
+  "dubai": "Dubai",
+  "istanbul": "İstanbul",
+  "kayseri": "Kayseri, Türkiye",
+  "kish": "Kiş",
+  "izmir": "İzmir, Türkiye",
+  "georgia": "Gürcistan",
+  "oman": "Umman",
+  "samsun": "Samsun, Türkiye",
+  "antalya": "Antalya, Türkiye",
+  "ankara": "Ankara, Türkiye",
+
+  "home": "Ana menü",
+  "branches": "Palm Rent şubeleri",
+  "carList": "Araç listesi",
+  "contactUs": "Bize ulaşın",
+  "aboutUs": "Palm Rent hakkında",
+  "more": "Daha fazla",
+  "blog": "Palm Rent blogu",
+  "gallery": "Resim Galerisi",
+  "commonQ": "Sıkça Sorulan Sorular",
+  "rules": "Araç kiralama kuralları",
+  "documents": "Gerekli belgeler",
+  "loginHeader": "Giriş Yap / Kayıt Ol",
+  "palmRent": "Palm Rent",
+
+  "FSectionF": "En iyi fiyatı garantileyin ve araç kiralamanın en kolay yolunu bulun",
+  "searchBarTitle": "Tüm şehirlerde en iyi fiyatlarla online araç kiralama",
+  "searchBarB": "Online araç kiralama",
+  "searchBarA": "En iyi fiyata",
+
+  "city": "Şehir",
+  "date": "Tarih",
+  "time": "Saat",
+
+  "deliveryTD": "Teslim alma tarihi ve saati",
+  "returnTD": "İade tarihi ve saati",
+  "deliveryT": "Teslim alma saati",
+  "returnT": "İade saati",
+
+  "delivery": "Teslim",
+  "return": "İade",
+
+  "done": "Tamam",
+  "searchCar": "Araç arama",
+
+  "jaliliDate": "Celali Tarih",
+  "gregorianDate": "Gregoryen Tarih",
+
+  "choose": "Seç",
+  "chooseTime": "Saat seçin",
+
+  "goneDate": "Başlangıç tarihi",
+  "returnDate": "İade tarihi",
+
+  "whoAreWe": "Biz kimiz?",
+  "whyB": "Araç kiralamada neden",
+  "whyA": "tercih etmeliyiz?",
+
+  "applicationTitle": "Palm Rent uygulaması",
+  "slogan": "Daha hızlı ve daha güvenilir online araç kiralama",
+  "downloadLink": "İndirme bağlantılarını görüntüle",
+  "downloadScan": "İndirmek için tarayın",
+  "androidIos": "Android ve iOS'a kurulum imkânı",
+
+  "commentSectionTitle": "Değerli müşterilerimizin yorumları",
+  "whySection2Title": "Neden bizden araç kiralamalısınız?",
+  "whySection2Sub": "Google'da 1 numaralı araç kiralama şirketi",
+
+  "rate": "Puan verin!",
+  "slogan2": "Palm Rent, önde gelen araç kiralama şirketlerinden biridir.",
+
+  "reasonTitle1": "Lüks veya ekonomik",
+  "reasonTitle2": "Mükemmel bir seçim.",
+  "reasonTitle3": "Araç kiralama platformu",
+
+  "reasonDescription1": "Dubai'de araç kiralamak için birçok sebep var. İş insanları, müşterilerini etkilemek ve zenginlik ve başarı duygusunu yansıtmak için genellikle şık bir araç kiralar. Birçok turist, Dubai'nin lüks yaşam tarzını deneyimlemek için araç kiralar. Ancak listemiz sadece Ferrari ve Lamborghini gibi üst düzey süper otomobilleri içermiyor. Ayrıca Dubai'yi keşfetmek için ideal SUV ve ekonomik araçlar da sunuyoruz.",
+  "reasonDescription2": "Renty'nin entegre hizmeti, müşterilere olağanüstü seçenekler ve sektördeki en iyi değeri sunar. Renty'de listelenen tüm araçlar eksiksiz bir şekilde incelenmiş ve en yüksek kalitededir. Sıkı kalite kontrol prosedürleri uygularız ve yalnızca mükemmel hizmet ile harika değer sunan bayilerle çalışırız.",
+  "reasonDescription3": "Palm Rent, lüks, ekonomik, ticari ve minibüs araçlarda uzmanlaşmış lider bir online araç kiralama hizmetidir. Dubai ve BAE'de hem turistlere hem de iş profesyonellerine hitap ediyoruz ve kapsamlı bir premium araç yelpazesi sunuyoruz.",
+
+  "whyOption1": "En iyi araç kiralama fiyatları",
+  "whyOption2": "Araç kiralamanın en kolay yolu",
+  "whyOption3": "Geniş kiralık araç yelpazesi",
+  "whyOption4": "En iyi araç kiralama şirketi",
+
+  "latestBlogs": "Palm Rent'in son makaleleri",
+  "viewAll": "Tümünü görüntüle",
+
+  "subscribeTitle": "En son haberleri almak için abone olun.",
+  "subscribe": "Abone ol",
+  "email": "E-posta",
+
+  "pages": "Sayfalar",
+  "licenses": "Lisanslarımız",
+  "phoneNumber": "İletişim numarası",
+  "followUs": "Bizi takip edin:",
+  "copyright": "Bu hizmetin (web sitesi ve mobil uygulama) tüm hakları saklıdır ve Palm Rent Company'ye aittir. (Sürüm 1.100)",
+
+  "carCategoryTitle": "Araç kategorileri",
+  "categoryLux": "Lüks araç",
+  "categoryEconomic": "Ekonomik",
+  "categorySport": "Spor",
+  "categoryOffRoad": "Arazi",
+  "categoryCrooked": "Cabrio",
+  "categoryBusiness": "Business",
+  "categoryElectric": "Elektrikli",
+  "categoryVan": "Van",
+
+  "carSearch": "Araç arama",
+  "sort": "Sıralama",
+  "sort1": "En yeni",
+  "price_min": "En düşük fiyat",
+  "price_max": "En yüksek fiyat",
+
+  "luxCar": "Lüks araç",
+  "economicCar": "Ekonomik araç",
+
+  "noDeposite": "Depozito yok",
+  "freeinsurance": "Ücretsiz sigorta",
+  "freeDelivery": "Ücretsiz teslimat",
+  "unlimitedKilometers": "Sınırsız kilometre",
+  "discount": "İndirim",
+
+  "chooseCar": "Araç seçimi",
+  "whatsapp": "WhatsApp",
+  "filters": "Filtreler",
+  "morePic": "Daha fazla fotoğraf",
+
+  "suitCase": "Bavul",
+  "geared": "Manuel",
+  "automatic": "Otomatik",
+  "people": "Kişi",
+  "gasoline": "Benzin",
+
+  "BSPrice": "Günlük fiyat",
+  "from": "Başlangıç",
+  "to": "Bitiş",
+  "moreThan": "Daha fazla",
+
   "rentDurationB": "Kiralama süresi:",
   "rentDurationA": "Unutulmaz günler",
   "changeSearch": "Aramayı değiştir",
+
   "roadMap1": "Tarih seçin",
   "roadMap2": "Aracı seçin",
   "roadMap3": "Bilgileri gönderin",
-  "roadMap4": "Voucheri oluştur",
-  "onlinePur": "Aracınızı çevrim içi rezerve edin",
-  "deliveryTitle": "Aracınızı nerede almak istersiniz?",
+  "roadMap4": "Voucher oluştur",
+
+  "onlinePur": "Aracınızı online rezerve edin",
+
+  "deliveryTitle": "Aracınızı nereden teslim almak istersiniz?",
   "chooseDeliveryLoc": "Teslim yeri seçin",
   "chooseReturnLoc": "İade yeri seçin",
   "afterDeliveryNum": "Mevcut yeri seçin",
-  "otherPlaces": "Aracı başka bir yerde teslim ediyorum",
+  "otherPlaces": "Aracı başka bir yerde teslim alacağım",
+
   "extraSerTitle": "Ek hizmetleri seçin:",
   "service1": "Çocuk koltuğu",
+
   "fineTitle": "Depozito ve cezalar",
-  "fineDescription": "test",
+  "fineDescription": "Test",
+
   "free": "Ücretsiz",
   "reviewTitle": "Ödeme bilgilerinizi gözden geçirin",
-  "rentPriceB": "Kiralama fiyatı",
-  "rentPriceA": "güne",
+
+  "rentPriceB": "Kiralama bedeli",
+  "rentPriceA": "gün",
+
   "deliveryPrice": "Teslim ücreti",
   "returnPrice": "İade ücreti",
   "expense": "Masraf",
-  "finalPriceB": "Toplam maliyet",
-  "prepayment": "Peşinat",
+  "finalPriceB": "Toplam tutar",
+
+  "prepayment": "Ön ödeme",
   "debt": "Teslimde ödenecek bakiye",
   "debtDescription": "Ödeme: nakit (USD, AED), uluslararası banka kartı",
+
   "personalInfoTitle": "Kişisel bilgilerinizi girin",
   "chooseInfoTitle": "Listeden seçin",
-  "nameLastname": "Ad ve soyad",
-  "rulesB": "Bu aracı rezerve etmek, tüm",
+  "nameLastname": "Ad Soyad",
+
+  "rulesB": "Bu aracı rezerve ederek,",
   "rulesA": "Palm Rent’i kabul ettiğiniz anlamına gelir",
   "rulesDescription": "Palm Rent’te rezervasyon ücretsizdir ve 15 dakika bekletilir; ardından ön ödeme bağlantılı bir onay SMS’i gönderilir.",
+
   "resButton": "Aracınızı rezerve edin",
   "paymentNRequired": "İlk rezervasyonda ödeme gerekmez",
+
   "yourResServices": "Rezervasyonunuzdaki hizmetler:",
   "location1": "Palm Rent ofisinde (ücretsiz)",
   "company location": "Şirket lokasyonunda (ücretsiz)",
-  "Istanbul Airport IST": "İstanbul Yeni Havaalanı (ücretsiz)",
-  "optionalLocation": "Tercih ettiğiniz konum (50 USD)",
-  "optionalTitle":"Lütfen otelinizin adını veya konumunu girin.",
+  "Istanbul Airport IST": "İstanbul Yeni Havalimanı (ücretsiz)",
+  "optionalLocation": "Tercih ettiğiniz konum (50 USD)",
+  "optionalTitle": "Lütfen otelinizin adını veya konumunu girin.",
   "chooseDelLoc": "Teslim yerini seçin",
   "chooseRetLoc": "İade yerini seçin",
-  "days": "gün",
-  "reservation": "rezervasyon",
+
   "description": "Açıklama",
   "BSPrice2": "Günlük fiyat",
   "gotDiscount": "İndirim kodum var!",
   "rules2": "Şartlar & Koşullar",
-  "location":"Konum",
-   "resTitle": "Rezervasyonunuz başarıyla tamamlandı",
+  "location": "Konum",
+
+  "resTitle": "Rezervasyonunuz başarıyla tamamlandı",
   "resSubtitle": "Rezervasyon bilgileriniz aşağıda listelenmiştir",
   "bannerTitle": "Palm Rent Uluslararası Araç Kiralama - Voucher",
+
   "personalInfo": "Kişisel bilgiler",
   "resTime": "Rezervasyon zamanı:",
   "resCode": "Rezervasyon kodu:",
   "branch": "Şube",
+
   "qrText": "Bu fiş yalnızca ödeme yapıldıktan sonra geçerlidir",
-  "downloadVoucher": "Voucheri indir",
+  "downloadVoucher": "Voucher indir",
+
   "deliveryLoc": "Teslim alma yeri:",
   "returnLoc": "İade yeri:",
+
   "resDetail": "Rezervasyon detayları",
   "resDayCount": "Rezervasyon yapılan gün sayısı:",
+
   "additionalInformation": "Ek bilgiler",
   "additionalInfo1": "Araç tesliminde orijinal pasaport ve uluslararası sürücü belgesi ibrazı zorunludur.",
   "additionalInfo2": "Lütfen doğru terminal numarasını seçtiğinizden emin olun. Uyuşmazlık halinde ek ücret uygulanabilir ve teslimatta gecikme olabilir.",
   "additionalInfo3": "Havalimanı otopark ücretleri kiralama tutarına dahil değildir ve müşteri sorumluluğundadır. Aracı teslim alırken veya iade ederken bu ücreti kendiniz ödemeniz gerekmektedir. Ayrıca orijinal pasaport ve uluslararası sürücü belgesi ibrazı zorunludur.",
   "additionalInfo4": "Lütfen doğru terminal numarasını seçtiğinizden emin olun. Uyuşmazlık halinde ek ücret uygulanabilir ve teslimatta gecikme olabilir.",
   "additionalInfo5": "Havalimanı otopark ücretleri kiralama tutarına dahil değildir ve müşteri sorumluluğundadır. Lütfen teslim alırken veya iade ederken bu ücreti kendiniz ödeyin.",
-  "for":"boyunca",
-  "carListTitle":"araba listesi",
-  "documentItem1": "Depozito gerektirmeyen araçları tanımlamak için örnek resim",
+
+  "for": "boyunca",
+  "carListTitle": "Araç listesi",
+
+  "documentItem1": "Depozito gerektirmeyen araçları tanımlamak için örnek görsel",
   "documentItem2": "Uluslararası sürücü belgesi örnek fotoğrafı",
   "documentItem3": "İran pasaportu örnek fotoğrafı",
   "documentItem4": "Birleşik Arap Emirlikleri turist vizesi örnek fotoğrafı",
   "documentItem5": "Birleşik Arap Emirlikleri ikamet kartı (ID kartı) örnek fotoğrafı",
   "documentItem6": "Birleşik Arap Emirlikleri sürücü belgesi örnek fotoğrafı",
+
   "AboutPalmRent": "Palm Rent Araç Kiralama Şirketi Hakkında",
   "dubaiServices": "Dubai'deki Hizmetlerimiz",
   "turkeyServices": "Türkiye'deki Hizmetlerimiz",
   "omanServices": "Umman'daki Hizmetlerimiz",
-  "dubaiDescription": "Palm Rent'in Dubai ofisi, Birleşik Arap Emirlikleri'ndeki en aktif araç kiralama merkezlerinden biridir ve <strong>depozito yok</strong>, <strong>kilometre sınırı yok</strong>, <strong>ücretsiz sigorta</strong> ve <strong>7/24 destek</strong> gibi hizmetler sunarak seyahat edenler ve sakinler için tamamen sorunsuz bir deneyim sağlar.",
-  "turkeyDescription": "Türkiye'nin İstanbul şehrinde de hizmetlerimizi geniş bir şekilde sunuyoruz. Depozito veya herhangi bir teminat gerektirmeden ve kilometre sınırı olmadan, yapmanız gereken tek şey <strong>kiralama ücretini ödemek</strong>. Araçlar arasında ekonomik, aile ve SUV modelleri bulunur ve Farsça destek ile sunulur.",
-  "omanDescription": "Umman'ın Muskat şehrinde de Palm Rent, dünyanın en yeni araçlarını sunmaya hazırdır. Havaalanında teslim, hızlı online rezervasyon, ücretsiz temel sigorta ve telefon desteği ile Umman'daki seyahatiniz kolay ve keyifli olacaktır.",
+
+  "dubaiDescription": "Palm Rent'in Dubai ofisi, Birleşik Arap Emirlikleri'ndeki en aktif araç kiralama merkezlerinden biridir ve <strong>depozito yok</strong>, <strong>kilometre sınırı yok</strong>, <strong>ücretsiz sigorta</strong> ve <strong>7/24 destek</strong> gibi hizmetler sunarak tamamen sorunsuz bir deneyim sağlar.",
+  "turkeyDescription": "Türkiye'nin İstanbul şehrinde de hizmetlerimizi geniş bir şekilde sunuyoruz. Depozito veya teminat gerektirmeden ve kilometre sınırı olmadan, yapmanız gereken tek şey <strong>kiralama ücretini ödemek</strong>.",
+  "omanDescription": "Umman'ın Maskat şehrinde de Palm Rent, en yeni araçları sunmaya hazırdır. Havaalanında teslim, hızlı online rezervasyon, ücretsiz temel sigorta ve telefon desteği ile seyahatiniz kolay ve keyifli olacaktır.",
+
   "tehranBranch": "Tahran Şubesi",
   "ahwazBranch": "Ahvaz Şubesi",
   "dubaiBranch": "Dubai Şubesi",
+
   "tehranBranchAddress": "Sayad Shirazi Otoyolu, Hüseyinabad Meydanı, Mellat Bankası yanı. Palm Rent İçerik Üretim Ofisi",
   "ahwazBranchAddress": "Enghelab Caddesi, Sepah Bankası yanı, Jumbo Mağazası, 4. kat, Ünite 3",
-  "dubaiBranchAddress": "Airport Road, Palm Rent Binası, 1. kat, Dubai Uluslararası Havaalanı yakını",
+  "dubaiBranchAddress": "Airport Road, Palm Rent Binası, 1. kat, Dubai Uluslararası Havalimanı yakını",
+
   "palmRentInsta": "Palm Rent Instagram Sayfası",
   "palmRentInstaSub": "Bizi Instagram'da takip edin. <strong>200.000'den fazla takipçi</strong> bize güveniyor.",
+
   "yourName": "Adınız*",
   "yourEmail": "E-postanız*",
   "message": "Mesaj*",
   "send": "Gönder",
+
   "ruleQ1": "Palm Rent, Araç Kiralama Şirketi",
   "ruleQ2": "Gerekli Belgeler",
   "ruleQ3": "Yakıt",
@@ -243,18 +295,20 @@
   "ruleQ5": "Park Ücretleri",
   "ruleQ6": "Rezervasyon İptali",
   "ruleQ7": "Dubai'de Araç Kiralama Kuralları ve Yönetmelikleri",
-  "ruleA1": "Palm Rent, dünyanın birçok şehrinde şubeleri ve resmi temsilcilikleri olan bir araç kiralama şirketidir. Son derece gelişmiş web sitesi ve tamamen online rezervasyonları ile sadece birkaç tıklamayla en iyi fiyatı garanti eder ve en geniş yeni ve son model araç çeşitliliğini sunar. Ayrıca, müşteriler kredi kartına ihtiyaç duymadan ve riyal ödeyerek şirketin hizmetlerinden yararlanabilirler.",
+
+  "ruleA1": "Palm Rent, dünyanın birçok şehrinde şubeleri ve resmi temsilcilikleri olan bir araç kiralama şirketidir. Gelişmiş web sitesi ve tamamen online rezervasyon sistemi ile sadece birkaç tıklamayla en iyi fiyatı sunar.",
   "ruleA2": "Uluslararası sürücü belgesi\nPasaport\nVize",
-  "ruleA3": "Yakıt masrafları müşterinin sorumluluğundadır. Lütfen aracı teslim aldığınızda olduğu gibi aynı miktarda yakıt ile iade ettiğinizden emin olun. Aksi takdirde, aracı teslim aldığınızdan daha az yakıt ile iade ederseniz, yakıt ücreti sizden alınacaktır. Ancak, aracı fazla yakıt ile iade ederseniz, size herhangi bir ödeme yapılmayacaktır.",
-  "ruleA4": "Rezervasyonunuzu uzatmak için, kiralama süresinin bitiminden en az iki gün önce Palm Rent destek ekibi ile iletişime geçin. Rezervasyonun uzatılması mevcut koşullara ve araç kapasitesine bağlı olduğundan, bu seçenek kullanılamayabilir.",
-  "ruleA5": "Park ücretlerini ödemek müşterinin sorumluluğundadır. Araç ücretsiz teslim edilse bile, havaalanında araç teslimi dahil herhangi bir park ücreti müşteri tarafından ödenmelidir.",
-  "ruleA6": "Web sitesinde depozito ödemesi kesin rezervasyon olarak kabul edilir ve iptal durumunda ödenen miktar iade edilmez. Rezervasyon yapmak için başlangıçta depozito ödemeye gerek olmadığını unutmayın.",
-  "ruleA7": "Yaş gereksinimleri: Sürücü en az 19 yaşında olmalı ve en az bir yıldır ehliyete sahip olmalıdır.\nUluslararası sürücü belgesi: İran vatandaşları Dubai'de araç kiralamak için geçerli bir uluslararası sürücü belgesine sahip olmalıdır. Sadece aracı kiralayan kişi sürücü olabilir. İkinci veya üçüncü bir sürücüye ihtiyaç duyulursa, uluslararası sürücü belgelerinin bilgileri kaydedilmeli ve ek ücret alınacaktır. Çocuk koltuğu talebi de ek ücrete tabidir.\nAraç sigortası: Tüm araçlar tam sigorta ile teslim edilir.",
+  "ruleA3": "Yakıt masrafları müşterinin sorumluluğundadır. Lütfen aracı teslim aldığınız seviyede yakıt ile iade edin.",
+  "ruleA4": "Rezervasyonunuzu uzatmak için kiralama bitiminden en az iki gün önce Palm Rent destek ekibi ile iletişime geçin.",
+  "ruleA5": "Park ücretlerini ödemek müşterinin sorumluluğundadır.",
+  "ruleA6": "Web sitesinde yapılan ödeme kesin rezervasyon olarak kabul edilir ve iptal durumunda iade edilmez.",
+  "ruleA7": "Yaş şartı: Sürücü en az 19 yaşında olmalı ve en az 1 yıldır ehliyete sahip olmalıdır.\nUluslararası sürücü belgesi: İran vatandaşları Dubai'de araç kiralamak için geçerli uluslararası sürücü belgesi sunmalıdır.\nSigorta: Tüm araçlar sigortalı teslim edilir.",
+
   "commonQ1": "Dubai'de yakıt fiyatı nedir?",
   "commonQ2": "Dubai'de ehliyetsiz araç kiralayabilir miyim?",
   "commonQ3": "SIM kartı nasıl ve nereden alabilirim? Gerçekten ihtiyacım var mı?",
   "commonQ4": "Dubai'de park etmek nasıldır ve park ücretini nasıl öderim?",
-  "commonQ5": "Neden aracı Dubai Havaalanı'ndan teslim almanızı öneriyoruz?",
+  "commonQ5": "Neden aracı Dubai Havalimanı'ndan teslim almanızı öneriyoruz?",
   "commonQ6": "Uluslararası sürücü belgesini nasıl alabilirim?",
   "commonQ7": "Dubai'de araç kiralamak ekonomik midir?",
   "commonQ8": "Dubai'de araç kiralamak için gerekli belgeler nelerdir?",
@@ -262,34 +316,41 @@
   "commonQ10": "İptal koşulları nelerdir?",
   "commonQ11": "Aracı istenen lokasyona teslim etme (transfer) maliyeti nedir?",
   "commonQ12": "İstanbul'da araç kiralama fiyatı nedir?",
-  "commonA1": "Dubai'de Ocak 2024 itibarıyla yakıt fiyatları:\nE-Plus (Oktan 97) 2.77 dirhem,\nSpecial (Oktan 95) 2.85 dirhem (tavsiye edilen)\nSuper (Oktan 98) 2.96 dirhem\nDizel 3.19 dirhem.",
-  "commonA2": "Araç kiralamada ehliyetsiz araç kullanmak yasa dışıdır ve para cezasına hatta hapis cezasına çarptırılabilirsiniz. Ayrıca, bir kaza durumunda sigorta hasar masraflarını karşılamayacaktır. Yasal ve mali sorunlardan kaçınmak için yasalara uymak önemlidir.",
-  "commonA3": "Genellikle havaalanında size 2 GB internet ile ücretsiz bir SIM kart verilebilir. Ancak bu mümkün değilse, Dubai'nin her yerinde bulunan Etisalat gişelerinden SIM kartınızı satın alabilirsiniz. 7 günlük bir internet paketi için yaklaşık maliyet 70 ila 100 dirhem arasındadır. Google Haritalar gibi hizmetleri kullanmak ve rotalar bulmak için internet bağlantısı gerekli olduğundan, bir SIM kart almanız şiddetle tavsiye edilir.",
-  "commonA4": "Dubai'de halka açık alanlarda park etmek genellikle ücretlidir ve park sistemi çok düzenli ve dijitaldir. Park ücretini iki basit yolla ödeyebilirsiniz:\nSMS yoluyla: Plaka numarasını, bölge numarasını ve park süresini RTA sistemine gönderin ve bir onay mesajı alın.\nSokak park makineleri yoluyla: Banka kartı veya bozuk para ile ödeme yapın ve bir makbuz alın.\nAyrıca ödeme, uzatma ve park yeri bulmak için RTA Dubai ve Dubai Drive uygulamalarını kullanabilirsiniz. Yasak veya çift park alanlarında park etmenin ceza ile sonuçlanabileceğini unutmayın.",
-  "commonA5": "Aracı Dubai Havaalanı'ndan teslim almak, aracınızı hızlı ve kolay bir şekilde almanızı sağlamakla kalmaz, aynı zamanda size önemli finansal avantajlar sunar. Aracı otel destinasyonunuza kiralamanız durumunda en az 150 dirhem maliyetiniz olacaktır. Aracı havaalanından teslim alarak taksi ücreti ödemenize gerek kalmaz ve doğrudan kiralık aracınızı kullanarak hedefinize gidebilirsiniz. Bu avantajlardan yararlanmak için aracı mutlaka havaalanından teslim almanızı şiddetle tavsiye ederiz.",
-  "commonA6": "Otomobil Derneği ofislerinden birini ziyaret ederek orijinal pasaportunuzu, bir fotoğrafınızı ve ehliyetinizi sunarak yaklaşık 200.000 tuman ödeyerek 15 dakikadan kısa bir sürede uluslararası sürücü belgenizi alabilirsiniz.",
-  "commonA7": "Dubai'de araç kiralamak, tek bir taksi yolculuğunun maliyeti ile Palm Rent'ten uygun fiyatlı bir araç kiralayabileceğiniz için ekonomik bir seçenek olarak kabul edilir. Bu maliyet düşüşü, tekrarlanan taksi masrafları hakkında endişelenmeden Dubai'nin güzel şehrinde ekonomik ve bağımsız bir şekilde hareket etmenizi sağlar.\nKiralık bir araç ile seyahat zamanınızı optimize edebilir ve tekrar tekrar taksi ücreti ödemeden istediğiniz gezilere çıkabilirsiniz. Sonuç olarak, kiralık bir araç ile Dubai'de daha bağımsız, ekonomik ve esnek bir şekilde hareket edebilirsiniz.",
-  "commonA8": "Uluslararası sürücü belgesi resmi\nPasaport resmi",
-  "commonA9": "Olası ihlallerle ilgili depozito miktarı (teminat) aşağıdaki gibidir:\n- Ekonomik araçlar için 1000 dirhem\n- Orta sınıf araçlar için 1500 dirhem\n- Lüks araçlar için 2000 dirhem\n- Süper lüks araçlar için 5000 dirhem\n(Tüm araçların altında depozito miktarları listelenmiştir)\nBu miktarlar riyal olarak da ödenebilir. Herhangi bir ihlal veya borç olmazsa, bu miktarlar aracın şirkete iadesinden sonra en fazla 20 iş günü içinde kiracının hesabına iade edilecektir.\nDepozitoyu dirhem olarak ödemek isterseniz, web sitesi üzerinden araç rezervasyonu için 2 milyon tuman ödeyin ve depozito miktarı araç tesliminde nakit olarak alınacaktır. (Araç teslim alındıktan sonra rezervasyon miktarı başvuru sahibinin hesabına iade edilecektir)\nDepozitoyu riyal olarak öderseniz, döviz kurundaki dalgalanmalar nedeniyle riyal depozito miktarı dirhem eşdeğerinden biraz daha yüksek olacaktır ve cezalar durumunda günlük kur ve ücretlere göre riyal miktardan düşülecektir.\nBir araç rezerve edip teslim almazsanız, 2 günlük kira ücreti kadar bir miktar alınacaktır.",
-  "commonA10": "Palm Rent'ten araç kiralayan ve depozitoyu ödeyip rezervasyonu tamamladıktan sonra bir gün iptal eden kişiler için, iptal edilen günün miktarı ödenen miktardan düşülecektir.",
-  "commonA11": "Dubai'de havaalanı, otel veya diğer herhangi bir yere transfer maliyeti, her bir gidiş yolculuğu için 50 dirhem ve dönüş için 50 dirhemdir. Ancak Sharjah'da her gidiş-dönüş yolculuğu için maliyet 200 dirhemdir.",
-  "commonA12": "İstanbul'da araç kiralama konusunda fiyat, kiralık araç türüne ve günlük veya aylık olmasına göre belirlenir.",
-  "rent":"kira",
-  "readMore":"Devamını oku",
+
+  "commonA1": "Dubai'de Ocak 2024 itibarıyla yakıt fiyatları:\nE-Plus (Oktan 97) 2.77 AED,\nSpecial (Oktan 95) 2.85 AED,\nSuper (Oktan 98) 2.96 AED,\nDizel 3.19 AED.",
+  "commonA2": "Ehliyetsiz araç kullanmak yasa dışıdır ve ağır para cezası veya hapis cezasına neden olabilir. Kaza durumunda sigorta masrafları karşılamaz.",
+  "commonA3": "Havalimanında 2 GB internet içeren ücretsiz bir SIM kart verilebilir. Aksi halde Etisalat gişelerinden satın alabilirsiniz. 7 günlük internet paketi yaklaşık 70–100 AED olabilir.",
+  "commonA4": "Dubai'de park sistemi düzenli ve dijitaldir. SMS ile veya park makineleriyle ödeme yapabilirsiniz. RTA Dubai ve Dubai Drive uygulamaları da kullanılabilir.",
+  "commonA5": "Aracı Dubai Havalimanı’ndan teslim almak hızlıdır ve taksi masrafını azaltır.",
+  "commonA6": "Otomobil Derneği ofislerinden pasaport, fotoğraf ve ehliyet ile kısa sürede uluslararası sürücü belgesi alabilirsiniz.",
+  "commonA7": "Dubai'de araç kiralamak, taksi maliyetlerine kıyasla çoğu zaman daha ekonomik ve daha esnek bir seçenektir.",
+  "commonA8": "Uluslararası sürücü belgesi görseli\nPasaport görseli",
+  "commonA9": "Olası ihlaller için depozito tutarları araç sınıfına göre değişir. İhlal yoksa belirlenen süre içinde iade edilir.",
+  "commonA10": "Depozito ödenip rezervasyon tamamlandıktan sonra iptal edilirse belirli kesintiler uygulanabilir.",
+  "commonA11": "Dubai'de transfer ücreti (havalimanı/otel vb.) tek yön 50 AED, dönüş 50 AED olabilir. Sharjah için farklı olabilir.",
+  "commonA12": "İstanbul’da araç kiralama fiyatı araç türüne ve kiralama süresine göre değişir.",
+
+  "rent": "Kiralama",
+  "readMore": "Devamını oku",
+
   "qHead1": "Genel",
   "qHead2": "İade",
   "qHead3": "Ödeme Şartları",
   "qHead4": "Araç Kiralama",
+
   "faqText1": "Aşağıdaki bölümde istediğiniz alt kategoride sorularınızı bulabilir ve yanıtlarınıza ulaşabilirsiniz.",
   "faqText2": "Sorunuzu Palm Rent'te bulamadınız mı?!",
   "faqText3": "Sorunuzu aşağıdaki formdan danışmanlarımıza iletin; Palm Rent danışmanları en kısa sürede sizinle iletişime geçecektir.",
   "faqText4": "Bize mesajınızı gönderin!",
+
   "yourMessage": "Mesajınız",
   "sendMessage": "Mesaj Gönder",
+
   "logout": "Çıkış Yap",
   "logoutDescription": "Uygulamadan çıkış yapmak istediğinizden emin misiniz?!",
   "exit": "Çıkış",
   "back": "Geri",
+
   "account": "Hesap",
   "bankInfo": "Banka Hesap Bilgileri",
   "myFav": "Favorilerim",
@@ -299,11 +360,14 @@
   "requestBackup": "Destek Talebi",
   "moneyBalance": "Hesap Bakiyesi",
   "increaseBalance": "Bakiye Yükle",
+
   "Dubai International Airport - Terminal 1": "Dubai Uluslararası Havalimanı - Terminal 1",
   "Dubai International Airport - Terminal 2": "Dubai Uluslararası Havalimanı - Terminal 2",
   "Dubai International Airport - Terminal 3": "Dubai Uluslararası Havalimanı - Terminal 3",
+
   "Delivery at the hotel door in Dubai": "Dubai’de otel kapısına teslimat",
   "Izmir Airport": "İzmir Havalimanı",
+
   "tax Title": "Vergi ücreti",
   "percent": "Yüzde",
   "Extra driver": "Ek sürücü",
@@ -313,17 +377,419 @@
   "At the company location": "Şirket konumunda (Ücretsiz)",
   "petrol or diesel": "Benzin veya dizel",
   "diesel": "Dizel",
+
   "sevenplus": "7+ kişilik",
   "sport": "Spor",
   "business": "Business",
-  "crook": "Üstü açılır",
+  "crook": "Cabrio",
   "standard": "Standart",
   "suv": "SUV",
   "coupe": "Coupe",
+
   "sum": "Toplam",
   "dayres": "Rezervasyon günü",
   "toman": "Tümen",
   "moredetail": "Daha fazla detay",
   "price": "Fiyat",
-  "hour": "Saat"
+  "hour": "Saat",
+
+  "InformationStep": {
+    "meta": {
+      "title": "Teslimat konumunu seçin{branch}{car}{days} | PalmRent",
+      "desc": "Aracın teslim ve iade konumlarını seçin{branchPart}{daysPart}{carPart} ve rezervasyonu tamamlayın.",
+      "branchIn": " - {branch}",
+      "forDays": " - {days} gün",
+      "carInParens": " ({car})"
+    },
+    "currency": {
+      "IRR": "Tümen",
+      "IRT": "Tümen",
+      "USD": "USD",
+      "EUR": "EUR",
+      "AED": "AED"
+    },
+    "common": {
+      "days": "{count} gün",
+      "daily": "günlük",
+      "dailyPrice": "Günlük fiyat",
+      "unknown": "Bilinmiyor",
+      "finalSubmit": "Rezervasyonu tamamla",
+      "submitting": "Gönderiliyor..."
+    },
+    "toast": {
+      "enterNamePhone": "Lütfen adınızı ve telefon numaranızı girin",
+      "selectDeliveryPlace": "Lütfen teslim konumunu seçin",
+      "selectReturnPlace": "Lütfen iade konumunu seçin",
+      "invalidReservationInfo": "Rezervasyon bilgileri geçersiz",
+      "carNotSelected": "Araç seçilmedi",
+      "reserveSubmitError": "Rezervasyon kaydedilemedi",
+      "reservedButNoRentCode": "Rezervasyon kaydedildi ancak rent_code alınamadı",
+      "reserveRequestDone": "Rezervasyon isteği gönderildi",
+      "serverConnectionError": "Sunucu bağlantı hatası.",
+      "fetchInfoError": "Bilgiler alınamadı.",
+      "invalidServerResponse": "Sunucu yanıtı geçersiz."
+    },
+    "selectedCar": {
+      "title": "Seçilen araç",
+      "dailyPriceFor": "Günlük fiyat:",
+      "discountBadge": "%{percent} indirim"
+    },
+    "badges": {
+      "unlimitedKm": "Sınırsız kilometre",
+      "freeDelivery": "Ücretsiz teslimat",
+      "freeInsurance": "Ücretsiz sigorta",
+      "noDeposit": "Depozito yok"
+    },
+    "deposit": {
+      "title": "Depozito",
+      "trafficDepositLabel": "Ceza depozitosu:",
+      "hint21Days": "Depozito, aracın iadesinden 21 gün sonra iade edilir ve kira ücretinden ayrıdır."
+    },
+    "noDepositBanner": {
+      "title": "Depozito yok",
+      "desc": "Bu araç için depozito ödemeniz gerekmez; yalnızca kira ücretini ödersiniz."
+    },
+    "deliveryCard": {
+      "title": "Aracı nereden teslim almak istersiniz?",
+      "deliveryPickerTitle": "Teslim konumunu seçin",
+      "deliveryPickerPlaceholder": "Teslim alınacak yeri seçin",
+      "returnDifferentLabel": "Aracı farklı bir yerde iade edeceğim",
+      "returnPickerTitle": "İade konumunu seçin",
+      "returnPickerPlaceholder": "İade edilecek yeri seçin"
+    },
+    "extras": {
+      "title": "Ek seçenekleri seçin",
+      "insuranceCompleteTitle": "Tam hasar kapsam paketi"
+    },
+    "personalInfo": {
+      "title": "Bilgilerinizi girin",
+      "alreadyRegistered": "Zaten hesabım var",
+      "placeholders": {
+        "fullName": "Ad Soyad",
+        "email": "E-posta"
+      }
+    },
+    "rules": {
+      "rulesB": "Rezervasyonu göndererek",
+      "rules2": "PalmRent kurallarını",
+      "rulesA": "kabul etmiş olursunuz."
+    },
+    "summary": {
+      "title": "Ödeme detayları",
+      "rentPriceLabel": "{days} gün kira bedeli",
+      "haveCoupon": "İndirim kodum var",
+      "discountInline": "%{percent} indirim",
+      "tax": "Vergi",
+      "taxPercent": "%{percent}",
+      "finalCostForDays": "{days} gün için toplam tutar",
+      "acceptRulesHint": "Göndererek PalmRent kurallarını kabul edersiniz"
+    },
+    "coupon": {
+      "title": "İndirim kodu",
+      "enterLabel": "İndirim kodunu girin",
+      "placeholder": "Örn: PALM15",
+      "invalidText": "İndirim kodu geçersiz.",
+      "invalidToast": "İndirim kodu geçersiz",
+      "checking": "Kontrol ediliyor...",
+      "apply": "Kodu uygula"
+    },
+    "mobileBar": {
+      "payableAmount": "Ödenecek tutar"
+    },
+    "places": {
+      "deliveryPrefix": "Teslim",
+      "returnPrefix": "İade"
+    }
+  },
+
+  "SearchHeader": {
+    "actions": {
+      "search": "Ara"
+    },
+    "common": {
+      "emptyDate": "---",
+      "shortDate": "{day} {month}"
+    },
+    "months": {
+      "1": "Farvardin",
+      "2": "Ordibehesht",
+      "3": "Khordad",
+      "4": "Tir",
+      "5": "Mordad",
+      "6": "Shahrivar",
+      "7": "Mehr",
+      "8": "Aban",
+      "9": "Azar",
+      "10": "Dey",
+      "11": "Bahman",
+      "12": "Esfand"
+    },
+    "formats": {
+      "mobileRange": "{start} {dt} - {end} {rt}",
+      "stepSecondRange": "{start} {dt} - {end} {rt} ({days} gün)"
+    },
+    "stepSecond": {
+      "title": "Bilgileri gir ve rezervasyonu tamamla"
+    },
+    "desktop": {
+      "deliveryTitle": "Teslim tarihi ve saati",
+      "returnTitle": "İade tarihi ve saati",
+      "hour": "saat"
+    },
+    "rentalDuration": {
+      "prefix": "Kiralama süresi:",
+      "daysSuffix": "gün",
+      "branchSuffix": "Şubede unutma:"
+    }
+  },
+
+  "SearchResultPage": {
+    "meta": {
+      "parts": {
+        "branch": " - {branch}",
+        "days": " - {days} gün"
+      },
+      "step1": {
+        "title": "Araç arama{branchPart} | {brand}",
+        "desc": "Araç listesini görmek için tarih ve şubeyi seçin."
+      },
+      "step2": {
+        "title": "Araç seçimi{branchPart}{daysPart} | {brand}",
+        "desc": "Kiralanabilir araç listesi{branchName, select,  { } other{ ({branchName})}}{rentDays, select,  { } other{ {rentDays} gün için}}."
+      },
+      "step3": {
+        "title": "Teslimat konumu seçimi{branchPart}{daysPart} | {brand}",
+        "desc": "Teslim ve iade konumunu seçin, rezervasyonu tamamlayın."
+      }
+    }
+  },
+
+  "ResponsiveLocationPicker": {
+    "trigger": {
+      "placeholder": "Seçin",
+      "selectedNeedsAddress": "{place} — {addressLabel} girin",
+      "selectedWithAddress": "{place} — {address}"
+    },
+    "address": {
+      "defaultLabel": "Adres",
+      "requiredHint": "Bu seçeneği kaydetmek için adres girmeniz gerekir.",
+      "savedTitle": "Kayıtlı adres"
+    },
+    "badges": {
+      "needsAddress": "Adres gerekli"
+    },
+    "actions": {
+      "save": "Kaydet"
+    },
+    "rows": {
+      "empty": "Sonuç bulunamadı",
+      "cost": "Ücret:"
+    },
+    "common": {
+      "free": "Ücretsiz",
+      "priceWithCurrency": "{price} {currency}"
+    },
+    "a11y": {
+      "back": "Geri"
+    }
+  },
+
+  "SummaryRow": {
+    "common": {
+      "free": "Ücretsiz"
+    },
+    "prefix": {
+      "delivery": "Teslim yeri:",
+      "return": "İade yeri:"
+    },
+    "normalized": {
+      "deliveryFee": "Teslim ücreti",
+      "returnFee": "İade ücreti"
+    }
+  },
+
+   "Auth": {
+    "LoginDialog": {
+      "srTitle": "Giriş",
+      "button": {
+        "open": "Giriş / Kayıt",
+        "sendOtp": "Doğrulama kodu al",
+        "verify": "Doğrula ve giriş yap",
+        "resend": "Kodu tekrar gönder",
+        "resendWithCountdown": "Kodu tekrar gönder ({seconds})",
+        "editMobile": "Telefon numarasını düzenle"
+      },
+      "header": {
+        "kicker": "Hesap",
+        "titleMobile": "Giriş / Kayıt",
+        "titleOtp": "Kodu doğrula"
+      },
+      "hint": {
+        "mobile": "Doğrulama kodu almak için telefon numaranızı girin.",
+        "otp": "Giriş yapmak için gönderilen 5 haneli kodu girin."
+      },
+      "toast": {
+        "invalidMobile": "Lütfen geçerli bir telefon numarası girin",
+        "otpSent": "Doğrulama kodu gönderildi",
+        "sendError": "Kod gönderilemedi",
+        "wrongOtp": "Girdiğiniz kod yanlış",
+        "loginSuccess": "Başarıyla giriş yapıldı",
+        "verifyError": "Kod doğrulanamadı"
+      }
+    }
+  },
+
+   "dateRangePicker": {
+    "clear": "Temizle",
+    "switchToGregorian": "Miladi takvim",
+    "switchToJalali": "Jalali takvim",
+    "goToToday": "Bugüne git",
+    "selectStart": "Başlangıç tarihi seçin",
+    "selectEnd": "Bitiş tarihi seçin",
+    "deliveryTime": "Teslim saati",
+    "returnTime": "İade saati",
+    "confirm": "Onayla",
+    "mobileTitle": "Tarih seç",
+    "delivery": "Teslim",
+    "return": "İade",
+    "pick": "Seçin",
+    "confirmAndSearch": "Onayla ve ara"
+  },
+
+
+  "calendarGrid": {
+    "tooltips": {
+      "start": "Teslim alma tarihi",
+      "end": "İade tarihi"
+    },
+    "aria": {
+      "start": "Başlangıç tarihi",
+      "end": "Bitiş tarihi",
+      "day": "Gün"
+    }
+  },
+
+
+  "InformationStepLogic": {
+    "errors": {
+      "invalidBranch": "Geçersiz şube.",
+      "invalidDates": "Geçersiz rezervasyon tarihleri.",
+      "fetchFailed": "Veri alınamadı.",
+      "invalidServerResponse": "Sunucu yanıtı geçersiz.",
+      "network": "Ağ hatası."
+    },
+    "common": {
+      "unknown": "Bilinmiyor"
+    },
+    "rows": {
+      "deliveryPrefix": "Teslim yeri: {place}",
+      "returnPrefix": "İade yeri: {place}"
+    }
+  },
+
+  "ImportantQuestions": {
+    "faqTitle": "Sık Sorulan Sorular",
+    "tabs": {
+      "delivery": "Teslimat & İade",
+      "general": "Genel"
+    },
+    "delivery": {
+      "q1": {
+        "title": "PalmRent'te nasıl araç rezervasyonu yapabilirim?",
+        "body": "..."
+      }
+    },
+    "general": {
+      "q1": {
+        "title": "PalmRent'e neden güvenebilirim?",
+        "body": "..."
+      }
+    },
+    "support": {
+      "title": "Sorunuz mu var? Bize sorun!",
+      "subtitle": "PalmRent 7/24 destek ve yardım",
+      "whatsapp": "WhatsApp danışmanlık",
+      "phone": "Telefon danışmanlık",
+      "whatsappAria": "PalmRent destek ile WhatsApp sohbeti başlat",
+      "phoneAria": "PalmRent desteğini ara"
+    }
+  },
+
+  "NavSection": {
+    "heroAlt": "Kapak görseli",
+    "defaultTitle": "PalmRent | Online araç kiralama rezervasyonu",
+    "defaultSubtitle1": "Online rezervasyon, planlı teslimat, 7/24 destek",
+    "loadingCities": "Yükleniyor...",
+    "cityLocked": "Şehir seçildi",
+    "fields": {
+      "city": "Şehir",
+      "delivery": "Teslim alma tarih & saat",
+      "return": "İade tarih & saat"
+    },
+    "placeholders": {
+      "city": "Şehir seçin",
+      "deliveryDate": "Teslim tarihi",
+      "deliveryTime": "Teslim saati",
+      "returnDate": "İade tarihi",
+      "returnTime": "İade saati"
+    },
+    "actions": {
+      "search": "Araçları ara"
+    },
+    "months": {
+      "1": "Ocak",
+      "2": "Şubat",
+      "3": "Mart",
+      "4": "Nisan",
+      "5": "Mayıs",
+      "6": "Haziran",
+      "7": "Temmuz",
+      "8": "Ağustos",
+      "9": "Eylül",
+      "10": "Ekim",
+      "11": "Kasım",
+      "12": "Aralık"
+    }
+  },
+
+  
+  "whatsappMessage": {
+    "reserve": "Merhaba\n({city}) konumunda ({car}) aracını kiralamak istiyorum. Ek bilgi ve kiralama şartlarını paylaşabilir misiniz?\n{url}",
+    "reserveWithDate": "Merhaba\n({city}) konumunda ({car}) aracını {from} ({dt}) - {to} ({rt}) tarihleri arasında kiralamak istiyorum.\nUygunluk durumu ve kiralama şartlarını paylaşabilir misiniz?\n{url}"
+  },
+
+  "branchLanding": {
+    "heroTitle": "<Branch></Branch> şehrinde depozitosuz araç kiralama",
+    "heroSubtitle1": "Havalimanı ve otelde anında teslimat, ücretsiz sigorta",
+    "heroSubtitle2": "Hızlı online rezervasyon, teslimde ödeme ve 7/24 destek",
+
+    "loadingMore": "Yükleniyor…",
+    "viewMore": "Daha fazla göster",
+
+    "noCarsFound": "Araç bulunamadı",
+    "noMoreResults": "Başka sonuç yok",
+    "fetchError": "Veri alınırken hata oluştu"
+  },
+
+    "RentCommon": {
+    "free": "Free",
+    "daily": "Daily",
+    "a11y": {
+      "moreInfo": "More info"
+    },
+    "extras": {
+      "insuranceCompleteTitle": "Full damage coverage"
+    },
+    "summary": {
+      "deliveryFee": "Delivery fee",
+      "returnFee": "Return fee"
+    },
+    "car": {
+      "fuelDefault": "Gasoline",
+      "gearboxAuto": "Automatic",
+      "gearboxManual": "Manual",
+      "baggageUnit": "bags",
+      "passengersUnit": "people"
+    }
   }
+}

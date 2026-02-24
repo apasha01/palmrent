@@ -6,7 +6,7 @@ import { IconArrow, IconArrowHandle, IconDiscount, IconHeart, IconInfo, IconInfo
 import Link from "next/link";
 import Image from "next/image";
 import { getDiffInShamsiDays } from "./SearchBar";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
 import { getLangUrl } from "@/lib/getLangUrl";
 import { dateDifference } from "@/lib/getDateDiffrence";
 import { capitalizeWords } from "@/lib/capitalizeFirstLetter";

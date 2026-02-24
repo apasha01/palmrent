@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   getDaysInMonth,
@@ -10,6 +10,7 @@ import {
 } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import type { Range } from "./date-range-picker";
+import { useLocale, useTranslations } from "next-intl";
 
 type CalendarGridProps = {
   year: number;
@@ -18,12 +19,10 @@ type CalendarGridProps = {
   onSelect: (date: Date) => void;
   isJalali: boolean;
 
-  // hover support
   hoverDate?: Date | null;
   onHover?: (date: Date | null) => void;
 };
 
-/** ✅ جلوگیری از باگ timezone/DST: همه تاریخ‌ها را به 12 ظهر تبدیل می‌کنیم */
 const atNoon = (d: Date) => {
   const x = new Date(d);
   x.setHours(12, 0, 0, 0);
@@ -48,6 +47,20 @@ const isBetween = (d: Date, start: Date, end: Date) => {
   return t > atNoon(start).getTime() && t < atNoon(end).getTime();
 };
 
+const RTL_LOCALES = new Set(["fa", "ar"]);
+
+function formatGregorianMonthYear(year: number, month: number, locale: string) {
+  try {
+    return new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(
+      new Date(year, month, 1),
+    );
+  } catch {
+    return new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(
+      new Date(year, month, 1),
+    );
+  }
+}
+
 export function CalendarGrid({
   year,
   month,
@@ -57,6 +70,15 @@ export function CalendarGrid({
   hoverDate,
   onHover,
 }: CalendarGridProps) {
+  const locale = useLocale();
+  const t = useTranslations("calendarGrid");
+
+  const dir: "rtl" | "ltr" = RTL_LOCALES.has(locale) ? "rtl" : "ltr";
+
+  // ✅ radius درست برای LTR/RTL
+  const startRound = dir === "rtl" ? "rounded-r-xl" : "rounded-l-xl";
+  const endRound = dir === "rtl" ? "rounded-l-xl" : "rounded-r-xl";
+
   const daysInMonth = getDaysInMonth(year, month, isJalali ? "jalali" : "gregorian");
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
@@ -69,7 +91,6 @@ export function CalendarGrid({
 
   const weekDays = isJalali ? weekDaysJalali : weekDaysGregorian;
 
-  // ✅ end موثر: فقط وقتی end واقعی داریم یا hover معتبر داریم
   const effectiveEnd =
     range.start
       ? range.end
@@ -79,13 +100,13 @@ export function CalendarGrid({
           : null
       : null;
 
+  const title = isJalali
+    ? `${jalaliMonthNames[month]} ${persianNumbers(year)}`
+    : formatGregorianMonthYear(year, month, locale);
+
   return (
-    <div className="w-full">
-      <h3 className="text-center font-bold text-lg mb-4">
-        {isJalali
-          ? `${jalaliMonthNames[month]} ${persianNumbers(year)}`
-          : new Date(year, month).toLocaleString("en-US", { month: "long", year: "numeric" })}
-      </h3>
+    <div className="w-full" dir={dir}>
+      <h3 className="text-center font-bold text-lg mb-4">{title}</h3>
 
       <div className="grid grid-cols-7 gap-y-1 text-center">
         {weekDays.map((day) => (
@@ -103,11 +124,8 @@ export function CalendarGrid({
           const date = atNoon(dateRaw);
 
           const isStart = isSameDaySafe(range.start, date);
-
-          // ✅ end واقعی
           const isEndReal = isSameDaySafe(range.end, date);
 
-          // ✅ end موقت hover (فقط وقتی end هنوز انتخاب نشده)
           const isEndHover =
             !range.end &&
             !!range.start &&
@@ -115,46 +133,60 @@ export function CalendarGrid({
             isGteDay(hoverDate, range.start) &&
             isSameDaySafe(hoverDate, date);
 
-          // ✅ دیگه end پیش‌فرض نداریم
           const isEnd = isEndReal || isEndHover;
 
-          // ✅ فقط وقتی effectiveEnd داریم، رنج روشن میشه
+          // ✅ اگر start و end یک روز باشند → کاملاً گرد
+          const isSingleDay = isStart && isEndReal;
+
           const inRange =
             range.start && effectiveEnd ? isBetween(date, range.start, effectiveEnd) : false;
 
           return (
             <button
               key={day}
+              type="button"
               onClick={() => onSelect(dateRaw)}
               onMouseEnter={() => onHover?.(dateRaw)}
               onMouseLeave={() => onHover?.(null)}
               className={cn(
                 "relative h-10 w-full flex items-center justify-center text-sm transition-all",
 
-                // start
-                isStart && "bg-orange-400 dark:bg-orange-400 text-black font-bold rounded-r-xl z-10",
+                // ✅ start
+                isStart &&
+                  cn(
+                    "bg-orange-400 dark:bg-orange-400 text-black font-bold z-10",
+                    isSingleDay ? "rounded-xl" : startRound,
+                  ),
 
-                // end (real/hover)
-                isEnd && "bg-orange-400 dark:bg-orange-400 text-black font-bold rounded-l-xl z-10",
+                // ✅ end
+                isEnd &&
+                  cn(
+                    "bg-orange-400 dark:bg-orange-400 text-black font-bold z-10",
+                    isSingleDay ? "rounded-xl" : endRound,
+                  ),
 
-                // range (فقط با hover یا end واقعی)
+                // range
                 inRange && "bg-orange-300/30 dark:bg-orange-300/20",
 
-                // hover style for normal days
-                !isStart && !isEnd && !inRange && "hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl"
+                // hover
+                !isStart &&
+                  !isEnd &&
+                  !inRange &&
+                  "hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl",
               )}
+              aria-label={isStart ? t("aria.start") : isEnd ? t("aria.end") : t("aria.day")}
             >
               {isJalali ? persianNumbers(day) : day}
 
               {isStart && (
                 <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap z-20">
-                  تاریخ رفت
+                  {t("tooltips.start")}
                 </div>
               )}
 
               {isEnd && (
                 <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap z-20">
-                  تاریخ برگشت
+                  {t("tooltips.end")}
                 </div>
               )}
             </button>

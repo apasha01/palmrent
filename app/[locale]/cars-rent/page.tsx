@@ -11,12 +11,11 @@ import QRApplication from "@/components/Branchs/QR-Application";
 import Header from "@/components/layouts/Header";
 import { useBranches } from "@/services/branches/branches.queries";
 import { useLocale } from "next-intl";
-import React from "react";
 
 const Page = () => {
   const locale = useLocale();
 
-  const { data, isLoading, error } = useBranches(locale);
+  const { data, isLoading } = useBranches(locale);
 
   return (
     <section className="max-w-7xl mx-auto">
@@ -29,7 +28,6 @@ const Page = () => {
         subtitle2="تا خودروهای موجود و قیمت نهایی نمایش داده شود."
       />
 
-      {/* ✅ فقط همین درست شد: دیتا + لودینگ به BranchList */}
       <BranchList branches={data} isLoading={isLoading} />
 
       <div>
