@@ -198,7 +198,7 @@ export default function RentStatusPage() {
           </button>
 
           <button
-            onClick={() => router.push(`/${locale}`)}
+            onClick={() => router.push(`/`)}
             className="px-4 py-2 rounded-xl bg-[#3B82F6] text-white hover:bg-[#2563EB] transition text-sm"
           >
             صفحه اصلی

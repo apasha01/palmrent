@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { IconArrow, IconBag, IconGas, IconGearBox, IconHeart, IconPerson } from '@/components/Icons'
 import { useTranslations } from 'next-intl'
-import Link from 'next/link'
+import {Link} from '@/i18n/navigation'
 
 
 export default function FavPage(){

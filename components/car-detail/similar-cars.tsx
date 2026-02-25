@@ -1,7 +1,7 @@
 "use client"
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Image from "next/image"
-import Link from "next/link"
+import {Link} from "@/i18n/navigation"
 import { Car, Fuel, Users, Briefcase, Info } from "lucide-react"
 import { STORAGE_URL } from "@/lib/apiClient"
 

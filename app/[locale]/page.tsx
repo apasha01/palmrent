@@ -2,7 +2,6 @@
 
 import Footer from "@/components/Footer";
 import ImportantQuestions from "@/components/Branchs/Important-Questions";
-import NavSection from "@/components/Branchs/Nav-Section";
 import QRApplication from "@/components/Branchs/QR-Application";
 import Header from "@/components/layouts/Header";
 import { useBranches } from "@/services/branches/branches.queries";
@@ -10,6 +9,7 @@ import { useLocale, useTranslations } from "next-intl";
 import ActiveRentCities from "@/components/Landing/ActiveRentCities";
 import HubSupportSection from "@/components/Landing/HubSupportSection";
 import GuidesSection from "@/components/Landing/GuideSection";
+import NavSection from "@/components/Branchs/Nav-SectionNew";
 
 const HomeClient = () => {
   const locale = useLocale();
@@ -17,9 +17,9 @@ const HomeClient = () => {
   const { data, isLoading } = useBranches(locale);
 
   return (
-    <div className="bg-white dark:bg-gray-800">
+    <div className="bg-white dark:bg-gray-950">
 
-    <section className="max-w-7xl mx-auto ">
+    <section className="mx-auto ">
       <Header />
 
       <NavSection
@@ -27,6 +27,9 @@ const HomeClient = () => {
         title={t("hero.title")}
         subtitle1={t("hero.subtitle")}
       />
+
+      <div className="max-w-7xl mx-auto md:px-2">
+
 
       <div className="mt-6">
         <ActiveRentCities cities={data} isLoading={isLoading} />
@@ -46,6 +49,7 @@ const HomeClient = () => {
 
       <div className="mt-8 px-2 md:px-0">
         <GuidesSection />
+      </div>
       </div>
 
       <Footer />

@@ -1,5 +1,5 @@
 'use client'
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { IconArrowDoubled, IconFacebook, IconLinkedIn, IconPhone, IconTwitter, IconYoutube } from "./Icons";
 import Image from "next/image";
 import { useTranslations } from "next-intl";

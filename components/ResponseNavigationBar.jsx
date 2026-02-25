@@ -1,5 +1,5 @@
 'use client'
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { IconCalender, IconHome, IconLocation, IconPerson, IconPerson2 } from "./Icons";
 import { usePathname } from "@/i18n/navigation";
 import React, { ReactElement } from 'react'

@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowUpLeft,
@@ -22,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Header from "@/components/layouts/Header";
 import Footer from "@/components/Footer";
+import { Link } from "@/i18n/navigation";
 
 type Props = {
   androidHref?: string;

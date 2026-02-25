@@ -8,7 +8,7 @@ import { useLocale } from "next-intl";
 import { useHubCarsOnly } from "@/services/hub-cars/hub-cars.queries";
 import SingleCar from "../card/CarsCard";
 import { Card, CardContent } from "../ui/card";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 
 type BranchItem = {
   id: number;
@@ -63,13 +63,7 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
     (branches ?? []).find((c) => c.slug === activeCity)?.title ?? "";
 
   const showSkeleton = carsLoading || isFetching;
-
-  // ✅✅✅ لینک مشاهده همه: با slug ساخته شود
-  // اگر روت شما locale دارد (مثل /fa/cars-rent/dubai) این را استفاده کن:
-  const viewAllHref = `/${locale}/cars-rent/${activeCity}`;
-
-  // اگر روت شما locale ندارد و فقط /cars-rent/dubai است، این را استفاده کن:
-  // const viewAllHref = `/cars-rent/${activeCity}`;
+  const viewAllHref = `/cars-rent/${activeCity}`;
 
   return (
     <div className="w-full px-2 sm:px-0">

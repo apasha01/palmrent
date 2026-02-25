@@ -5,13 +5,11 @@ import { useTranslations, useLocale } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 
 import { cn } from "@/lib/utils"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
-import { Search, X, ArrowDownWideNarrow, SlidersHorizontal } from "lucide-react"
+import { Search, X } from "lucide-react"
+import { IconClose, IconFilter, IconSort } from "../Icons"
 
 import SearchFilterSheet from "./SearchFilterSheet"
 import {
@@ -89,165 +87,173 @@ export function SerarchSection({
 
   return (
     <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-      <Card
+      <div
         className={cn(
-          "bg-white dark:bg-gray-900",
-          "transition-all duration-300 relative",
-          "rounded-none shadow-none border-x-0",
-          "sm:rounded-lg sm:shadow-md sm:border",
-          "border border-[#E0E0E0] dark:border-gray-700",
-          "py-2 sm:py-4",
+          "bg-white z-30 transition-all sm:rounded-lg rounded-none sm:shadow-[0_4px_20px_0px_rgba(0,0,0,.06)] sm:p-4 p-2 max-sm:py-3 m-0 max-sm:border-t-0 text-nowrap border border-[#E0E0E0]",
           containerClassName
         )}
       >
-        <div className="relative px-2 sm:px-4 space-y-2 sm:space-y-3">
-          {/* Search Row */}
-          <div
-            className={cn(
-              "rounded-md flex items-center",
-              "border border-[#0000001f] dark:border-gray-700",
-              "bg-gray-50 dark:bg-gray-900"
-            )}
-          >
-            <span className="px-2 shrink-0">
-              <Search size={20} color={"#969696"} />
+        <div className="relative space-y-2">
+
+          {/* ── Search Row ── */}
+          <div className="rounded-md flex items-center p-4 sm:py-2 py-1 relative mb-2 border border-[#0000001f]">
+            <span className="text-[#4b5259]">
+              <Search size={20} />
             </span>
 
-            <Input
+            <input
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               type="search"
               placeholder={t("carSearch")}
-              className={cn(
-                "border-none shadow-none bg-transparent dark:bg-gray-900 placeholder:text-xs",
-                "focus:outline-none focus:ring-0 focus:ring-offset-0",
-                "focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0",
-                "h-10 sm:h-9 px-0"
-              )}
+              className="w-full px-2 outline-0 placeholder:text-[#4b5259] text-xs"
             />
 
-            <div className="flex items-center gap-1 text-[#75736F] dark:text-gray-400 border-r pr-2 border-gray-300 dark:border-gray-600">
+            <div className="flex items-center gap-1 text-[#75736F]">
+              {/* Filter button */}
               <SheetTrigger asChild>
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  className={cn(
-                    "flex items-center gap-1 p-1.5 rounded",
-                    "h-auto hover:bg-gray-200 dark:hover:bg-gray-700"
-                  )}
+                  className="flex items-center gap-1 rtl:border-l ltr:border-r border-[#4b5259] px-2 cursor-pointer"
                 >
-                  <ArrowDownWideNarrow size="20" />
-                  <span className="hidden sm:block text-xs font-bold text-nowrap dark:text-gray-300">
-                    {t("filters")}
+                  <span className="text-[#626262]">
+                    <span className="sm:hidden">
+                      <IconFilter size="22" />
+                    </span>
+                    <span className="max-sm:hidden">
+                      <IconFilter size="20" />
+                    </span>
                   </span>
-                </Button>
+                  <span className="max-sm:hidden text-sm">{t("filters")}</span>
+                </button>
               </SheetTrigger>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className={cn(
-                      "flex items-center gap-1 p-1.5 rounded",
-                      "h-auto hover:bg-gray-200 dark:hover:bg-gray-700"
-                    )}
-                  >
-                    <SlidersHorizontal size="20" />
-                    <span className="hidden sm:block text-xs font-bold text-nowrap dark:text-gray-300">
-                      {sort ? t(sort) : t("sort")}
-                    </span>
-                  </Button>
-                </DropdownMenuTrigger>
+              {/* Sort dropdown */}
+              <div className="flex relative">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex items-center gap-1 cursor-pointer"
+                    >
+                      <span className="text-[#626262]">
+                        <span className="max-sm:hidden">
+                          <IconSort size="22" className={undefined} />
+                        </span>
+                        <span className="sm:hidden">
+                          <IconSort size="20" className={undefined} />
+                        </span>
+                      </span>
+                      <span className="max-sm:hidden text-sm">
+                        {sort ? t(sort) : t("sort")}
+                      </span>
+                      {sort && (
+                        <span
+                          onClick={(e) => { e.stopPropagation(); setSort("") }}
+                          className="size-4 transition-all flex items-center overflow-hidden"
+                        >
+                          <IconClose className={undefined} />
+                        </span>
+                      )}
+                    </button>
+                  </DropdownMenuTrigger>
 
-                <DropdownMenuContent
-                  align="start"
-                  className="w-40 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden"
-                >
-                  <DropdownMenuItem
-                    className="px-4 py-2 text-xs cursor-pointer text-gray-700 dark:text-gray-300 border-b dark:border-gray-700 rounded-none hover:bg-blue-50 dark:hover:bg-blue-900/30"
-                    onClick={() => handleSortChange("price_min")}
+                  <DropdownMenuContent
+                    align="start"
+                    className="flex flex-col bg-white p-2 border border-[#cccccc] rounded-lg shadow-none"
                   >
-                    {t("price_min")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="px-4 py-2 text-xs cursor-pointer text-gray-700 dark:text-gray-300 border-b dark:border-gray-700 rounded-none hover:bg-blue-50 dark:hover:bg-blue-900/30"
-                    onClick={() => handleSortChange("price_max")}
-                  >
-                    {t("price_max")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="px-4 py-2 text-xs cursor-pointer text-gray-700 dark:text-gray-300 rounded-none hover:bg-blue-50 dark:hover:bg-blue-900/30"
-                    onClick={() => handleSortChange("new")}
-                  >
-                    {t("sort1")}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <DropdownMenuItem
+                      className="text-[#4b5259] p-2 px-3 text-nowrap border-b lg:border-b-0 hover:bg-[#f8fafb] lg:rounded-lg cursor-pointer text-xs"
+                      onClick={() => handleSortChange("price_min")}
+                    >
+                      {t("price_min")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-[#4b5259] p-2 px-3 text-nowrap border-b lg:border-b-0 hover:bg-[#f8fafb] lg:rounded-lg cursor-pointer text-xs"
+                      onClick={() => handleSortChange("price_max")}
+                    >
+                      {t("price_max")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-[#4b5259] p-2 px-3 text-nowrap hover:bg-[#f8fafb] lg:rounded-lg cursor-pointer text-xs"
+                      onClick={() => handleSortChange("new")}
+                    >
+                      {t("sort1")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
+
+            {searchDisable && (
+              <div className="w-full h-full bg-white opacity-50 absolute top-0 z-20" />
+            )}
           </div>
 
-          {/* Selected chips */}
+          {/* ── Selected chips ── */}
           {selectedItems.length > 0 && (
-            <div className={cn("flex flex-wrap gap-2", isRtl ? "justify-start" : "justify-end")}>
-              {selectedItems.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => handleCategoryToggle(item.id)}
-                  className={cn(
-                    "inline-flex items-center gap-2 px-3 py-2 rounded-md text-xs whitespace-nowrap",
-                    "border border-blue-500 dark:border-blue-400",
-                    "bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 "
-                  )}
-                >
-                  {t(item.title)}
-                  <X className="size-3 text-blue-500 dark:text-blue-400" />
-                </button>
-              ))}
+            <div className="w-full block overflow-auto hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              <div className="flex md:gap-2 gap-1">
+                {selectedItems.map((item) => (
+                  <label key={item.id} className="flex gap-2 mb-2 select-none">
+                    <input
+                      onChange={() => handleCategoryToggle(item.id)}
+                      checked={true}
+                      className="peer hidden"
+                      value={item.id}
+                      type="checkbox"
+                      readOnly
+                    />
+                    <div className="p-2 h-[33px] rounded-lg transition-all text-xs peer-checked:bg-[#3B82F61A] border border-[#0077db] peer-checked:text-[#0077db] flex gap-2 cursor-pointer items-center">
+                      {t(item.title)}
+                      <span className="size-3 flex items-center text-[#0077db]">
+                        <IconClose className={undefined} />
+                      </span>
+                    </div>
+                  </label>
+                ))}
+              </div>
             </div>
           )}
 
-          {/* Horizontal category list */}
-          <div
-            className={cn(
-              "w-full overflow-x-auto overflow-y-hidden hide-scrollbar",
-              "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-            )}
-          >
-            <div className="flex gap-2">
-              {sortList.map((item) => {
-                const isSelected = selectedCategories.includes(item.id)
-                return (
-                  <div key={item.id}>
-                    {!isSelected && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => handleCategoryToggle(item.id)}
-                        className={cn(
-                          "flex items-center gap-2 px-2 rounded-lg border text-xs cursor-pointer whitespace-nowrap transition-all",
-                          "h-auto",
-                          "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                        )}
-                      >
-                        {item.icon}
-                        {t(item.title)}
-                      </Button>
-                    )}
-                  </div>
-                )
-              })}
+          {/* ── Category list ── */}
+          <div className="block md:flex-nowrap flex-wrap items-center justify-between gap-2 lg:text-sm md:text-xs text-xs relative">
+            <div className="flex md:w-auto w-full items-start gap-2 lg:text-sm md:text-xs text-xs">
+              <div className="w-full block overflow-auto hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex md:gap-2 gap-1">
+                  {sortList
+                    .filter((item) => !selectedCategories.includes(item.id))
+                    .map((item) => (
+                      <label key={item.id} className="flex gap-2 select-none">
+                        <input
+                          checked={false}
+                          onChange={() => handleCategoryToggle(item.id)}
+                          className="peer hidden"
+                          value={item.id}
+                          type="checkbox"
+                          readOnly
+                        />
+                        <div className="p-2 h-[33px] rounded-lg border text-xs border-[#0000001f] text-[#4b5259] transition-all peer-checked:bg-[#7CABF9] sm:hover:bg-[#3B82F61A] sm:hover:text-[#3B82F6] peer-checked:text-white flex gap-2 cursor-pointer items-center">
+                          {item.icon}
+                          {t(item.title)}
+                        </div>
+                      </label>
+                    ))}
+                </div>
+              </div>
             </div>
+
+            {searchDisable && (
+              <div className="w-full h-full bg-white opacity-50 absolute top-0 z-20" />
+            )}
           </div>
 
-          {searchDisable && <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 z-40 cursor-wait" />}
         </div>
-      </Card>
+      </div>
 
       <SheetContent
         side={isRtl ? "left" : "right"}
-        className="w-full max-w-md p-0 bg-white dark:bg-gray-900 shadow-2xl border-l dark:border-gray-700"
+        className="w-full max-w-md p-0 bg-white shadow-2xl border-l"
       >
         <SearchFilterSheet closePopup={() => setFiltersOpen(false)} carListLength={carListLength} />
       </SheetContent>

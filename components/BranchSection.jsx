@@ -5,7 +5,7 @@ import { Navigation, Autoplay } from "swiper/modules";
 import "swiper/css";
 import { IconArrowHandle, IconWSOSD } from "./Icons";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useSelector } from "react-redux";
 import { useTranslations } from "next-intl";
 import { BASE_URL, STORAGE_URL } from "@/lib/apiClient";

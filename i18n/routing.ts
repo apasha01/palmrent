@@ -4,9 +4,6 @@ export const routing = defineRouting({
   locales: ["en", "ar", "fa", 'tr'], // Add your RTL locales
   defaultLocale: "fa",
   localePrefix: "as-needed",
-  // pathnames: {
-  //   "/": "/",
-  // },
   localeDetection: false,
 });
 

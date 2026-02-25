@@ -6,7 +6,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { useDispatch, useSelector } from "react-redux"
 import { changeActiveIndex, changeReelActive } from "@/redux/slices/reelsSlice"
 import useDisableScroll from "@/hooks/useDisableScroll"
-import Link from "next/link"
+import {Link} from "@/i18n/navigation"
 import { useTranslations } from "next-intl"
 
 export default function PopupReels(){

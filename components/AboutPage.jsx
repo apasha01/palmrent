@@ -6,7 +6,7 @@ import { useEffect } from "react"
 import { useTranslations } from "next-intl"
 import { IconAboutBack, IconLocationTick} from "@/components/Icons"
 import Image from "next/image"
-import Link from "next/link"
+import {Link} from "@/i18n/navigation"
 import { SocialBox } from "@/components/VoucherStep"
 
 export default function AboutUsComponent(){

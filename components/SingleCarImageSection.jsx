@@ -3,7 +3,7 @@ import { SingleCarOptions } from "../components/card/CarsCard";
 import { IconSend, IconWhatsapp } from "./Icons";
 import { useDispatch } from "react-redux";
 import { changeSingleGalleryStatus } from "@/redux/slices/globalSlice";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 import { usePathname } from "@/i18n/navigation";
 

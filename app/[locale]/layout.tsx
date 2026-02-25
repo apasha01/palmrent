@@ -24,10 +24,10 @@ async function getMessages(locale: string) {
 
 const dana = localFont({
   src: [
-    { path: "../../fonts/Dana-Medium.woff2", weight: "500", style: "normal" },
-    { path: "../../fonts/Dana-Medium.woff", weight: "500", style: "normal" },
-    { path: "../../fonts/Dana-Bold.woff2", weight: "700", style: "normal" },
-    { path: "../../fonts/Dana-Bold.woff", weight: "700", style: "normal" },
+    { path: "../../fonts/iranyekanwebregularfanum.ttf", weight: "500", style: "normal" },
+    { path: "../../fonts/iranyekanwebboldfanum.ttf", weight: "700", style: "normal" },
+    // { path: "../../fonts/Dana-Bold.woff2", weight: "700", style: "normal" },
+    // { path: "../../fonts/Dana-Bold.woff", weight: "700", style: "normal" },
   ],
   variable: "--font-dana",
   display: "swap",

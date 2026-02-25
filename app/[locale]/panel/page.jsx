@@ -4,7 +4,7 @@ import { IconArrow, IconCalling, IconCards, IconClock2, IconClose, IconEdit2, Ic
 
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
+import {Link} from "@/i18n/navigation"
 import { useTranslations } from "next-intl"
 
 export default function PanelPage(){

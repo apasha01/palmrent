@@ -2,11 +2,12 @@
 
 import { getData } from "@/lib/getData";
 import Image from "next/image";
-import Link from "next/link";
+
 
 import { IconDate, IconPerson2 } from "@/components/Icons";
 import { BASE_URL, STORAGE_URL } from "../../../../lib/apiClient";
 import { notFound } from "next/navigation";
+import { Link } from "@/i18n/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -106,7 +107,7 @@ export default async function BlogPost({ params }) {
                 return (
                   <Link
                     key={relatedId ?? index}
-                    href={`/${locale}/blogs/${relatedId}`}
+                    href={`/blogs/${relatedId}`}
                     className="p-2 border border-[#00000022] rounded-lg flex gap-2"
                   >
                     <div className="shrink-0 w-[125px] h-[70px] rounded-lg animate-skeleton">

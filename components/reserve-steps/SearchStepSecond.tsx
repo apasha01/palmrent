@@ -6,7 +6,7 @@
 // import { useLocale, useTranslations } from "next-intl";
 // import jalaali from "jalaali-js";
 // import Image from "next/image";
-// import Link from "next/link";
+// import { Link } from "@/i18n/navigation";
 // import { useSearchParams, useRouter } from "@/i18n/navigation";
 // import { PhoneInput } from "react-international-phone";
 // import "react-international-phone/style.css";

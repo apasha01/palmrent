@@ -82,10 +82,8 @@ function ReservePageContent() {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("step");
       params.delete("car_id");
-      // ✅ FIX: locale رو به URL اضافه میکنیم تا زبان حفظ بشه
-      // برای fa (default) نیازی به prefix نیست، بقیه زبان‌ها prefix میخوان
-      const localePath = locale === "fa" ? "" : `/${locale}`;
-      router.replace(`${localePath}/search?${params.toString()}`);
+
+      router.replace(`/search?${params.toString()}`);
       return;
     }
 

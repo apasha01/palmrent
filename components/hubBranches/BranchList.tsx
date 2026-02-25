@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Skeleton } from "../ui/skeleton";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 
 type BranchItem = {
   id: number;

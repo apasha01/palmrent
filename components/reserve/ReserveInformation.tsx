@@ -3,9 +3,7 @@
 import * as React from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
-
 import jalaali from "jalaali-js"
-import Link from "next/link"
 import { toast } from "react-toastify"
 import SearchMetaClient from "@/services/seo/SearchMetaClient"
 import { getBranchNameById } from "@/helpers/BranchNameHelper"
@@ -30,6 +28,7 @@ import SelectedCarCard from "./SelectedCarCard"
 import SummaryCard from "./SummaryCard"
 import NoDepositBanner from "./NoDepositeBanner"
 import { useRouter, useSearchParams } from "next/navigation"
+import { Link } from "@/i18n/navigation"
 
 
 /* ---------------- types (minimal) ---------------- */

@@ -4,7 +4,7 @@
 import { useEffect } from "react"
 import { useTranslations } from "next-intl"
 import { IconEmail2, IconFacebook, IconInstagram2, IconPerson3, IconPhone, IconSend, IconTwitter, IconYoutube, Shape1} from "@/components/Icons"
-import Link from "next/link"
+import {Link} from "@/i18n/navigation"
 
 export default function ContactUsComponent(){
     useEffect(()=>{

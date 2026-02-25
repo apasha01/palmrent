@@ -127,7 +127,7 @@ const ActiveRentCities = ({ cities, isLoading }: ActiveRentCitiesProps) => {
                 type="button"
                 size="lg"
                 variant="outline-primary"
-                className="w-full h-14 mt-2"
+                className="w-full h-12"
                 aria-label={t("viewAllAria")}
               >
                 {t("viewAll")}

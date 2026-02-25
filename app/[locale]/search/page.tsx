@@ -155,12 +155,9 @@ function SearchResultPageContent() {
   // ✅ Zustand
   // =========================================================
   const {
-    roadMapStep,
     setRoadMapStep,
-
     isSearchOpen,
     isFilterOpen,
-
     carDates,
     setCarDates,
     deliveryTime,

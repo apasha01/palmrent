@@ -245,7 +245,7 @@ export function MobilePriceBar({ car, dailyPrice, currency }: MobilePriceBarProp
       params.set("rt", rt);
       params.set("car_id", String(carId));
 
-      router.push(`/${locale}/reserve?${params.toString()}`, { scroll: true });
+      router.push(`/reserve?${params.toString()}`, { scroll: true });
     },
     [
       defaults,

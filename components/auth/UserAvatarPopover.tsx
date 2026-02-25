@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import React from "react";
 import { User, LogOut, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
