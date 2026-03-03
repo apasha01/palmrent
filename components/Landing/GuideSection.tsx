@@ -119,7 +119,7 @@ export default function GuidesSection() {
       <div
         className="
           md:hidden
-          flex flex-nowrap gap-6 overflow-x-auto pb-2
+          flex flex-nowrap gap-4 overflow-x-auto pb-2
           [scrollbar-width:none] [-ms-overflow-style:none]
           [&::-webkit-scrollbar]:hidden
         "
@@ -128,7 +128,7 @@ export default function GuidesSection() {
           ? Array.from({ length: 3 }).map((_, i) => (
               <article
                 key={`m-skel-${i}`}
-                className="flex flex-col border rounded-lg shrink-0 w-[320px] animate-pulse"
+                className="flex flex-col border rounded-lg shrink-0 w-[260px] animate-pulse"
               >
                 <div className="rounded-lg overflow-hidden">
                   <div className="w-full h-48 bg-muted" />
@@ -155,7 +155,7 @@ export default function GuidesSection() {
                   }}
                   className="
                     flex flex-col cursor-pointer group border rounded-lg
-                    shrink-0 w-[320px]
+                    shrink-0 w-[260px]
                     hover:shadow-sm transition
                    
                   "
@@ -164,9 +164,9 @@ export default function GuidesSection() {
                     <Image
                       src={imgSrc}
                       alt={item.title}
-                      width={400}
-                      height={240}
-                      className="w-full h-48 object-cover"
+                      width={260}
+                      height={220}
+                      className="w-full h-44 object-cover"
                     />
                   </div>
 

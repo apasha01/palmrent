@@ -717,6 +717,8 @@
 
   "NavSection": {
     "heroAlt": "Kapak görseli",
+         "CITY_REQUIREMENT": "Şehir seçimi zorunludur",
+ 
     "defaultTitle": "PalmRent | Online araç kiralama rezervasyonu",
     "defaultSubtitle1": "Online rezervasyon, planlı teslimat, 7/24 destek",
     "loadingCities": "Yükleniyor...",
@@ -751,6 +753,7 @@
       "12": "Aralık"
     }
   },
+
 
   
   "whatsappMessage": {

@@ -142,6 +142,7 @@
   "price_max": "بیشترین قیمت",
   "filters": "فیلترها",
 
+
   "noDeposite": "بدون دیپوزیت",
   "freeinsurance": "بیمه رایگان",
   "freeDelivery": "تحویل رایگان",
@@ -665,6 +666,7 @@
     "defaultSubtitle1": "رزرو آنلاین، تحویل هماهنگ شده، پشتیبانی فارسی ۷/۲۴",
     "loadingCities": "در حال بارگذاری...",
     "cityLocked": "شهر انتخاب شده",
+    "CITY_REQUIREMENT": "انتخاب شهر الزامی است",
     "fields": {
       "city": "شهر",
       "delivery": "تاریخ و زمان تحویل",

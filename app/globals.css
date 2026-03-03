@@ -167,6 +167,15 @@
 
 
 
+@keyframes search-stuck-in {
+  from { opacity: 0; transform: translate3d(0, -8px, 0); }
+  to   { opacity: 1; transform: translate3d(0,  0px, 0); }
+}
+
+.search-stuck-in{
+  animation: search-stuck-in 280ms ease-out both;
+}
+
 /* ===== react-international-phone => shadcn-like ===== */
 .react-international-phone-input-container {
   width: 100%;

@@ -5,8 +5,8 @@ import { Link } from "@/i18n/navigation";
 
 const QRApplication = () => {
   return (
-    <div className="px-2">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl md:px-0 shadow-sm dark:shadow-none">
+    <div className="">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl md:px-0 border shadow-sm dark:shadow-none">
         {/* ✅ موبایل px-2 | md به بالا مثل قبل */}
         <div className="flex justify-between items-center px-2 md:px-12">
           <div className="flex items-center justify-between gap-3 p-2 md:p-4 md:px-12 w-full">
@@ -57,16 +57,16 @@ const QRApplication = () => {
                 <Image
                   alt="android"
                   src="/images/android-logo.png"
-                  width={26}
-                  height={26}
+                  width={22}
+                  height={22}
                 />
                 <Image
                   alt="ios"
                   src="/images/ios-logo.png"
-                  width={26}
-                  height={26}
+                  width={22}
+                  height={22}
                 />
-                <span className="text-xs text-muted-foreground dark:text-gray-400">
+                <span className="text-[10px] text-muted-foreground dark:text-gray-400">
                   قابل نصب روی Android و IOS
                 </span>
               </div>
@@ -76,7 +76,7 @@ const QRApplication = () => {
             <div className="relative shrink-0 w-28 h-40 sm:w-32 sm:h-44 md:w-60 md:h-72">
               <Image
                 alt="application picture"
-                src="/images/application-d.png"
+                src="/images/app.webp"
                 fill
                 className="w-full h-full object-contain"
                 sizes="(max-width: 640px) 112px, (max-width: 768px) 128px, 240px"

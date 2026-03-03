@@ -5,12 +5,7 @@ import React, { useMemo, useState } from "react";
 import Lottie from "lottie-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  CheckCircle2,
-  CalendarDays,
-  ChevronLeft,
-  CreditCard,
-} from "lucide-react";
+import { CheckCircle2, ChevronLeft, CreditCard } from "lucide-react";
 import sucess from "@/public/lottie/Success.json";
 import { requestZarinpalPayment } from "@/services/Zarinpal/Zarinpal";
 import Image from "next/image";
@@ -36,7 +31,7 @@ function formatDateTimeFa(input?: string) {
   }).format(d);
 }
 
-export function PaymentCard({ rentData }: any) {
+export function PaymentCard({ rentData, payFailed, reason }: any) {
   const [loadingPay, setLoadingPay] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
@@ -50,28 +45,32 @@ export function PaymentCard({ rentData }: any) {
     payment?.pay_payload_example?.rent_id ?? rentData?.rent_id ?? 0,
   );
 
-  const amountToPayToman = Number(payment?.amount_to_pay ?? 0); // تومان
-  const prePay = Number(payment?.pre_pay ?? 0); // درهم
+  // =========================
+  // ✅ FIX: tax_in normalization
+  // هر چیزی غیر از "yes" => "no"
+  // =========================
+  const taxInRaw = String(payment?.tax_in ?? "no").toLowerCase().trim();
+  const taxIn: "yes" | "no" = taxInRaw === "yes" ? "yes" : "no";
 
-  // ✅ اضافه‌های لازم فقط برای محاسبه ۳ رکورد
-  const taxIn = String(payment?.tax_in ?? "").toLowerCase(); // "yes" | "no"
+  // =========================
+  // ✅ amounts from backend
+  // =========================
+  const prePayAed = Number(payment?.pre_pay ?? 0); // درهم
   const taxAed = Number(payment?.tax_price ?? 0); // درهم
   const tomanRate = Number(payment?.toman_rate ?? 0); // تومان برای هر 1 درهم
+  const payNowToman = Number(payment?.amount_to_pay ?? 0); // تومان (همون مبلغ زرین‌پال)
+
   const totalAed = Number(rentData?.summary?.total ?? 0); // کل رزرو (درهم)
 
-  // ✅ پرداخت الان (درهم) مطابق بک‌اند: اگر tax_in=no => pre_pay + tax_price
-  const payNowAed = taxIn === "no" ? prePay + taxAed : prePay;
+  // ✅ پرداخت الان (درهم): اگر tax_in=no => pre_pay + tax_price
+  const payNowAed = taxIn === "no" ? prePayAed + taxAed : prePayAed;
 
-  // ✅ پرداخت الان (تومان): همون amount_to_pay که بک به زرین‌پال می‌فرسته
-  const payNowToman = amountToPayToman;
-
-  // ✅ جمع کل تومان: totalAed × rate
+  // ✅ جمع کل تومان
   const totalToman =
     totalAed > 0 && tomanRate > 0 ? Math.round(totalAed * tomanRate) : 0;
 
-  // ✅ باقی مانده
+  // ✅ باقی‌مانده
   const remainingAed = Math.max(totalAed - payNowAed, 0);
-  const remainingToman = Math.max(totalToman - payNowToman, 0);
 
   const carTitle = useMemo(
     () => [car?.brand, car?.model, car?.year].filter(Boolean).join(" "),
@@ -152,15 +151,21 @@ export function PaymentCard({ rentData }: any) {
                     باقی‌مانده هنگام تحویل خودرو پرداخت می‌شود.
                   </span>
                 </p>
+
+                {/* ✅ اگر از قبل در URL payFailed/reason داری */}
+                {payFailed ? (
+                  <div className="mt-3 text-sm font-bold text-red-600">
+                    پرداخت ناموفق بود{reason ? `: ${String(reason)}` : ""}
+                  </div>
+                ) : null}
               </div>
             </div>
           </CardHeader>
 
           <CardContent className="space-y-4 p-0 m-0">
-            {/* ===== STEPPER (like sample) ===== */}
+            {/* ===== STEPPER ===== */}
             <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 md:p-4">
               <div className="flex justify-evenly items-center font-bold text-[11px] sm:text-xs md:text-sm">
-                {/* ثبت درخواست */}
                 <div className="flex items-center gap-1 md:gap-2 text-emerald-600">
                   <CheckCircle2 className="h-5 w-5 shrink-0" />
                   <span className="whitespace-nowrap">ثبت درخواست</span>
@@ -168,7 +173,6 @@ export function PaymentCard({ rentData }: any) {
 
                 <ChevronLeft className="h-7 w-7 md:h-8 md:w-8 text-emerald-500 shrink-0" />
 
-                {/* تایید رزرو */}
                 <div className="flex items-center gap-1 md:gap-2 text-emerald-600">
                   <CheckCircle2 className="h-5 w-5 shrink-0" />
                   <span className="whitespace-nowrap">تایید رزرو</span>
@@ -176,7 +180,6 @@ export function PaymentCard({ rentData }: any) {
 
                 <ChevronLeft className="h-7 w-7 md:h-8 md:w-8 text-gray-300 dark:text-gray-600 shrink-0" />
 
-                {/* پرداخت پیش پرداخت */}
                 <div className="flex items-center gap-1 md:gap-2 text-emerald-600">
                   <CreditCard className="h-5 w-5 shrink-0" />
                   <span className="whitespace-nowrap">پرداخت پیش‌پرداخت</span>
@@ -184,10 +187,9 @@ export function PaymentCard({ rentData }: any) {
               </div>
             </div>
 
-            {/* ===== PAYMENT DETAILS (like screenshot box) ===== */}
+            {/* ===== PAYMENT DETAILS ===== */}
             <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
               <div className="py-6">
-                {/* header with right gutter bar on mobile */}
                 <div className="flex items-center">
                   <div className="flex w-full">
                     <div className="h-10 rounded-l-lg bg-gray-700 w-2 md:hidden" />
@@ -200,7 +202,6 @@ export function PaymentCard({ rentData }: any) {
                   </div>
                 </div>
 
-                {/* body */}
                 <div className="mt-5 space-y-4 text-sm px-6">
                   <div className="flex flex-wrap gap-2">
                     <span className="text-gray-500 whitespace-nowrap">
@@ -232,7 +233,7 @@ export function PaymentCard({ rentData }: any) {
                   </div>
 
                   <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
-                    {/* ✅ total (درهم + تومان) */}
+                    {/* ✅ total */}
                     <div className="flex items-center gap-3">
                       <span className="text-gray-700 dark:text-gray-200 font-bold">
                         جمع کل:
@@ -242,7 +243,7 @@ export function PaymentCard({ rentData }: any) {
                       </span>
                     </div>
 
-                    {/* ✅ pay now (درهم + تومان) */}
+                    {/* ✅ pay now */}
                     <div className="flex items-center gap-3">
                       <span className="text-emerald-700 dark:text-emerald-300 font-black">
                         پرداخت الآن (پیش‌پرداخت):
@@ -252,14 +253,17 @@ export function PaymentCard({ rentData }: any) {
                       </span>
                     </div>
 
-                    {/* ✅ remaining (درهم + تومان) */}
+      
+                    {/* ✅ remaining */}
                     <div className="flex items-center gap-3">
                       <span className="text-gray-600 dark:text-gray-300 font-bold">
                         پرداخت هنگام تحویل:
                       </span>
                       <span className="font-black text-gray-900 dark:text-white">
-                        {toFaNumber(remainingAed)} درهم 
-                        {/* {toFaNumber(remainingAed)} درهم = {toFaNumber(remainingToman)} تومان */}
+                        {toFaNumber(remainingAed)} درهم
+                        {/* اگر خواستی تومان هم نشون بده:
+                        {" "} = {toFaNumber(remainingToman)} تومان
+                        */}
                       </span>
                     </div>
 
@@ -273,7 +277,7 @@ export function PaymentCard({ rentData }: any) {
               </div>
             </div>
 
-            {/* ===== PAY BUTTON (big like screenshot) ===== */}
+            {/* ===== PAY BUTTON ===== */}
             <div className="flex justify-center pt-2">
               <Button
                 onClick={onPay}
@@ -310,7 +314,7 @@ export function PaymentCard({ rentData }: any) {
                   />
                 </div>
 
-                <div className="relative h-12 md:h-16 lg:h-20 aspect-[5/3] shrink-0">
+                <div className="relative h-12 md:h-16 lg:h-20 aspect-5/3 shrink-0">
                   <Image
                     src="/images/peyment/5.webp"
                     alt="5"

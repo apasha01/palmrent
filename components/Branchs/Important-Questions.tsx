@@ -79,7 +79,7 @@ const ImportantQuestions = ({
                       <TabsTrigger
                         value="delivery"
                         className="
-                          px-4 py-2
+                          px-2 py-2
                           data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-blue-950/40
                           data-[state=active]:border-blue-500
                           data-[state=active]:shadow-none
@@ -154,8 +154,8 @@ const ImportantQuestions = ({
       )}
 
       {/* ✅ Support Box */}
-      <div className="mt-6 px-4 md:px-0">
-        <div className="p-5 bg-white dark:bg-gray-900 shadow rounded-xl">
+      <div className="mt-6  md:px-0">
+        <div className="p-5 bg-white dark:bg-gray-900 shadow border rounded-xl">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-right">
               <p className="font-bold md:font-medium text-gray-900 dark:text-gray-100">

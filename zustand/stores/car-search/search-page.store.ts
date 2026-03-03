@@ -328,8 +328,6 @@ export const useSearchPageStore = create<SearchPageState>((set, get) => ({
   setReserveDraft: (patch) => {
     const cur = get().reserveDraft;
     const next = { ...cur, ...patch };
-
-    // اگر واقعاً تغییری نیست، set نزن
     const same =
       cur.branch_id === next.branch_id &&
       cur.car_id === next.car_id &&

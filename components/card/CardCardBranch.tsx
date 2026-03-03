@@ -7,7 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useSelector } from "react-redux";
-import { ArrowUpRight, ChevronLeft, ArrowRight } from "lucide-react";
+import {  ChevronLeft, ArrowRight, InfinityIcon, ArrowUpRight } from "lucide-react";
 
 import {
   IconBag,
@@ -321,14 +321,14 @@ export default function BranchCarCard({
 
       <div className="pl-2.5 flex flex-col">
         <div className="flex items-center justify-between">
+          <span className="size-6 text-[#333333]" role="button" tabIndex={0}>
+            <IconHeart active={undefined}  />
+          </span>
           <div className="text-left my-2 text-lg font-bold">
             {locale === "fa"
               ? toFaDigitsHelper(capitalizeWords((car as any).title))
               : capitalizeWords((car as any).title)}
           </div>
-          <span className="size-6 text-[#333333]" role="button" tabIndex={0}>
-            <IconHeart active={undefined}  />
-          </span>
         </div>
 
         <SingleCarOptions car={car} />
@@ -441,7 +441,7 @@ export function SingleCarGallery({
   );
 
   return (
-    <div className="flex relative z-10 w-full lg:h-[220px] h-[220px]">
+    <div className="flex relative z-10 w-full lg:h-55 h-55">
       <div className="flex h-full max-md:overflow-x-auto max-md:z-10 hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <div
           className="md:absolute max-md:flex w-full h-full top-0 right-0 rounded-lg -z-10 max-md:gap-2"
@@ -509,8 +509,8 @@ export function SingleCarGallery({
             onClick={goCar}
           >
             <div className={`absolute w-full h-full rounded-lg ${activeImageIndex === safeImageList.length - 1 ? "z-20" : ""} bg-[#000000aa] text-white flex flex-col items-center justify-center`}>
-              <span className="flex items-center justify-center border-2 border-white rounded-full size-16 rotate-135">
-                <ArrowUpRight className="size-6" />
+              <span className="flex items-center justify-center border-2 border-white rounded-full size-16 ">
+                <ArrowRight className="size-6" />
               </span>
               {t("moredetail")}
             </div>
@@ -631,23 +631,93 @@ export function SingleCarPriceList({
     return translated && translated !== upper ? translated : c;
   }, [currency, t]);
 
+const formatRangeLabel = useCallback(
+  (raw: string): React.ReactNode => {
+    const s = String(raw || "").trim();
+    if (!s) return "";
+
+    const m = s.match(/^(\d+)\s*[-_–—]\s*(\d+)\s*$/);
+    if (!m) return s;
+
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return s;
+
+    const aTxt = numberFmt.format(a);
+
+    // ✅ اگر انتها 9999 یا خیلی بزرگ بود => آیکون بی‌نهایت
+    if (b >= 9999) {
+      if (locale === "fa") {
+        return (
+          <span className="inline-flex items-center gap-1">
+            <span>{aTxt}</span>
+            <span>تا</span>
+            <InfinityIcon className="size-4 translate-y-[1px]" />
+            <span>روز</span>
+          </span>
+        );
+      }
+
+      if (locale === "ar") {
+        return (
+          <span className="inline-flex items-center gap-1">
+            <span>{aTxt}</span>
+            <span>إلى</span>
+            <InfinityIcon className="size-4 translate-y-[1px]" />
+            <span>يوم</span>
+          </span>
+        );
+      }
+
+      if (locale === "tr") {
+        return (
+          <span className="inline-flex items-center gap-1">
+            <span>{aTxt}</span>
+            <span>-</span>
+            <InfinityIcon className="size-4 translate-y-[1px]" />
+            <span>gün</span>
+          </span>
+        );
+      }
+
+      return (
+        <span className="inline-flex items-center gap-1">
+          <span>{aTxt}</span>
+          <span>to</span>
+          <InfinityIcon className="size-4 translate-y-[1px]" />
+          <span>days</span>
+        </span>
+      );
+    }
+
+    // ✅ حالت عادی: "۱ تا ۶ روز"
+    const bTxt = numberFmt.format(b);
+
+    if (locale === "fa") return `${aTxt} تا ${bTxt} روز`;
+    if (locale === "ar") return `${aTxt} إلى ${bTxt} يوم`;
+    if (locale === "tr") return `${aTxt} - ${bTxt} gün`;
+    return `${aTxt} to ${bTxt} days`;
+  },
+  [locale, numberFmt],
+);
   if (!pricesArray.length) return null;
 
   return (
     <div className="flex flex-col gap-2 mb-4 border-[#0000001f]">
       {pricesArray.map((row: any, idx: number) => {
         const rangeRaw = String(row?.range ?? "").trim();
-        const rangeText = locale === "fa" ? toFaDigitsHelper(rangeRaw) : rangeRaw;
+        const rangeText = formatRangeLabel(rangeRaw);
+
         const daily = Number(row?.final_price ?? row?.currentPrice ?? 0) || 0;
         const dailyOld = Number(row?.base_price ?? row?.previousPrice ?? 0) || 0;
 
         return (
           <div key={`${rangeRaw || "range"}-${idx}`} className="flex justify-between items-center text-sm font-bold">
+            {/* ✅ سمت راست: "۱ تا ۶ روز :" */}
             <span className="text-[#4b5259]">{rangeText} :</span>
+
             <div className="flex gap-2">
-              {dailyOld > daily && (
-                <span className="text-[#A7A7A7] line-through">{formatNum(dailyOld)}</span>
-              )}
+              {dailyOld > daily && <span className="text-[#A7A7A7] line-through">{formatNum(dailyOld)}</span>}
               <span className="text-[#3B82F6] font-bold">{formatNum(daily)}</span>
               {!!currencyLabel && <span>{currencyLabel}</span>}
             </div>

@@ -681,6 +681,8 @@ declare const messages: {
 
   "NavSection": {
     "heroAlt": "Header image",
+    "CITY_REQUIREMENT": "City selection is required",
+
     "defaultTitle": "PalmRent | Online car rental booking",
     "defaultSubtitle1": "Online booking, coordinated delivery, 24/7 support",
     "loadingCities": "Loading...",
@@ -716,7 +718,6 @@ declare const messages: {
     }
   },
 
-  
   "whatsappMessage": {
      "reserve": "Hello\nI am interested in reserving the ({car}) in ({city}) and would like to request additional information and rental terms.\n{url}",
     "reserveWithDate": "Hello\nI am interested in reserving the ({car}) in ({city}) from {from} ({dt}) to {to} ({rt}).\nPlease share the rental terms and availability.\n{url}"

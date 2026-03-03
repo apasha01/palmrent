@@ -653,6 +653,8 @@
   "NavSection": {
     "heroAlt": "صورة العنوان",
     "defaultTitle": "PalmRent | حجز تأجير السيارات عبر الإنترنت",
+         "CITY_REQUIREMENT": "اختيار المدينة إلزامي",
+
     "defaultSubtitle1": "حجز عبر الإنترنت، تسليم منسّق، دعم 24/7",
     "loadingCities": "جارٍ التحميل...",
     "cityLocked": "تم اختيار المدينة",
@@ -717,6 +719,7 @@
       }
     }
   },
+
 
   "whatsappMessage": {
     "reserve": "مرحباً\nأنا مهتم بحجز السيارة ({car}) في ({city}) وأود طلب مزيد من المعلومات وشروط الإيجار.\n{url}",

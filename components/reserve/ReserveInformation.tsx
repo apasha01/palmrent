@@ -847,7 +847,7 @@ export default function ReserveInformation() {
           </div>
 
           <div className="md:col-span-4 overflow-visible">
-            <div dir="ltr" className="w-full overflow-visible relative z-50">
+            <div dir="ltr" className="w-full overflow-visible relative z-20">
               <PhoneInput
                 defaultCountry="ir"
                 value={userInfo.phone}
@@ -1005,7 +1005,7 @@ export default function ReserveInformation() {
         </div>
 
         {/* Sticky Bottom Bar (Mobile) */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-60 bg-white border-t border-gray-200">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-gray-200">
           <div className="max-w-130 mx-auto px-4 py-3">
             <div className="flex items-center justify-between mb-2">
               <div className="text-xs text-gray-500">{t("mobileBar.payableAmount")}</div>

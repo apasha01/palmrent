@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useMemo } from "react";
-import Link from "next/link";
-import { ArrowUpLeftIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { Link } from "@/i18n/navigation"; // ✅ localized link
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
+import { ChevronLeft } from "lucide-react";
 
 type City = {
   id: number | string;
@@ -19,32 +19,69 @@ type ActiveRentCitiesProps = {
   isLoading?: boolean;
 };
 
+/* ---------------- Shared Styles ---------------- */
+const baseBtnClass =
+  "w-full h-12 md:h-14 px-4 md:px-5 flex items-center justify-between gap-3 text-sm md:text-base rounded-md";
+
+const outlineNeutral =
+  "border border-border text-foreground hover:bg-accent hover:text-accent-foreground";
+
+const outlinePrimary =
+  "border border-[#0077db] text-[#0077db] hover:bg-[#3B82F61A] hover:text-[#0077db]";
+
 /* ---------------- Skeletons ---------------- */
 function CitiesSkeleton() {
   return (
-    <div className="w-full flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-      <div className="w-full flex flex-col md:flex-row gap-3 md:flex-1">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div
-            key={i}
-            className="w-full md:flex-1 h-12 md:h-14 rounded-md border flex items-center justify-between px-4"
-          >
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-5 w-5 rounded-full" />
-          </div>
-        ))}
-      </div>
-
-      <div className="hidden md:flex h-14 px-6 items-center gap-3 rounded-md border">
-        <Skeleton className="h-4 w-40" />
-        <Skeleton className="h-5 w-5 rounded-full" />
-      </div>
-
-      <div className="md:hidden w-full h-14 mt-2 rounded-md border flex items-center justify-between px-4">
-        <Skeleton className="h-4 w-40" />
-        <Skeleton className="h-5 w-5 rounded-full" />
-      </div>
+    <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-3">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
+          key={i}
+          className="w-full h-12 md:h-14 rounded-md border border-border flex items-center justify-between px-4 md:px-5"
+        >
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-5 w-5 rounded-full" />
+        </div>
+      ))}
     </div>
+  );
+}
+
+/* ---------------- Reusable Item ---------------- */
+function CityItem({
+  href,
+  label,
+  ariaLabel,
+  isPrimary = false,
+  disabled = false,
+}: {
+  href?: string;
+  label: string;
+  ariaLabel: string;
+  isPrimary?: boolean;
+  disabled?: boolean;
+}) {
+  const className = `${baseBtnClass} ${isPrimary ? outlinePrimary : outlineNeutral} ${
+    disabled ? "opacity-50 pointer-events-none" : ""
+  }`;
+
+  // ✅ اگر href داشت => لینک
+  if (href && !disabled) {
+    return (
+      <Link href={href} className="w-full">
+        <Button type="button" variant="ghost" className={className}>
+          <span className="truncate">{label}</span>
+          <ChevronLeft className="size-5 shrink-0" />
+        </Button>
+      </Link>
+    );
+  }
+
+  // ✅ در غیر اینصورت => دکمه غیرفعال
+  return (
+    <Button type="button" disabled variant="ghost" className={className} aria-label={ariaLabel}>
+      <span className="truncate">{label}</span>
+      <ChevronLeft className="size-5 shrink-0" />
+    </Button>
   );
 }
 
@@ -56,84 +93,47 @@ const ActiveRentCities = ({ cities, isLoading }: ActiveRentCitiesProps) => {
   const loading = Boolean(isLoading || !cities);
   const visibleCities = useMemo(() => (cities ?? []).slice(0, 3), [cities]);
 
-  // ✅ مسیرها با locale
   const carsRentBase = `/${locale}/cars-rent`;
 
   return (
-    <div className="w-full px-2 md:px-0">
+    <div className="w-full ">
       {/* Header */}
       <div className="flex flex-col">
         <p className="font-bold md:text-2xl text-xl">{t("title")}</p>
-        <p className="text-xs mt-2 text-gray-600">{t("subtitle")}</p>
+        <p className="text-xs mt-2 text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       <div className="mt-6 w-full">
         {loading ? (
           <CitiesSkeleton />
         ) : (
-          <div className="w-full flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-            {/* Cities */}
-            <div className="w-full flex flex-col md:flex-row gap-3 md:flex-1">
-              {visibleCities.map((city) => {
-                const href = city.slug ? `${carsRentBase}/${city.slug}` : null;
+          <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-3">
+            {/* 3 Cities */}
+            {visibleCities.map((city) => {
+              const href = city.slug ? `${carsRentBase}/${city.slug}` : undefined;
 
-                return href ? (
-                  <Link key={city.id} href={href} className="w-full md:flex-1">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="lg"
-                      className="w-full md:flex-1 h-12 md:h-14 flex items-center justify-between text-sm md:text-base"
-                      aria-label={t("cityButtonAria", { city: city.title })}
-                    >
-                      <span>{city.title}</span>
-                      <ArrowUpLeftIcon className="size-5" />
-                    </Button>
-                  </Link>
-                ) : (
-                  <Button
-                    key={city.id}
-                    type="button"
-                    variant="outline"
-                    size="lg"
-                    disabled
-                    className="w-full md:flex-1 h-12 md:h-14 flex items-center justify-between text-sm md:text-base opacity-50"
-                    aria-label={t("cityButtonDisabledAria", { city: city.title })}
-                  >
-                    <span>{city.title}</span>
-                    <ArrowUpLeftIcon className="size-5" />
-                  </Button>
-                );
-              })}
-            </div>
+              return (
+                <CityItem
+                  key={city.id}
+                  href={href}
+                  label={city.title}
+                  ariaLabel={
+                    href
+                      ? t("cityButtonAria", { city: city.title })
+                      : t("cityButtonDisabledAria", { city: city.title })
+                  }
+                  disabled={!href}
+                />
+              );
+            })}
 
-            {/* View All (Desktop) */}
-            <Link href={carsRentBase}>
-              <Button
-                size="lg"
-                type="button"
-                variant="outline-primary"
-                className="hidden md:inline-flex h-14 px-6 shrink-0"
-                aria-label={t("viewAllAria")}
-              >
-                {t("viewAll")}
-                <ArrowUpLeftIcon className="size-5" />
-              </Button>
-            </Link>
-
-            {/* View All (Mobile) */}
-            <Link href={carsRentBase} className="md:hidden w-full">
-              <Button
-                type="button"
-                size="lg"
-                variant="outline-primary"
-                className="w-full h-12"
-                aria-label={t("viewAllAria")}
-              >
-                {t("viewAll")}
-                <ArrowUpLeftIcon className="size-5" />
-              </Button>
-            </Link>
+            {/* View All (same style, only blue border/text) */}
+            <CityItem
+              href={carsRentBase}
+              label={t("viewAll")}
+              ariaLabel={t("viewAllAria")}
+              isPrimary
+            />
           </div>
         )}
       </div>

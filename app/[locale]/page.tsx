@@ -28,7 +28,7 @@ const HomeClient = () => {
         subtitle1={t("hero.subtitle")}
       />
 
-      <div className="max-w-7xl mx-auto md:px-2">
+      <div className="max-w-7xl mx-auto px-4">
 
 
       <div className="mt-6">
@@ -47,7 +47,7 @@ const HomeClient = () => {
         <QRApplication />
       </div>
 
-      <div className="mt-8 px-2 md:px-0">
+      <div className="mt-8  md:px-0">
         <GuidesSection />
       </div>
       </div>

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import Image from "next/image";
 import React from "react";
 
 import { Label } from "../ui/label";
@@ -27,6 +26,8 @@ import { Spinner } from "../ui/spinner";
 import { useRouter } from "@/i18n/navigation";
 import { useParams } from "next/navigation";
 
+/* ---------------- utils ---------------- */
+
 function toPersianDigits(input: string) {
   const en = "0123456789";
   const fa = "۰۱۲۳۴۵۶۷۸۹";
@@ -50,16 +51,15 @@ function toEnglishDigits(input: string) {
 /** ✅ تاریخ جلالی YYYY/MM/DD با اعداد فارسی */
 function formatJalaliYMD(date: Date | null) {
   if (!date) return "---";
-  return toPersianDigits(toEnglishDigits(formatJalaliDate(date))); // 1404/12/30
+  return toPersianDigits(toEnglishDigits(formatJalaliDate(date)));
 }
 
-/** ✅ Trigger: دسکتاپ همون قبلی (تاریخ+ساعت)، موبایل pill فقط تاریخ */
+/** ✅ Trigger UI */
 function DateTimeTrigger({
   date,
   time,
   datePlaceholder,
   timePlaceholder,
-  monthNames, // برای سازگاری نگه داشتیم
   variant = "default",
 }: {
   date?: Date | null;
@@ -67,37 +67,58 @@ function DateTimeTrigger({
   datePlaceholder: string;
   timePlaceholder: string;
   monthNames: string[];
-  variant?: "default" | "mobilePill";
+  variant?: "default" | "mobilePill" | "mobileDashTime";
 }) {
   const hasDate = date instanceof Date && !isNaN(date.getTime());
 
-  // ✅ موبایل: فقط تاریخ YYYY/MM/DD + یک آیکون
-  if (variant === "mobilePill") {
+  if (variant === "mobileDashTime") {
     return (
-      <div className="flex items-center h-10 w-full overflow-hidden bg-transparent">
-        <div className="flex items-center px-3 gap-2 w-full">
-          <CalendarRange className="text-gray-500 shrink-0" size={18} />
+      <div className="flex items-center h-12 w-full overflow-hidden bg-transparent">
+        <div className="px-2 w-full min-w-0">
           {hasDate ? (
-            <p className="truncate text-sm text-gray-900 dark:text-gray-100 font-medium">
-              {formatJalaliYMD(date!)}
+            <p className="truncate text-[14px] text-gray-900 dark:text-gray-100 font-medium">
+              {formatJalaliYMD(date!)}{" "}
+              <span className="text-gray-900 dark:text-gray-100 font-medium">
+                {" - "}
+                {hasDate && time ? toPersianDigits(time) : timePlaceholder}
+              </span>
             </p>
           ) : (
-            <p className="truncate text-sm text-gray-500">{datePlaceholder}</p>
+            <p className="truncate text-[14px] text-gray-500">
+              {datePlaceholder}{" "}
+              <span className="text-gray-500 font-normal">
+                {" - "}
+                {timePlaceholder}
+              </span>
+            </p>
           )}
         </div>
       </div>
     );
   }
 
-  // ✅ دسکتاپ: دقیقاً همون طراحی فعلی شما (تاریخ + ساعت)
+  if (variant === "mobilePill") {
+    return (
+      <div className="flex items-center w-full overflow-hidden bg-transparent">
+        <div className="flex items-center px-2 gap-2 w-full">
+          {hasDate ? (
+            <p className="truncate text-base text-gray-900 dark:text-gray-100 font-medium">
+              {formatJalaliYMD(date!)}
+            </p>
+          ) : (
+            <p className="truncate text-base text-gray-500">{datePlaceholder}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center border h-10 rounded-md w-full overflow-hidden bg-transparent">
-      {/* تاریخ */}
       <div className="flex items-center px-2 gap-1.5 w-1/2">
         <CalendarRange className="text-gray-500 shrink-0" size={18} />
         {hasDate ? (
           <p className="truncate text-sm text-gray-900 dark:text-gray-100 font-medium">
-            {/* دسکتاپ رو هم میتونی YMD کنی؛ ولی گفتی کامپیوتر همون بمونه */}
             {formatJalaliYMD(date!)}
           </p>
         ) : (
@@ -107,7 +128,6 @@ function DateTimeTrigger({
 
       <Separator orientation="vertical" />
 
-      {/* ساعت */}
       <div className="flex items-center px-2 gap-1 w-1/2">
         <Clock className="text-gray-500 shrink-0" size={18} />
         {hasDate && time ? (
@@ -122,15 +142,6 @@ function DateTimeTrigger({
   );
 }
 
-function MobileFloatLabel({ text }: { text: string }) {
-  return (
-    <span className="pointer-events-none rounded-t-md absolute right-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-gray-600 dark:bg-gray-900">
-      {text}
-    </span>
-  );
-}
-
-/** ✅ نرمال‌سازی برای مقایسه slug/title */
 function normalizeSlugLike(s: string) {
   return String(s)
     .trim()
@@ -139,13 +150,11 @@ function normalizeSlugLike(s: string) {
     .replace(/-+/g, "-");
 }
 
-/** ✅ خروجی جلالی مناسب query string: 1404/10/15 */
 function jalaliQueryDate(date: Date | null) {
   if (!date) return "";
-  return toEnglishDigits(formatJalaliDate(date)); // YYYY/MM/DD
+  return toEnglishDigits(formatJalaliDate(date));
 }
 
-/** ✅ ساعت امن: همیشه HH:mm */
 function safeTime(t?: string | null) {
   const s = String(t || "").trim();
   if (!s) return "10:00";
@@ -160,7 +169,6 @@ function safeTime(t?: string | null) {
   return "10:00";
 }
 
-/** ✅ فردا تا ۵ روز بعد + ساعت ۱۰:۰۰ */
 function makeDefaultRange(): Range {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
@@ -172,6 +180,28 @@ function makeDefaultRange(): Range {
   return { start, end };
 }
 
+/** ✅ ساده و امن: تشخیص دسکتاپ */
+function useIsDesktop(breakpointPx = 768) {
+  const [isDesktop, setIsDesktop] = React.useState(false);
+
+  React.useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${breakpointPx}px)`);
+    const update = () => setIsDesktop(mq.matches);
+    update();
+
+    if (typeof mq.addEventListener === "function") {
+      mq.addEventListener("change", update);
+      return () => mq.removeEventListener("change", update);
+    }
+
+    // Safari قدیمی
+    mq.addListener(update);
+    return () => mq.removeListener(update);
+  }, [breakpointPx]);
+
+  return isDesktop;
+}
+
 type NavSectionProps = {
   image?: string;
   title?: React.ReactNode;
@@ -179,13 +209,24 @@ type NavSectionProps = {
   subtitle2?: React.ReactNode;
 };
 
-const NavSection = ({ image, title, subtitle1, subtitle2 }: NavSectionProps) => {
+const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
   useDIR();
 
   const t = useTranslations("NavSection");
   const router = useRouter();
   const locale = useLocale();
   const params = useParams() as any;
+
+  const isDesktop = useIsDesktop(768);
+
+  const [isPending, startTransition] = React.useTransition();
+  const [clickedOnce, setClickedOnce] = React.useState(false);
+
+  // ✅ FIX اصلی: دو state جدا برای open
+  const [cityOpenMobile, setCityOpenMobile] = React.useState(false);
+  const [cityOpenDesktop, setCityOpenDesktop] = React.useState(false);
+
+  const [cityError, setCityError] = React.useState<string | null>(null);
 
   const monthNames = React.useMemo(
     () => [
@@ -253,6 +294,11 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: NavSectionProps) => 
   const cityLoading = Boolean(isLoading || isFetching || !data);
 
   React.useEffect(() => {
+    const url = `/${locale}/search`;
+    router.prefetch(url as any);
+  }, [router, locale]);
+
+  React.useEffect(() => {
     if (!data || !Array.isArray(data)) return;
     if (!routeSlug) return;
     if (cityLocked && selectedCity) return;
@@ -278,37 +324,57 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: NavSectionProps) => 
     if (found?.id != null) {
       setSelectedCity(String(found.id));
       setCityLocked(true);
+
+      // ✅ اگر از route قفل شد، خطا و open رو جمع کن
+      setCityError(null);
+      setCityOpenMobile(false);
+      setCityOpenDesktop(false);
     }
   }, [data, routeSlug, cityLocked, selectedCity]);
 
+  const isNavigating = isPending || clickedOnce;
+
   const handleSearch = () => {
+    if (!selectedCity) {
+      setCityError(t("CITY_REQUIREMENT") ?? "انتخاب شهر الزامی است");
+
+      // ✅ فقط همون یکی که واقعا روی صفحه‌ست باز بشه
+      if (isDesktop) {
+        setCityOpenDesktop(true);
+        setCityOpenMobile(false);
+      } else {
+        setCityOpenMobile(true);
+        setCityOpenDesktop(false);
+      }
+      return;
+    }
+
+    setCityError(null);
+
     const branchId = selectedCity;
     const from = jalaliQueryDate(selectedRange.start);
     const to = jalaliQueryDate(selectedRange.end);
-
     const dt = safeTime(deliveryTime);
     const rt = safeTime(returnTime);
 
     if (!branchId || !from || !to) return;
 
-    router.push(
-      {
-        pathname: "/search",
-        query: {
-          branch_id: branchId,
-          from,
-          to,
-          dt,
-          rt,
-        },
-      },
-      { locale },
-    );
+    setClickedOnce(true);
+
+    const url = `/${locale}/search?branch_id=${encodeURIComponent(
+      branchId,
+    )}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(
+      to,
+    )}&dt=${encodeURIComponent(dt)}&rt=${encodeURIComponent(rt)}`;
+
+    startTransition(() => {
+      router.push(url as any);
+    });
   };
 
+  // ✅ دکمه سرچ: شهر باعث disable نمیشه
   const searchDisabled =
     cityLoading ||
-    !selectedCity ||
     !selectedRange?.start ||
     !selectedRange?.end ||
     !(selectedRange.start instanceof Date) ||
@@ -316,8 +382,8 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: NavSectionProps) => 
 
   return (
     <section className="w-full">
-      <div className="relative w-full h-64 md:h-40">
-        <div className="absolute inset-0 flex items-start justify-center pt-10 md:bg-amber-800 md:pt-0 md:items-center">
+      <div className="relative w-full h-72 md:h-40">
+        <div className="absolute inset-0 flex items-start justify-center pt-10 md:bg-[#12416b] md:pt-0 md:items-center">
           <div className="w-full max-w-6xl absolute top-4 md:top-8 px-2 md:px-4 text-center z-10">
             <div className="flex flex-col gap-3">
               <p className="text-md md:text-2xl md:text-white font-bold">
@@ -337,29 +403,33 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: NavSectionProps) => 
           </div>
         </div>
 
-        {/* ✅ MOBILE (فقط این بخش تغییر کرده) */}
+        {/* ✅ MOBILE */}
         <div className="absolute inset-x-0 bottom-3 px-4 z-10 md:hidden">
           <div className="grid grid-cols-1 gap-3">
             {/* city */}
             <div className="relative">
               <Select
+                open={cityOpenMobile}
+                onOpenChange={(v) => setCityOpenMobile(v)}
                 value={selectedCity}
                 onValueChange={(value) => {
                   if (cityLocked) return;
                   setSelectedCity(value);
+                  setCityError(null);
+                  setCityOpenMobile(false);
                 }}
-                disabled={cityLoading || cityLocked}
+                disabled={cityLoading || cityLocked || isNavigating}
               >
                 <SelectTrigger
                   className="
-                    w-full h-10!
+                    w-full h-12!
                     border-gray-400 md:border-input
-                    relative pr-9
+                    relative pr-9 text-base
                   "
                 >
                   <MapPin
                     className="
-                      w-4 h-4 text-muted-foreground
+                      w-5 h-5 text-muted-foreground
                       absolute right-3 top-1/2 -translate-y-1/2
                       pointer-events-none
                     "
@@ -375,9 +445,9 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: NavSectionProps) => 
                   />
                 </SelectTrigger>
 
-                <SelectContent position="popper" className="z-[9999]">
+                <SelectContent position="popper" className="z-20">
                   {cityLoading ? (
-                    <div className="py-3 px-3 flex items-center justify-center">
+                    <div className="py-1 px-3 flex items-center justify-center">
                       <Spinner />
                     </div>
                   ) : (
@@ -386,6 +456,7 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: NavSectionProps) => 
                         key={key}
                         value={String(item?.id ?? "")}
                         disabled={cityLocked}
+                        className="text-base py-1.5"
                       >
                         {String(item?.title ?? "")}
                       </SelectItem>
@@ -393,84 +464,83 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: NavSectionProps) => 
                   )}
                 </SelectContent>
               </Select>
+
+              {cityError ? (
+                <p className="mt-1 text-xs text-red-600">{cityError}</p>
+              ) : null}
             </div>
 
-      {/* ✅ کپسول تاریخ موبایل (Fix label overlap) */}
-{/* ✅ MOBILE DATE (labels sit ON border line, not outside) */}
-<div className="relative w-full pt-2">
-  {/* ✅ labels (exactly on top border) */}
-  <span className="pointer-events-none absolute right-4 top-2 -translate-y-1/2 z-20 bg-white dark:bg-gray-900 px-2 text-xs text-gray-500">
-    {t("fields.delivery")}
-  </span>
+            {/* MOBILE DATE */}
+            <div className="relative w-full pt-2">
+              <span className="pointer-events-none absolute right-4 top-2 -translate-y-1/2 z-20 bg-white dark:bg-gray-900 px-2 text-xs text-gray-500">
+                {t("fields.delivery")}
+              </span>
 
-  <span className="pointer-events-none absolute left-14 top-2 -translate-y-1/2 z-20 bg-white dark:bg-gray-900 px-2 text-xs text-gray-500">
-    {t("fields.return")}
-  </span>
+              <span className="pointer-events-none absolute left-14 top-2 -translate-y-1/2 z-20 bg-white dark:bg-gray-900 px-2 text-xs text-gray-500">
+                {t("fields.return")}
+              </span>
 
-  {/* ✅ border container */}
-  <div className="w-full rounded-md border border-gray-400 bg-white dark:bg-gray-900">
-    {/* ✅ inner clip only */}
-    <div className="grid grid-cols-2 w-full overflow-hidden rounded-md">
-      {/* delivery */}
-      <div className="h-10 flex items-center">
-        <DateRangePickerPopover
-          initialRange={selectedRange}
-          initialTimes={{ deliveryTime, returnTime }}
-          onConfirm={handleConfirm}
-          onClear={handleClear}
-          trigger={
-            <div className="cursor-pointer w-full">
-              <DateTimeTrigger
-                monthNames={monthNames}
-                date={selectedRange.start}
-                time={selectedRange.start ? deliveryTime : undefined}
-                datePlaceholder={t("placeholders.deliveryDate")}
-                timePlaceholder={t("placeholders.deliveryTime")}
-                variant="mobilePill"
-              />
+              <div className="w-full rounded-md border border-gray-400 bg-white dark:bg-gray-900">
+                <div className="grid grid-cols-2 w-full overflow-hidden rounded-md">
+                  <div className="flex items-center">
+                    <DateRangePickerPopover
+                      initialRange={selectedRange}
+                      initialTimes={{ deliveryTime, returnTime }}
+                      onConfirm={handleConfirm}
+                      onClear={handleClear}
+                      trigger={
+                        <div className="cursor-pointer w-full">
+                          <DateTimeTrigger
+                            monthNames={monthNames}
+                            date={selectedRange.start}
+                            time={selectedRange.start ? deliveryTime : undefined}
+                            datePlaceholder={t("placeholders.deliveryDate")}
+                            timePlaceholder={t("placeholders.deliveryTime")}
+                            variant="mobileDashTime"
+                          />
+                        </div>
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center border-r border-gray-400">
+                    <DateRangePickerPopover
+                      initialRange={selectedRange}
+                      initialTimes={{ deliveryTime, returnTime }}
+                      onConfirm={handleConfirm}
+                      onClear={handleClear}
+                      trigger={
+                        <div className="cursor-pointer w-full">
+                          <DateTimeTrigger
+                            monthNames={monthNames}
+                            date={selectedRange.end}
+                            time={selectedRange.end ? returnTime : undefined}
+                            datePlaceholder={t("placeholders.returnDate")}
+                            timePlaceholder={t("placeholders.returnTime")}
+                            variant="mobileDashTime"
+                          />
+                        </div>
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-          }
-        />
-      </div>
 
-      {/* return */}
-      <div className="h-10 flex items-center border-r border-gray-400">
-        <DateRangePickerPopover
-          initialRange={selectedRange}
-          initialTimes={{ deliveryTime, returnTime }}
-          onConfirm={handleConfirm}
-          onClear={handleClear}
-          trigger={
-            <div className="cursor-pointer w-full">
-              <DateTimeTrigger
-                monthNames={monthNames}
-                date={selectedRange.end}
-                time={selectedRange.end ? returnTime : undefined}
-                datePlaceholder={t("placeholders.returnDate")}
-                timePlaceholder={t("placeholders.returnTime")}
-                variant="mobilePill"
-              />
-            </div>
-          }
-        />
-      </div>
-    </div>
-  </div>
-</div>
             <Button
-              className="w-full h-10"
+              className="w-full h-12 text-base"
               onClick={handleSearch}
-              disabled={searchDisabled}
+              disabled={searchDisabled || isNavigating}
             >
               <div className="flex items-center justify-center gap-2 px-3">
-                <Search className="size-4.5" />
+                {isNavigating ? <Spinner /> : <Search className="size-5" />}
                 {t("actions.search")}
               </div>
             </Button>
           </div>
         </div>
 
-        {/* ✅ DESKTOP (بدون تغییر) */}
+        {/* ✅ DESKTOP */}
         <div className="hidden md:block absolute w-full left-0 -bottom-14 z-10">
           <div className="flex justify-center px-4">
             <div className="bg-white dark:bg-gray-900 shadow rounded-md p-4 max-w-6xl w-full">
@@ -479,14 +549,18 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: NavSectionProps) => 
                   <Label>{t("fields.city")}</Label>
 
                   <Select
+                    open={cityOpenDesktop}
+                    onOpenChange={(v) => setCityOpenDesktop(v)}
                     value={selectedCity}
                     onValueChange={(value) => {
                       if (cityLocked) return;
                       setSelectedCity(value);
+                      setCityError(null);
+                      setCityOpenDesktop(false);
                     }}
-                    disabled={cityLoading || cityLocked}
+                    disabled={cityLoading || cityLocked || isNavigating}
                   >
-                    <SelectTrigger className="w-full h-10!">
+                    <SelectTrigger className="w-full h-10">
                       <SelectValue
                         placeholder={
                           cityLoading
@@ -516,6 +590,10 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: NavSectionProps) => 
                       )}
                     </SelectContent>
                   </Select>
+
+                  {cityError ? (
+                    <p className="text-xs text-red-600">{cityError}</p>
+                  ) : null}
                 </div>
 
                 <div className="space-y-2">
@@ -567,10 +645,10 @@ const NavSection = ({ image, title, subtitle1, subtitle2 }: NavSectionProps) => 
                   <Button
                     className="w-full h-10"
                     onClick={handleSearch}
-                    disabled={searchDisabled}
+                    disabled={searchDisabled || isNavigating}
                   >
                     <div className="flex items-center justify-center gap-2 px-3">
-                      <Search className="size-4.5" />
+                      {isNavigating ? <Spinner /> : <Search className="size-4.5" />}
                       {t("actions.search")}
                     </div>
                   </Button>

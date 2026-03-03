@@ -1,0 +1,354 @@
+[
+  {
+    "brand": "Mercedes-Benz",
+    "slug": "mercedes-benz",
+    "models": [
+      "C 180", "C 200", "C 220d", "C 300",
+      "E 200", "E 220d", "E 300", "E 350",
+      "S 350d", "S 450", "S 500", "S 580",
+      "GLA 200", "GLC 200", "GLC 300", "GLE 300d", "GLE 450", "GLS 450",
+      "A 180", "A 200",
+      "CLA 200", "CLA 250",
+      "G 500", "G 63 AMG",
+      "C 43 AMG", "E 53 AMG", "S 63 AMG"
+    ]
+  },
+  {
+    "brand": "BMW",
+    "slug": "bmw",
+    "models": [
+      "118i", "120i",
+      "318i", "320i", "330i", "M340i",
+      "520i", "530i", "540i", "M550i",
+      "730i", "740i", "750i",
+      "X1", "X2", "X3", "X4", "X5", "X6", "X7",
+      "M3", "M4", "M5", "M8",
+      "i4", "iX", "i7"
+    ]
+  },
+  {
+    "brand": "Ferrari",
+    "slug": "ferrari",
+    "models": [
+      "Roma", "Roma Spider",
+      "Portofino M",
+      "F8 Tributo", "F8 Spider",
+      "296 GTB", "296 GTS",
+      "SF90 Stradale", "SF90 Spider",
+      "812 Superfast", "812 GTS",
+      "Purosangue",
+      "GTC4Lusso",
+      "Daytona SP3"
+    ]
+  },
+  {
+    "brand": "Honda",
+    "slug": "honda",
+    "models": [
+      "Civic", "Civic Type R",
+      "Accord", "Accord Hybrid",
+      "CR-V", "CR-V Hybrid",
+      "HR-V",
+      "Pilot",
+      "Passport",
+      "Ridgeline",
+      "Odyssey",
+      "Jazz",
+      "e:Ny1",
+      "ZR-V"
+    ]
+  },
+  {
+    "brand": "Toyota",
+    "slug": "toyota",
+    "models": [
+      "Corolla", "Corolla Cross", "Corolla GR Sport",
+      "Camry", "Camry Hybrid",
+      "Yaris", "Yaris GR",
+      "RAV4", "RAV4 Hybrid", "RAV4 PHEV",
+      "Land Cruiser", "Land Cruiser 300",
+      "Prado",
+      "Hilux",
+      "Fortuner",
+      "Highlander",
+      "C-HR",
+      "bZ4X",
+      "Supra GR"
+    ]
+  },
+  {
+    "brand": "Hyundai",
+    "slug": "hyundai",
+    "models": [
+      "i10", "i20", "i20 N",
+      "i30", "i30 N",
+      "Elantra", "Elantra N",
+      "Sonata", "Sonata Hybrid",
+      "Tucson", "Tucson Hybrid",
+      "Santa Fe", "Santa Fe Hybrid",
+      "Kona", "Kona Electric",
+      "Palisade",
+      "IONIQ 5", "IONIQ 6",
+      "Staria"
+    ]
+  },
+  {
+    "brand": "Kia",
+    "slug": "kia",
+    "models": [
+      "Picanto",
+      "Rio",
+      "Ceed", "ProCeed",
+      "K5",
+      "Sportage", "Sportage Hybrid",
+      "Sorento", "Sorento Hybrid",
+      "Stinger",
+      "Telluride",
+      "Carnival",
+      "Niro", "Niro EV",
+      "EV6", "EV9"
+    ]
+  },
+  {
+    "brand": "Audi",
+    "slug": "audi",
+    "models": [
+      "A1", "A3", "A4", "A5", "A6", "A7", "A8",
+      "Q2", "Q3", "Q4 e-tron", "Q5", "Q7", "Q8",
+      "RS3", "RS4", "RS5", "RS6", "RS7",
+      "S3", "S4", "S5", "S6", "S7", "S8",
+      "TT", "TTS", "TT RS",
+      "R8",
+      "e-tron GT", "RS e-tron GT"
+    ]
+  },
+  {
+    "brand": "Volkswagen",
+    "slug": "volkswagen",
+    "models": [
+      "Polo", "Polo GTI",
+      "Golf", "Golf GTI", "Golf R", "Golf GTE",
+      "Passat", "Passat Alltrack",
+      "Arteon",
+      "T-Roc", "T-Roc R",
+      "Tiguan", "Tiguan Allspace",
+      "Touareg",
+      "ID.3", "ID.4", "ID.5", "ID.7",
+      "Multivan",
+      "Amarok"
+    ]
+  },
+  {
+    "brand": "Porsche",
+    "slug": "porsche",
+    "models": [
+      "911 Carrera", "911 Carrera S", "911 Carrera 4S",
+      "911 Targa 4", "911 Targa 4S",
+      "911 Turbo", "911 Turbo S",
+      "911 GT3", "911 GT3 RS",
+      "718 Boxster", "718 Cayman", "718 Spyder",
+      "Macan", "Macan Electric",
+      "Cayenne", "Cayenne Coupe", "Cayenne Turbo GT",
+      "Panamera", "Panamera Turbo",
+      "Taycan", "Taycan Cross Turismo", "Taycan Turbo S"
+    ]
+  },
+  {
+    "brand": "Tesla",
+    "slug": "tesla",
+    "models": [
+      "Model 3", "Model 3 Long Range", "Model 3 Performance",
+      "Model Y", "Model Y Long Range", "Model Y Performance",
+      "Model S", "Model S Plaid",
+      "Model X", "Model X Plaid",
+      "Cybertruck"
+    ]
+  },
+  {
+    "brand": "Land Rover",
+    "slug": "land-rover",
+    "models": [
+      "Defender 90", "Defender 110", "Defender 130",
+      "Discovery", "Discovery Sport",
+      "Range Rover", "Range Rover Sport", "Range Rover Velar", "Range Rover Evoque"
+    ]
+  },
+  {
+    "brand": "Ford",
+    "slug": "ford",
+    "models": [
+      "Fiesta", "Focus", "Focus ST",
+      "Mustang", "Mustang Mach-E", "Mustang Dark Horse",
+      "F-150", "F-150 Raptor", "F-150 Lightning",
+      "Explorer",
+      "Bronco", "Bronco Sport",
+      "Ranger", "Ranger Raptor",
+      "Edge",
+      "Escape",
+      "Expedition"
+    ]
+  },
+  {
+    "brand": "Chevrolet",
+    "slug": "chevrolet",
+    "models": [
+      "Spark",
+      "Trax",
+      "Equinox", "Equinox EV",
+      "Blazer", "Blazer EV",
+      "Traverse",
+      "Tahoe",
+      "Suburban",
+      "Silverado 1500", "Silverado EV",
+      "Colorado",
+      "Camaro",
+      "Corvette", "Corvette Z06"
+    ]
+  },
+  {
+    "brand": "Nissan",
+    "slug": "nissan",
+    "models": [
+      "Micra",
+      "Juke",
+      "Qashqai",
+      "X-Trail",
+      "Kicks",
+      "Rogue",
+      "Murano",
+      "Pathfinder",
+      "Sentra",
+      "Altima",
+      "Maxima",
+      "370Z", "400Z",
+      "GT-R",
+      "Navara",
+      "Patrol",
+      "Ariya"
+    ]
+  },
+  {
+    "brand": "Lexus",
+    "slug": "lexus",
+    "models": [
+      "IS 300", "IS 350", "IS 500",
+      "ES 250", "ES 300h",
+      "GS 350",
+      "LS 500", "LS 500h",
+      "UX 200", "UX 250h",
+      "NX 250", "NX 350h",
+      "RX 350", "RX 500h",
+      "GX 550",
+      "LX 600",
+      "RC 300", "RC F",
+      "LC 500", "LC 500h",
+      "RZ 450e"
+    ]
+  },
+  {
+    "brand": "Lamborghini",
+    "slug": "lamborghini",
+    "models": [
+      "Huracán EVO", "Huracán STO", "Huracán Tecnica",
+      "Urus", "Urus S", "Urus Performante",
+      "Revuelto"
+    ]
+  },
+  {
+    "brand": "Maserati",
+    "slug": "maserati",
+    "models": [
+      "Ghibli", "Ghibli Trofeo",
+      "Quattroporte", "Quattroporte Trofeo",
+      "Levante", "Levante Trofeo",
+      "Grecale", "Grecale Folgore",
+      "GranTurismo", "GranTurismo Folgore",
+      "MC20", "MC20 Cielo"
+    ]
+  },
+  {
+    "brand": "Bentley",
+    "slug": "bentley",
+    "models": [
+      "Continental GT", "Continental GT Speed", "Continental GT Mulliner",
+      "Continental GTC",
+      "Flying Spur", "Flying Spur Speed",
+      "Bentayga", "Bentayga EWB", "Bentayga Speed"
+    ]
+  },
+  {
+    "brand": "Rolls-Royce",
+    "slug": "rolls-royce",
+    "models": [
+      "Ghost", "Ghost Extended",
+      "Phantom", "Phantom Extended",
+      "Wraith",
+      "Dawn",
+      "Cullinan", "Cullinan Black Badge",
+      "Spectre"
+    ]
+  },
+  {
+    "brand": "Jaguar",
+    "slug": "jaguar",
+    "models": [
+      "XE", "XF", "XJ",
+      "F-Type", "F-Type R",
+      "E-Pace", "F-Pace", "I-Pace"
+    ]
+  },
+  {
+    "brand": "Volvo",
+    "slug": "volvo",
+    "models": [
+      "XC40", "XC40 Recharge",
+      "XC60", "XC60 Recharge",
+      "XC90", "XC90 Recharge",
+      "S60", "S90",
+      "V60", "V90",
+      "C40 Recharge",
+      "EX30", "EX90"
+    ]
+  },
+  {
+    "brand": "Subaru",
+    "slug": "subaru",
+    "models": [
+      "Impreza",
+      "WRX", "WRX STI",
+      "Legacy",
+      "Outback",
+      "Forester",
+      "Crosstrek",
+      "Ascent",
+      "BRZ",
+      "Solterra"
+    ]
+  },
+  {
+    "brand": "Mazda",
+    "slug": "mazda",
+    "models": [
+      "Mazda2",
+      "Mazda3", "Mazda3 Turbo",
+      "Mazda6",
+      "CX-3", "CX-30", "CX-5", "CX-60", "CX-90",
+      "MX-5 Miata",
+      "MX-30",
+      "RX-8"
+    ]
+  },
+  {
+    "brand": "Mitsubishi",
+    "slug": "mitsubishi",
+    "models": [
+      "Mirage",
+      "Lancer", "Lancer Evolution",
+      "Eclipse Cross",
+      "Outlander", "Outlander PHEV",
+      "ASX",
+      "Pajero Sport",
+      "L200 Triton"
+    ]
+  }
+]
