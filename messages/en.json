@@ -505,7 +505,20 @@
     }
   },
 
+
   "SearchHeader": {
+    "noDate": {
+      "title": "Car Rental in Dubai",
+      "subtitle": "Select your delivery and return dates",
+      "cta": "Select Date"
+    },
+    "city": {
+      "label": "City",
+      "placeholder": "Select a city",
+      "required": "City selection is required",
+      "loading": "Loading cities...",
+      "locked": "Selected city"
+    },
     "actions": {
       "search": "Search"
     },
@@ -513,36 +526,42 @@
       "emptyDate": "---",
       "shortDate": "{day} {month}"
     },
-"months": {
-  "1": "January",
-  "2": "February",
-  "3": "March",
-  "4": "April",
-  "5": "May",
-  "6": "June",
-  "7": "July",
-  "8": "August",
-  "9": "September",
-  "10": "October",
-  "11": "November",
-  "12": "December"
-},
+    "months": {
+      "1": "Farvardin",
+      "2": "Ordibehesht",
+      "3": "Khordad",
+      "4": "Tir",
+      "5": "Mordad",
+      "6": "Shahrivar",
+      "7": "Mehr",
+      "8": "Aban",
+      "9": "Azar",
+      "10": "Dey",
+      "11": "Bahman",
+      "12": "Esfand"
+    },
     "formats": {
       "mobileRange": "From {start} at {dt} to {end} at {rt}",
       "stepSecondRange": "{start} {dt} - {end} {rt} ({days} days)"
     },
     "stepSecond": {
-      "title": "Enter details and finalize reservation"
+      "title": "Enter details and finalize booking"
     },
     "desktop": {
       "deliveryTitle": "Delivery date & time",
       "returnTitle": "Return date & time",
-      "hour": "at"
+      "hour": "Time"
+    },
+    "placeholders": {
+      "deliveryDate": "Delivery date",
+      "deliveryTime": "Delivery time",
+      "returnDate": "Return date",
+      "returnTime": "Return time"
     },
     "rentalDuration": {
       "prefix": "Rental duration:",
       "daysSuffix": "days",
-      "branchSuffix": "Don’t forget at"
+      "branchSuffix": "Don't forget at"
     }
   },
 

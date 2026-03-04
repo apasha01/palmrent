@@ -77,6 +77,10 @@ type SearchPageState = {
   sort: string | null;
   search_title: string;
   selectedCategories: number[];
+
+  // ✅ NEW: برندهای انتخاب‌شده (sync بین SearchSection و SearchFilterSheet)
+  selectedBrands: string[];
+
   selectedPriceRange: [number, number] | null;
   priceRange: [number, number] | null;
   currency: string | null;
@@ -120,6 +124,11 @@ type SearchPageState = {
   setSelectedCategories: (v: number[]) => void;
   toggleSelectedCategory: (id: number) => void;
   resetCategories: () => void;
+
+  // ✅ NEW: brand actions
+  setSelectedBrands: (brands: string[]) => void;
+  toggleSelectedBrand: (brand: string) => void;
+  resetBrands: () => void;
 
   setSelectedPriceRange: (v: [number, number] | null) => void;
   setPriceRange: (v: [number, number] | null) => void;
@@ -243,6 +252,14 @@ const sameArrayNumbers = (a: number[] = [], b: number[] = []) => {
   return true;
 };
 
+// ✅ NEW: مقایسه آرایه رشته‌ها
+const sameArrayStrings = (a: string[] = [], b: string[] = []) => {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+};
+
 const sameTuple2 = (a?: [number, number] | null, b?: [number, number] | null) => {
   if (a === b) return true;
   if (!a && !b) return true;
@@ -304,6 +321,10 @@ const initialState = {
   sort: null as string | null,
   search_title: "",
   selectedCategories: [] as number[],
+
+  // ✅ NEW: برندهای انتخاب‌شده
+  selectedBrands: [] as string[],
+
   selectedPriceRange: null as [number, number] | null,
   priceRange: null as [number, number] | null,
   currency: "AED" as string | null,
@@ -443,6 +464,29 @@ export const useSearchPageStore = create<SearchPageState>((set, get) => ({
     set({ selectedCategories: [] });
   },
 
+  // ✅ NEW: brand actions
+  setSelectedBrands: (brands) => {
+    const next = uniqStrings(brands);
+    const cur = get().selectedBrands;
+    if (sameArrayStrings(cur, next)) return;
+    set({ selectedBrands: next });
+  },
+
+  toggleSelectedBrand: (brand) => {
+    const v = String(brand || "").trim();
+    if (!v) return;
+    const cur = get().selectedBrands;
+    const exists = cur.includes(v);
+    const next = exists ? cur.filter((b) => b !== v) : [...cur, v];
+    if (sameArrayStrings(cur, next)) return;
+    set({ selectedBrands: next });
+  },
+
+  resetBrands: () => {
+    if (!get().selectedBrands.length) return;
+    set({ selectedBrands: [] });
+  },
+
   setSelectedPriceRange: (v) => {
     const cur = get().selectedPriceRange;
     if (sameTuple2(cur, v)) return;
@@ -515,11 +559,12 @@ export const useSearchPageStore = create<SearchPageState>((set, get) => ({
 
   // ===== Resets =====
   resetFilters: () => {
-    // ✅ فقط فیلترها و انتخاب‌ها ریست می‌شن
+    // ✅ فقط فیلترها و انتخاب‌ها ریست می‌شن (برندها هم ریست میشن)
     set({
       sort: null,
       search_title: "",
       selectedCategories: [],
+      selectedBrands: [],
       selectedPriceRange: null,
       selectedCarId: null,
       descriptionPopup: null,

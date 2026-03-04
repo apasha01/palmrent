@@ -19,7 +19,7 @@ import { SerarchSection } from "@/components/search/SearchSection";
 import SingleCar from "@/components/card/CarsCard";
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Info, RefreshCcw } from "lucide-react";
+import { ArrowRight, Info, RefreshCcw, SlidersHorizontal } from "lucide-react";
 
 import { useInfiniteCarFilter } from "@/services/car-filter/car-filter.hooks";
 import type { CarFilterParams } from "@/services/car-filter/car-filter.types";
@@ -138,6 +138,12 @@ function SearchResultPageContent() {
 
     setIsAnySheetOpen,
     setBranchId,
+
+    // ✅ برندها از store
+    selectedBrands,
+    setSelectedBrands,
+    resetBrands,
+    resetCategories,
   } = useSearchPageStore();
 
   useEffect(() => {
@@ -282,12 +288,71 @@ function SearchResultPageContent() {
     } else {
       setSelectedCarId(null);
     }
+
+    // ✅ sync برندها از URL به store
+    const brandsRaw = searchParams.get("brand") || "";
+    const urlBrands = brandsRaw ? brandsRaw.split(",").map((x) => x.trim()).filter(Boolean) : [];
+    if (selectedBrands.join(",") !== urlBrands.join(",")) setSelectedBrands(urlBrands);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sp]);
 
   const from = (carDates as any)?.[0] as string | null;
   const to = (carDates as any)?.[1] as string | null;
   const hasDates = Boolean(from && to);
+
+  /* ---------------- ✅ reset all filters + URL ---------------- */
+
+  const handleResetAllFilters = useCallback(() => {
+    // ریست store
+    resetCategories();
+    resetBrands();
+    setSort(null);
+    setSearchTitle("");
+    setSelectedPriceRange(null);
+
+    // ریست URL — فقط branch_id و from/to و dt/rt نگه دار
+    const params = new URLSearchParams();
+    if (branchIdFromUrl) params.set("branch_id", String(branchIdFromUrl));
+    if (from) params.set("from", from);
+    if (to) params.set("to", to);
+    if (deliveryTime) params.set("dt", normalizeTime(deliveryTime) || "10:00");
+    if (returnTime) params.set("rt", normalizeTime(returnTime) || "10:00");
+
+    const next = params.toString();
+    lastPushedRef.current = next;
+    freezeUrlSyncRef.current = true;
+
+    router.replace({ pathname, query: toQueryObject(params) as any } as any, { scroll: false } as any);
+
+    setTimeout(() => {
+      freezeUrlSyncRef.current = false;
+    }, 0);
+  }, [
+    resetCategories,
+    resetBrands,
+    setSort,
+    setSearchTitle,
+    setSelectedPriceRange,
+    branchIdFromUrl,
+    from,
+    to,
+    deliveryTime,
+    returnTime,
+    pathname,
+    router,
+  ]);
+
+  // ✅ آیا فیلتر فعالی وجود داره؟
+  const hasActiveFilters = useMemo(() => {
+    return (
+      selectedCategories.length > 0 ||
+      selectedBrands.length > 0 ||
+      !!sort ||
+      !!typedSearchTitle ||
+      !!selectedPriceRange
+    );
+  }, [selectedCategories, selectedBrands, sort, typedSearchTitle, selectedPriceRange]);
 
   /* ---------------- meta ---------------- */
 
@@ -308,7 +373,6 @@ function SearchResultPageContent() {
   /* ---------------- Shared calendar (ONLY when no dates) ---------------- */
 
   const calendarStorageKey = useMemo(() => {
-    // کلید پایدار برای همین صفحه + همین شعبه
     const bid = branchIdFromUrl ?? 0;
     return `search-result:calendar:${locale}:${pathname}:branch:${bid}`;
   }, [locale, pathname, branchIdFromUrl]);
@@ -326,7 +390,6 @@ function SearchResultPageContent() {
   const [calendarHydrated, setCalendarHydrated] = useState(false);
   const [visitToken, setVisitToken] = useState<string>("");
 
-  // hydrate once
   useEffect(() => {
     let cancelled = false;
 
@@ -384,7 +447,6 @@ function SearchResultPageContent() {
     };
   }, [calendarStorageKey]);
 
-  // persist when changes (and only meaningful)
   useEffect(() => {
     if (!calendarHydrated) return;
     if (!visitToken) return;
@@ -411,7 +473,6 @@ function SearchResultPageContent() {
     } catch {}
   }, [sharedCalendar, calendarHydrated, calendarStorageKey, visitToken]);
 
-  // اگر تاریخ از URL/Store ست شد => تقویم shared پاک/ریست
   useEffect(() => {
     if (hasDates) {
       setSharedCalendar((p) => ({ ...p, range: EMPTY_RANGE }));
@@ -802,7 +863,6 @@ function SearchResultPageContent() {
                   safeCarList.map((item: any, index: number) => {
                     const isLast = index === safeCarList.length - 1;
 
-                    // ✅ بدون تاریخ => کارت گروه قیمتی
                     if (!hasDates) {
                       return (
                         <div key={`${item.id}-${index}`} className="flex w-full" ref={isLast ? lastElementRef : undefined}>
@@ -820,7 +880,6 @@ function SearchResultPageContent() {
                       );
                     }
 
-                    // ✅ با تاریخ => کارت رزرو معمولی
                     return (
                       <div key={`${item.id}-${index}`} className="flex w-full" ref={isLast ? lastElementRef : undefined}>
                         <SingleCar data={item} currency={currency} rateToRial={rateToRial} onMobileReserve={handleMobileReserve} />
@@ -838,10 +897,26 @@ function SearchResultPageContent() {
                     ))}
               </div>
 
+              {/* ✅ empty state با دکمه حذف فیلترها */}
               {!isLoading && !isLoadingMore && !error && safeCarList.length === 0 && (
-                <div className="text-center py-20 text-gray-500 dark:text-gray-400 flex flex-col items-center gap-2">
-                  <Info size={40} className="opacity-30" />
-                  <span>{tGlobal("noCarsFound")}</span>
+                <div className="text-center py-20 text-gray-500 dark:text-gray-400 flex flex-col items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <Info size={28} className="opacity-40" />
+                  </div>
+                  <span className="text-base font-medium">{tGlobal("noCarsFound")}</span>
+
+                  {/* ✅ فقط وقتی فیلتر فعال داره نمایش داده میشه */}
+                  {hasActiveFilters && (
+                    <Button
+                      type="button"
+                      onClick={handleResetAllFilters}
+                      variant="outline"
+                      className="flex items-center gap-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl px-5 py-2.5 text-sm font-medium transition-all"
+                    >
+                      <SlidersHorizontal className="size-4" />
+                      حذف همه فیلترها
+                    </Button>
+                  )}
                 </div>
               )}
             </div>

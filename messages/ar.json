@@ -479,7 +479,20 @@
     }
   },
 
+
   "SearchHeader": {
+    "noDate": {
+      "title": "تأجير سيارات في دبي",
+      "subtitle": "اختر تاريخ التسليم والإرجاع",
+      "cta": "اختر التاريخ"
+    },
+    "city": {
+      "label": "المدينة",
+      "placeholder": "اختر مدينة",
+      "required": "اختيار المدينة إلزامي",
+      "loading": "جارٍ تحميل المدن...",
+      "locked": "المدينة المختارة"
+    },
     "actions": {
       "search": "بحث"
     },
@@ -499,19 +512,25 @@
       "9": "آذر",
       "10": "دي",
       "11": "بهمن",
-      "12": "اسفند"
+      "12": "إسفند"
     },
     "formats": {
       "mobileRange": "من {start} الساعة {dt} إلى {end} الساعة {rt}",
       "stepSecondRange": "{start} {dt} - {end} {rt} ({days} أيام)"
     },
     "stepSecond": {
-      "title": "إدخال المعلومات وإنهاء الحجز"
+      "title": "أدخل التفاصيل وأكمل الحجز"
     },
     "desktop": {
       "deliveryTitle": "تاريخ ووقت التسليم",
       "returnTitle": "تاريخ ووقت الإرجاع",
-      "hour": "الساعة"
+      "hour": "الوقت"
+    },
+    "placeholders": {
+      "deliveryDate": "تاريخ التسليم",
+      "deliveryTime": "وقت التسليم",
+      "returnDate": "تاريخ الإرجاع",
+      "returnTime": "وقت الإرجاع"
     },
     "rentalDuration": {
       "prefix": "مدة الإيجار:",

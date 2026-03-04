@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Slider } from "@/components/ui/slider"
 
 // lucide
-import { Building2, Car, Check, DollarSign, RefreshCw, Settings2, Sparkles } from "lucide-react"
+import { Building2, Car, Check, ChevronDown, DollarSign, RefreshCw, Search, Settings2, Sparkles, X } from "lucide-react"
 
 // zustand
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store"
@@ -23,6 +23,39 @@ type Props = {
   carListLength?: number
 }
 
+const TOP_BRANDS = [
+  "Toyota",
+  "Mercedes-Benz",
+  "Kia",
+  "Hyundai",
+  "Mitsubishi",
+  "Nissan",
+  "Chevrolet",
+  "BMW",
+  "Fiat",
+  "Renault",
+]
+
+const EXTRA_BRANDS = [
+  "Audi",
+  "Volkswagen",
+  "Ford",
+  "Honda",
+  "Lexus",
+  "Porsche",
+  "Land Rover",
+  "Jeep",
+  "Dodge",
+  "Infiniti",
+  "Mazda",
+  "Subaru",
+  "Volvo",
+  "Peugeot",
+  "Citroën",
+]
+
+const ALL_BRANDS = [...TOP_BRANDS, ...EXTRA_BRANDS]
+
 export default function SearchFilterSheet({ closePopup, carListLength = 0 }: Props) {
   const t = useTranslations()
   const locale = useLocale()
@@ -30,10 +63,15 @@ export default function SearchFilterSheet({ closePopup, carListLength = 0 }: Pro
 
   const selectedCategories = useSearchPageStore((s) => s.selectedCategories)
   const resetCategories = useSearchPageStore((s) => s.resetCategories)
+  const selectedBrands = useSearchPageStore((s) => s.selectedBrands)
+  const resetBrands = useSearchPageStore((s) => s.resetBrands)
 
   const handleReset = () => {
     resetCategories()
+    resetBrands()
   }
+
+  const hasAnyFilter = selectedCategories.length > 0 || selectedBrands.length > 0
 
   const filterGroups = useMemo(
     () => [
@@ -48,18 +86,6 @@ export default function SearchFilterSheet({ closePopup, carListLength = 0 }: Pro
           { id: 19, title: "sport" },
           { id: 15, title: "sevenplus" },
           { id: 21, title: "crook" },
-        ],
-      },
-      {
-        title: "برند",
-        icon: <Building2 className="size-4" />,
-        shouldTranslate: false,
-        items: [
-          { id: 28, title: "Hyundai" },
-          { id: 44, title: "Mercedes-Benz" },
-          { id: 24, title: "Toyota" },
-          { id: 25, title: "Kia" },
-          { id: 30, title: "BMW" },
         ],
       },
       {
@@ -87,12 +113,11 @@ export default function SearchFilterSheet({ closePopup, carListLength = 0 }: Pro
 
   return (
     <div className={cn("dark:bg-gray-950", isRtl ? "text-right" : "text-left")}>
-      <div className="p-5 border-b border-gray-200 dark:border-gray-900  dark:bg-gray-950">
+      <div className="p-5 border-b border-gray-200 dark:border-gray-900 dark:bg-gray-950">
         <div className="flex items-center justify-between">
-          <div className="text-lg font-bold  text-gray-900 dark:text-gray-100">{t("filters")}</div>
-
+          <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{t("filters")}</div>
           <div className="flex items-center gap-3">
-            {selectedCategories.length > 0 && (
+            {hasAnyFilter && (
               <Button
                 type="button"
                 variant="ghost"
@@ -108,7 +133,8 @@ export default function SearchFilterSheet({ closePopup, carListLength = 0 }: Pro
       </div>
 
       <ScrollArea className="h-[calc(100vh-88px-88px)]">
-        <div className="p-5 pb-6 space-y-8  dark:bg-gray-950">
+        <div className="p-5 pb-6 space-y-8 dark:bg-gray-950">
+
           <section>
             <div className="flex items-center gap-2 mb-6 text-gray-900 dark:text-gray-100">
               <span className="p-2 bg-blue-50 dark:bg-blue-950/50 rounded-lg text-blue-600 dark:text-blue-400">
@@ -116,10 +142,26 @@ export default function SearchFilterSheet({ closePopup, carListLength = 0 }: Pro
               </span>
               <h3 className="font-bold">بازه قیمتی (روزانه)</h3>
             </div>
-
             <div className="px-2">
               <PriceRange isRtl={isRtl} />
             </div>
+          </section>
+
+          <Separator className="bg-gray-200 dark:bg-gray-800" />
+
+          <section>
+            <div className="flex items-center gap-2 mb-4 text-gray-900 dark:text-gray-100">
+              <span className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-700 dark:text-gray-400">
+                <Building2 className="size-4" />
+              </span>
+              <h3 className="font-bold">برند</h3>
+              {selectedBrands.length > 0 && (
+                <span className="mr-auto text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">
+                  {selectedBrands.length} انتخاب شده
+                </span>
+              )}
+            </div>
+            <BrandSection />
           </section>
 
           <Separator className="bg-gray-200 dark:bg-gray-800" />
@@ -171,37 +213,127 @@ export default function SearchFilterSheet({ closePopup, carListLength = 0 }: Pro
   )
 }
 
+function BrandSection() {
+  const [query, setQuery] = useState("")
+  const [expanded, setExpanded] = useState(false)
+  const selectedBrands = useSearchPageStore((s) => s.selectedBrands)
+
+  const isSearching = query.trim().length > 0
+
+  const visibleBrands = useMemo(() => {
+    if (isSearching) {
+      const q = query.toLowerCase().trim()
+      return ALL_BRANDS.filter((b) => b.toLowerCase().includes(q))
+    }
+    if (expanded) return ALL_BRANDS
+    return TOP_BRANDS
+  }, [query, expanded, isSearching])
+
+  const selectedExtraCount = EXTRA_BRANDS.filter((b) => selectedBrands.includes(b)).length
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 bg-gray-50 dark:bg-gray-900 focus-within:border-blue-400 focus-within:bg-white dark:focus-within:bg-gray-800 transition-all">
+        <Search className="size-4 text-gray-400 shrink-0" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="جستجوی برند..."
+          className="w-full text-sm outline-none bg-transparent placeholder:text-gray-400 text-gray-800 dark:text-gray-200"
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => setQuery("")}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          >
+            <X className="size-3.5" />
+          </button>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {visibleBrands.length > 0 ? (
+          visibleBrands.map((brand) => (
+            <BrandFilterChip key={brand} brandName={brand} />
+          ))
+        ) : (
+          <p className="text-sm text-gray-400 py-2">برندی پیدا نشد</p>
+        )}
+      </div>
+
+      {!isSearching && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 font-medium mt-1 hover:text-blue-700 transition-colors"
+        >
+          <ChevronDown
+            className={cn("size-3.5 transition-transform duration-200", expanded && "rotate-180")}
+          />
+          {expanded
+            ? "نمایش کمتر"
+            : `نمایش بیشتر${selectedExtraCount > 0 ? ` (${selectedExtraCount} انتخاب شده)` : ""}`}
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ✅ استایل انتخاب‌شده: border آبی، bg سفید، text آبی، تیک آبی
 function FilterChip({ id, label }: { id: number; label: string }) {
   const selectedCategories = useSearchPageStore((s) => s.selectedCategories)
   const toggleSelectedCategory = useSearchPageStore((s) => s.toggleSelectedCategory)
   const isSelected = selectedCategories.includes(id)
 
   return (
-    <Button
+    <button
       type="button"
-      variant="outline"
       onClick={() => toggleSelectedCategory(id)}
       className={cn(
-        "px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border",
-        "flex items-center gap-2 select-none h-auto",
+        "px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150 select-none",
+        "flex items-center gap-1.5 h-auto border",
         isSelected
-          ? "bg-blue-600 dark:bg-blue-600 text-white border-blue-600 dark:border-blue-600 shadow-md shadow-blue-200 dark:shadow-blue-900/50 hover:bg-blue-600"
-          : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+          ? "border-blue-500 text-blue-600 bg-white dark:bg-gray-950 dark:text-blue-400 dark:border-blue-400"
+          : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600"
       )}
     >
-      {isSelected && <Check className="size-3 text-white" />}
+      {isSelected && <Check className="size-3.5 text-blue-500 dark:text-blue-400 shrink-0" />}
       {label}
-    </Button>
+    </button>
+  )
+}
+
+// ✅ استایل انتخاب‌شده: border آبی، bg سفید، text آبی، تیک آبی
+function BrandFilterChip({ brandName }: { brandName: string }) {
+  const selectedBrands = useSearchPageStore((s) => s.selectedBrands)
+  const toggleSelectedBrand = useSearchPageStore((s) => s.toggleSelectedBrand)
+  const isSelected = selectedBrands.includes(brandName)
+
+  return (
+    <button
+      type="button"
+      onClick={() => toggleSelectedBrand(brandName)}
+      className={cn(
+        "px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150 select-none",
+        "flex items-center gap-1.5 h-auto border",
+        isSelected
+          ? "border-blue-500 text-blue-600 bg-white dark:bg-gray-950 dark:text-blue-400 dark:border-blue-400"
+          : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600"
+      )}
+    >
+      {isSelected && <Check className="size-3.5 text-blue-500 dark:text-blue-400 shrink-0" />}
+      {brandName}
+    </button>
   )
 }
 
 function PriceRange({ isRtl }: { isRtl: boolean }) {
-  const priceRange = useSearchPageStore((s) => s.priceRange) // optional
+  const priceRange = useSearchPageStore((s) => s.priceRange)
   const selectedPriceRange = useSearchPageStore((s) => s.selectedPriceRange)
   const setSelectedPriceRange = useSearchPageStore((s) => s.setSelectedPriceRange)
   const currency = useSearchPageStore((s) => s.currency) || "AED"
 
-  // اگر priceRange از API نداری، این fallback میشه
   const safePriceRange = priceRange && priceRange.length === 2 ? priceRange : ([0, 50000] as [number, number])
   const MIN_LIMIT = Math.min(...safePriceRange)
   const MAX_LIMIT = Math.max(...safePriceRange)

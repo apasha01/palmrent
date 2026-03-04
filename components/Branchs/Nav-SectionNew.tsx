@@ -67,16 +67,45 @@ function DateTimeTrigger({
   datePlaceholder: string;
   timePlaceholder: string;
   monthNames: string[];
-  variant?: "default" | "mobilePill" | "mobileDashTime";
+  variant?: "default" | "mobilePill" | "mobileDashTime" | "mobileDashTimeNoIcon";
 }) {
   const hasDate = date instanceof Date && !isNaN(date.getTime());
 
   if (variant === "mobileDashTime") {
     return (
       <div className="flex items-center h-12 w-full overflow-hidden bg-transparent">
+        <div className="flex items-center gap-2 px-2 w-full min-w-0">
+          <CalendarRange className="shrink-0" size={18} />
+          <div className="min-w-0">
+            {hasDate ? (
+              <p className="truncate text-[15px] text-gray-900 dark:text-gray-100 font-medium">
+                {formatJalaliYMD(date!)}{" "}
+                <span className="text-gray-900 dark:text-gray-100 font-medium">
+                  {" - "}
+                  {hasDate && time ? toPersianDigits(time) : timePlaceholder}
+                </span>
+              </p>
+            ) : (
+              <p className="truncate text-[15px] text-gray-500">
+                {datePlaceholder}{" "}
+                <span className="text-gray-500 font-normal">
+                  {" - "}
+                  {timePlaceholder}
+                </span>
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (variant === "mobileDashTimeNoIcon") {
+    return (
+      <div className="flex items-center h-12 w-full overflow-hidden bg-transparent">
         <div className="px-2 w-full min-w-0">
           {hasDate ? (
-            <p className="truncate text-[14px] text-gray-900 dark:text-gray-100 font-medium">
+            <p className="truncate text-[15px] text-gray-900 dark:text-gray-100 font-medium">
               {formatJalaliYMD(date!)}{" "}
               <span className="text-gray-900 dark:text-gray-100 font-medium">
                 {" - "}
@@ -84,7 +113,7 @@ function DateTimeTrigger({
               </span>
             </p>
           ) : (
-            <p className="truncate text-[14px] text-gray-500">
+            <p className="truncate text-[15px] text-gray-500">
               {datePlaceholder}{" "}
               <span className="text-gray-500 font-normal">
                 {" - "}
@@ -116,7 +145,7 @@ function DateTimeTrigger({
   return (
     <div className="flex items-center border h-10 rounded-md w-full overflow-hidden bg-transparent">
       <div className="flex items-center px-2 gap-1.5 w-1/2">
-        <CalendarRange className="text-gray-500 shrink-0" size={18} />
+        <CalendarRange className=" shrink-0" size={18} />
         {hasDate ? (
           <p className="truncate text-sm text-gray-900 dark:text-gray-100 font-medium">
             {formatJalaliYMD(date!)}
@@ -212,7 +241,8 @@ type NavSectionProps = {
 const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
   useDIR();
 
-  const t = useTranslations("NavSection");
+  // ✅ namespace درست: SearchHeader
+  const t = useTranslations("SearchHeader");
   const router = useRouter();
   const locale = useLocale();
   const params = useParams() as any;
@@ -222,11 +252,10 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
   const [isPending, startTransition] = React.useTransition();
   const [clickedOnce, setClickedOnce] = React.useState(false);
 
-  // ✅ FIX اصلی: دو state جدا برای open
   const [cityOpenMobile, setCityOpenMobile] = React.useState(false);
   const [cityOpenDesktop, setCityOpenDesktop] = React.useState(false);
 
-  const [cityError, setCityError] = React.useState<string | null>(null);
+  const [cityError, setCityError] = React.useState(false);
 
   const monthNames = React.useMemo(
     () => [
@@ -324,9 +353,7 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
     if (found?.id != null) {
       setSelectedCity(String(found.id));
       setCityLocked(true);
-
-      // ✅ اگر از route قفل شد، خطا و open رو جمع کن
-      setCityError(null);
+      setCityError(false);
       setCityOpenMobile(false);
       setCityOpenDesktop(false);
     }
@@ -336,9 +363,8 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
 
   const handleSearch = () => {
     if (!selectedCity) {
-      setCityError(t("CITY_REQUIREMENT") ?? "انتخاب شهر الزامی است");
+      setCityError(true);
 
-      // ✅ فقط همون یکی که واقعا روی صفحه‌ست باز بشه
       if (isDesktop) {
         setCityOpenDesktop(true);
         setCityOpenMobile(false);
@@ -349,7 +375,7 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
       return;
     }
 
-    setCityError(null);
+    setCityError(false);
 
     const branchId = selectedCity;
     const from = jalaliQueryDate(selectedRange.start);
@@ -372,13 +398,21 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
     });
   };
 
-  // ✅ دکمه سرچ: شهر باعث disable نمیشه
   const searchDisabled =
     cityLoading ||
     !selectedRange?.start ||
     !selectedRange?.end ||
     !(selectedRange.start instanceof Date) ||
     !(selectedRange.end instanceof Date);
+
+  /* ✅ placeholder شهر - موقع خطا متن عوض میشه - چندزبانه */
+  const cityPlaceholder = cityLoading
+    ? t("city.loading")
+    : cityLocked
+      ? t("city.locked")
+      : cityError
+        ? t("city.required")
+        : t("city.placeholder");
 
   return (
     <section className="w-full">
@@ -387,15 +421,15 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
           <div className="w-full max-w-6xl absolute top-4 md:top-8 px-2 md:px-4 text-center z-10">
             <div className="flex flex-col gap-3">
               <p className="text-md md:text-2xl md:text-white font-bold">
-                {title ?? t("defaultTitle")}
+                {title ?? t("noDate.title")}
               </p>
 
-              <p className="text-muted-foreground md:text-white font-light text-sm ">
-                {subtitle1 ?? t("defaultSubtitle1")}
+              <p className="text-muted-foreground md:text-white font-light text-sm">
+                {subtitle1 ?? t("noDate.subtitle")}
               </p>
 
               {subtitle2 ? (
-                <p className="text-muted-foreground md:text-white  text-sm">
+                <p className="text-muted-foreground md:text-white text-sm">
                   {subtitle2}
                 </p>
               ) : null}
@@ -415,34 +449,27 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
                 onValueChange={(value) => {
                   if (cityLocked) return;
                   setSelectedCity(value);
-                  setCityError(null);
+                  setCityError(false);
                   setCityOpenMobile(false);
                 }}
                 disabled={cityLoading || cityLocked || isNavigating}
               >
                 <SelectTrigger
-                  className="
-                    w-full h-12!
-                    border-gray-400 md:border-input
-                    relative pr-9 text-base
-                  "
+                  className={[
+                    "w-full h-12!",
+                    "md:border-input relative pr-9 text-base",
+                    cityError
+                      ? "border-red-500 text-red-500 [&>span]:text-red-500 [&_svg]:!text-red-500"
+                      : "border-gray-400",
+                  ].join(" ")}
                 >
                   <MapPin
-                    className="
-                      w-5 h-5 text-muted-foreground
-                      absolute right-3 top-1/2 -translate-y-1/2
-                      pointer-events-none
-                    "
+                    className={[
+                      "w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none",
+                      cityError ? "text-red-500" : "text-muted-foreground",
+                    ].join(" ")}
                   />
-                  <SelectValue
-                    placeholder={
-                      cityLoading
-                        ? t("loadingCities")
-                        : cityLocked
-                          ? t("cityLocked")
-                          : t("placeholders.city")
-                    }
-                  />
+                  <SelectValue placeholder={cityPlaceholder} />
                 </SelectTrigger>
 
                 <SelectContent position="popper" className="z-20">
@@ -464,20 +491,16 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
                   )}
                 </SelectContent>
               </Select>
-
-              {cityError ? (
-                <p className="mt-1 text-xs text-red-600">{cityError}</p>
-              ) : null}
             </div>
 
             {/* MOBILE DATE */}
             <div className="relative w-full pt-2">
               <span className="pointer-events-none absolute right-4 top-2 -translate-y-1/2 z-20 bg-white dark:bg-gray-900 px-2 text-xs text-gray-500">
-                {t("fields.delivery")}
+                {t("desktop.deliveryTitle")}
               </span>
 
               <span className="pointer-events-none absolute left-14 top-2 -translate-y-1/2 z-20 bg-white dark:bg-gray-900 px-2 text-xs text-gray-500">
-                {t("fields.return")}
+                {t("desktop.returnTitle")}
               </span>
 
               <div className="w-full rounded-md border border-gray-400 bg-white dark:bg-gray-900">
@@ -517,7 +540,7 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
                             time={selectedRange.end ? returnTime : undefined}
                             datePlaceholder={t("placeholders.returnDate")}
                             timePlaceholder={t("placeholders.returnTime")}
-                            variant="mobileDashTime"
+                            variant="mobileDashTimeNoIcon"
                           />
                         </div>
                       }
@@ -546,7 +569,7 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
             <div className="bg-white dark:bg-gray-900 shadow rounded-md p-4 max-w-6xl w-full">
               <div className="grid grid-cols-4 gap-3 items-end">
                 <div className="space-y-2">
-                  <Label>{t("fields.city")}</Label>
+                  <Label>{t("city.label")}</Label>
 
                   <Select
                     open={cityOpenDesktop}
@@ -555,24 +578,24 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
                     onValueChange={(value) => {
                       if (cityLocked) return;
                       setSelectedCity(value);
-                      setCityError(null);
+                      setCityError(false);
                       setCityOpenDesktop(false);
                     }}
                     disabled={cityLoading || cityLocked || isNavigating}
                   >
-                    <SelectTrigger className="w-full h-10">
-                      <SelectValue
-                        placeholder={
-                          cityLoading
-                            ? t("loadingCities")
-                            : cityLocked
-                              ? t("cityLocked")
-                              : t("placeholders.city")
-                        }
-                      />
+                    <SelectTrigger
+                      className={[
+                        "w-full h-10",
+                        cityError
+                          ? "border-red-500 text-red-500 [&>span]:text-red-500 [&_svg]:!text-red-500"
+                          : "",
+                      ].join(" ")}
+                    >
+                      <SelectValue placeholder={cityPlaceholder} />
                     </SelectTrigger>
 
-                    <SelectContent className="w-fit">
+                    {/* ✅ width سلکت = width trigger */}
+                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
                       {cityLoading ? (
                         <div className="py-3 px-3 flex items-center justify-center">
                           <Spinner />
@@ -590,14 +613,10 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
                       )}
                     </SelectContent>
                   </Select>
-
-                  {cityError ? (
-                    <p className="text-xs text-red-600">{cityError}</p>
-                  ) : null}
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{t("fields.delivery")}</Label>
+                  <Label>{t("desktop.deliveryTitle")}</Label>
                   <DateRangePickerPopover
                     initialRange={selectedRange}
                     initialTimes={{ deliveryTime, returnTime }}
@@ -618,7 +637,7 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>{t("fields.return")}</Label>
+                  <Label>{t("desktop.returnTitle")}</Label>
                   <DateRangePickerPopover
                     initialRange={selectedRange}
                     initialTimes={{ deliveryTime, returnTime }}

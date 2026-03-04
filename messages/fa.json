@@ -487,7 +487,20 @@
     }
   },
 
+
   "SearchHeader": {
+    "noDate": {
+      "title": "اجاره خودرو در دبی",
+      "subtitle": "تاریخ تحویل و عودت خود را انتخاب کنید",
+      "cta": "انتخاب تاریخ"
+    },
+    "city": {
+      "label": "شهر",
+      "placeholder": "انتخاب شهر",
+      "required": "انتخاب شهر الزامی است",
+      "loading": "در حال بارگذاری شهرها...",
+      "locked": "شهر انتخاب‌شده"
+    },
     "actions": {
       "search": "جستجو"
     },
@@ -521,12 +534,19 @@
       "returnTitle": "تاریخ و زمان عودت",
       "hour": "ساعت"
     },
+    "placeholders": {
+      "deliveryDate": "تاریخ تحویل",
+      "deliveryTime": "ساعت تحویل",
+      "returnDate": "تاریخ عودت",
+      "returnTime": "ساعت عودت"
+    },
     "rentalDuration": {
       "prefix": "مدت زمان اجاره :",
       "daysSuffix": "روز",
       "branchSuffix": "فراموش نشدی در"
     }
   },
+
 
   "SearchResultPage": {
     "meta": {
@@ -793,4 +813,6 @@
       "passengersUnit": "نفر"
     }
   }
+
+
 }

@@ -4,7 +4,7 @@
 
 import { useLocale, useTranslations } from "next-intl"
 import { useMemo } from "react"
-import { CalendarDays, Clock, Search } from "lucide-react"
+import { CalendarDays, Clock, HandHeartIcon, Search } from "lucide-react"
 import { DateRangePickerPopover } from "@/components/custom/calender/date-range-picker"
 import { jalaliToDate, formatJalaliDate } from "@/lib/date-utils"
 import { cn } from "@/lib/utils"
@@ -35,7 +35,6 @@ function pad2(n: number) {
   return String(n).padStart(2, "0")
 }
 
-/** ✅ خروجی قطعی: YYYY/MM/DD */
 function normalizeJalaliParam(input?: string | null) {
   if (!input) return null
   const clean = toEnglishDigits(String(input)).replace(/-/g, "/").trim()
@@ -82,14 +81,71 @@ function getJalaliMonthNames(t: any): string[] {
   ]
 }
 
-/** ✅ همیشه خروجی معتبر بده */
 function safeTime(input: any, fallback: string) {
   const n = normalizeTime(input)
-  // اگر normalizeTime یک چیز عجیب برگردوند یا خالی شد:
   if (!n || typeof n !== "string" || n.length < 4) return fallback
   return n
 }
 
+// ─────────────────────────────────────────────
+// NoDate Banner – shown when hasDates = false
+// ─────────────────────────────────────────────
+function NoDateBanner({
+  onTrigger,
+  t,
+}: {
+  onTrigger: React.ReactNode
+  t: any
+}) {
+  return (
+    <>
+{/* ── DESKTOP ── */}
+<div className="hidden md:flex w-full items-center justify-center gap-6 py-1 text-xs">
+  {/* آیکون + عنوان شعبه */}
+  <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
+    <HandHeartIcon className="h-5 w-5 shrink-0" />
+    <span className="font-semibold">{t("noDate.title")}</span>
+  </div>
+
+  {/* زیرعنوان */}
+  <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-600 dark:text-gray-400">
+    <CalendarDays className="h-5 w-5 shrink-0" />
+    <span>{t("noDate.subtitle")}</span>
+  </div>
+
+  {/* دکمه انتخاب تاریخ */}
+  <div className="shrink-0">
+    {onTrigger}
+  </div>
+</div>
+
+      {/* ── MOBILE ── */}
+      <div className="flex md:hidden w-full items-center justify-between py-0.5">
+        {/* Right side */}
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <CalendarDays className="h-5 w-5 shrink-0" />
+          <div className="flex flex-col rtl:text-right ltr:text-left min-w-0">
+            <span className="font-bold text-gray-900 dark:text-gray-100 text-[13px] leading-tight">
+              {t("noDate.title")}
+            </span>
+            <span className="text-gray-500 dark:text-gray-400 text-[11px] mt-0.5">
+              {t("noDate.subtitle")}
+            </span>
+          </div>
+        </div>
+
+        {/* Left side: trigger button — pushed to far end */}
+        <div className="shrink-0 ltr:ml-6 rtl:mr-6">
+          {onTrigger}
+        </div>
+      </div>
+    </>
+  )
+}
+
+// ─────────────────────────────────────────────
+// Main Component
+// ─────────────────────────────────────────────
 export default function SearchHeader({
   isSticky = false,
   timerValue,
@@ -115,9 +171,11 @@ export default function SearchHeader({
   const returnTime = useSearchPageStore((s) => s.returnTime)
   const setReturnTime = useSearchPageStore((s) => s.setReturnTime)
 
-  // ✅ fallback قطعی
   const dtFallback = useMemo(() => safeTime(deliveryTime, "10:00"), [deliveryTime])
   const rtFallback = useMemo(() => safeTime(returnTime, "10:00"), [returnTime])
+
+  // آیا تاریخ داریم یا نه
+  const hasDates = Boolean(carDates?.[0] && carDates?.[1])
 
   const carDayCount = useMemo(() => {
     return calcRentDaysWithGrace({
@@ -175,7 +233,6 @@ export default function SearchHeader({
     return t("formats.stepSecondRange", { start: opts.startText, end: opts.endText, dt, rt, days })
   }
 
-  // ✅✅✅ اینجا فیکس اصلیه: هیچوقت null/undefined نذاریم بره داخل store
   const handleConfirm = ({ start, end, deliveryTime: dtRaw, returnTime: rtRaw }: any) => {
     if (!start || !end) return
 
@@ -191,7 +248,6 @@ export default function SearchHeader({
     const toStr = normalizeJalaliParam(toRaw)
     if (!fromStr || !toStr) return
 
-    // ✅ fallback قطعی
     const safeDt = safeTime(dtRaw, dtFallback)
     const safeRt = safeTime(rtRaw, rtFallback)
 
@@ -200,15 +256,12 @@ export default function SearchHeader({
 
     if (curFrom !== fromStr || curTo !== toStr) setCarDates([fromStr, toStr])
 
-    // ✅ اینجا دیگه هیچوقت null نمی‌ره تو store
     if (safeTime(deliveryTime, "10:00") !== safeDt) setDeliveryTime(safeDt)
     if (safeTime(returnTime, "10:00") !== safeRt) setReturnTime(safeRt)
   }
 
   const handleClear = () => {
     setCarDates([null, null])
-    // ✅ پاک کردن زمان رو نکن! چون رزرو/سرچ ممکنه با null بترکه
-    // اگر واقعاً خواستی clear کنی، باید در همه جا fallback داشته باشی
     setDeliveryTime("10:00")
     setReturnTime("10:00")
   }
@@ -219,6 +272,37 @@ export default function SearchHeader({
     return `drp-${f}-${to}-${dtFallback}-${rtFallback}`
   }, [carDates?.[0], carDates?.[1], dtFallback, rtFallback])
 
+  const dayCountText = locale === "fa" ? toPersianDigits(String(carDayCount)) : String(carDayCount)
+  const desktopActsLikeSearch = stepSecond && stepSecondDesktopLikeSearch
+
+  // ── دکمه آبی "انتخاب تاریخ" برای حالت no-date ──
+  const noDateTriggerButton = (
+    <DateRangePickerPopover
+      key={`nodate-${popoverKey}`}
+      initialRange={initialRange}
+      defaultIsJalali={true}
+      initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
+      onConfirm={handleConfirm}
+      onClear={handleClear}
+      trigger={
+        <button
+          type="button"
+          className={cn(
+            "inline-flex items-center gap-2 px-2 py-2 rounded-md",
+            "bg-blue-600 hover:bg-blue-700 active:bg-blue-800",
+            "text-white font-bold text-sm",
+            "transition-colors duration-150 cursor-pointer",
+            "shadow-sm"
+          )}
+        >
+
+          <span>{t("noDate.cta")}</span>
+        </button>
+      }
+    />
+  )
+
+  // ── دکمه آیکون search برای حالت‌های دیگر ──
   const searchButton = (
     <button
       type="button"
@@ -232,9 +316,6 @@ export default function SearchHeader({
     </button>
   )
 
-  const dayCountText = locale === "fa" ? toPersianDigits(String(carDayCount)) : String(carDayCount)
-  const desktopActsLikeSearch = stepSecond && stepSecondDesktopLikeSearch
-
   return (
     <div
       className={cn(
@@ -244,41 +325,132 @@ export default function SearchHeader({
       )}
     >
       <div className="mx-auto max-w-6xl px-2 md:px-4 py-2">
-        {/* ===================== MOBILE ===================== */}
-        <div className="md:hidden">
-          {stepSecond ? (
-            <div className="w-full hide-scrollbar">
-              <div className="flex w-full items-center justify-between">
-                <div className="flex flex-col flex-1">
-                  <div className="font-bold text-gray-900 dark:text-gray-100 text-[13px]">{t("stepSecond.title")}</div>
-                  <div className="mt-1 text-gray-500 dark:text-gray-400 text-[12px]">
-                    {formatRangeStepSecond({
-                      startText: deliveryDateText,
-                      endText: returnDateText,
-                      deliveryTime: dtFallback,
-                      returnTime: rtFallback,
-                      dayCount: Number(carDayCount) || 0,
-                    })}
+
+        {/* ══════════════════════════════════════════════
+            حالت: بدون تاریخ (no-date)
+            فقط یه بار نمایش داده میشه — هم موبایل هم دسکتاپ
+        ══════════════════════════════════════════════ */}
+        {!hasDates && !stepSecond && (
+          <NoDateBanner onTrigger={noDateTriggerButton} t={t} />
+        )}
+
+        {/* ══════════════════════════════════════════════
+            حالت: با تاریخ — MOBILE
+        ══════════════════════════════════════════════ */}
+        {hasDates && (
+          <div className="md:hidden">
+            {stepSecond ? (
+              <div className="w-full hide-scrollbar">
+                <div className="flex w-full items-center justify-between">
+                  <div className="flex flex-col flex-1">
+                    <div className="font-bold text-gray-900 dark:text-gray-100 text-[13px]">{t("stepSecond.title")}</div>
+                    <div className="mt-1 text-gray-500 dark:text-gray-400 text-[12px]">
+                      {formatRangeStepSecond({
+                        startText: deliveryDateText,
+                        endText: returnDateText,
+                        deliveryTime: dtFallback,
+                        returnTime: rtFallback,
+                        dayCount: Number(carDayCount) || 0,
+                      })}
+                    </div>
+                  </div>
+
+                  <DateRangePickerPopover
+                    key={`mobile-step2-${popoverKey}`}
+                    initialRange={initialRange}
+                    defaultIsJalali={true}
+                    initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
+                    onConfirm={handleConfirm}
+                    onClear={handleClear}
+                    trigger={searchButton}
+                  />
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="w-full overflow-x-auto hide-scrollbar">
+                  <div className="flex flex-row-reverse items-center justify-between whitespace-nowrap text-[11px] px-1">
+                    <DateRangePickerPopover
+                      key={`mobile-${popoverKey}`}
+                      initialRange={initialRange}
+                      defaultIsJalali={true}
+                      initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
+                      onConfirm={handleConfirm}
+                      onClear={handleClear}
+                      trigger={searchButton}
+                    />
+
+                    <div className="inline-flex items-center gap-2 font-bold text-gray-800 dark:text-gray-100 shrink-0">
+                      <CalendarDays className="h-4 w-4" />
+                      <span className="font-bold">
+                        {formatRangeMobile({
+                          startText: deliveryDateText,
+                          endText: returnDateText,
+                          deliveryTime: dtFallback,
+                          returnTime: rtFallback,
+                        })}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <DateRangePickerPopover
-                  key={`mobile-${popoverKey}`}
-                  initialRange={initialRange}
-                  defaultIsJalali={true}
-                  initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
-                  onConfirm={handleConfirm}
-                  onClear={handleClear}
-                  trigger={searchButton}
-                />
-              </div>
-            </div>
-          ) : (
-            <>
+                <div className="mt-2 px-1 flex flex-col gap-1">
+                  <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100 text-[11px]">
+                    <Clock className="h-4 w-4" />
+                    <span>
+                      {t("rentalDuration.prefix")} {dayCountText} {t("rentalDuration.daysSuffix")} {t("rentalDuration.branchSuffix")}{" "}
+                      <BranchById />
+                    </span>
+                  </div>
+
+                  {timerValue && (
+                    <div className="inline-flex items-center gap-2 whitespace-nowrap text-red-500 font-bold text-[11px]">
+                      <Clock className="h-4 w-4" />
+                      <span className="font-mono">{timerValue}</span>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════
+            حالت: با تاریخ — DESKTOP
+        ══════════════════════════════════════════════ */}
+        {hasDates && (
+          <div className="hidden md:block">
+            {desktopActsLikeSearch ? (
               <div className="w-full overflow-x-auto hide-scrollbar">
-                <div className="flex flex-row-reverse items-center justify-between whitespace-nowrap text-[11px] px-1">
+                <div className="w-full md:min-w-0 flex justify-between items-center text-xs">
+                  <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
+                    <CalendarDays className="h-4 w-4" />
+                    <span className="font-semibold">{t("desktop.deliveryTitle")}</span>
+                    <span>
+                      {deliveryDateText} &nbsp; {t("desktop.hour")}{" "}
+                      {locale === "fa" ? toPersianDigits(dtFallback) : dtFallback}
+                    </span>
+                  </div>
+
+                  <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
+                    <CalendarDays className="h-4 w-4" />
+                    <span className="font-semibold">{t("desktop.returnTitle")}</span>
+                    <span>
+                      {returnDateText} &nbsp; {t("desktop.hour")}{" "}
+                      {locale === "fa" ? toPersianDigits(rtFallback) : rtFallback}
+                    </span>
+                  </div>
+
+                  <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
+                    <Clock className="h-4 w-4" />
+                    <span className="text-gray-700 dark:text-gray-200">
+                      {t("rentalDuration.prefix")} {dayCountText} {t("rentalDuration.daysSuffix")} {t("rentalDuration.branchSuffix")}{" "}
+                      <BranchById />
+                    </span>
+                  </div>
+
                   <DateRangePickerPopover
-                    key={`mobile-${popoverKey}`}
+                    key={`desktop-step2-${popoverKey}`}
                     initialRange={initialRange}
                     defaultIsJalali={true}
                     initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
@@ -287,171 +459,98 @@ export default function SearchHeader({
                     trigger={searchButton}
                   />
 
-                  <div className="inline-flex items-center gap-2 font-bold text-gray-800 dark:text-gray-100 shrink-0">
-                    <CalendarDays className="h-4 w-4" />
-                    <span className="font-bold">
-                      {formatRangeMobile({
+                  {timerValue && (
+                    <>
+                      <VDivider />
+                      <div className="inline-flex items-center gap-2 whitespace-nowrap text-red-500">
+                        <Clock className="h-4 w-4" />
+                        <span className="font-mono font-bold">{timerValue}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            ) : stepSecond ? (
+              <div className="w-full overflow-x-auto hide-scrollbar">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 text-center">
+                    <div className="font-bold text-gray-900 dark:text-gray-100 text-base">{t("stepSecond.title")}</div>
+                    <div className="mt-1 text-gray-500 dark:text-gray-400 text-sm">
+                      {formatRangeStepSecond({
                         startText: deliveryDateText,
                         endText: returnDateText,
                         deliveryTime: dtFallback,
                         returnTime: rtFallback,
+                        dayCount: Number(carDayCount) || 0,
                       })}
+                    </div>
+                  </div>
+
+                  <DateRangePickerPopover
+                    key={`desktop-step2-popover-${popoverKey}`}
+                    initialRange={initialRange}
+                    defaultIsJalali={true}
+                    initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
+                    onConfirm={handleConfirm}
+                    onClear={handleClear}
+                    trigger={searchButton}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="w-full overflow-x-auto hide-scrollbar">
+                <div className="w-full md:min-w-0 flex justify-between items-center text-xs">
+                  <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
+                    <CalendarDays className="h-4 w-4" />
+                    <span className="font-semibold">{t("desktop.deliveryTitle")}</span>
+                    <span>
+                      {deliveryDateText} &nbsp; {t("desktop.hour")}{" "}
+                      {locale === "fa" ? toPersianDigits(dtFallback) : dtFallback}
                     </span>
                   </div>
-                </div>
-              </div>
 
-              <div className="mt-2 px-1 flex flex-col gap-1">
-                <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100 text-[11px]">
-                  <Clock className="h-4 w-4" />
-                  <span>
-                    {t("rentalDuration.prefix")} {dayCountText} {t("rentalDuration.daysSuffix")} {t("rentalDuration.branchSuffix")}{" "}
-                    <BranchById />
-                  </span>
-                </div>
+                  <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
+                    <CalendarDays className="h-4 w-4" />
+                    <span className="font-semibold">{t("desktop.returnTitle")}</span>
+                    <span>
+                      {returnDateText} &nbsp; {t("desktop.hour")}{" "}
+                      {locale === "fa" ? toPersianDigits(rtFallback) : rtFallback}
+                    </span>
+                  </div>
 
-                {timerValue && (
-                  <div className="inline-flex items-center gap-2 whitespace-nowrap text-red-500 font-bold text-[11px]">
+                  <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
                     <Clock className="h-4 w-4" />
-                    <span className="font-mono">{timerValue}</span>
+                    <span className="text-gray-700 dark:text-gray-200">
+                      {t("rentalDuration.prefix")} {dayCountText} {t("rentalDuration.daysSuffix")} {t("rentalDuration.branchSuffix")}{" "}
+                      <BranchById />
+                    </span>
                   </div>
-                )}
+
+                  <DateRangePickerPopover
+                    key={`desktop-${popoverKey}`}
+                    initialRange={initialRange}
+                    defaultIsJalali={true}
+                    initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
+                    onConfirm={handleConfirm}
+                    onClear={handleClear}
+                    trigger={searchButton}
+                  />
+
+                  {timerValue && (
+                    <>
+                      <VDivider />
+                      <div className="inline-flex items-center gap-2 whitespace-nowrap text-red-500">
+                        <Clock className="h-4 w-4" />
+                        <span className="font-mono font-bold">{timerValue}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
-            </>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
-        {/* ===================== DESKTOP ===================== */}
-        <div className="hidden md:block">
-          {desktopActsLikeSearch ? (
-            <div className="w-full overflow-x-auto hide-scrollbar">
-              <div className="w-full md:min-w-0 flex justify-between items-center text-xs">
-                <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
-                  <CalendarDays className="h-4 w-4" />
-                  <span className="font-semibold">{t("desktop.deliveryTitle")}</span>
-                  <span>
-                    {deliveryDateText} &nbsp; {t("desktop.hour")}{" "}
-                    {locale === "fa" ? toPersianDigits(dtFallback) : dtFallback}
-                  </span>
-                </div>
-
-                <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
-                  <CalendarDays className="h-4 w-4" />
-                  <span className="font-semibold">{t("desktop.returnTitle")}</span>
-                  <span>
-                    {returnDateText} &nbsp; {t("desktop.hour")}{" "}
-                    {locale === "fa" ? toPersianDigits(rtFallback) : rtFallback}
-                  </span>
-                </div>
-
-                <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-gray-700 dark:text-gray-200">
-                    {t("rentalDuration.prefix")} {dayCountText} {t("rentalDuration.daysSuffix")} {t("rentalDuration.branchSuffix")}{" "}
-                    <BranchById />
-                  </span>
-                </div>
-
-                <DateRangePickerPopover
-                  key={`desktop-${popoverKey}`}
-                  initialRange={initialRange}
-                  defaultIsJalali={true}
-                  initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
-                  onConfirm={handleConfirm}
-                  onClear={handleClear}
-                  trigger={searchButton}
-                />
-
-                {timerValue && (
-                  <>
-                    <VDivider />
-                    <div className="inline-flex items-center gap-2 whitespace-nowrap text-red-500">
-                      <Clock className="h-4 w-4" />
-                      <span className="font-mono font-bold">{timerValue}</span>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          ) : stepSecond ? (
-            <div className="w-full overflow-x-auto hide-scrollbar">
-              <div className="flex items-center justify-between">
-                <div className="flex-1 text-center">
-                  <div className="font-bold text-gray-900 dark:text-gray-100 text-base">{t("stepSecond.title")}</div>
-                  <div className="mt-1 text-gray-500 dark:text-gray-400 text-sm">
-                    {formatRangeStepSecond({
-                      startText: deliveryDateText,
-                      endText: returnDateText,
-                      deliveryTime: dtFallback,
-                      returnTime: rtFallback,
-                      dayCount: Number(carDayCount) || 0,
-                    })}
-                  </div>
-                </div>
-
-                <DateRangePickerPopover
-                  key={`desktop-${popoverKey}`}
-                  initialRange={initialRange}
-                  defaultIsJalali={true}
-                  initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
-                  onConfirm={handleConfirm}
-                  onClear={handleClear}
-                  trigger={searchButton}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="w-full overflow-x-auto hide-scrollbar">
-              <div className="w-full md:min-w-0 flex justify-between items-center text-xs">
-                <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
-                  <CalendarDays className="h-4 w-4" />
-                  <span className="font-semibold">{t("desktop.deliveryTitle")}</span>
-                  <span>
-                    {deliveryDateText} &nbsp; {t("desktop.hour")}{" "}
-                    {locale === "fa" ? toPersianDigits(dtFallback) : dtFallback}
-                  </span>
-                </div>
-
-                <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
-                  <CalendarDays className="h-4 w-4" />
-                  <span className="font-semibold">{t("desktop.returnTitle")}</span>
-                  <span>
-                    {returnDateText} &nbsp; {t("desktop.hour")}{" "}
-                    {locale === "fa" ? toPersianDigits(rtFallback) : rtFallback}
-                  </span>
-                </div>
-
-                <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-gray-700 dark:text-gray-200">
-                    {t("rentalDuration.prefix")} {dayCountText} {t("rentalDuration.daysSuffix")} {t("rentalDuration.branchSuffix")}{" "}
-                    <BranchById />
-                  </span>
-                </div>
-
-                <DateRangePickerPopover
-                  key={`desktop-${popoverKey}`}
-                  initialRange={initialRange}
-                  defaultIsJalali={true}
-                  initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
-                  onConfirm={handleConfirm}
-                  onClear={handleClear}
-                  trigger={searchButton}
-                />
-
-                {timerValue && (
-                  <>
-                    <VDivider />
-                    <div className="inline-flex items-center gap-2 whitespace-nowrap text-red-500">
-                      <Clock className="h-4 w-4" />
-                      <span className="font-mono font-bold">{timerValue}</span>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   )

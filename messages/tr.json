@@ -502,7 +502,20 @@
     }
   },
 
+
   "SearchHeader": {
+    "noDate": {
+      "title": "Dubai'de Araç Kiralama",
+      "subtitle": "Teslim ve iade tarihlerinizi seçin",
+      "cta": "Tarih Seç"
+    },
+    "city": {
+      "label": "Şehir",
+      "placeholder": "Şehir seçin",
+      "required": "Şehir seçimi zorunludur",
+      "loading": "Şehirler yükleniyor...",
+      "locked": "Seçilen şehir"
+    },
     "actions": {
       "search": "Ara"
     },
@@ -511,37 +524,44 @@
       "shortDate": "{day} {month}"
     },
     "months": {
-      "1": "Farvardin",
-      "2": "Ordibehesht",
-      "3": "Khordad",
+      "1": "Ferverdin",
+      "2": "Ordibeheşt",
+      "3": "Hordad",
       "4": "Tir",
       "5": "Mordad",
-      "6": "Shahrivar",
+      "6": "Şehriver",
       "7": "Mehr",
       "8": "Aban",
       "9": "Azar",
       "10": "Dey",
-      "11": "Bahman",
-      "12": "Esfand"
+      "11": "Behmen",
+      "12": "Esfend"
     },
     "formats": {
-      "mobileRange": "{start} {dt} - {end} {rt}",
+      "mobileRange": "{start} saat {dt}'den {end} saat {rt}'ye kadar",
       "stepSecondRange": "{start} {dt} - {end} {rt} ({days} gün)"
     },
     "stepSecond": {
-      "title": "Bilgileri gir ve rezervasyonu tamamla"
+      "title": "Bilgileri girin ve rezervasyonu tamamlayın"
     },
     "desktop": {
       "deliveryTitle": "Teslim tarihi ve saati",
       "returnTitle": "İade tarihi ve saati",
-      "hour": "saat"
+      "hour": "Saat"
+    },
+    "placeholders": {
+      "deliveryDate": "Teslim tarihi",
+      "deliveryTime": "Teslim saati",
+      "returnDate": "İade tarihi",
+      "returnTime": "İade saati"
     },
     "rentalDuration": {
       "prefix": "Kiralama süresi:",
       "daysSuffix": "gün",
-      "branchSuffix": "Şubede unutma:"
+      "branchSuffix": "Unutma, şurada"
     }
   },
+
 
   "SearchResultPage": {
     "meta": {

@@ -19,9 +19,7 @@ const nextConfig: NextConfig = {
   },
 
   images: {
-    // unoptimized: true,
     remotePatterns: [
-      { protocol: "https", hostname: "picsum.photos" },
       { protocol: "https", hostname: "commondatastorage.googleapis.com" },
       {
         protocol: "https",

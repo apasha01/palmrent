@@ -31,7 +31,6 @@ export default function ReservationFlow() {
       <Header />
 
       <main className="container mx-auto max-w-7xl py-12 px-4 md:px-6">
-        {/* Step 1: Request Submitted */}
         {currentStep === "SUCCESS_SUBMITTED" && (
           <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="text-center space-y-4">
