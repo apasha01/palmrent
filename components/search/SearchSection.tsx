@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
-import { useDebounce } from "@/hooks/useDebounce"
 import { useTranslations, useLocale } from "next-intl"
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
@@ -25,13 +25,7 @@ import {
 } from "../Icons"
 
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store"
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "../ui/sheet"
+import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet"
 
 import CAR_DATA from "@/lib/carsSuggestion.json"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "../ui/drawer"
@@ -47,27 +41,63 @@ const PARAM_CATS = "categories"
 const MAX_SUGGESTIONS = 10
 
 const POPULAR_BRANDS: string[] = [
-  "Toyota", "Mercedes-Benz", "Kia", "Hyundai",
-  "Mitsubishi", "Nissan", "Chevrolet", "BMW", "Fiat", "Renault",
+  "Toyota",
+  "Mercedes-Benz",
+  "Kia",
+  "Hyundai",
+  "Mitsubishi",
+  "Nissan",
+  "Chevrolet",
+  "BMW",
+  "Fiat",
+  "Renault",
 ]
 
 const FA_TO_BRAND: Record<string, string> = {
-  "بی ام و": "BMW", "بی‌ام‌و": "BMW", "بی‌ ام‌ و": "BMW", "بی ام": "BMW",
-  "بی‌ام": "BMW", "بی امو": "BMW", "بیامو": "BMW", "بیام و": "BMW",
-  "بى ام و": "BMW", "بی": "BMW", "bmw": "BMW",
-  "مرسدس": "Mercedes-Benz", "مرسدس بنز": "Mercedes-Benz",
-  "مرسدس‌بنز": "Mercedes-Benz", "بنز": "Mercedes-Benz",
-  "آئودی": "Audi", "اودی": "Audi",
-  "تویوتا": "Toyota", "هیوندای": "Hyundai", "کیا": "Kia",
-  "نیسان": "Nissan", "هوندا": "Honda",
-  "فولکس": "Volkswagen", "فولکس واگن": "Volkswagen", "فولکس‌واگن": "Volkswagen",
-  "فورد": "Ford", "میتسوبیشی": "Mitsubishi", "میتسو": "Mitsubishi",
-  "شورلت": "Chevrolet", "شورولت": "Chevrolet", "فیات": "Fiat", "رنو": "Renault",
+  "بی ام و": "BMW",
+  "بی‌ام‌و": "BMW",
+  "بی‌ ام‌ و": "BMW",
+  "بی ام": "BMW",
+  "بی‌ام": "BMW",
+  "بی امو": "BMW",
+  "بیامو": "BMW",
+  "بیام و": "BMW",
+  "بى ام و": "BMW",
+  "بی": "BMW",
+  "bmw": "BMW",
+
+  "مرسدس": "Mercedes-Benz",
+  "مرسدس بنز": "Mercedes-Benz",
+  "مرسدس‌بنز": "Mercedes-Benz",
+  "بنز": "Mercedes-Benz",
+
+  "آئودی": "Audi",
+  "اودی": "Audi",
+  "تویوتا": "Toyota",
+  "هیوندای": "Hyundai",
+  "کیا": "Kia",
+  "نیسان": "Nissan",
+  "هوندا": "Honda",
+  "فولکس": "Volkswagen",
+  "فولکس واگن": "Volkswagen",
+  "فولکس‌واگن": "Volkswagen",
+  "فورد": "Ford",
+  "میتسوبیشی": "Mitsubishi",
+  "میتسو": "Mitsubishi",
+  "شورلت": "Chevrolet",
+  "شورولت": "Chevrolet",
+  "فیات": "Fiat",
+  "رنو": "Renault",
 }
 
 const normalize = (s: string) =>
-  String(s || "").toLowerCase().trim()
-    .replace(/[‌ـ]/g, " ").replace(/[ي]/g, "ی").replace(/[ك]/g, "ک").replace(/\s+/g, " ")
+  String(s || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[‌ـ]/g, " ")
+    .replace(/[ي]/g, "ی")
+    .replace(/[ك]/g, "ک")
+    .replace(/\s+/g, " ")
 
 const noSpace = (s: string) => normalize(s).replace(/\s+/g, "")
 
@@ -80,17 +110,27 @@ function resolveBrandFromFaQuery(raw: string): string | null {
   if (!q) return null
   const qNS = noSpace(raw)
   if (qNS.length < 1) return null
+
   let bestKey = ""
   let bestVal: string | null = null
+
   const qTokens = q.split(" ").filter(Boolean)
   for (const [kNorm, brand] of Object.entries(FA_TO_BRAND_NORM)) {
     const kNS = noSpace(kNorm)
     const hitNoSpace = kNS.startsWith(qNS) || qNS.startsWith(kNS)
+
     const kTokens = kNorm.split(" ").filter(Boolean)
-    const hitTokens = qTokens.length > 0 &&
-      qTokens.every((qt) => kTokens.some((kt) => kt.startsWith(qt) || qt.startsWith(kt)))
+    const hitTokens =
+      qTokens.length > 0 &&
+      qTokens.every((qt) =>
+        kTokens.some((kt) => kt.startsWith(qt) || qt.startsWith(kt))
+      )
+
     if (!(hitNoSpace || hitTokens)) continue
-    if (kNorm.length > bestKey.length) { bestKey = kNorm; bestVal = brand }
+    if (kNorm.length > bestKey.length) {
+      bestKey = kNorm
+      bestVal = brand
+    }
   }
   return bestVal
 }
@@ -101,13 +141,14 @@ const buildSuggestion = (brand: string, model?: string): Suggestion => {
   return { value: v, display: v, brand, isModel: true }
 }
 
-const ALL_SUGGESTIONS: Suggestion[] = (CAR_DATA as CarEntry[]).flatMap(({ brand, models }) => [
-  buildSuggestion(brand),
-  ...models.map((m) => buildSuggestion(brand, m)),
-])
+const ALL_SUGGESTIONS: Suggestion[] = (CAR_DATA as CarEntry[]).flatMap(
+  ({ brand, models }) => [buildSuggestion(brand), ...models.map((m) => buildSuggestion(brand, m))]
+)
 
-const DEFAULT_SUGGESTIONS: Suggestion[] =
-  POPULAR_BRANDS.map((b) => buildSuggestion(b)).slice(0, MAX_SUGGESTIONS)
+const DEFAULT_SUGGESTIONS: Suggestion[] = POPULAR_BRANDS.map((b) => buildSuggestion(b)).slice(
+  0,
+  MAX_SUGGESTIONS
+)
 
 function uniqBrands(arr: string[]) {
   const out: string[] = []
@@ -115,13 +156,14 @@ function uniqBrands(arr: string[]) {
   for (const x of arr || []) {
     const v = String(x || "").trim()
     if (!v || seen.has(v)) continue
-    seen.add(v); out.push(v)
+    seen.add(v)
+    out.push(v)
   }
   return out
 }
 
 // ─────────────────────────────────────────
-// ✅ Sort Drawer — با shadcn Sheet
+// ✅ Sort Drawer
 // ─────────────────────────────────────────
 function SortDrawer({
   open,
@@ -145,83 +187,74 @@ function SortDrawer({
 
   const activeId = currentSort ?? null
 
-return (
-  <Drawer open={open} onOpenChange={(o) => { if (!o) onClose() }}>
-    <DrawerContent
-      className={cn(
-        "w-full p-0",              // ✅ عرض کامل + حذف padding پیشفرض
-        "max-h-[85vh] overflow-hidden" // ✅ جلوگیری از بیرون‌زدگی
-      )}
-    >
-      {/* ✅ مهم: mx-auto حذف شد، و عرض کامل شد */}
-      <div className="w-full max-w-3xl mx-auto">
-        {/* Header */}
-        <DrawerHeader className="flex flex-row items-center justify-between px-5 py-2.5 border-b border-gray-100 dark:border-gray-800 space-y-0">
-          <DrawerTitle className="font-bold text-sm text-gray-900 dark:text-gray-100">
-            مرتب‌سازی
-          </DrawerTitle>
+  return (
+    <Drawer open={open} onOpenChange={(o) => { if (!o) onClose() }}>
+      <DrawerContent>
+        <div className="w-full max-w-3xl mx-auto">
+          <DrawerHeader className="flex flex-row items-center justify-between px-5 py-2.5 border-b border-gray-100 dark:border-gray-800 space-y-0">
+            <DrawerTitle className="font-bold text-sm text-gray-900 dark:text-gray-100">
+              مرتب‌سازی
+            </DrawerTitle>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 transition-colors"
-          >
-            <X className="size-4" />
-          </button>
-        </DrawerHeader>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 transition-colors"
+            >
+              <X className="size-4" />
+            </button>
+          </DrawerHeader>
 
-        {/* Items */}
-        <div className="py-2 px-3 w-full overflow-auto max-h-[calc(85vh-56px)]">
-          {sortItems.map((item, idx) => {
-            const isActive = activeId === item.id
-            return (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => { onSelect(item.id); onClose() }}
-                className={cn(
-                  "w-full flex items-center justify-between gap-3",
-                  "px-4 py-3 rounded-xl text-sm transition-all mb-0.5 last:mb-0",
-                  isActive
-                    ? "bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                )}
-              >
-                <div className="flex flex-col items-start gap-0.5 text-right">
-                  <span className="font-medium">{item.label}</span>
-                  {item.sub && (
-                    <span
-                      className={cn(
-                        "text-xs",
-                        isActive ? "text-blue-400 dark:text-blue-500" : "text-gray-400 dark:text-gray-500"
-                      )}
-                    >
-                      {item.sub}
-                    </span>
-                  )}
-                </div>
-
-                <span
+          <div className="py-2 px-3 w-full overflow-auto max-h-[calc(85vh-56px)]">
+            {sortItems.map((item, idx) => {
+              const isActive = activeId === item.id
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => { onSelect(item.id); onClose() }}
                   className={cn(
-                    "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
+                    "w-full flex items-center justify-between gap-3",
+                    "px-4 py-3 rounded-xl text-sm transition-all mb-0.5 last:mb-0",
                     isActive
-                      ? "border-blue-600 bg-blue-600 dark:border-blue-400 dark:bg-blue-400"
-                      : "border-gray-300 dark:border-gray-600"
+                      ? "bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                   )}
                 >
-                  {isActive && <Check className="size-3 text-white dark:text-gray-900" />}
-                </span>
-              </button>
-            )
-          })}
-        </div>
+                  <div className="flex flex-col items-start gap-0.5 text-right">
+                    <span className="font-medium">{item.label}</span>
+                    {item.sub && (
+                      <span
+                        className={cn(
+                          "text-xs",
+                          isActive ? "text-blue-400 dark:text-blue-500" : "text-gray-400 dark:text-gray-500"
+                        )}
+                      >
+                        {item.sub}
+                      </span>
+                    )}
+                  </div>
 
-        {/* Safe area bottom */}
-        <div className="h-5" />
-      </div>
-    </DrawerContent>
-  </Drawer>
-)
+                  <span
+                    className={cn(
+                      "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
+                      isActive
+                        ? "border-blue-600 bg-blue-600 dark:border-blue-400 dark:bg-blue-400"
+                        : "border-gray-300 dark:border-gray-600"
+                    )}
+                  >
+                    {isActive && <Check className="size-3 text-white dark:text-gray-900" />}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="h-5" />
+        </div>
+      </DrawerContent>
+    </Drawer>
+  )
 }
 
 // ─────────────────────────────────────────
@@ -248,8 +281,10 @@ export function SerarchSection({
   const setSort = useSearchPageStore((s) => s.setSort)
   const selectedCategories = useSearchPageStore((s) => s.selectedCategories)
   const toggleSelectedCategory = useSearchPageStore((s) => s.toggleSelectedCategory)
+
   const search_title = useSearchPageStore((s) => s.search_title)
   const setSearchTitle = useSearchPageStore((s) => s.setSearchTitle)
+
   const storeBrands = useSearchPageStore((s) => s.selectedBrands)
   const setStoreBrands = useSearchPageStore((s) => s.setSelectedBrands)
 
@@ -258,23 +293,18 @@ export function SerarchSection({
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [sortDrawerOpen, setSortDrawerOpen] = useState(false)
 
-  const debouncedSearch = useDebounce(searchValue, 1200)
-
-  const didMountRef = useRef(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
   const barRef = useRef<HTMLDivElement>(null)
-  const userTypedRef = useRef(false)
-  const lastAppliedQRef = useRef<string>("__INIT__")
+
   const suppressUrlSyncRef = useRef(false)
   const pendingParamsRef = useRef<string | null>(null)
-  const ignoreNextDebounceRef = useRef(false)
 
   const scrollToTop = useCallback((behavior: ScrollBehavior = "smooth") => {
     if (typeof window === "undefined") return
-    requestAnimationFrame(() => requestAnimationFrame(() =>
-      window.scrollTo({ top: 0, behavior })
-    ))
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => window.scrollTo({ top: 0, behavior }))
+    )
   }, [])
 
   const pushURL = useCallback(
@@ -307,10 +337,11 @@ export function SerarchSection({
     [searchParams, search_title, storeBrands, sort, selectedCategories, pathname, router]
   )
 
+  // ✅ Sync store from URL (ولی اینپوت رو پر نکن — چون چیپ نمایش میدیم)
   useEffect(() => {
     const currentParams = searchParams.toString()
     if (suppressUrlSyncRef.current && pendingParamsRef.current) {
-      if (currentParams !== pendingParamsRef.current) { didMountRef.current = true; return }
+      if (currentParams !== pendingParamsRef.current) return
       suppressUrlSyncRef.current = false
       pendingParamsRef.current = null
     }
@@ -318,37 +349,25 @@ export function SerarchSection({
     const q = searchParams.get(PARAM_Q) || ""
     const brandsRaw = searchParams.get(PARAM_BRAND) || ""
     const sortRaw = searchParams.get(PARAM_SORT) || ""
+
     const urlBrands = brandsRaw ? uniqBrands(brandsRaw.split(",").filter(Boolean)) : []
 
     if (storeBrands.join(",") !== urlBrands.join(",")) setStoreBrands(urlBrands)
 
-    if (sortRaw) { if (sortRaw !== (sort ?? "")) setSort(sortRaw) }
-    else { if (sort !== null) setSort(null) }
+    if (sortRaw) {
+      if (sortRaw !== (sort ?? "")) setSort(sortRaw)
+    } else {
+      if (sort !== null) setSort(null)
+    }
 
     if (q !== search_title) setSearchTitle(q)
-    lastAppliedQRef.current = q
 
-    if (!userTypedRef.current && searchValue !== q) setSearchValue(q)
-
-    didMountRef.current = true
+    // ✅ مهم: اینپوت همیشه خالی بمونه مگر اینکه کاربر داره تایپ میکنه
+    // (اینجا ما کاری به searchValue نداریم)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
-  useEffect(() => {
-    if (!didMountRef.current || !userTypedRef.current) return
-    if (ignoreNextDebounceRef.current) {
-      ignoreNextDebounceRef.current = false; userTypedRef.current = false; return
-    }
-    const nextQ = (debouncedSearch ?? "").trim()
-    if (lastAppliedQRef.current === nextQ) { userTypedRef.current = false; return }
-    lastAppliedQRef.current = nextQ
-    setSearchTitle(nextQ)
-    pushURL({ q: nextQ })
-    scrollToTop("smooth")
-    userTypedRef.current = false
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch])
-
+  // close suggestions on outside click
   useEffect(() => {
     const fn = (e: Event) => {
       const target = e.target as Node
@@ -362,7 +381,7 @@ export function SerarchSection({
     document.addEventListener("touchstart", fn, { passive: true })
     return () => {
       document.removeEventListener("mousedown", fn)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      
       document.removeEventListener("touchstart", fn as any)
     }
   }, [])
@@ -370,43 +389,96 @@ export function SerarchSection({
   const suggestions = useMemo<Suggestion[]>(() => {
     const qNorm = normalize(searchValue)
     if (!qNorm) return DEFAULT_SUGGESTIONS
+
     const mappedBrand = resolveBrandFromFaQuery(qNorm)
     const q2 = mappedBrand ? normalize(mappedBrand) : qNorm
+
     const matches = ALL_SUGGESTIONS.filter((s) => normalize(s.value).includes(q2))
-    return [...matches.filter((s) => !s.isModel), ...matches.filter((s) => s.isModel)]
-      .slice(0, MAX_SUGGESTIONS)
+    return [...matches.filter((s) => !s.isModel), ...matches.filter((s) => s.isModel)].slice(
+      0,
+      MAX_SUGGESTIONS
+    )
   }, [searchValue])
 
+  // ✅ کلیک روی suggestion: مثل قبل برند رو badge کن + اینپوت خالی
   const handleSuggestionClick = (s: Suggestion) => {
     setShowSuggestions(false)
+
     const brandOnly = s.brand
     const nextBrands = storeBrands.includes(brandOnly)
       ? storeBrands.filter((b) => b !== brandOnly)
       : uniqBrands([...storeBrands, brandOnly])
+
     setStoreBrands(nextBrands)
-    ignoreNextDebounceRef.current = true
-    userTypedRef.current = false
-    lastAppliedQRef.current = ""
-    setSearchValue(""); setSearchTitle("")
+
+    // ✅ سرچ تایپی رو چیپ نکن، چون خودش برند چیپ شد
+    setSearchTitle("")
+    setSearchValue("")
     inputRef.current?.blur()
+
     pushURL({ q: "", brands: nextBrands })
     scrollToTop("smooth")
   }
 
+  // ✅ فقط تایپ: هیچ URL آپدیت نشه
   const handleInputChange = (vRaw: string) => {
-    userTypedRef.current = true
     setSearchValue(vRaw)
     setShowSuggestions(true)
     if (!vRaw.trim()) {
-      ignoreNextDebounceRef.current = true; userTypedRef.current = false
-      lastAppliedQRef.current = ""; setSearchTitle("")
-      pushURL({ q: "" }); setShowSuggestions(false)
+      setShowSuggestions(false)
     }
   }
 
+  // ✅ اعمال سرچ فقط با Enter یا دکمه تایید
+  const commitSearch = useCallback(() => {
+    const raw = (searchValue || "").trim()
+    if (!raw) {
+      // اگر چیزی تایپ نشده، کاری نکن
+      setShowSuggestions(false)
+      return
+    }
+
+    setShowSuggestions(false)
+
+    // اگر کاربر فارسی/غلط املایی برند زد، تبدیلش کن و مثل badge برند اعمال کن
+    const maybeBrand = resolveBrandFromFaQuery(raw)
+    if (maybeBrand) {
+      const brandOnly = maybeBrand
+      const nextBrands = storeBrands.includes(brandOnly)
+        ? storeBrands
+        : uniqBrands([...storeBrands, brandOnly])
+
+      setStoreBrands(nextBrands)
+      setSearchTitle("")
+      setSearchValue("")
+      inputRef.current?.blur()
+
+      pushURL({ q: "", brands: nextBrands })
+      scrollToTop("smooth")
+      return
+    }
+
+    // در غیر این صورت: q رو مثل چیپ نگه دار (search_title) + اینپوت حتما خالی
+    setSearchTitle(raw)
+    setSearchValue("")
+    inputRef.current?.blur()
+
+    pushURL({ q: raw })
+    scrollToTop("smooth")
+  }, [searchValue, storeBrands, pushURL, scrollToTop, setSearchTitle, setStoreBrands])
+
   const handleRemoveBrand = (brand: string) => {
     const nextBrands = storeBrands.filter((b) => b !== brand)
-    setStoreBrands(nextBrands); pushURL({ brands: nextBrands }); scrollToTop("smooth")
+    setStoreBrands(nextBrands)
+    pushURL({ brands: nextBrands })
+    scrollToTop("smooth")
+  }
+
+  // ✅ چیپ سرچ (q) رو پاک کن
+  const handleRemoveSearchChip = () => {
+    setSearchTitle("")
+    pushURL({ q: "" })
+    scrollToTop("smooth")
   }
 
   const handleSortSelect = (val: string | null) => {
@@ -419,33 +491,43 @@ export function SerarchSection({
     const next = selectedCategories.includes(id)
       ? selectedCategories.filter((c) => c !== id)
       : [...selectedCategories, id]
-    toggleSelectedCategory(id); pushURL({ cats: next }); scrollToTop("smooth")
+
+    toggleSelectedCategory(id)
+    pushURL({ cats: next })
+    scrollToTop("smooth")
   }
 
   const handleSheetOpenChange = (open: boolean) => {
     setFiltersOpen(open)
-    if (!open) { pushURL({ brands: storeBrands }); scrollToTop("smooth") }
+    if (!open) {
+      pushURL({ brands: storeBrands })
+      scrollToTop("smooth")
+    }
   }
 
-  const sortList = useMemo(() => [
-    { id: 14, icon: <IconNoDeposite />, title: "noDeposite" },
-    { id: 3, icon: <IconEconemy />, title: "economicCar" },
-    { id: 13, icon: <IconLuxury />, title: "luxCar" },
-    { id: 15, icon: <Icon7Plus />, title: "sevenplus" },
-    { id: 19, icon: <IconSport />, title: "sport" },
-    { id: 18, icon: <IconBusiness />, title: "business" },
-    { id: 21, icon: <IconCrook />, title: "crook" },
-    { id: 17, icon: <IconStandard />, title: "standard" },
-    { id: 9, icon: <IconSuv />, title: "suv" },
-    { id: 20, icon: <IconCoupe />, title: "coupe" },
-  ], [])
+  const sortList = useMemo(
+    () => [
+      { id: 14, icon: <IconNoDeposite />, title: "noDeposite" },
+      { id: 3, icon: <IconEconemy />, title: "economicCar" },
+      { id: 13, icon: <IconLuxury />, title: "luxCar" },
+      { id: 15, icon: <Icon7Plus />, title: "sevenplus" },
+      { id: 19, icon: <IconSport />, title: "sport" },
+      { id: 18, icon: <IconBusiness />, title: "business" },
+      { id: 21, icon: <IconCrook />, title: "crook" },
+      { id: 17, icon: <IconStandard />, title: "standard" },
+      { id: 9, icon: <IconSuv />, title: "suv" },
+      { id: 20, icon: <IconCoupe />, title: "coupe" },
+    ],
+    []
+  )
 
   const selectedCategoryItems = useMemo(
     () => sortList.filter((x) => selectedCategories.includes(x.id)),
     [sortList, selectedCategories]
   )
 
-  const hasChips = storeBrands.length > 0 || selectedCategoryItems.length > 0
+  const hasSearchChip = !!(search_title && String(search_title).trim())
+  const hasChips = hasSearchChip || storeBrands.length > 0 || selectedCategoryItems.length > 0
 
   const sortLabel = useMemo(() => {
     if (!sort) return "مرتب‌سازی"
@@ -457,11 +539,10 @@ export function SerarchSection({
 
   return (
     <>
-      {/* ── Filter Sheet ── */}
       <Sheet open={filtersOpen} onOpenChange={handleSheetOpenChange}>
         <div
           className={cn(
-            "relative bg-white z-[20]",
+            "relative bg-white z-20",
             "transition-all",
             "sm:rounded-lg rounded-none",
             "sm:shadow-[0_4px_20px_0px_rgba(0,0,0,.06)]",
@@ -471,7 +552,6 @@ export function SerarchSection({
           )}
         >
           <div className="relative space-y-2">
-
             {/* ── Search bar ── */}
             <div
               ref={barRef}
@@ -487,11 +567,34 @@ export function SerarchSection({
                   value={searchValue}
                   onChange={(e) => handleInputChange(e.target.value)}
                   onFocus={() => setShowSuggestions(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      commitSearch()
+                    }
+                    if (e.key === "Escape") {
+                      setShowSuggestions(false)
+                      inputRef.current?.blur()
+                    }
+                  }}
                   type="search"
                   placeholder={t("carSearch")}
                   className="w-full px-2 outline-0 placeholder:text-[#4b5259] text-[16px] sm:text-xs leading-none"
                 />
               </div>
+
+              {/* ✅ Clear typed text (فقط تایپ رو پاک میکنه، نه چیپ‌ها) */}
+              {!!searchValue.trim() && (
+                <button
+                  type="button"
+                  onClick={() => { setSearchValue(""); setShowSuggestions(false); inputRef.current?.focus() }}
+                  className="p-1 rounded-md hover:bg-gray-100 text-gray-400 shrink-0"
+                  aria-label="clear"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
+
 
               <div className="flex items-center gap-1 text-[#75736F] shrink-0">
                 {/* Filter */}
@@ -501,26 +604,32 @@ export function SerarchSection({
                     className="flex items-center gap-1 rtl:border-l ltr:border-r border-[#4b5259] px-2 cursor-pointer"
                   >
                     <span className="text-[#626262]">
-                      <span className="sm:hidden"><IconFilter size="22" /></span>
-                      <span className="max-sm:hidden"><IconFilter size="20" /></span>
+                      <span className="sm:hidden">
+                        <IconFilter size="22" />
+                      </span>
+                      <span className="max-sm:hidden">
+                        <IconFilter size="20" />
+                      </span>
                     </span>
                     <span className="max-sm:hidden text-sm">{t("filters")}</span>
                   </button>
                 </SheetTrigger>
 
-                {/* Sort → shadcn Sheet drawer */}
+                {/* Sort drawer */}
                 <button
                   type="button"
                   onClick={() => setSortDrawerOpen(true)}
                   className="flex items-center gap-1 cursor-pointer relative"
                 >
                   <span className="text-[#626262]">
-                    <span className="max-sm:hidden"><IconSort size="22" className={undefined} /></span>
-                    <span className="sm:hidden"><IconSort size="20" className={undefined} /></span>
+                    <span className="max-sm:hidden">
+                      <IconSort size="22" className={undefined} />
+                    </span>
+                    <span className="sm:hidden">
+                      <IconSort size="20" className={undefined} />
+                    </span>
                   </span>
-                  <span className="max-sm:hidden text-sm text-[#4b5259]">
-                    {sortLabel}
-                  </span>
+                  <span className="max-sm:hidden text-sm text-[#4b5259]">{sortLabel}</span>
                   {sort && (
                     <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-blue-500 sm:hidden" />
                   )}
@@ -540,7 +649,7 @@ export function SerarchSection({
                       "absolute top-[calc(100%+8px)] left-0 right-0",
                       "bg-white border border-[#E8E8E8] rounded-xl",
                       "shadow-[0_8px_24px_rgba(0,0,0,0.08)]",
-                      "z-[20] overflow-hidden"
+                      "z-20 overflow-hidden"
                     )}
                   >
                     <div className="p-2 max-h-[46vh] overflow-auto overscroll-contain">
@@ -557,7 +666,7 @@ export function SerarchSection({
                             onClick={() => handleSuggestionClick(item)}
                             className={cn(
                               "w-full text-left flex items-center justify-between gap-2",
-                              "px-3 py-[7px] rounded-lg text-xs transition-colors cursor-pointer",
+                              "px-3 py-1.75 rounded-lg text-xs transition-colors cursor-pointer",
                               isActive
                                 ? "bg-[#EBF4FF] text-[#0077db]"
                                 : "text-[#333] hover:bg-[#F5F8FC] hover:text-[#0077db]"
@@ -577,10 +686,26 @@ export function SerarchSection({
               )}
             </div>
 
-            {/* ── Brand + Category chips ── */}
+            {/* ── Chips ── */}
             {hasChips && (
               <div className="w-full overflow-auto hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 <div className="flex md:gap-2 gap-1">
+                  {/* ✅ Search chip (q) */}
+                  {hasSearchChip && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveSearchChip}
+                      className="flex shrink-0 items-center gap-2 p-2 h-8.25 rounded-lg transition-all text-xs bg-[#3B82F61A] border border-[#0077db] text-[#0077db] cursor-pointer mb-2 select-none"
+                      title={String(search_title)}
+                    >
+                      <span className="truncate">{String(search_title)}</span>
+                      <span className="size-3 flex items-center text-[#0077db]">
+                        <IconClose className={undefined} />
+                      </span>
+                    </button>
+                  )}
+
+                  {/* Brand chips */}
                   {storeBrands.map((brand) => (
                     <button
                       key={brand}
@@ -595,6 +720,7 @@ export function SerarchSection({
                     </button>
                   ))}
 
+                  {/* Category chips */}
                   {selectedCategoryItems.map((item) => (
                     <label key={item.id} className="flex gap-2 mb-2 select-none shrink-0">
                       <input
@@ -654,7 +780,6 @@ export function SerarchSection({
         </SheetContent>
       </Sheet>
 
-      {/* ── Sort Drawer — shadcn Sheet (bottom) ── */}
       <SortDrawer
         open={sortDrawerOpen}
         onClose={() => setSortDrawerOpen(false)}

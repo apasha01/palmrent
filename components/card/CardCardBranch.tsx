@@ -427,13 +427,21 @@ export function SingleCarGallery({
 }) {
   const t = useTranslations();
   const router = useRouter();
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  const safeImageList = Array.isArray(imageList) && imageList.length > 0 ? imageList : ["/images/placeholder.png"];
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [firstImageLoaded, setFirstImageLoaded] = useState(false);
+
+  const safeImageList =
+    Array.isArray(imageList) && imageList.length > 0
+      ? imageList
+      : ["/images/placeholder.png"];
 
   const goCar = useCallback(
     (e?: React.MouseEvent) => {
-      if (e) { e.preventDefault(); e.stopPropagation(); }
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       if (!carHref) return;
       router.push(carHref);
     },
@@ -441,12 +449,15 @@ export function SingleCarGallery({
   );
 
   return (
-    <div className="flex relative z-10 w-full lg:h-55 h-55">
-      <div className="flex h-full max-md:overflow-x-auto max-md:z-10 hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        <div
-          className="md:absolute max-md:flex w-full h-full top-0 right-0 rounded-lg -z-10 max-md:gap-2"
-        >
-          {/* Mobile images */}
+    <div className="flex relative z-10 w-full lg:h-55 h-55 rounded-xl overflow-hidden">
+      {/* ✅ skeleton until first image loads */}
+      {!firstImageLoaded && (
+        <div className="absolute inset-0 z-30 bg-gray-200 animate-pulse pointer-events-none" />
+      )}
+
+      <div className="flex h-full w-full max-md:overflow-x-auto max-md:z-10 hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="md:absolute max-md:flex w-full h-full top-0 right-0 -z-10 max-md:gap-2">
+          {/* ---------------- Mobile (scrollable) ---------------- */}
           {safeImageList.map((src: any, index: number) => {
             const isFirst = index === 0;
             const isLast = index === safeImageList.length - 1;
@@ -454,9 +465,11 @@ export function SingleCarGallery({
 
             return (
               <Link
-                key={`${String(src)}-${index}`}
+                key={`mob-${String(src)}-${index}`}
                 href={carHref || "#"}
-                onClick={(e) => { if (!carHref) e.preventDefault(); }}
+                onClick={(e) => {
+                  if (!carHref) e.preventDefault();
+                }}
                 className={`
                   md:hidden shrink-0 h-full relative overflow-hidden bg-white block
                   ${isSingle ? "rounded-xl" : ""}
@@ -470,30 +483,21 @@ export function SingleCarGallery({
                   width={395}
                   height={253}
                   alt={`Car image ${index + 1}`}
-                  loading="lazy"
+                  loading={index === 0 ? "eager" : "lazy"}
+                  onLoad={index === 0 ? () => setFirstImageLoaded(true) : undefined}
+                  onError={index === 0 ? () => setFirstImageLoaded(true) : undefined}
                 />
               </Link>
             );
           })}
 
-          {/* Desktop images */}
-          {safeImageList.map((src: any, index: number) => (
-            <Image
-              key={`desk-${String(src)}-${index}`}
-              className={`md:rounded-lg w-full h-full object-cover md:absolute max-md:hidden ${index === activeImageIndex ? "z-10" : ""} ${index !== safeImageList.length - 1 ? "" : "md:hidden"}`}
-              src={toStorageUrl(src)}
-              width={395}
-              height={253}
-              alt={`Car image ${index + 1}`}
-              loading="lazy"
-            />
-          ))}
-
           {/* Mobile: more detail button */}
           {safeImageList.length > 1 && (
             <Link
               href={carHref || "#"}
-              onClick={(e) => { if (!carHref) e.preventDefault(); }}
+              onClick={(e) => {
+                if (!carHref) e.preventDefault();
+              }}
               className="flex md:hidden flex-col items-center justify-center text-black text-nowrap relative gap-2 font-bold px-4 shrink-0"
             >
               <span className="flex items-center justify-center bg-[#F1F1F1] rounded-full size-8">
@@ -503,54 +507,105 @@ export function SingleCarGallery({
             </Link>
           )}
 
-          {/* Desktop: last image overlay */}
+          {/* ---------------- Desktop (fade transition) ---------------- */}
+          {safeImageList.map((src: any, index: number) => {
+            const isLast = index === safeImageList.length - 1;
+            if (isLast) return null; // آخرین عکس جدا با overlay میاد
+
+            return (
+              <Image
+                key={`desk-${String(src)}-${index}`}
+                className={`
+                  max-md:hidden md:absolute md:inset-0
+                  w-full h-full object-cover md:rounded-xl
+                  ${index === activeImageIndex ? "z-10 opacity-100" : "z-0 opacity-0"}
+                  transition-opacity duration-200 ease-out
+                `}
+                src={toStorageUrl(src)}
+                width={395}
+                height={253}
+                alt={`Car image ${index + 1}`}
+                loading={index === 0 ? "eager" : "lazy"}
+                onLoad={index === 0 ? () => setFirstImageLoaded(true) : undefined}
+                onError={index === 0 ? () => setFirstImageLoaded(true) : undefined}
+              />
+            );
+          })}
+
+          {/* Desktop: last image + overlay (also fades) */}
           <div
-            className={`${activeImageIndex === safeImageList.length - 1 ? "z-10" : ""} rounded-lg w-full h-full max-md:hidden md:absolute cursor-pointer`}
+            className={`
+              max-md:hidden md:absolute md:inset-0 md:rounded-xl cursor-pointer
+              ${activeImageIndex === safeImageList.length - 1 ? "z-10 opacity-100" : "z-0 opacity-0"}
+              transition-opacity duration-200 ease-out
+            `}
             onClick={goCar}
           >
-            <div className={`absolute w-full h-full rounded-lg ${activeImageIndex === safeImageList.length - 1 ? "z-20" : ""} bg-[#000000aa] text-white flex flex-col items-center justify-center`}>
-              <span className="flex items-center justify-center border-2 border-white rounded-full size-16 ">
-                <ArrowRight className="size-6" />
-              </span>
-              {t("moredetail")}
-            </div>
             <Image
-              className={`${activeImageIndex === safeImageList.length - 1 ? "z-10" : ""} rounded-lg w-full h-full object-cover md:absolute`}
+              className="absolute inset-0 w-full h-full object-cover md:rounded-xl"
               src={toStorageUrl(safeImageList[safeImageList.length - 1])}
               width={395}
               height={253}
               alt="Car image last"
+              loading="lazy"
             />
+
+            <div
+              className={`
+                absolute inset-0 md:rounded-xl bg-[#000000aa] text-white
+                flex flex-col items-center justify-center
+                transition-opacity duration-200 ease-out
+                ${activeImageIndex === safeImageList.length - 1 ? "opacity-100" : "opacity-0"}
+              `}
+            >
+              <span className="flex items-center justify-center border-2 border-white rounded-full size-16">
+                <ArrowRight className="size-6" />
+              </span>
+              {t("moredetail")}
+            </div>
           </div>
         </div>
 
+        {/* children overlays (badges, discount, etc.) */}
         <div className="z-20">{children}</div>
 
-        {/* hover zones + indicator bars */}
+        {/* ---------------- Hover zones + indicator bars (Desktop) ---------------- */}
         <div
-          className="absolute w-full h-full md:flex items-end flex-row-reverse p-2 cursor-pointer transition-all opacity-0 hover:opacity-100 hidden"
+          className="
+            absolute inset-0
+            hidden md:flex
+            items-end flex-row-reverse p-2 cursor-pointer
+            opacity-0 hover:opacity-100
+            transition-opacity duration-200 ease-out
+          "
           onMouseLeave={() => setActiveImageIndex(0)}
         >
-          {safeImageList.map((_: any, index: number) => (
-            index !== safeImageList.length - 1 ? (
-              <div
-                key={index}
-                onMouseEnter={() => setActiveImageIndex(index)}
-                className="w-full h-full flex items-end group px-1"
-              >
-                <span className="w-full h-1 rounded-2xl bg-[#00000070] group-hover:bg-white transition-all"></span>
-              </div>
-            ) : (
+          {safeImageList.map((_: any, index: number) => {
+            const isLast = index === safeImageList.length - 1;
+
+            if (!isLast) {
+              return (
+                <div
+                  key={index}
+                  onMouseEnter={() => setActiveImageIndex(index)}
+                  className="w-full h-full flex items-end group px-1"
+                >
+                  <span className="w-full h-1 rounded-2xl bg-[#00000070] group-hover:bg-white transition-colors duration-200" />
+                </div>
+              );
+            }
+
+            return (
               <div
                 key={index}
                 onMouseEnter={() => setActiveImageIndex(index)}
                 onClick={goCar}
                 className="w-full h-full flex items-end group px-1 cursor-pointer"
               >
-                <span className="w-full h-1 rounded-2xl bg-[#00000070] group-hover:bg-white transition-all"></span>
+                <span className="w-full h-1 rounded-2xl bg-[#00000070] group-hover:bg-white transition-colors duration-200" />
               </div>
-            )
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

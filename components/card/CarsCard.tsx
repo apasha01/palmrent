@@ -221,14 +221,7 @@ export function SingleCarGallery({
     Array.isArray(imageList) && imageList.length > 0 ? imageList : ["/images/placeholder.png"]
 
   return (
-    /*
-      FIX موبایل: overflow-hidden اینجا نیست
-      اگر overflow-hidden باشه، max-md:overflow-x-auto داخلی کار نمیکنه
-      چون parent با overflow:hidden اون رو override میکنه
-    */
     <div className="flex relative z-10 w-full lg:h-[220px] h-[220px] rounded-lg">
-
-      {/* skeleton overlay */}
       {!firstImageLoaded && (
         <div className="absolute inset-0 z-30 rounded-lg bg-gray-200 animate-pulse pointer-events-none" />
       )}
@@ -245,7 +238,8 @@ export function SingleCarGallery({
                 md:rounded-lg
                 max-md:first:rounded-r-lg max-md:last-of-type:rounded-l-lg
                 w-full h-full object-cover md:absolute
-                ${index === activeImageIndex ? "z-10" : ""}
+                ${index === activeImageIndex ? "z-10 opacity-100" : "opacity-0"}
+                md:transition-opacity md:duration-200 md:ease-out
                 ${index !== safeImageList.length - 1 ? "" : "md:hidden"}
               `}
               src={toStorageUrl(src)}
@@ -267,8 +261,14 @@ export function SingleCarGallery({
             </div>
           )}
 
-          <div className={`${activeImageIndex === safeImageList.length - 1 ? "z-10" : ""} rounded-lg w-full h-full max-md:hidden md:absolute`}>
-            <div className={`absolute w-full h-full rounded-lg ${activeImageIndex === safeImageList.length - 1 ? "z-20" : ""} bg-[#000000aa] text-white flex flex-col items-center justify-center`}>
+          <div
+            className={`${activeImageIndex === safeImageList.length - 1 ? "z-10" : ""} rounded-lg w-full h-full max-md:hidden md:absolute`}
+          >
+            <div
+              className={`absolute w-full h-full rounded-lg ${
+                activeImageIndex === safeImageList.length - 1 ? "z-20" : ""
+              } bg-[#000000aa] text-white flex flex-col items-center justify-center md:transition-opacity md:duration-200 md:ease-out`}
+            >
               <span className="flex items-center justify-center border-2 border-white rounded-full size-16">
                 <ArrowRight className="size-6" />
               </span>
@@ -292,11 +292,20 @@ export function SingleCarGallery({
         >
           {safeImageList.map((_: any, index: number) => (
             index !== safeImageList.length - 1 ? (
-              <div key={index} onMouseEnter={() => setActiveImageIndex(index)} className="w-full h-full flex items-end group px-1">
+              <div
+                key={index}
+                onMouseEnter={() => setActiveImageIndex(index)}
+                className="w-full h-full flex items-end group px-1"
+              >
                 <span className="w-full h-1 rounded-2xl bg-[#00000070] group-hover:bg-white transition-all"></span>
               </div>
             ) : (
-              <Link key={index} href={"test"} onMouseEnter={() => setActiveImageIndex(index)} className="w-full h-full flex items-end group px-1">
+              <Link
+                key={index}
+                href={"test"}
+                onMouseEnter={() => setActiveImageIndex(index)}
+                className="w-full h-full flex items-end group px-1"
+              >
                 <span className="w-full h-1 rounded-2xl bg-[#00000070] group-hover:bg-white transition-all"></span>
               </Link>
             )

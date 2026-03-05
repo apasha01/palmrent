@@ -6,7 +6,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Camera, Loader2, Save } from "lucide-react";
+import { Camera, Loader2, Save, User2 } from "lucide-react";
 import { updateMe } from "@/services/user/user";
 import { toast } from "react-toastify";
 import { useSession } from "next-auth/react";
@@ -22,6 +22,42 @@ function CardShell({ title, children }: { title: string; children: React.ReactNo
 
 function Label({ children }: { children: React.ReactNode }) {
   return <div className="text-xs text-muted-foreground mb-1">{children}</div>;
+}
+
+/**
+ * ✅ اگر بک‌اندت عکس‌ها رو با مسیر نسبی میده مثل:
+ * uploads/avatars/...
+ * این تابع می‌کنه URL معتبر برای next/image
+ *
+ * ترجیحاً یکی از این env ها رو ست کن:
+ * NEXT_PUBLIC_STORAGE_URL="https://api.example.com"
+ * یا NEXT_PUBLIC_API_URL="https://api.example.com"
+ */
+const STORAGE_ORIGIN =
+  process.env.NEXT_PUBLIC_STORAGE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "";
+
+function normalizeImageSrc(raw?: string) {
+  const s = String(raw ?? "").trim();
+  if (!s) return "";
+
+  // preview from file picker
+  if (s.startsWith("blob:") || s.startsWith("data:")) return s;
+
+  // already absolute
+  if (/^https?:\/\//i.test(s)) return s;
+
+  // protocol-relative
+  if (s.startsWith("//")) return `https:${s}`;
+
+  // root-relative
+  if (s.startsWith("/")) {
+    return STORAGE_ORIGIN ? new URL(s, STORAGE_ORIGIN).toString() : s;
+  }
+
+  // plain relative like: uploads/avatars/...
+  return STORAGE_ORIGIN ? new URL(`/${s}`, STORAGE_ORIGIN).toString() : `/${s}`;
 }
 
 export default function ProfileMe({
@@ -40,7 +76,8 @@ export default function ProfileMe({
     return String(p || "").trim();
   }, [user]);
 
-  const avatarUrl = useMemo(() => {
+  // ✅ اینجا هرچی از بک‌اند میاد می‌گیریم (avatar_url یا avatar)
+  const avatarUrlRaw = useMemo(() => {
     const u = String(user?.avatar_url ?? user?.avatar ?? "").trim();
     return u || "";
   }, [user]);
@@ -58,7 +95,12 @@ export default function ProfileMe({
     setAvatarPreview("");
   }, [initialName]);
 
-  const currentAvatar = avatarPreview || avatarUrl;
+  // ✅ URL نهایی برای نمایش
+  const currentAvatarSrc = useMemo(() => {
+    // اول preview (blob) بعد url از بک‌اند
+    const raw = avatarPreview || avatarUrlRaw;
+    return normalizeImageSrc(raw);
+  }, [avatarPreview, avatarUrlRaw]);
 
   const pickFile = () => fileRef.current?.click();
 
@@ -75,9 +117,28 @@ export default function ProfileMe({
       return;
     }
 
+    // ✅ اگر قبلاً preview داشتیم، آزادش کنیم
+    if (avatarPreview?.startsWith("blob:")) {
+      try {
+        URL.revokeObjectURL(avatarPreview);
+      } catch {}
+    }
+
     setAvatarFile(f);
     setAvatarPreview(URL.createObjectURL(f));
   };
+
+  useEffect(() => {
+    // ✅ cleanup وقتی کامپوننت unmount میشه
+    return () => {
+      if (avatarPreview?.startsWith("blob:")) {
+        try {
+          URL.revokeObjectURL(avatarPreview);
+        } catch {}
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const changed = name.trim() !== initialName || !!avatarFile;
 
@@ -93,7 +154,6 @@ export default function ProfileMe({
     setSaving(true);
 
     try {
-      // ✅ چون updateMe خروجی‌اش { user?: any } است
       const res = await updateMe({ name: cleanName, avatarFile });
       const nextUser = res?.user ?? null;
 
@@ -102,15 +162,21 @@ export default function ProfileMe({
         return;
       }
 
-      // ✅ callback والد (اختیاری)
       onUserUpdated?.(nextUser);
 
-      // ✅ sync کردن next-auth
+      // ✅ sync next-auth
       const accessToken = (session as any)?.accessToken ?? null;
       await update({
         user: nextUser,
         accessToken,
       } as any);
+
+      // ✅ reset file state
+      if (avatarPreview?.startsWith("blob:")) {
+        try {
+          URL.revokeObjectURL(avatarPreview);
+        } catch {}
+      }
 
       setAvatarFile(null);
       setAvatarPreview("");
@@ -134,7 +200,7 @@ export default function ProfileMe({
       <div className="space-y-6">
         {/* Avatar */}
         <div className="flex justify-center">
-          <div className="relative group cursor-pointer" onClick={pickFile}>
+          <div className="relative group cursor-pointer select-none" onClick={pickFile}>
             <input
               ref={fileRef}
               type="file"
@@ -143,12 +209,21 @@ export default function ProfileMe({
               onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
             />
 
-            <div className="w-28 h-28 rounded-full overflow-hidden border shadow-md relative">
-              {currentAvatar ? (
-                <Image src={currentAvatar} alt="avatar" fill className="object-cover" sizes="112px" />
+            <div className="w-28 h-28 rounded-full overflow-hidden border shadow-md relative bg-muted">
+              {/* ✅ اگر آواتار نبود: فقط آیکون */}
+              {currentAvatarSrc ? (
+                <Image
+                  src={currentAvatarSrc}
+                  alt="avatar"
+                  fill
+                  className="object-cover"
+                  sizes="112px"
+                  // اگر remotePatterns نزدی و عجله داری، اینو باز کن:
+                  // unoptimized
+                />
               ) : (
-                <div className="w-full h-full bg-muted flex items-center justify-center text-2xl font-bold text-muted-foreground">
-                  {initialName?.charAt(0) || "U"}
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                  <User2 className="w-10 h-10" />
                 </div>
               )}
 

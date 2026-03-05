@@ -2,13 +2,17 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Button } from "../ui/button";
 import { useLocale } from "next-intl";
 import { useHubCarsOnly } from "@/services/hub-cars/hub-cars.queries";
-import SingleCar from "../card/CarsCard";
+
 import { Card, CardContent } from "../ui/card";
 import { Link } from "@/i18n/navigation";
+import BranchCarCard from "../card/CardCardBranch";
+
+// ✅ این Range همونیه که BranchCarCard از DateRangePickerPopover می‌گیره
+import type { Range } from "@/components/custom/calender/date-range-picker";
 
 type BranchItem = {
   id: number;
@@ -20,6 +24,8 @@ type BranchCarsProps = {
   branches?: BranchItem[];
   isLoading?: boolean;
 };
+
+const EMPTY_RANGE: Range = { start: null, end: null };
 
 const BranchCars = ({ branches }: BranchCarsProps) => {
   const locale = useLocale();
@@ -35,7 +41,7 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
     }
   }, [branches, activeCity]);
 
-  // ✅ برای گرفتن ماشین‌ها هنوز id لازم داری
+  // ✅ برای گرفتن ماشین‌ها id لازم داری
   const activeBranchId = useMemo(() => {
     return (branches ?? []).find((b) => b.slug === activeCity)?.id ?? "";
   }, [branches, activeCity]);
@@ -43,20 +49,39 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
   const { data: carsData, isLoading: carsLoading, isFetching } = useHubCarsOnly(
     activeBranchId,
     locale,
-    { page: 1 }
+    { page: 1 },
   );
 
   const cars = carsData?.cars ?? [];
-
   const currency = carsData?.currency ?? "";
   const rateToRial = carsData?.rate_to_rial ?? null;
 
+  // ✅ shared calendar بین همه‌ی کارت‌ها
+  const [sharedCalendar, setSharedCalendar] = useState<{
+    range: Range;
+    deliveryTime: string;
+    returnTime: string;
+  }>({
+    range: EMPTY_RANGE,
+    deliveryTime: "10:00",
+    returnTime: "10:00",
+  });
+
+  const onSharedCalendarChange = useCallback(
+    (v: { range: Range; deliveryTime: string; returnTime: string }) => {
+      setSharedCalendar(v);
+    },
+    [],
+  );
+
   const scrollLeft = () => {
-    if (sliderRef.current) sliderRef.current.scrollBy({ left: -300, behavior: "smooth" });
+    if (sliderRef.current)
+      sliderRef.current.scrollBy({ left: -300, behavior: "smooth" });
   };
 
   const scrollRight = () => {
-    if (sliderRef.current) sliderRef.current.scrollBy({ left: 300, behavior: "smooth" });
+    if (sliderRef.current)
+      sliderRef.current.scrollBy({ left: 300, behavior: "smooth" });
   };
 
   const activeCityName =
@@ -109,10 +134,20 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
         </div>
 
         <div className="hidden md:flex gap-2 shrink-0">
-          <Button size="icon" type="button" variant="outline" onClick={scrollRight}>
+          <Button
+            size="icon"
+            type="button"
+            variant="outline"
+            onClick={scrollRight}
+          >
             <ChevronRight className="w-6 h-6 text-gray-700" />
           </Button>
-          <Button variant="outline" size="icon" type="button" onClick={scrollLeft}>
+          <Button
+            variant="outline"
+            size="icon"
+            type="button"
+            onClick={scrollLeft}
+          >
             <ChevronLeft className="w-6 h-6 text-gray-700" />
           </Button>
         </div>
@@ -126,7 +161,10 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
       >
         {showSkeleton ? (
           Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="shrink-0 w-[330px] sm:w-[360px] md:w-[380px]">
+            <div
+              key={i}
+              className="shrink-0 w-[330px] sm:w-[360px] md:w-[380px]"
+            >
               <Card className="flex w-full flex-col rounded-2xl border border-[#0000001f] shadow-[0_2px_5px_-1px_rgba(0,0,0,.08)] bg-white dark:bg-gray-900 dark:border-gray-700 xs:p-0 max-sm:p-2 md:p-2 h-full">
                 <CardContent className="p-0 px-1 m-0">
                   <div className="relative w-full overflow-hidden rounded-none md:rounded-lg">
@@ -164,12 +202,25 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
           ))
         ) : cars.length === 0 ? (
           <div className="w-full flex justify-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400">خودرویی نیست</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              خودرویی نیست
+            </p>
           </div>
         ) : (
           cars.map((car: any) => (
-            <div key={car.id} className="shrink-0 w-[330px] sm:w-[360px] md:w-[380px]">
-              <SingleCar data={car} currency={currency} rateToRial={rateToRial} />
+            <div
+              key={car.id}
+              className="shrink-0 w-[330px] sm:w-[360px] md:w-[380px]"
+            >
+              <BranchCarCard
+                data={car}
+                currency={currency}
+                rateToRial={rateToRial}
+                branchId={Number(activeBranchId) || null}
+                sharedCalendar={sharedCalendar}
+                onSharedCalendarChange={onSharedCalendarChange}
+                calendarHydrated={true}
+              />
             </div>
           ))
         )}

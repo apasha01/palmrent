@@ -145,7 +145,7 @@ function DateTimeTrigger({
   return (
     <div className="flex items-center border h-10 rounded-md w-full overflow-hidden bg-transparent">
       <div className="flex items-center px-2 gap-1.5 w-1/2">
-        <CalendarRange className=" shrink-0" size={18} />
+        <CalendarRange className="shrink-0" size={18} />
         {hasDate ? (
           <p className="truncate text-sm text-gray-900 dark:text-gray-100 font-medium">
             {formatJalaliYMD(date!)}
@@ -158,6 +158,7 @@ function DateTimeTrigger({
       <Separator orientation="vertical" />
 
       <div className="flex items-center px-2 gap-1 w-1/2">
+        {/* این Clock در این حالت دسکتاپه، همون رنگ placeholder */}
         <Clock className="text-gray-500 shrink-0" size={18} />
         {hasDate && time ? (
           <p className="truncate text-sm text-gray-900 dark:text-gray-100 font-medium">
@@ -241,7 +242,6 @@ type NavSectionProps = {
 const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
   useDIR();
 
-  // ✅ namespace درست: SearchHeader
   const t = useTranslations("SearchHeader");
   const router = useRouter();
   const locale = useLocale();
@@ -405,7 +405,6 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
     !(selectedRange.start instanceof Date) ||
     !(selectedRange.end instanceof Date);
 
-  /* ✅ placeholder شهر - موقع خطا متن عوض میشه - چندزبانه */
   const cityPlaceholder = cityLoading
     ? t("city.loading")
     : cityLocked
@@ -414,12 +413,22 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
         ? t("city.required")
         : t("city.placeholder");
 
+  // ✅ اگر subtitle2 نبود، تاپ بیشتر بشه
+  const hasSubtitle2 = Boolean(subtitle2);
+  const headerTopClass = hasSubtitle2 ? "top-4 md:top-5" : "top-8 md:top-10";
+
   return (
     <section className="w-full">
       <div className="relative w-full h-72 md:h-40">
         <div className="absolute inset-0 flex items-start justify-center pt-10 md:bg-[#12416b] md:pt-0 md:items-center">
-          <div className="w-full max-w-6xl absolute top-4 md:top-8 px-2 md:px-4 text-center z-10">
-            <div className="flex flex-col gap-3">
+          {/* ✅ top داینامیک */}
+          <div
+            className={[
+              "w-full max-w-6xl absolute px-2 md:px-4 text-center z-10",
+              headerTopClass,
+            ].join(" ")}
+          >
+            <div className="flex flex-col gap-2">
               <p className="text-md md:text-2xl md:text-white font-bold">
                 {title ?? t("noDate.title")}
               </p>
@@ -565,7 +574,7 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
 
         {/* ✅ DESKTOP */}
         <div className="hidden md:block absolute w-full left-0 -bottom-14 z-10">
-          <div className="flex justify-center px-4">
+          <div className="flex justify-center px-2">
             <div className="bg-white dark:bg-gray-900 shadow rounded-md p-4 max-w-6xl w-full">
               <div className="grid grid-cols-4 gap-3 items-end">
                 <div className="space-y-2">
@@ -585,7 +594,7 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
                   >
                     <SelectTrigger
                       className={[
-                        "w-full h-10",
+                        "w-full h-10 relative",
                         cityError
                           ? "border-red-500 text-red-500 [&>span]:text-red-500 [&_svg]:!text-red-500"
                           : "",
@@ -594,8 +603,14 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
                       <SelectValue placeholder={cityPlaceholder} />
                     </SelectTrigger>
 
-                    {/* ✅ width سلکت = width trigger */}
-                    <SelectContent className="w-[var(--radix-select-trigger-width)]">
+                    {/* ✅ FIX: همیشه زیر اینپوت باز شود + کلاس‌های صحیح */}
+                    <SelectContent
+                      position="popper"
+                      side="bottom"
+                      align="start"
+                      sideOffset={4}
+                      className="z-[60] w-[var(--radix-select-trigger-width)]"
+                    >
                       {cityLoading ? (
                         <div className="py-3 px-3 flex items-center justify-center">
                           <Spinner />

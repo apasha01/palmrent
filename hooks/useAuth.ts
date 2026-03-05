@@ -18,7 +18,6 @@ export function useAuth() {
     router.refresh();
   };
 
-  // ✅ این رو اضافه کن: برای sync کردن user داخل next-auth
   const setSessionUser = async (nextUser: any) => {
     // next-auth update => session callback دوباره اجرا میشه
     await update({

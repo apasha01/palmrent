@@ -15,6 +15,7 @@ import ReactQueryProvider from "@/providers/ReactQuery-provider";
 // ✅ shadcn/radix direction
 import { DirectionProvider } from "@radix-ui/react-direction";
 import { MobileSheetProvider } from "@/providers/mobile-sheet-provider";
+import ConditionalBottomNav from "@/components/layouts/ConditionalBottomNav";
 
 const RTL_LOCALES = new Set(["fa", "ar"]);
 
@@ -59,7 +60,12 @@ export default function Providers({
                 enableSystem
                 disableTransitionOnChange
               >
-                <AppBoot>{children}</AppBoot>
+                <AppBoot>
+                  {children}
+
+                          <ConditionalBottomNav />
+
+                </AppBoot>
               </ThemeProvider>
 
               </MobileSheetProvider>

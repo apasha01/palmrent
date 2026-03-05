@@ -6,7 +6,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { useSelector } from "react-redux";
-
 import Header from "@/components/layouts/Header";
 import SearchHeader from "@/components/search/search-header";
 import Footer from "@/components/Footer";
@@ -17,13 +16,10 @@ import DescriptionPopup from "@/components/DescriptionPopup";
 import ReserveInformation from "@/components/reserve/ReserveInformation";
 import { SerarchSection } from "@/components/search/SearchSection";
 import SingleCar from "@/components/card/CarsCard";
-
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Info, RefreshCcw, SlidersHorizontal } from "lucide-react";
-
 import { useInfiniteCarFilter } from "@/services/car-filter/car-filter.hooks";
 import type { CarFilterParams } from "@/services/car-filter/car-filter.types";
-
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store";
 import { normalizeTime } from "@/lib/rent-days";
 import SearchMetaClient from "@/services/seo/SearchMetaClient";
