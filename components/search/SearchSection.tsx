@@ -7,7 +7,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 import { AnimatePresence, motion } from "framer-motion"
-import { Check, Search, X } from "lucide-react"
+import { CalendarDays, Check, Search, X } from "lucide-react"
 import { IconClose, IconFilter, IconSort } from "../Icons"
 
 import SearchFilterSheet from "./SearchFilterSheet"
@@ -29,6 +29,9 @@ import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet"
 
 import CAR_DATA from "@/lib/carsSuggestion.json"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "../ui/drawer"
+import { DateRangePickerPopover } from "@/components/custom/calender/date-range-picker"
+import { jalaliToDate, formatJalaliDate } from "@/lib/date-utils"
+import { normalizeTime } from "@/lib/rent-days"
 
 type CarEntry = { brand: string; slug: string; models: string[] }
 type Suggestion = { value: string; display: string; brand: string; isModel: boolean }
@@ -37,6 +40,10 @@ const PARAM_Q = "search_title"
 const PARAM_BRAND = "brand"
 const PARAM_SORT = "sort"
 const PARAM_CATS = "categories"
+const PARAM_FROM = "from"
+const PARAM_TO = "to"
+const PARAM_DT = "dt"
+const PARAM_RT = "rt"
 
 const MAX_SUGGESTIONS = 10
 
@@ -160,6 +167,77 @@ function uniqBrands(arr: string[]) {
     out.push(v)
   }
   return out
+}
+
+function toEnglishDigits(input: string) {
+  const fa = "۰۱۲۳۴۵۶۷۸۹"
+  const ar = "٠١٢٣٤٥٦٧٨٩"
+  return String(input)
+    .split("")
+    .map((ch) => {
+      const faIndex = fa.indexOf(ch)
+      if (faIndex !== -1) return String(faIndex)
+      const arIndex = ar.indexOf(ch)
+      if (arIndex !== -1) return String(arIndex)
+      return ch
+    })
+    .join("")
+}
+
+function normalizeJalaliString(s: string) {
+  return toEnglishDigits(s).replace(/-/g, "/").trim()
+}
+
+function pad2(n: number) {
+  return String(n).padStart(2, "0")
+}
+
+function normalizeJalaliParam(input?: string | null) {
+  if (!input) return null
+  const clean = toEnglishDigits(String(input)).replace(/-/g, "/").trim()
+  const [y, m, d] = clean.split("/").map((x) => parseInt(x, 10))
+  if (!y || !m || !d) return null
+  return `${y}/${pad2(m)}/${pad2(d)}`
+}
+
+function toPersianDigits(input: string) {
+  const en = "0123456789"
+  const fa = "۰۱۲۳۴۵۶۷۸۹"
+  return String(input).replace(/[0-9]/g, (d) => fa[en.indexOf(d)])
+}
+
+function parseJalaliToDateNoon(s?: string | null) {
+  const norm = normalizeJalaliParam(s)
+  if (!norm) return null
+  const [y, m, d] = norm.split("/").map((x) => parseInt(x, 10))
+  if (!y || !m || !d) return null
+  const date = jalaliToDate(y, m - 1, d)
+  if (!date) return null
+  date.setHours(12, 0, 0, 0)
+  return date
+}
+
+function safeTime(input: any, fallback: string) {
+  const n = normalizeTime(input)
+  if (!n || typeof n !== "string" || n.length < 4) return fallback
+  return n
+}
+
+function getJalaliMonthNames(t: any): string[] {
+  return [
+    t("months.1"),
+    t("months.2"),
+    t("months.3"),
+    t("months.4"),
+    t("months.5"),
+    t("months.6"),
+    t("months.7"),
+    t("months.8"),
+    t("months.9"),
+    t("months.10"),
+    t("months.11"),
+    t("months.12"),
+  ]
 }
 
 // ─────────────────────────────────────────
@@ -288,6 +366,15 @@ export function SerarchSection({
   const storeBrands = useSearchPageStore((s) => s.selectedBrands)
   const setStoreBrands = useSearchPageStore((s) => s.setSelectedBrands)
 
+  const carDates = useSearchPageStore((s) => s.carDates)
+  const setCarDates = useSearchPageStore((s) => s.setCarDates)
+
+  const deliveryTime = useSearchPageStore((s) => s.deliveryTime)
+  const setDeliveryTime = useSearchPageStore((s) => s.setDeliveryTime)
+
+  const returnTime = useSearchPageStore((s) => s.returnTime)
+  const setReturnTime = useSearchPageStore((s) => s.setReturnTime)
+
   const [searchValue, setSearchValue] = useState("")
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -300,6 +387,19 @@ export function SerarchSection({
   const suppressUrlSyncRef = useRef(false)
   const pendingParamsRef = useRef<string | null>(null)
 
+  const dtFallback = useMemo(() => safeTime(deliveryTime, "10:00"), [deliveryTime])
+  const rtFallback = useMemo(() => safeTime(returnTime, "10:00"), [returnTime])
+
+  const hasDates = Boolean(carDates?.[0] && carDates?.[1])
+
+  const monthNames = useMemo(() => getJalaliMonthNames(t), [t])
+
+  const initialRange = useMemo(() => {
+    const start = parseJalaliToDateNoon(carDates?.[0] ?? null)
+    const end = parseJalaliToDateNoon(carDates?.[1] ?? null)
+    return { start, end }
+  }, [carDates?.[0], carDates?.[1]])
+
   const scrollToTop = useCallback((behavior: ScrollBehavior = "smooth") => {
     if (typeof window === "undefined") return
     requestAnimationFrame(() =>
@@ -307,14 +407,66 @@ export function SerarchSection({
     )
   }, [])
 
+  function formatJalaliShort(dateString?: string | null) {
+    const norm = normalizeJalaliParam(dateString)
+    if (!norm) return ""
+
+    const parts = norm.split("/")
+    if (parts.length !== 3) return ""
+
+    const m = Number(parts[1])
+    const d = Number(parts[2])
+    if (!Number.isFinite(m) || !Number.isFinite(d) || m < 1 || m > 12) return ""
+
+    const dayStr = locale === "fa" ? toPersianDigits(String(d)) : String(d)
+    return `${dayStr} ${monthNames[m - 1]}`
+  }
+
+  const deliveryDateText = useMemo(
+    () => formatJalaliShort(carDates?.[0] ?? null),
+    [carDates?.[0], locale, monthNames]
+  )
+
+  const returnDateText = useMemo(
+    () => formatJalaliShort(carDates?.[1] ?? null),
+    [carDates?.[1], locale, monthNames]
+  )
+
+  const dateChipLabel = useMemo(() => {
+    if (!hasDates) return ""
+    const dtText = locale === "fa" ? toPersianDigits(dtFallback) : dtFallback
+    const rtText = locale === "fa" ? toPersianDigits(rtFallback) : rtFallback
+    return `${deliveryDateText} (${dtText}) - ${returnDateText} (${rtText})`
+  }, [hasDates, locale, dtFallback, rtFallback, deliveryDateText, returnDateText])
+
+  const popoverKey = useMemo(() => {
+    const f = normalizeJalaliParam(carDates?.[0] ?? "") ?? ""
+    const to = normalizeJalaliParam(carDates?.[1] ?? "") ?? ""
+    return `search-dates-${f}-${to}-${dtFallback}-${rtFallback}`
+  }, [carDates?.[0], carDates?.[1], dtFallback, rtFallback])
+
   const pushURL = useCallback(
-    (patch: { q?: string; brands?: string[]; sortVal?: string | null; cats?: number[] }) => {
+    (patch: {
+      q?: string
+      brands?: string[]
+      sortVal?: string | null
+      cats?: number[]
+      from?: string | null
+      to?: string | null
+      dt?: string | null
+      rt?: string | null
+    }) => {
       const p = new URLSearchParams(searchParams.toString())
 
       const q = patch.q !== undefined ? patch.q : (search_title || "")
       const brands = patch.brands !== undefined ? patch.brands : storeBrands
       const sortVal = "sortVal" in patch ? patch.sortVal : sort
       const cats = patch.cats !== undefined ? patch.cats : selectedCategories
+
+      const fromVal = patch.from !== undefined ? patch.from : (carDates?.[0] ?? null)
+      const toVal = patch.to !== undefined ? patch.to : (carDates?.[1] ?? null)
+      const dtVal = patch.dt !== undefined ? patch.dt : dtFallback
+      const rtVal = patch.rt !== undefined ? patch.rt : rtFallback
 
       if (q && String(q).trim()) p.set(PARAM_Q, String(q).trim())
       else p.delete(PARAM_Q)
@@ -329,15 +481,39 @@ export function SerarchSection({
       if (cats.length) p.set(PARAM_CATS, cats.join(","))
       else p.delete(PARAM_CATS)
 
+      if (fromVal && String(fromVal).trim()) p.set(PARAM_FROM, String(fromVal).trim())
+      else p.delete(PARAM_FROM)
+
+      if (toVal && String(toVal).trim()) p.set(PARAM_TO, String(toVal).trim())
+      else p.delete(PARAM_TO)
+
+      if (fromVal && dtVal && String(dtVal).trim()) p.set(PARAM_DT, String(dtVal).trim())
+      else p.delete(PARAM_DT)
+
+      if (toVal && rtVal && String(rtVal).trim()) p.set(PARAM_RT, String(rtVal).trim())
+      else p.delete(PARAM_RT)
+
       const nextParams = p.toString()
       pendingParamsRef.current = nextParams
       suppressUrlSyncRef.current = true
-      router.replace(`${pathname}?${nextParams}`, { scroll: false })
+
+      const nextUrl = nextParams ? `${pathname}?${nextParams}` : pathname
+      router.replace(nextUrl, { scroll: false })
     },
-    [searchParams, search_title, storeBrands, sort, selectedCategories, pathname, router]
+    [
+      searchParams,
+      search_title,
+      storeBrands,
+      sort,
+      selectedCategories,
+      carDates,
+      dtFallback,
+      rtFallback,
+      pathname,
+      router,
+    ]
   )
 
-  // ✅ Sync store from URL (ولی اینپوت رو پر نکن — چون چیپ نمایش میدیم)
   useEffect(() => {
     const currentParams = searchParams.toString()
     if (suppressUrlSyncRef.current && pendingParamsRef.current) {
@@ -349,6 +525,11 @@ export function SerarchSection({
     const q = searchParams.get(PARAM_Q) || ""
     const brandsRaw = searchParams.get(PARAM_BRAND) || ""
     const sortRaw = searchParams.get(PARAM_SORT) || ""
+
+    const fromRaw = normalizeJalaliParam(searchParams.get(PARAM_FROM))
+    const toRaw = normalizeJalaliParam(searchParams.get(PARAM_TO))
+    const dtRaw = safeTime(searchParams.get(PARAM_DT), "10:00")
+    const rtRaw = safeTime(searchParams.get(PARAM_RT), "10:00")
 
     const urlBrands = brandsRaw ? uniqBrands(brandsRaw.split(",").filter(Boolean)) : []
 
@@ -362,12 +543,24 @@ export function SerarchSection({
 
     if (q !== search_title) setSearchTitle(q)
 
-    // ✅ مهم: اینپوت همیشه خالی بمونه مگر اینکه کاربر داره تایپ میکنه
-    // (اینجا ما کاری به searchValue نداریم)
+    const currentFrom = normalizeJalaliParam(carDates?.[0] ?? null)
+    const currentTo = normalizeJalaliParam(carDates?.[1] ?? null)
+
+    if (currentFrom !== fromRaw || currentTo !== toRaw) {
+      setCarDates([fromRaw, toRaw])
+    }
+
+    if (safeTime(deliveryTime, "10:00") !== dtRaw) {
+      setDeliveryTime(dtRaw)
+    }
+
+    if (safeTime(returnTime, "10:00") !== rtRaw) {
+      setReturnTime(rtRaw)
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
-  // close suggestions on outside click
   useEffect(() => {
     const fn = (e: Event) => {
       const target = e.target as Node
@@ -381,7 +574,6 @@ export function SerarchSection({
     document.addEventListener("touchstart", fn, { passive: true })
     return () => {
       document.removeEventListener("mousedown", fn)
-      
       document.removeEventListener("touchstart", fn as any)
     }
   }, [])
@@ -400,7 +592,6 @@ export function SerarchSection({
     )
   }, [searchValue])
 
-  // ✅ کلیک روی suggestion: مثل قبل برند رو badge کن + اینپوت خالی
   const handleSuggestionClick = (s: Suggestion) => {
     setShowSuggestions(false)
 
@@ -410,8 +601,6 @@ export function SerarchSection({
       : uniqBrands([...storeBrands, brandOnly])
 
     setStoreBrands(nextBrands)
-
-    // ✅ سرچ تایپی رو چیپ نکن، چون خودش برند چیپ شد
     setSearchTitle("")
     setSearchValue("")
     inputRef.current?.blur()
@@ -420,7 +609,6 @@ export function SerarchSection({
     scrollToTop("smooth")
   }
 
-  // ✅ فقط تایپ: هیچ URL آپدیت نشه
   const handleInputChange = (vRaw: string) => {
     setSearchValue(vRaw)
     setShowSuggestions(true)
@@ -429,18 +617,15 @@ export function SerarchSection({
     }
   }
 
-  // ✅ اعمال سرچ فقط با Enter یا دکمه تایید
   const commitSearch = useCallback(() => {
     const raw = (searchValue || "").trim()
     if (!raw) {
-      // اگر چیزی تایپ نشده، کاری نکن
       setShowSuggestions(false)
       return
     }
 
     setShowSuggestions(false)
 
-    // اگر کاربر فارسی/غلط املایی برند زد، تبدیلش کن و مثل badge برند اعمال کن
     const maybeBrand = resolveBrandFromFaQuery(raw)
     if (maybeBrand) {
       const brandOnly = maybeBrand
@@ -458,7 +643,6 @@ export function SerarchSection({
       return
     }
 
-    // در غیر این صورت: q رو مثل چیپ نگه دار (search_title) + اینپوت حتما خالی
     setSearchTitle(raw)
     setSearchValue("")
     inputRef.current?.blur()
@@ -474,7 +658,6 @@ export function SerarchSection({
     scrollToTop("smooth")
   }
 
-  // ✅ چیپ سرچ (q) رو پاک کن
   const handleRemoveSearchChip = () => {
     setSearchTitle("")
     pushURL({ q: "" })
@@ -487,6 +670,12 @@ export function SerarchSection({
     scrollToTop("smooth")
   }
 
+  const handleRemoveSortChip = () => {
+    setSort(null)
+    pushURL({ sortVal: null })
+    scrollToTop("smooth")
+  }
+
   const handleCategoryToggle = (id: number) => {
     const next = selectedCategories.includes(id)
       ? selectedCategories.filter((c) => c !== id)
@@ -494,6 +683,54 @@ export function SerarchSection({
 
     toggleSelectedCategory(id)
     pushURL({ cats: next })
+    scrollToTop("smooth")
+  }
+
+  const handleDateConfirm = ({ start, end, deliveryTime: dtRaw, returnTime: rtRaw }: any) => {
+    if (!start || !end) return
+
+    const s = new Date(start)
+    const e = new Date(end)
+    s.setHours(12, 0, 0, 0)
+    e.setHours(12, 0, 0, 0)
+
+    const fromRaw = normalizeJalaliString(formatJalaliDate(s))
+    const toRaw = normalizeJalaliString(formatJalaliDate(e))
+
+    const fromStr = normalizeJalaliParam(fromRaw)
+    const toStr = normalizeJalaliParam(toRaw)
+
+    if (!fromStr || !toStr) return
+
+    const safeDt = safeTime(dtRaw, dtFallback)
+    const safeRt = safeTime(rtRaw, rtFallback)
+
+    setCarDates([fromStr, toStr])
+    setDeliveryTime(safeDt)
+    setReturnTime(safeRt)
+
+    pushURL({
+      from: fromStr,
+      to: toStr,
+      dt: safeDt,
+      rt: safeRt,
+    })
+
+    scrollToTop("smooth")
+  }
+
+  const handleClearDates = () => {
+    setCarDates([null, null])
+    setDeliveryTime("10:00")
+    setReturnTime("10:00")
+
+    pushURL({
+      from: null,
+      to: null,
+      dt: null,
+      rt: null,
+    })
+
     scrollToTop("smooth")
   }
 
@@ -527,15 +764,45 @@ export function SerarchSection({
   )
 
   const hasSearchChip = !!(search_title && String(search_title).trim())
-  const hasChips = hasSearchChip || storeBrands.length > 0 || selectedCategoryItems.length > 0
+  const hasSortChip = !!sort
+
+  const hasChips =
+    hasSearchChip ||
+    hasSortChip ||
+    storeBrands.length > 0 ||
+    selectedCategoryItems.length > 0
 
   const sortLabel = useMemo(() => {
-    if (!sort) return "مرتب‌سازی"
+    if (!sort) return "پیشنهاد پالم رنت"
     if (sort === "price_min") return t("price_min")
     if (sort === "price_max") return t("price_max")
     if (sort === "new") return t("sort1")
-    return "مرتب‌سازی"
+    return "پیشنهاد پالم رنت"
   }, [sort, t])
+
+  const dateTrigger = (
+    <DateRangePickerPopover
+      key={popoverKey}
+      initialRange={initialRange}
+      defaultIsJalali={true}
+      initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
+      onConfirm={handleDateConfirm}
+      onClear={handleClearDates}
+      trigger={
+        <button
+          type="button"
+          className={cn(
+            "flex shrink-0 items-center gap-2 p-2 h-[33px] rounded-lg border text-xs",
+            "border-[#0000001f] text-[#4b5259] transition-all cursor-pointer",
+            "sm:hover:bg-[#3B82F61A] sm:hover:text-[#3B82F6]"
+          )}
+        >
+          <CalendarDays className="size-4" />
+          <span>{hasDates ? dateChipLabel : "انتخاب تاریخ"}</span>
+        </button>
+      }
+    />
+  )
 
   return (
     <>
@@ -579,15 +846,18 @@ export function SerarchSection({
                   }}
                   type="search"
                   placeholder={t("carSearch")}
-                  className="w-full px-2 outline-0 placeholder:text-[#4b5259] text-[16px] sm:text-xs leading-none"
+                  className="w-full px-2 outline-0 placeholder:text-[#4b5259] text-[14px] sm:text-xs leading-none"
                 />
               </div>
 
-              {/* ✅ Clear typed text (فقط تایپ رو پاک میکنه، نه چیپ‌ها) */}
               {!!searchValue.trim() && (
                 <button
                   type="button"
-                  onClick={() => { setSearchValue(""); setShowSuggestions(false); inputRef.current?.focus() }}
+                  onClick={() => {
+                    setSearchValue("")
+                    setShowSuggestions(false)
+                    inputRef.current?.focus()
+                  }}
                   className="p-1 rounded-md hover:bg-gray-100 text-gray-400 shrink-0"
                   aria-label="clear"
                 >
@@ -595,9 +865,7 @@ export function SerarchSection({
                 </button>
               )}
 
-
               <div className="flex items-center gap-1 text-[#75736F] shrink-0">
-                {/* Filter */}
                 <SheetTrigger asChild>
                   <button
                     type="button"
@@ -615,7 +883,6 @@ export function SerarchSection({
                   </button>
                 </SheetTrigger>
 
-                {/* Sort drawer */}
                 <button
                   type="button"
                   onClick={() => setSortDrawerOpen(true)}
@@ -629,14 +896,17 @@ export function SerarchSection({
                       <IconSort size="20" className={undefined} />
                     </span>
                   </span>
-                  <span className="max-sm:hidden text-sm text-[#4b5259]">{sortLabel}</span>
+
+                  <span className="max-sm:hidden text-sm text-[#4b5259]">
+                    {sort ? sortLabel : "مرتب‌سازی"}
+                  </span>
+
                   {sort && (
                     <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-blue-500 sm:hidden" />
                   )}
                 </button>
               </div>
 
-              {/* Suggestions */}
               <AnimatePresence>
                 {showSuggestions && suggestions.length > 0 && (
                   <motion.div
@@ -690,7 +960,6 @@ export function SerarchSection({
             {hasChips && (
               <div className="w-full overflow-auto hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 <div className="flex md:gap-2 gap-1">
-                  {/* ✅ Search chip (q) */}
                   {hasSearchChip && (
                     <button
                       type="button"
@@ -705,7 +974,22 @@ export function SerarchSection({
                     </button>
                   )}
 
-                  {/* Brand chips */}
+                  {hasSortChip && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveSortChip}
+                      className="flex shrink-0 items-center gap-2 p-2 h-8.25 rounded-lg transition-all text-xs bg-[#3B82F61A] border border-[#0077db] text-[#0077db] cursor-pointer mb-2 select-none"
+                      title={sortLabel}
+                    >
+                      <span className="truncate">{sortLabel}</span>
+                      <span className="size-3 flex items-center text-[#0077db]">
+                        <IconClose className={undefined} />
+                      </span>
+                    </button>
+                  )}
+
+           
+
                   {storeBrands.map((brand) => (
                     <button
                       key={brand}
@@ -720,7 +1004,6 @@ export function SerarchSection({
                     </button>
                   ))}
 
-                  {/* Category chips */}
                   {selectedCategoryItems.map((item) => (
                     <label key={item.id} className="flex gap-2 mb-2 select-none shrink-0">
                       <input
@@ -742,11 +1025,13 @@ export function SerarchSection({
               </div>
             )}
 
-            {/* ── Category pills ── */}
+            {/* ── Category pills + Date button ── */}
             <div className="block md:flex-nowrap flex-wrap items-center justify-between gap-2 lg:text-sm md:text-xs text-xs relative">
               <div className="flex md:w-auto w-full items-start gap-2 lg:text-sm md:text-xs text-xs">
                 <div className="w-full block overflow-auto hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                   <div className="flex md:gap-2 gap-1">
+                    {!hasDates && dateTrigger}
+
                     {sortList
                       .filter((item) => !selectedCategories.includes(item.id))
                       .map((item) => (
@@ -768,6 +1053,7 @@ export function SerarchSection({
                   </div>
                 </div>
               </div>
+
               {searchDisable && (
                 <div className="absolute inset-0 bg-white/25 pointer-events-none z-[5] rounded-lg" />
               )}

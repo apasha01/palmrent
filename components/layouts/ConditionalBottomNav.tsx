@@ -7,7 +7,7 @@ import BottomNav from "./BottomNav"
 const LOCALES = ["en", "fa", "ar", "tr"]
 
 // مسیرهایی که bottom nav باید نمایش داده شود
-const ALLOW = ["/", "/cars-rent", "/profile", "/profile/myReserve", "/search", "/favorites", "/rent"]
+const ALLOW = ["/", "/cars-rent", "/profile", "/profile/myReserve"]
 
 function removeLocalePrefix(pathname: string) {
   const parts = pathname.split("/")

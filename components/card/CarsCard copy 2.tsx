@@ -145,54 +145,29 @@ export default function SingleCar({
     >
       <SingleCarGallery imageList={images}>
 
-        {/* 
-          FIX (Safari badge reflow):
-          - Removed "absolute" positioning from this wrapper div.
-          - Now uses a flex row inside a new overlay wrapper that is
-            position:absolute but has "transform: translateZ(0)" and
-            "will-change: transform" to force a GPU compositing layer.
-          - This prevents Safari from re-painting/re-positioning badges
-            during momentum scroll because the layer is promoted to GPU.
-          - "pointer-events-none" on wrapper + "pointer-events-auto" on
-            each badge keeps click-through behaviour identical to before.
-        */}
-        <div
-          className="absolute top-2 start-2 max-w-[calc(100%-16px)] pointer-events-none"
-          style={{ transform: "translateZ(0)", willChange: "transform" }}
-        >
-          <div className="flex text-[#0B835C] text-[10px] gap-2 max-[380px]:gap-1 text-nowrap pointer-events-auto">
-            {rawOptions.map((item: any, index: number) => {
-              if (!optionList?.[item]) return null
-              const isNoDeposit = optionList[item].title === "noDeposite"
-              return (
-                <div
-                  key={index}
-                  onClick={(e) => e.stopPropagation()}
-                  className={`shrink-0 sm:py-1 py-2 group sm:px-2 max-[405px]:px-2 max-[405px]:text-[9px] font-bold px-3 rounded-4xl ${isNoDeposit ? "bg-[#eafaee] border-[#eafaee]" : "bg-[#e2e6e9]"} relative hover:scale-[105%] transition-all border border-white`}
-                >
-                  <span className={`${isNoDeposit ? "text-[#1e7b33]" : "text-[#4b5259]"} font-bold flex items-center gap-1`}>
-                    {t(optionList[item].title)}
-                    {isNoDeposit && <span className="inline-flex"><IconInfoCircle /></span>}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
+        <div className="flex text-[#0B835C] text-[10px] absolute gap-2 max-[380px]:gap-1 text-nowrap top-2 start-2 max-w-[calc(100%-16px)]">
+          {rawOptions.map((item: any, index: number) => {
+            if (!optionList?.[item]) return null
+            const isNoDeposit = optionList[item].title === "noDeposite"
+            return (
+              <div
+                key={index}
+                onClick={(e) => e.stopPropagation()}
+                className={`shrink-0 sm:py-1 py-2 group sm:px-2 max-[405px]:px-2 max-[405px]:text-[9px] font-bold px-3 rounded-4xl ${isNoDeposit ? "bg-[#eafaee] border-[#eafaee]" : "bg-[#e2e6e9]"} relative hover:scale-[105%] transition-all border border-white`}
+              >
+                <span className={`${isNoDeposit ? "text-[#1e7b33]" : "text-[#4b5259]"} font-bold flex items-center gap-1`}>
+                  {t(optionList[item].title)}
+                  {isNoDeposit && <span className="inline-flex"><IconInfoCircle /></span>}
+                </span>
+              </div>
+            )
+          })}
         </div>
 
         {Number((car as any).discountPercent || (car as any).discount || 0) > 0 && (
-          /*
-            FIX (Safari badge reflow) - same GPU layer trick for discount badge.
-            "bottom-2 end-2" positioning preserved, translateZ(0) prevents repaint.
-          */
-          <div
-            className="absolute bottom-2 end-2"
-            style={{ transform: "translateZ(0)", willChange: "transform" }}
-          >
-            <div className="bg-[#e1ff00] py-1.5 px-2.5 text-[#3b3d40] opacity-85 rounded-lg flex items-center gap-1">
-              <IconDiscount size="20" />
-              {(car as any).discountPercent || (car as any).discount}% {t("discount")}
-            </div>
+          <div className="absolute bottom-2 end-2 bg-[#e1ff00] py-1.5 px-2.5 text-[#3b3d40] opacity-85 rounded-lg flex items-center gap-1">
+            <IconDiscount size="20" />
+            {(car as any).discountPercent || (car as any).discount}% {t("discount")}
           </div>
         )}
       </SingleCarGallery>
@@ -248,7 +223,7 @@ export function SingleCarGallery({
   return (
     <div className="flex relative z-10 w-full lg:h-[220px] h-[220px] rounded-lg">
       {!firstImageLoaded && (
-        <div className="absolute inset-0 z-10 rounded-lg bg-gray-200 animate-pulse pointer-events-none" />
+        <div className="absolute inset-0 z-30 rounded-lg bg-gray-200 animate-pulse pointer-events-none" />
       )}
 
       <div className="flex h-full w-full max-md:overflow-x-auto max-md:z-10 hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
@@ -257,36 +232,21 @@ export function SingleCarGallery({
           onClick={(e) => e.stopPropagation()}
         >
           {safeImageList.map((src: any, index: number) => (
-            /*
-              FIX (Android images not loading):
-              Root cause: images had `opacity-0` applied on mobile too, even though
-              mobile uses horizontal scroll (not opacity-switching). Android Chrome
-              skips rendering/fetching elements that are invisible AND in a flex
-              scroll container — it treats them as "not needed".
-
-              Fix:
-              - On mobile (max-md): ALL images are fully visible — no opacity hiding.
-                The user swipes horizontally to see them (natural flex scroll).
-              - On desktop (md+): keep opacity-based switching as before.
-              - `md:absolute` stays so desktop stacks images on top of each other.
-              - `loading="eager"` ensures no lazy-load skipping.
-              - `shrink-0` + explicit width on mobile prevents images from collapsing.
-            */
             <Image
               key={`${String(src)}-${index}`}
               className={`
                 md:rounded-lg
                 max-md:first:rounded-r-lg max-md:last-of-type:rounded-l-lg
-                max-md:shrink-0 max-md:w-[calc(100vw-80px)] max-md:snap-center
                 w-full h-full object-cover md:absolute
-                ${index === activeImageIndex ? "md:z-10 md:opacity-100" : "md:opacity-0"}
+                ${index === activeImageIndex ? "z-10 opacity-100" : "opacity-0"}
                 md:transition-opacity md:duration-200 md:ease-out
+                ${index !== safeImageList.length - 1 ? "" : "md:hidden"}
               `}
               src={toStorageUrl(src)}
               width={395}
               height={253}
               alt={`Car image ${index + 1}`}
-              loading="eager"
+              loading={index === 0 ? "eager" : "lazy"}
               onLoad={index === 0 ? () => setFirstImageLoaded(true) : undefined}
               onError={index === 0 ? () => setFirstImageLoaded(true) : undefined}
             />

@@ -248,7 +248,7 @@ export function SingleCarGallery({
   return (
     <div className="flex relative z-10 w-full lg:h-[220px] h-[220px] rounded-lg">
       {!firstImageLoaded && (
-        <div className="absolute inset-0 z-10 rounded-lg bg-gray-200 animate-pulse pointer-events-none" />
+        <div className="absolute inset-0 z-30 rounded-lg bg-gray-200 animate-pulse pointer-events-none" />
       )}
 
       <div className="flex h-full w-full max-md:overflow-x-auto max-md:z-10 hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
@@ -279,7 +279,7 @@ export function SingleCarGallery({
                 max-md:first:rounded-r-lg max-md:last-of-type:rounded-l-lg
                 max-md:shrink-0 max-md:w-[calc(100vw-80px)] max-md:snap-center
                 w-full h-full object-cover md:absolute
-                ${index === activeImageIndex ? "md:z-10 md:opacity-100" : "md:opacity-0"}
+                ${index === activeImageIndex ? "md:z-5 md:opacity-100" : "md:opacity-0"}
                 md:transition-opacity md:duration-200 md:ease-out
               `}
               src={toStorageUrl(src)}

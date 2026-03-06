@@ -66,7 +66,6 @@ function DateTimeTrigger({
   time?: string;
   datePlaceholder: string;
   timePlaceholder: string;
-  monthNames: string[];
   variant?: "default" | "mobilePill" | "mobileDashTime" | "mobileDashTimeNoIcon";
 }) {
   const hasDate = date instanceof Date && !isNaN(date.getTime());
@@ -79,7 +78,7 @@ function DateTimeTrigger({
           <div className="min-w-0">
             {hasDate ? (
               <p className="truncate text-[15px] text-gray-900 dark:text-gray-100 font-medium">
-                {formatJalaliYMD(date!)}{" "}
+                {formatJalaliYMD(date)}{" "}
                 <span className="text-gray-900 dark:text-gray-100 font-medium">
                   {" - "}
                   {hasDate && time ? toPersianDigits(time) : timePlaceholder}
@@ -106,7 +105,7 @@ function DateTimeTrigger({
         <div className="px-2 w-full min-w-0">
           {hasDate ? (
             <p className="truncate text-[15px] text-gray-900 dark:text-gray-100 font-medium">
-              {formatJalaliYMD(date!)}{" "}
+              {formatJalaliYMD(date)}{" "}
               <span className="text-gray-900 dark:text-gray-100 font-medium">
                 {" - "}
                 {hasDate && time ? toPersianDigits(time) : timePlaceholder}
@@ -132,7 +131,7 @@ function DateTimeTrigger({
         <div className="flex items-center px-2 gap-2 w-full">
           {hasDate ? (
             <p className="truncate text-base text-gray-900 dark:text-gray-100 font-medium">
-              {formatJalaliYMD(date!)}
+              {formatJalaliYMD(date)}
             </p>
           ) : (
             <p className="truncate text-base text-gray-500">{datePlaceholder}</p>
@@ -148,7 +147,7 @@ function DateTimeTrigger({
         <CalendarRange className="shrink-0" size={18} />
         {hasDate ? (
           <p className="truncate text-sm text-gray-900 dark:text-gray-100 font-medium">
-            {formatJalaliYMD(date!)}
+            {formatJalaliYMD(date)}
           </p>
         ) : (
           <p className="truncate text-sm text-gray-500">{datePlaceholder}</p>
@@ -158,7 +157,6 @@ function DateTimeTrigger({
       <Separator orientation="vertical" />
 
       <div className="flex items-center px-2 gap-1 w-1/2">
-        {/* این Clock در این حالت دسکتاپه، همون رنگ placeholder */}
         <Clock className="text-gray-500 shrink-0" size={18} />
         {hasDate && time ? (
           <p className="truncate text-sm text-gray-900 dark:text-gray-100 font-medium">
@@ -224,7 +222,6 @@ function useIsDesktop(breakpointPx = 768) {
       return () => mq.removeEventListener("change", update);
     }
 
-    // Safari قدیمی
     mq.addListener(update);
     return () => mq.removeListener(update);
   }, [breakpointPx]);
@@ -256,24 +253,6 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
   const [cityOpenDesktop, setCityOpenDesktop] = React.useState(false);
 
   const [cityError, setCityError] = React.useState(false);
-
-  const monthNames = React.useMemo(
-    () => [
-      t("months.1"),
-      t("months.2"),
-      t("months.3"),
-      t("months.4"),
-      t("months.5"),
-      t("months.6"),
-      t("months.7"),
-      t("months.8"),
-      t("months.9"),
-      t("months.10"),
-      t("months.11"),
-      t("months.12"),
-    ],
-    [t],
-  );
 
   const branchSlugFromRoute =
     params?.cityName ?? params?.slug ?? params?.branch ?? params?.city ?? "";
@@ -413,7 +392,6 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
         ? t("city.required")
         : t("city.placeholder");
 
-  // ✅ اگر subtitle2 نبود، تاپ بیشتر بشه
   const hasSubtitle2 = Boolean(subtitle2);
   const headerTopClass = hasSubtitle2 ? "top-4 md:top-5" : "top-8 md:top-10";
 
@@ -421,7 +399,6 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
     <section className="w-full">
       <div className="relative w-full h-72 md:h-40">
         <div className="absolute inset-0 flex items-start justify-center pt-10 md:bg-[#12416b] md:pt-0 md:items-center">
-          {/* ✅ top داینامیک */}
           <div
             className={[
               "w-full max-w-6xl absolute px-2 md:px-4 text-center z-10",
@@ -446,10 +423,9 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
           </div>
         </div>
 
-        {/* ✅ MOBILE */}
+        {/* MOBILE */}
         <div className="absolute inset-x-0 bottom-3 px-4 z-10 md:hidden">
           <div className="grid grid-cols-1 gap-3">
-            {/* city */}
             <div className="relative">
               <Select
                 open={cityOpenMobile}
@@ -502,7 +478,6 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
               </Select>
             </div>
 
-            {/* MOBILE DATE */}
             <div className="relative w-full pt-2">
               <span className="pointer-events-none absolute right-4 top-2 -translate-y-1/2 z-20 bg-white dark:bg-gray-900 px-2 text-xs text-gray-500">
                 {t("desktop.deliveryTitle")}
@@ -523,7 +498,6 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
                       trigger={
                         <div className="cursor-pointer w-full">
                           <DateTimeTrigger
-                            monthNames={monthNames}
                             date={selectedRange.start}
                             time={selectedRange.start ? deliveryTime : undefined}
                             datePlaceholder={t("placeholders.deliveryDate")}
@@ -544,7 +518,6 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
                       trigger={
                         <div className="cursor-pointer w-full">
                           <DateTimeTrigger
-                            monthNames={monthNames}
                             date={selectedRange.end}
                             time={selectedRange.end ? returnTime : undefined}
                             datePlaceholder={t("placeholders.returnDate")}
@@ -572,7 +545,7 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
           </div>
         </div>
 
-        {/* ✅ DESKTOP */}
+        {/* DESKTOP */}
         <div className="hidden md:block absolute w-full left-0 -bottom-14 z-10">
           <div className="flex justify-center px-2">
             <div className="bg-white dark:bg-gray-900 shadow rounded-md p-4 max-w-6xl w-full">
@@ -603,7 +576,6 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
                       <SelectValue placeholder={cityPlaceholder} />
                     </SelectTrigger>
 
-                    {/* ✅ FIX: همیشه زیر اینپوت باز شود + کلاس‌های صحیح */}
                     <SelectContent
                       position="popper"
                       side="bottom"
@@ -640,7 +612,6 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
                     trigger={
                       <div className="cursor-pointer">
                         <DateTimeTrigger
-                          monthNames={monthNames}
                           date={selectedRange.start}
                           time={selectedRange.start ? deliveryTime : undefined}
                           datePlaceholder={t("placeholders.deliveryDate")}
@@ -661,7 +632,6 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
                     trigger={
                       <div className="cursor-pointer">
                         <DateTimeTrigger
-                          monthNames={monthNames}
                           date={selectedRange.end}
                           time={selectedRange.end ? returnTime : undefined}
                           datePlaceholder={t("placeholders.returnDate")}

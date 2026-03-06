@@ -242,47 +242,66 @@ export default function BranchCarCard({
     [openSheet, setRoadMapStep, setIsAnySheetOpen],
   );
 
-  const goReserve = useCallback(
-    (args: { start?: Date | null; end?: Date | null; dt?: string | null; rt?: string | null }) => {
-      const carId = getCarIdSafe(car, data);
-      const bId = Number(branchId || 0);
-      const safeBranchId = Number.isFinite(bId) && bId > 0 ? bId : 0;
-      if (!carId || !safeBranchId) return;
+const goReserve = useCallback(
+  (args: { start?: Date | null; end?: Date | null; dt?: string | null; rt?: string | null }) => {
+    const carId = getCarIdSafe(car, data);
+    const bId = Number(branchId || 0);
+    const safeBranchId = Number.isFinite(bId) && bId > 0 ? bId : 0;
+    if (!carId || !safeBranchId) return;
 
-      const safeStart = args.start ?? range?.start ?? null;
-      const safeEnd = args.end ?? range?.end ?? null;
-      if (!safeStart || !safeEnd) return;
+    const safeStart = args.start ?? range?.start ?? null;
+    const safeEnd = args.end ?? range?.end ?? null;
+    if (!safeStart || !safeEnd) return;
 
-      const fromFa = formatJalaliDate(safeStart);
-      const toFa = formatJalaliDate(safeEnd);
-      const from = toEnDigits(fromFa);
-      const to = toEnDigits(toFa);
-      const dt = toEnDigits(normalizeTime(args.dt ?? deliveryTime) || "10:00");
-      const rt = toEnDigits(normalizeTime(args.rt ?? returnTime) || "10:00");
-      if (!from || !to || !dt || !rt) return;
+    const fromFa = formatJalaliDate(safeStart);
+    const toFa = formatJalaliDate(safeEnd);
+    const from = toEnDigits(fromFa);
+    const to = toEnDigits(toFa);
+    const dt = toEnDigits(normalizeTime(args.dt ?? deliveryTime) || "10:00");
+    const rt = toEnDigits(normalizeTime(args.rt ?? returnTime) || "10:00");
+    if (!from || !to || !dt || !rt) return;
 
-      const payload = { branchId: safeBranchId, carId, from, to, dt, rt };
-      const hydrateKey = [safeBranchId, carId, from, to, dt, rt].join("|");
-      hydrateReserveStore(payload);
-      const params = buildReserveSearchParams(payload);
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    const payload = { branchId: safeBranchId, carId, from, to, dt, rt };
+    const hydrateKey = [safeBranchId, carId, from, to, dt, rt].join("|");
 
-      const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-      if (isMobile) {
-        openReserveSheetMobile(hydrateKey);
-        return;
-      }
-      router.push(`/reserve?${params.toString()}`, { scroll: true });
-    },
-    [car, data, branchId, range?.start, range?.end, deliveryTime, returnTime, hydrateReserveStore, buildReserveSearchParams, router, pathname, locale, openReserveSheetMobile],
-  );
+    hydrateReserveStore(payload);
+
+    const params = buildReserveSearchParams(payload);
+    const reserveUrl = `/reserve?${params.toString()}`;
+    const searchUrl = `${pathname}?${params.toString()}`;
+
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
+    if (isMobile) {
+      router.replace(searchUrl, { scroll: false });
+      openReserveSheetMobile(hydrateKey);
+      return;
+    }
+
+    router.push(reserveUrl, { scroll: true });
+  },
+  [
+    car,
+    data,
+    branchId,
+    range?.start,
+    range?.end,
+    deliveryTime,
+    returnTime,
+    hydrateReserveStore,
+    buildReserveSearchParams,
+    router,
+    pathname,
+    openReserveSheetMobile,
+  ],
+);
 
   if (!car) return null;
   if (!calendarHydrated) return null;
 
   return (
     <div
-      className={`${isHovering ? "z-30" : ""} flex w-full flex-col bg-white cursor-pointer transition-all rounded-2xl md:text-sm text-xs border border-[#0000001f] shadow-[0_2px_5px_-1px_rgba(0,0,0,.08)] max-md:pl-0 p-2.5 h-full justify-between overflow-hidden`}
+      className={`${isHovering ? "z-10" : ""} flex w-full flex-col bg-white cursor-pointer transition-all rounded-2xl md:text-sm text-xs border border-[#0000001f] shadow-[0_2px_5px_-1px_rgba(0,0,0,.08)] max-md:pl-0 p-2.5 h-full justify-between overflow-hidden`}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >

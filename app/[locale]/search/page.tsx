@@ -1,7 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
@@ -34,7 +42,9 @@ import BranchCarCard from "@/components/card/CardCardBranch";
 
 function toQueryObject(params: URLSearchParams): Record<string, string> {
   const obj: Record<string, string> = {};
-  params.forEach((value, key) => (obj[key] = value));
+  params.forEach((value, key) => {
+    obj[key] = value;
+  });
   return obj;
 }
 
@@ -97,6 +107,10 @@ function SearchResultPageContent() {
   const freezeUrlSyncRef = useRef(false);
   const lastPushedRef = useRef<string>("");
   const sheetOpenedRef = useRef(false);
+  const urlHydratedRef = useRef(false);
+
+  // ✅ تا قبل از sync اولیه چیزی که به store وابسته است render نشود
+  const [urlSyncReady, setUrlSyncReady] = useState(false);
 
   const {
     isSearchOpen,
@@ -135,17 +149,21 @@ function SearchResultPageContent() {
     setIsAnySheetOpen,
     setBranchId,
 
-    // ✅ برندها از store
     selectedBrands,
     setSelectedBrands,
     resetBrands,
     resetCategories,
+
+    setReserveDraft,
+    resetReserveDraft,
   } = useSearchPageStore();
 
   useEffect(() => {
     setIsAnySheetOpen(false);
     return () => setIsAnySheetOpen(false);
   }, [setIsAnySheetOpen]);
+
+  const sp = searchParams.toString();
 
   const branchIdFromUrl = useMemo(() => {
     const raw = searchParams.get("branch_id");
@@ -226,13 +244,10 @@ function SearchResultPageContent() {
     };
   }, []);
 
-  const sp = searchParams.toString();
+  /* ---------------- URL -> Store (before paint) ---------------- */
 
-  /* ---------------- URL -> Store (no step) ---------------- */
-
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (freezeUrlSyncRef.current) return;
-    if (sp === lastPushedRef.current) return;
 
     const fromQ = searchParams.get("from");
     const toQ = searchParams.get("to");
@@ -253,7 +268,10 @@ function SearchResultPageContent() {
     else setCarDates([null, null]);
 
     if (dtRaw) setDeliveryTime(dt);
+    else setDeliveryTime("10:00");
+
     if (rtRaw) setReturnTime(rt);
+    else setReturnTime("10:00");
 
     if (cats) {
       const parsed = cats
@@ -271,24 +289,31 @@ function SearchResultPageContent() {
     if (minP && maxP) {
       const a = Number(minP);
       const b = Number(maxP);
-      if (Number.isFinite(a) && Number.isFinite(b)) setSelectedPriceRange([Math.min(a, b), Math.max(a, b)]);
-      else setSelectedPriceRange(null);
+      if (Number.isFinite(a) && Number.isFinite(b)) {
+        setSelectedPriceRange([Math.min(a, b), Math.max(a, b)]);
+      } else {
+        setSelectedPriceRange(null);
+      }
     } else {
       setSelectedPriceRange(null);
     }
 
     const carIdParam = searchParams.get("car_id");
-    if (carIdParam) {
-      const id = Number(carIdParam);
-      if (Number.isFinite(id)) setSelectedCarId(id);
-    } else {
+    if (!carIdParam && selectedCarId !== null) {
       setSelectedCarId(null);
     }
 
-    // ✅ sync برندها از URL به store
-    const brandsRaw = searchParams.get("brand") || "";
-    const urlBrands = brandsRaw ? brandsRaw.split(",").map((x) => x.trim()).filter(Boolean) : [];
-    if (selectedBrands.join(",") !== urlBrands.join(",")) setSelectedBrands(urlBrands);
+    const brandsRawInner = searchParams.get("brand") || "";
+    const urlBrands = brandsRawInner
+      ? brandsRawInner.split(",").map((x) => x.trim()).filter(Boolean)
+      : [];
+
+    if (selectedBrands.join(",") !== urlBrands.join(",")) {
+      setSelectedBrands(urlBrands);
+    }
+
+    urlHydratedRef.current = true;
+    setUrlSyncReady(true);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sp]);
@@ -297,17 +322,15 @@ function SearchResultPageContent() {
   const to = (carDates as any)?.[1] as string | null;
   const hasDates = Boolean(from && to);
 
-  /* ---------------- ✅ reset all filters + URL ---------------- */
+  /* ---------------- reset all filters + URL ---------------- */
 
   const handleResetAllFilters = useCallback(() => {
-    // ریست store
     resetCategories();
     resetBrands();
     setSort(null);
     setSearchTitle("");
     setSelectedPriceRange(null);
 
-    // ریست URL — فقط branch_id و from/to و dt/rt نگه دار
     const params = new URLSearchParams();
     if (branchIdFromUrl) params.set("branch_id", String(branchIdFromUrl));
     if (from) params.set("from", from);
@@ -319,7 +342,10 @@ function SearchResultPageContent() {
     lastPushedRef.current = next;
     freezeUrlSyncRef.current = true;
 
-    router.replace({ pathname, query: toQueryObject(params) as any } as any, { scroll: false } as any);
+    router.replace(
+      { pathname, query: toQueryObject(params) as any } as any,
+      { scroll: false } as any,
+    );
 
     setTimeout(() => {
       freezeUrlSyncRef.current = false;
@@ -339,7 +365,6 @@ function SearchResultPageContent() {
     router,
   ]);
 
-  // ✅ آیا فیلتر فعالی وجود داره؟
   const hasActiveFilters = useMemo(() => {
     return (
       selectedCategories.length > 0 ||
@@ -352,7 +377,10 @@ function SearchResultPageContent() {
 
   /* ---------------- meta ---------------- */
 
-  const branchPart = useMemo(() => (branchName ? t("meta.parts.branch", { branch: branchName }) : ""), [branchName, t]);
+  const branchPart = useMemo(
+    () => (branchName ? t("meta.parts.branch", { branch: branchName }) : ""),
+    [branchName, t],
+  );
 
   const dynamicTitle = useMemo(() => {
     return hasDates
@@ -399,11 +427,18 @@ function SearchResultPageContent() {
         }
 
         const prevState: any = window.history.state || {};
-        const existingToken = typeof prevState.__searchResultCalendarToken === "string" ? prevState.__searchResultCalendarToken : null;
+        const existingToken =
+          typeof prevState.__searchResultCalendarToken === "string"
+            ? prevState.__searchResultCalendarToken
+            : null;
+
         const finalToken = existingToken ?? makeToken();
 
         if (!existingToken) {
-          window.history.replaceState({ ...prevState, __searchResultCalendarToken: finalToken }, document.title);
+          window.history.replaceState(
+            { ...prevState, __searchResultCalendarToken: finalToken },
+            document.title,
+          );
         }
 
         setVisitToken(finalToken);
@@ -493,7 +528,6 @@ function SearchResultPageContent() {
       cats: (selectedCategories || []).join(","),
       minp: selectedPriceRange?.[0] ?? "",
       maxp: selectedPriceRange?.[1] ?? "",
-      car_id: selectedCarId ?? "",
       locale,
     });
   }, [
@@ -508,12 +542,13 @@ function SearchResultPageContent() {
     brandsFromUrl,
     selectedCategories,
     selectedPriceRange,
-    selectedCarId,
     locale,
   ]);
 
   useEffect(() => {
     if (freezeUrlSyncRef.current) return;
+    if (!urlHydratedRef.current) return;
+    if (!urlSyncReady) return;
 
     const params = new URLSearchParams(searchParams.toString());
 
@@ -549,9 +584,6 @@ function SearchResultPageContent() {
       params.delete("max_p");
     }
 
-    if (selectedCarId) params.set("car_id", String(selectedCarId));
-    else params.delete("car_id");
-
     const next = params.toString();
     if (next === lastPushedRef.current) return;
     if (next === searchParams.toString()) return;
@@ -559,7 +591,10 @@ function SearchResultPageContent() {
     lastPushedRef.current = next;
     freezeUrlSyncRef.current = true;
 
-    router.replace({ pathname, query: toQueryObject(params) as any } as any, { scroll: false } as any);
+    router.replace(
+      { pathname, query: toQueryObject(params) as any } as any,
+      { scroll: false } as any,
+    );
 
     setTimeout(() => {
       freezeUrlSyncRef.current = false;
@@ -574,38 +609,31 @@ function SearchResultPageContent() {
     typedSearchTitle,
     selectedCategories,
     selectedPriceRange,
-    selectedCarId,
     pathname,
     searchParams,
     router,
+    urlSyncReady,
   ]);
 
   /* ---------------- fetch ---------------- */
 
-  const canFetch = Boolean(branchIdFromUrl);
+  const canFetch = Boolean(branchIdFromUrl) && urlSyncReady;
 
   const rqParamsSafe: CarFilterParams = useMemo(
     () =>
       ({
         locale,
         branch_id: branchIdFromUrl ?? 0,
-
         from: from || undefined,
         to: to || undefined,
-
         dt: hasDates ? normalizeTime(deliveryTime) ?? undefined : undefined,
         rt: hasDates ? normalizeTime(returnTime) ?? undefined : undefined,
-
         sort: sort ?? undefined,
-
         search_title: typedSearchTitle || undefined,
         brand: brandRaw || undefined,
-
         cat_id: selectedCategories || [],
         min_p: selectedPriceRange?.[0],
         max_p: selectedPriceRange?.[1],
-
-        car_id: selectedCarId ?? undefined,
       } as any),
     [
       locale,
@@ -620,7 +648,6 @@ function SearchResultPageContent() {
       brandRaw,
       selectedCategories,
       selectedPriceRange,
-      selectedCarId,
     ],
   );
 
@@ -628,12 +655,13 @@ function SearchResultPageContent() {
 
   const lastQueryKeyRef = useRef<string>("");
   useEffect(() => {
+    if (!urlSyncReady) return;
     if (lastQueryKeyRef.current !== filterKey) {
       lastQueryKeyRef.current = filterKey;
       clearCarList();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKey]);
+  }, [filterKey, urlSyncReady]);
 
   useEffect(() => {
     if (!canFetch) return;
@@ -654,11 +682,13 @@ function SearchResultPageContent() {
   /* ---------------- infinite scroll ---------------- */
 
   const observerRef = useRef<IntersectionObserver | null>(null);
+
   const lastElementRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (!node) return;
 
       observerRef.current?.disconnect();
+
       observerRef.current = new IntersectionObserver(
         (entries) => {
           const first = entries[0];
@@ -668,18 +698,21 @@ function SearchResultPageContent() {
         },
         { root: null, threshold: 0.1, rootMargin: "300px 0px 0px 0px" },
       );
+
       observerRef.current.observe(node);
     },
     [q, canFetch],
   );
 
-  useEffect(() => () => observerRef.current?.disconnect(), []);
+  useEffect(() => {
+    return () => observerRef.current?.disconnect();
+  }, []);
 
   const isLoading = canFetch ? q.isLoading : false;
   const isLoadingMore = canFetch ? q.isFetchingNextPage : false;
   const error = canFetch && q.isError ? ((q.error as any)?.message ?? tGlobal("errorLoading")) : null;
 
-  /* ---------------- reserve sheet (only when hasDates) ---------------- */
+  /* ---------------- reserve sheet ---------------- */
 
   const openReserveSheet = useCallback(
     (carId: number) => {
@@ -688,6 +721,7 @@ function SearchResultPageContent() {
 
       const dt = normalizeTime(deliveryTime) || "10:00";
       const rt = normalizeTime(returnTime) || "10:00";
+
       if (sheetOpenedRef.current) return;
 
       sheetOpenedRef.current = true;
@@ -701,6 +735,20 @@ function SearchResultPageContent() {
       setDeliveryTime(dt);
       setReturnTime(rt);
 
+      setReserveDraft({
+        branch_id: branchIdFromUrl,
+        car_id: carId,
+        from,
+        to,
+        dt,
+        rt,
+        sort: sort ?? null,
+        search_title: typedSearchTitle || null,
+        categories: selectedCategories || [],
+        min_p: selectedPriceRange?.[0] ?? null,
+        max_p: selectedPriceRange?.[1] ?? null,
+      });
+
       const params = new URLSearchParams(searchParams.toString());
       params.set("branch_id", String(branchIdFromUrl));
       params.set("from", String(from));
@@ -712,7 +760,10 @@ function SearchResultPageContent() {
       const next = params.toString();
       lastPushedRef.current = next;
 
-      router.replace({ pathname, query: toQueryObject(params) as any } as any, { scroll: false } as any);
+      router.replace(
+        { pathname, query: toQueryObject(params) as any } as any,
+        { scroll: false } as any,
+      );
 
       setTimeout(() => {
         freezeUrlSyncRef.current = false;
@@ -734,7 +785,10 @@ function SearchResultPageContent() {
           ),
           onClose: () => {
             freezeUrlSyncRef.current = true;
+
             setIsAnySheetOpen(false);
+            setSelectedCarId(null);
+            resetReserveDraft();
 
             const p = new URLSearchParams(window.location.search);
             p.delete("car_id");
@@ -742,7 +796,10 @@ function SearchResultPageContent() {
             const back = p.toString();
             lastPushedRef.current = back;
 
-            router.replace({ pathname, query: toQueryObject(p) as any } as any, { scroll: false } as any);
+            router.replace(
+              { pathname, query: toQueryObject(p) as any } as any,
+              { scroll: false } as any,
+            );
 
             setTimeout(() => {
               freezeUrlSyncRef.current = false;
@@ -769,13 +826,47 @@ function SearchResultPageContent() {
       setCarDates,
       setDeliveryTime,
       setReturnTime,
+      setReserveDraft,
+      resetReserveDraft,
+      sort,
+      typedSearchTitle,
+      selectedCategories,
+      selectedPriceRange,
     ],
   );
 
-  const handleMobileReserve = useCallback((carData: any) => openReserveSheet(Number(carData?.id)), [openReserveSheet]);
+  const handleMobileReserve = useCallback(
+    (carData: any) => openReserveSheet(Number(carData?.id)),
+    [openReserveSheet],
+  );
 
   const safeCarList = carList || [];
   const headerOffsetClass = isHeaderClose ? "translate-y-0" : "translate-y-16";
+
+  // ✅ تا قبل از sync اولیه، هیچ UI وابسته به store را نشان نده
+  if (!urlSyncReady) {
+    return (
+      <>
+        <SearchMetaClient title={dynamicTitle} description={dynamicDesc} />
+        <Header shadowLess />
+        <div className="bg-background">
+          <SearchHeader />
+        </div>
+        <div className="sm:w-[90vw] max-w-334 m-auto relative my-4 px-0 sm:px-2">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 mt-4">
+            {Array(6)
+              .fill(null)
+              .map((_, index) => (
+                <div key={`boot-skeleton-${index}`} className="flex w-full">
+                  <SkeletonCarCard />
+                </div>
+              ))}
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
@@ -808,7 +899,6 @@ function SearchResultPageContent() {
       <div className="relative">
         {branchIdFromUrl && (
           <div className="relative">
-            {/* Normal SearchSection */}
             <div
               className={cn(
                 "sm:w-[90vw] max-w-334 m-auto px-0 sm:px-2",
@@ -820,9 +910,14 @@ function SearchResultPageContent() {
               <div ref={afterNormalRef} className="h-px w-full" />
             </div>
 
-            {/* Sticky SearchSection */}
             <div className="fixed left-0 right-0 top-0 z-20">
-              <div className={cn("transform-gpu will-change-transform", "transition-transform duration-500 ease-in-out", headerOffsetClass)}>
+              <div
+                className={cn(
+                  "transform-gpu will-change-transform",
+                  "transition-transform duration-500 ease-in-out",
+                  headerOffsetClass,
+                )}
+              >
                 <div
                   className={cn(
                     "transform-gpu will-change-opacity",
@@ -841,13 +936,16 @@ function SearchResultPageContent() {
               </div>
             </div>
 
-            {/* Cars List */}
             <div className="md:w-[90vw] max-w-334 m-auto relative min-h-[50vh] px-0 md:px-2 mt-4">
               {error && !isLoading && (
                 <div className="flex flex-col items-center justify-center py-20 text-red-500 bg-red-50 dark:bg-red-950/30 rounded-xl border border-red-100 dark:border-red-900/40">
                   <Info size={48} className="opacity-80" />
                   <span className="mt-2 font-bold">{error}</span>
-                  <Button onClick={() => q.refetch()} className="mt-4 flex items-center gap-2" variant="default">
+                  <Button
+                    onClick={() => q.refetch()}
+                    className="mt-4 flex items-center gap-2"
+                    variant="default"
+                  >
                     <RefreshCcw className="size-4" />
                     {tGlobal("tryAgain")}
                   </Button>
@@ -861,7 +959,11 @@ function SearchResultPageContent() {
 
                     if (!hasDates) {
                       return (
-                        <div key={`${item.id}-${index}`} className="flex w-full" ref={isLast ? lastElementRef : undefined}>
+                        <div
+                          key={`${item.id}-${index}`}
+                          className="flex w-full"
+                          ref={isLast ? lastElementRef : undefined}
+                        >
                           <BranchCarCard
                             data={item}
                             currency={currency}
@@ -877,8 +979,17 @@ function SearchResultPageContent() {
                     }
 
                     return (
-                      <div key={`${item.id}-${index}`} className="flex w-full" ref={isLast ? lastElementRef : undefined}>
-                        <SingleCar data={item} currency={currency} rateToRial={rateToRial} onMobileReserve={handleMobileReserve} />
+                      <div
+                        key={`${item.id}-${index}`}
+                        className="flex w-full"
+                        ref={isLast ? lastElementRef : undefined}
+                      >
+                        <SingleCar
+                          data={item}
+                          currency={currency}
+                          rateToRial={rateToRial}
+                          onMobileReserve={handleMobileReserve}
+                        />
                       </div>
                     );
                   })}
@@ -893,15 +1004,14 @@ function SearchResultPageContent() {
                     ))}
               </div>
 
-              {/* ✅ empty state با دکمه حذف فیلترها */}
               {!isLoading && !isLoadingMore && !error && safeCarList.length === 0 && (
                 <div className="text-center py-20 text-gray-500 dark:text-gray-400 flex flex-col items-center gap-4">
                   <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                     <Info size={28} className="opacity-40" />
                   </div>
+
                   <span className="text-base font-medium">{tGlobal("noCarsFound")}</span>
 
-                  {/* ✅ فقط وقتی فیلتر فعال داره نمایش داده میشه */}
                   {hasActiveFilters && (
                     <Button
                       type="button"

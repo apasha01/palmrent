@@ -5,8 +5,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useSelector } from "react-redux";
 import { useTranslations } from "next-intl";
-
-import NavSection from "@/components/Branchs/Nav-Section";
 import TinyInformation from "@/components/Branchs/Tiny-Information";
 import ImportantQuestions from "@/components/Branchs/Important-Questions";
 import FavoriteBrands from "@/components/Branchs/Favorite-Brands";
@@ -27,6 +25,7 @@ import BranchName from "@/helpers/BranchNameHelper";
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store";
 import BranchCarCard from "@/components/card/CardCardBranch";
 import { useParams } from "next/navigation";
+import NavSection from "@/components/Branchs/Nav-SectionNew";
 
 /* ---------------- shared calendar helpers ---------------- */
 
@@ -465,13 +464,16 @@ export default function HomePage() {
 
   return (
     <>
-      <main className="max-w-7xl w-full mx-auto">
+      <main className="w-full mx-auto">
         <NavSection
           image="/images/head-list-branch.jpg"
           title={t.rich("heroTitle", { Branch: () => <BranchName /> })}
           subtitle1={t("heroSubtitle1")}
           subtitle2={t("heroSubtitle2")}
         />
+
+        <div className="max-w-7xl mx-auto">
+
 
         {/* Categories */}
         <div className="px-0 sm:px-2">
@@ -604,6 +606,10 @@ export default function HomePage() {
         <div className="mt-6">
           <DescriptionLanding />
         </div>
+
+        </div>
+
+
       </main>
     </>
   );
