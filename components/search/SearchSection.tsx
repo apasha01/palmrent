@@ -115,6 +115,7 @@ const FA_TO_BRAND_NORM: Record<string, string> = Object.fromEntries(
 function resolveBrandFromFaQuery(raw: string): string | null {
   const q = normalize(raw)
   if (!q) return null
+
   const qNS = noSpace(raw)
   if (qNS.length < 1) return null
 
@@ -122,6 +123,7 @@ function resolveBrandFromFaQuery(raw: string): string | null {
   let bestVal: string | null = null
 
   const qTokens = q.split(" ").filter(Boolean)
+
   for (const [kNorm, brand] of Object.entries(FA_TO_BRAND_NORM)) {
     const kNS = noSpace(kNorm)
     const hitNoSpace = kNS.startsWith(qNS) || qNS.startsWith(kNS)
@@ -134,11 +136,13 @@ function resolveBrandFromFaQuery(raw: string): string | null {
       )
 
     if (!(hitNoSpace || hitTokens)) continue
+
     if (kNorm.length > bestKey.length) {
       bestKey = kNorm
       bestVal = brand
     }
   }
+
   return bestVal
 }
 
@@ -160,25 +164,30 @@ const DEFAULT_SUGGESTIONS: Suggestion[] = POPULAR_BRANDS.map((b) => buildSuggest
 function uniqBrands(arr: string[]) {
   const out: string[] = []
   const seen = new Set<string>()
+
   for (const x of arr || []) {
     const v = String(x || "").trim()
     if (!v || seen.has(v)) continue
     seen.add(v)
     out.push(v)
   }
+
   return out
 }
 
 function toEnglishDigits(input: string) {
   const fa = "۰۱۲۳۴۵۶۷۸۹"
   const ar = "٠١٢٣٤٥٦٧٨٩"
+
   return String(input)
     .split("")
     .map((ch) => {
       const faIndex = fa.indexOf(ch)
       if (faIndex !== -1) return String(faIndex)
+
       const arIndex = ar.indexOf(ch)
       if (arIndex !== -1) return String(arIndex)
+
       return ch
     })
     .join("")
@@ -194,25 +203,32 @@ function pad2(n: number) {
 
 function normalizeJalaliParam(input?: string | null) {
   if (!input) return null
+
   const clean = toEnglishDigits(String(input)).replace(/-/g, "/").trim()
   const [y, m, d] = clean.split("/").map((x) => parseInt(x, 10))
+
   if (!y || !m || !d) return null
+
   return `${y}/${pad2(m)}/${pad2(d)}`
 }
 
 function toPersianDigits(input: string) {
   const en = "0123456789"
   const fa = "۰۱۲۳۴۵۶۷۸۹"
+
   return String(input).replace(/[0-9]/g, (d) => fa[en.indexOf(d)])
 }
 
 function parseJalaliToDateNoon(s?: string | null) {
   const norm = normalizeJalaliParam(s)
   if (!norm) return null
+
   const [y, m, d] = norm.split("/").map((x) => parseInt(x, 10))
   if (!y || !m || !d) return null
+
   const date = jalaliToDate(y, m - 1, d)
   if (!date) return null
+
   date.setHours(12, 0, 0, 0)
   return date
 }
@@ -223,21 +239,10 @@ function safeTime(input: any, fallback: string) {
   return n
 }
 
-function getJalaliMonthNames(t: any): string[] {
-  return [
-    t("months.1"),
-    t("months.2"),
-    t("months.3"),
-    t("months.4"),
-    t("months.5"),
-    t("months.6"),
-    t("months.7"),
-    t("months.8"),
-    t("months.9"),
-    t("months.10"),
-    t("months.11"),
-    t("months.12"),
-  ]
+function formatShortDate(dateString?: string | null, locale?: string) {
+  const norm = normalizeJalaliParam(dateString)
+  if (!norm) return ""
+  return locale === "fa" ? toPersianDigits(norm) : norm
 }
 
 // ─────────────────────────────────────────
@@ -266,7 +271,12 @@ function SortDrawer({
   const activeId = currentSort ?? null
 
   return (
-    <Drawer open={open} onOpenChange={(o) => { if (!o) onClose() }}>
+    <Drawer
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) onClose()
+      }}
+    >
       <DrawerContent>
         <div className="w-full max-w-3xl mx-auto">
           <DrawerHeader className="flex flex-row items-center justify-between px-5 py-2.5 border-b border-gray-100 dark:border-gray-800 space-y-0">
@@ -286,11 +296,15 @@ function SortDrawer({
           <div className="py-2 px-3 w-full overflow-auto max-h-[calc(85vh-56px)]">
             {sortItems.map((item, idx) => {
               const isActive = activeId === item.id
+
               return (
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => { onSelect(item.id); onClose() }}
+                  onClick={() => {
+                    onSelect(item.id)
+                    onClose()
+                  }}
                   className={cn(
                     "w-full flex items-center justify-between gap-3",
                     "px-4 py-3 rounded-xl text-sm transition-all mb-0.5 last:mb-0",
@@ -305,7 +319,9 @@ function SortDrawer({
                       <span
                         className={cn(
                           "text-xs",
-                          isActive ? "text-blue-400 dark:text-blue-500" : "text-gray-400 dark:text-gray-500"
+                          isActive
+                            ? "text-blue-400 dark:text-blue-500"
+                            : "text-gray-400 dark:text-gray-500"
                         )}
                       >
                         {item.sub}
@@ -392,8 +408,6 @@ export function SerarchSection({
 
   const hasDates = Boolean(carDates?.[0] && carDates?.[1])
 
-  const monthNames = useMemo(() => getJalaliMonthNames(t), [t])
-
   const initialRange = useMemo(() => {
     const start = parseJalaliToDateNoon(carDates?.[0] ?? null)
     const end = parseJalaliToDateNoon(carDates?.[1] ?? null)
@@ -402,40 +416,28 @@ export function SerarchSection({
 
   const scrollToTop = useCallback((behavior: ScrollBehavior = "smooth") => {
     if (typeof window === "undefined") return
+
     requestAnimationFrame(() =>
       requestAnimationFrame(() => window.scrollTo({ top: 0, behavior }))
     )
   }, [])
 
-  function formatJalaliShort(dateString?: string | null) {
-    const norm = normalizeJalaliParam(dateString)
-    if (!norm) return ""
-
-    const parts = norm.split("/")
-    if (parts.length !== 3) return ""
-
-    const m = Number(parts[1])
-    const d = Number(parts[2])
-    if (!Number.isFinite(m) || !Number.isFinite(d) || m < 1 || m > 12) return ""
-
-    const dayStr = locale === "fa" ? toPersianDigits(String(d)) : String(d)
-    return `${dayStr} ${monthNames[m - 1]}`
-  }
-
   const deliveryDateText = useMemo(
-    () => formatJalaliShort(carDates?.[0] ?? null),
-    [carDates?.[0], locale, monthNames]
+    () => formatShortDate(carDates?.[0] ?? null, locale),
+    [carDates?.[0], locale]
   )
 
   const returnDateText = useMemo(
-    () => formatJalaliShort(carDates?.[1] ?? null),
-    [carDates?.[1], locale, monthNames]
+    () => formatShortDate(carDates?.[1] ?? null, locale),
+    [carDates?.[1], locale]
   )
 
   const dateChipLabel = useMemo(() => {
     if (!hasDates) return ""
+
     const dtText = locale === "fa" ? toPersianDigits(dtFallback) : dtFallback
     const rtText = locale === "fa" ? toPersianDigits(rtFallback) : rtFallback
+
     return `${deliveryDateText} (${dtText}) - ${returnDateText} (${rtText})`
   }, [hasDates, locale, dtFallback, rtFallback, deliveryDateText, returnDateText])
 
@@ -516,8 +518,10 @@ export function SerarchSection({
 
   useEffect(() => {
     const currentParams = searchParams.toString()
+
     if (suppressUrlSyncRef.current && pendingParamsRef.current) {
       if (currentParams !== pendingParamsRef.current) return
+
       suppressUrlSyncRef.current = false
       pendingParamsRef.current = null
     }
@@ -564,14 +568,19 @@ export function SerarchSection({
   useEffect(() => {
     const fn = (e: Event) => {
       const target = e.target as Node
+
       if (
         !inputRef.current?.contains(target) &&
         !dropRef.current?.contains(target) &&
         !barRef.current?.contains(target)
-      ) setShowSuggestions(false)
+      ) {
+        setShowSuggestions(false)
+      }
     }
+
     document.addEventListener("mousedown", fn)
     document.addEventListener("touchstart", fn, { passive: true })
+
     return () => {
       document.removeEventListener("mousedown", fn)
       document.removeEventListener("touchstart", fn as any)
@@ -586,6 +595,7 @@ export function SerarchSection({
     const q2 = mappedBrand ? normalize(mappedBrand) : qNorm
 
     const matches = ALL_SUGGESTIONS.filter((s) => normalize(s.value).includes(q2))
+
     return [...matches.filter((s) => !s.isModel), ...matches.filter((s) => s.isModel)].slice(
       0,
       MAX_SUGGESTIONS
@@ -612,6 +622,7 @@ export function SerarchSection({
   const handleInputChange = (vRaw: string) => {
     setSearchValue(vRaw)
     setShowSuggestions(true)
+
     if (!vRaw.trim()) {
       setShowSuggestions(false)
     }
@@ -619,6 +630,7 @@ export function SerarchSection({
 
   const commitSearch = useCallback(() => {
     const raw = (searchValue || "").trim()
+
     if (!raw) {
       setShowSuggestions(false)
       return
@@ -627,6 +639,7 @@ export function SerarchSection({
     setShowSuggestions(false)
 
     const maybeBrand = resolveBrandFromFaQuery(raw)
+
     if (maybeBrand) {
       const brandOnly = maybeBrand
       const nextBrands = storeBrands.includes(brandOnly)
@@ -686,11 +699,17 @@ export function SerarchSection({
     scrollToTop("smooth")
   }
 
-  const handleDateConfirm = ({ start, end, deliveryTime: dtRaw, returnTime: rtRaw }: any) => {
+  const handleDateConfirm = ({
+    start,
+    end,
+    deliveryTime: dtRaw,
+    returnTime: rtRaw,
+  }: any) => {
     if (!start || !end) return
 
     const s = new Date(start)
     const e = new Date(end)
+
     s.setHours(12, 0, 0, 0)
     e.setHours(12, 0, 0, 0)
 
@@ -736,6 +755,7 @@ export function SerarchSection({
 
   const handleSheetOpenChange = (open: boolean) => {
     setFiltersOpen(open)
+
     if (!open) {
       pushURL({ brands: storeBrands })
       scrollToTop("smooth")
@@ -819,7 +839,6 @@ export function SerarchSection({
           )}
         >
           <div className="relative space-y-2">
-            {/* ── Search bar ── */}
             <div
               ref={barRef}
               className="rounded-md flex items-center p-4 sm:py-2 py-1 relative mb-2 border border-[#0000001f]"
@@ -839,6 +858,7 @@ export function SerarchSection({
                       e.preventDefault()
                       commitSearch()
                     }
+
                     if (e.key === "Escape") {
                       setShowSuggestions(false)
                       inputRef.current?.blur()
@@ -879,6 +899,7 @@ export function SerarchSection({
                         <IconFilter size="20" />
                       </span>
                     </span>
+
                     <span className="max-sm:hidden text-sm">{t("filters")}</span>
                   </button>
                 </SheetTrigger>
@@ -925,6 +946,7 @@ export function SerarchSection({
                     <div className="p-2 max-h-[46vh] overflow-auto overscroll-contain">
                       {suggestions.map((item, i) => {
                         const isActive = storeBrands.includes(item.brand)
+
                         return (
                           <motion.button
                             key={`${item.value}-${i}`}
@@ -956,7 +978,6 @@ export function SerarchSection({
               )}
             </div>
 
-            {/* ── Chips ── */}
             {hasChips && (
               <div className="w-full overflow-auto hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 <div className="flex md:gap-2 gap-1">
@@ -987,8 +1008,6 @@ export function SerarchSection({
                       </span>
                     </button>
                   )}
-
-           
 
                   {storeBrands.map((brand) => (
                     <button
@@ -1025,7 +1044,6 @@ export function SerarchSection({
               </div>
             )}
 
-            {/* ── Category pills + Date button ── */}
             <div className="block md:flex-nowrap flex-wrap items-center justify-between gap-2 lg:text-sm md:text-xs text-xs relative">
               <div className="flex md:w-auto w-full items-start gap-2 lg:text-sm md:text-xs text-xs">
                 <div className="w-full block overflow-auto hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
@@ -1061,8 +1079,14 @@ export function SerarchSection({
           </div>
         </div>
 
-        <SheetContent side={isRtl ? "left" : "right"} className="w-full max-w-md p-0 bg-white shadow-2xl border-l">
-          <SearchFilterSheet closePopup={() => setFiltersOpen(false)} carListLength={carListLength} />
+        <SheetContent
+          side={isRtl ? "left" : "right"}
+          className="w-full max-w-md p-0 bg-white shadow-2xl border-l"
+        >
+          <SearchFilterSheet
+            closePopup={() => setFiltersOpen(false)}
+            carListLength={carListLength}
+          />
         </SheetContent>
       </Sheet>
 

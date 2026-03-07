@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/preserve-manual-memoization */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -338,11 +337,12 @@ export default function SingleCar({
 
       const params = buildReserveSearchParams(payload);
       const reserveUrl = `/reserve?${params.toString()}`;
+      const searchUrl = `${pathname}?${params.toString()}`;
 
       const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
       if (isMobile) {
-        // موبایل: شیت رو باز می‌کنیم (بدون تغییر URL به searchUrl)
+        router.replace(searchUrl, { scroll: false });
         openReserveSheetMobile(hydrateKey);
         return;
       }
@@ -359,6 +359,8 @@ export default function SingleCar({
       localReturnTime,
       hydrateReserveStore,
       buildReserveSearchParams,
+      pathname,
+      router,
       openReserveSheetMobile,
     ],
   );

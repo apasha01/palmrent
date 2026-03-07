@@ -23,7 +23,7 @@ import StepRent from "@/components/search/StepsRent";
 import DescriptionPopup from "@/components/DescriptionPopup";
 import ReserveInformation from "@/components/reserve/ReserveInformation";
 import { SerarchSection } from "@/components/search/SearchSection";
-import SingleCar from "@/components/card/CarsCard";
+
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Info, RefreshCcw, SlidersHorizontal } from "lucide-react";
 import { useInfiniteCarFilter } from "@/services/car-filter/car-filter.hooks";
@@ -36,7 +36,7 @@ import { useMobileSheet } from "@/providers/mobile-sheet-provider";
 import { SheetClose } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import SkeletonCarCard from "@/components/Loadings/SkeletonCarCard";
-import BranchCarCard from "@/components/card/CardCardBranch";
+import SingleCar from "@/components/card/CarsCard";
 
 /* ---------------- utils ---------------- */
 
@@ -109,7 +109,6 @@ function SearchResultPageContent() {
   const sheetOpenedRef = useRef(false);
   const urlHydratedRef = useRef(false);
 
-  // ✅ تا قبل از sync اولیه چیزی که به store وابسته است render نشود
   const [urlSyncReady, setUrlSyncReady] = useState(false);
 
   const {
@@ -843,7 +842,6 @@ function SearchResultPageContent() {
   const safeCarList = carList || [];
   const headerOffsetClass = isHeaderClose ? "translate-y-0" : "translate-y-16";
 
-  // ✅ تا قبل از sync اولیه، هیچ UI وابسته به store را نشان نده
   if (!urlSyncReady) {
     return (
       <>
@@ -957,27 +955,6 @@ function SearchResultPageContent() {
                   safeCarList.map((item: any, index: number) => {
                     const isLast = index === safeCarList.length - 1;
 
-                    if (!hasDates) {
-                      return (
-                        <div
-                          key={`${item.id}-${index}`}
-                          className="flex w-full"
-                          ref={isLast ? lastElementRef : undefined}
-                        >
-                          <BranchCarCard
-                            data={item}
-                            currency={currency}
-                            rateToRial={rateToRial}
-                            branchId={branchIdFromUrl}
-                            forceWhatsappNoDate={true}
-                            sharedCalendar={sharedCalendar}
-                            onSharedCalendarChange={setSharedCalendar}
-                            calendarHydrated={calendarHydrated}
-                          />
-                        </div>
-                      );
-                    }
-
                     return (
                       <div
                         key={`${item.id}-${index}`}
@@ -989,6 +966,12 @@ function SearchResultPageContent() {
                           currency={currency}
                           rateToRial={rateToRial}
                           onMobileReserve={handleMobileReserve}
+                          branchId={branchIdFromUrl}
+                          noDateMode={!hasDates}
+                          forceWhatsappNoDate={!hasDates}
+                          sharedCalendar={sharedCalendar}
+                          onSharedCalendarChange={setSharedCalendar}
+                          calendarHydrated={calendarHydrated}
                         />
                       </div>
                     );
