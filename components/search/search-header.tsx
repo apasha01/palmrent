@@ -4,6 +4,7 @@
 
 import { useLocale, useTranslations } from "next-intl"
 import { useMemo } from "react"
+import { useSearchParams } from "next/navigation"
 import { CalendarDays, Clock, HandHeartIcon, Search } from "lucide-react"
 import { DateRangePickerPopover } from "@/components/custom/calender/date-range-picker"
 import { jalaliToDate, formatJalaliDate } from "@/lib/date-utils"
@@ -89,39 +90,43 @@ function safeTime(input: any, fallback: string) {
 
 // ─────────────────────────────────────────────
 // NoDate Banner – shown when hasDates = false
+// اگر URL فقط branch_id داشت و from/to نداشت:
+// فقط در موبایل حالت ساده نمایش داده می‌شود
+// بدون mt-4 / rounded / bg-white
 // ─────────────────────────────────────────────
 function NoDateBanner({
   onTrigger,
   t,
+  mobileBranchOnlyMode = false,
 }: {
   onTrigger: React.ReactNode
   t: any
+  mobileBranchOnlyMode?: boolean
 }) {
   return (
     <>
-{/* ── DESKTOP ── */}
-<div className="hidden md:flex w-full items-center justify-center gap-6 py-1 text-xs">
-  {/* آیکون + عنوان شعبه */}
-  <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
-    <HandHeartIcon className="h-5 w-5 shrink-0" />
-    <span className="font-semibold">{t("noDate.title")}</span>
-  </div>
+      {/* ── DESKTOP ── */}
+      <div className="hidden md:flex w-full items-center justify-center gap-6 py-1 text-xs">
+        <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
+          <HandHeartIcon className="h-5 w-5 shrink-0" />
+          <span className="font-semibold">{t("noDate.title")}</span>
+        </div>
 
-  {/* زیرعنوان */}
-  <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-600 dark:text-gray-400">
-    <CalendarDays className="h-5 w-5 shrink-0" />
-    <span>{t("noDate.subtitle")}</span>
-  </div>
+        <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-600 dark:text-gray-400">
+          <CalendarDays className="h-5 w-5 shrink-0" />
+          <span>{t("noDate.subtitle")}</span>
+        </div>
 
-  {/* دکمه انتخاب تاریخ */}
-  <div className="shrink-0">
-    {onTrigger}
-  </div>
-</div>
+        <div className="shrink-0">{onTrigger}</div>
+      </div>
 
       {/* ── MOBILE ── */}
-      <div className="flex md:hidden w-full items-center justify-between py-0.5">
-        {/* Right side */}
+      <div
+        className={cn(
+          "flex md:hidden w-full bg-white p-2 rounded-md shadow items-center justify-between",
+
+        )}
+      >
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <CalendarDays className="h-5 w-5 shrink-0" />
           <div className="flex flex-col rtl:text-right ltr:text-left min-w-0">
@@ -134,10 +139,7 @@ function NoDateBanner({
           </div>
         </div>
 
-        {/* Left side: trigger button — pushed to far end */}
-        <div className="shrink-0 ltr:ml-6 rtl:mr-6">
-          {onTrigger}
-        </div>
+        <div className="shrink-0 ltr:ml-6 rtl:mr-6">{onTrigger}</div>
       </div>
     </>
   )
@@ -159,6 +161,7 @@ export default function SearchHeader({
 }) {
   const t = useTranslations("SearchHeader")
   const locale = useLocale()
+  const searchParams = useSearchParams()
 
   const isHeaderClose = useSearchPageStore((s) => s.isHeaderClose)
 
@@ -176,6 +179,14 @@ export default function SearchHeader({
 
   // آیا تاریخ داریم یا نه
   const hasDates = Boolean(carDates?.[0] && carDates?.[1])
+
+  // فقط برای URL حالت branch-only
+  const branchIdFromUrl = searchParams.get("branch_id")
+  const fromParam = searchParams.get("from")
+  const toParam = searchParams.get("to")
+
+  // فقط وقتی branch_id هست و from/to نیست
+  const isBranchOnlyMobileMode = Boolean(branchIdFromUrl && !fromParam && !toParam)
 
   const carDayCount = useMemo(() => {
     return calcRentDaysWithGrace({
@@ -205,19 +216,39 @@ export default function SearchHeader({
 
     const m = Number(parts[1])
     const d = Number(parts[2])
-    if (!Number.isFinite(m) || !Number.isFinite(d) || m < 1 || m > 12) return t("common.emptyDate")
+
+    if (!Number.isFinite(m) || !Number.isFinite(d) || m < 1 || m > 12) {
+      return t("common.emptyDate")
+    }
 
     const dayStr = locale === "fa" ? toPersianDigits(String(d)) : String(d)
     return t("common.shortDate", { day: dayStr, month: monthNames[m - 1] })
   }
 
-  const deliveryDateText = useMemo(() => formatJalaliShort(carDates?.[0] ?? null), [carDates?.[0], monthNames, locale])
-  const returnDateText = useMemo(() => formatJalaliShort(carDates?.[1] ?? null), [carDates?.[1], monthNames, locale])
+  const deliveryDateText = useMemo(
+    () => formatJalaliShort(carDates?.[0] ?? null),
+    [carDates?.[0], monthNames, locale]
+  )
 
-  function formatRangeMobile(opts: { startText: string; endText: string; deliveryTime: string; returnTime: string }) {
+  const returnDateText = useMemo(
+    () => formatJalaliShort(carDates?.[1] ?? null),
+    [carDates?.[1], monthNames, locale]
+  )
+
+  function formatRangeMobile(opts: {
+    startText: string
+    endText: string
+    deliveryTime: string
+    returnTime: string
+  }) {
     const dt = locale === "fa" ? toPersianDigits(opts.deliveryTime) : opts.deliveryTime
     const rt = locale === "fa" ? toPersianDigits(opts.returnTime) : opts.returnTime
-    return t("formats.mobileRange", { start: opts.startText, end: opts.endText, dt, rt })
+    return t("formats.mobileRange", {
+      start: opts.startText,
+      end: opts.endText,
+      dt,
+      rt,
+    })
   }
 
   function formatRangeStepSecond(opts: {
@@ -230,14 +261,27 @@ export default function SearchHeader({
     const dt = locale === "fa" ? toPersianDigits(opts.deliveryTime) : opts.deliveryTime
     const rt = locale === "fa" ? toPersianDigits(opts.returnTime) : opts.returnTime
     const days = locale === "fa" ? toPersianDigits(String(opts.dayCount)) : String(opts.dayCount)
-    return t("formats.stepSecondRange", { start: opts.startText, end: opts.endText, dt, rt, days })
+
+    return t("formats.stepSecondRange", {
+      start: opts.startText,
+      end: opts.endText,
+      dt,
+      rt,
+      days,
+    })
   }
 
-  const handleConfirm = ({ start, end, deliveryTime: dtRaw, returnTime: rtRaw }: any) => {
+  const handleConfirm = ({
+    start,
+    end,
+    deliveryTime: dtRaw,
+    returnTime: rtRaw,
+  }: any) => {
     if (!start || !end) return
 
     const s = new Date(start)
     const e = new Date(end)
+
     s.setHours(12, 0, 0, 0)
     e.setHours(12, 0, 0, 0)
 
@@ -246,6 +290,7 @@ export default function SearchHeader({
 
     const fromStr = normalizeJalaliParam(fromRaw)
     const toStr = normalizeJalaliParam(toRaw)
+
     if (!fromStr || !toStr) return
 
     const safeDt = safeTime(dtRaw, dtFallback)
@@ -254,10 +299,17 @@ export default function SearchHeader({
     const curFrom = normalizeJalaliParam(carDates?.[0] ?? null)
     const curTo = normalizeJalaliParam(carDates?.[1] ?? null)
 
-    if (curFrom !== fromStr || curTo !== toStr) setCarDates([fromStr, toStr])
+    if (curFrom !== fromStr || curTo !== toStr) {
+      setCarDates([fromStr, toStr])
+    }
 
-    if (safeTime(deliveryTime, "10:00") !== safeDt) setDeliveryTime(safeDt)
-    if (safeTime(returnTime, "10:00") !== safeRt) setReturnTime(safeRt)
+    if (safeTime(deliveryTime, "10:00") !== safeDt) {
+      setDeliveryTime(safeDt)
+    }
+
+    if (safeTime(returnTime, "10:00") !== safeRt) {
+      setReturnTime(safeRt)
+    }
   }
 
   const handleClear = () => {
@@ -272,10 +324,12 @@ export default function SearchHeader({
     return `drp-${f}-${to}-${dtFallback}-${rtFallback}`
   }, [carDates?.[0], carDates?.[1], dtFallback, rtFallback])
 
-  const dayCountText = locale === "fa" ? toPersianDigits(String(carDayCount)) : String(carDayCount)
+  const dayCountText =
+    locale === "fa" ? toPersianDigits(String(carDayCount)) : String(carDayCount)
+
   const desktopActsLikeSearch = stepSecond && stepSecondDesktopLikeSearch
 
-  // ── دکمه آبی "انتخاب تاریخ" برای حالت no-date ──
+  // ── دکمه انتخاب تاریخ برای حالت no-date ──
   const noDateTriggerButton = (
     <DateRangePickerPopover
       key={`nodate-${popoverKey}`}
@@ -288,27 +342,27 @@ export default function SearchHeader({
         <button
           type="button"
           className={cn(
-            "inline-flex items-center gap-2 px-2 py-2 rounded-md",
-            "bg-blue-600 hover:bg-blue-700 active:bg-blue-800",
-            "text-white font-bold text-sm",
-            "transition-colors duration-150 cursor-pointer",
-            "shadow-sm"
+            "inline-flex items-center gap-2 rounded-md px-2 py-2",
+            "bg-blue-600 text-white font-bold text-sm",
+            "hover:bg-blue-700 active:bg-blue-800",
+            "transition-colors duration-150 cursor-pointer shadow-sm"
           )}
         >
-
           <span>{t("noDate.cta")}</span>
         </button>
       }
     />
   )
 
-  // ── دکمه آیکون search برای حالت‌های دیگر ──
+  // ── دکمه آیکون سرچ برای سایر حالت‌ها ──
   const searchButton = (
     <button
       type="button"
       className={cn(
         "shrink-0 h-9 w-9 rounded-full inline-flex items-center justify-center",
-        stepSecond ? "bg-yellow-400 hover:bg-yellow-500 text-black" : "bg-blue-600 hover:bg-blue-700 text-white"
+        stepSecond
+          ? "bg-yellow-400 hover:bg-yellow-500 text-black"
+          : "bg-blue-600 hover:bg-blue-700 text-white"
       )}
       aria-label={t("actions.search")}
     >
@@ -317,21 +371,26 @@ export default function SearchHeader({
   )
 
   return (
-    <div
-      className={cn(
-        isSticky ? "sticky" : "",
-        isHeaderClose ? "top-0" : "top-16",
-        "z-40 w-full transition-all bg-white dark:bg-background border-b border-gray-200 dark:border-white/10"
-      )}
-    >
+<div
+  className={cn(
+    isSticky ? "sticky" : "",
+    isHeaderClose ? "top-0" : "top-16",
+    "z-40 w-full transition-all border-gray-200 dark:border-white/10",
+    hasDates ? "bg-white dark:bg-background" : "bg-transparent md:bg-white dark:bg-transparent md:dark:bg-background"
+  )}
+>
       <div className="mx-auto max-w-6xl px-2 md:px-4 py-2">
-
         {/* ══════════════════════════════════════════════
             حالت: بدون تاریخ (no-date)
-            فقط یه بار نمایش داده میشه — هم موبایل هم دسکتاپ
+            فقط یک بار نمایش داده می‌شود
+            اگر URL فقط branch_id داشت، فقط در موبایل حالت ساده می‌ماند
         ══════════════════════════════════════════════ */}
         {!hasDates && !stepSecond && (
-          <NoDateBanner onTrigger={noDateTriggerButton} t={t} />
+          <NoDateBanner
+            onTrigger={noDateTriggerButton}
+            t={t}
+            mobileBranchOnlyMode={isBranchOnlyMobileMode}
+          />
         )}
 
         {/* ══════════════════════════════════════════════
@@ -343,7 +402,9 @@ export default function SearchHeader({
               <div className="w-full hide-scrollbar">
                 <div className="flex w-full items-center justify-between">
                   <div className="flex flex-col flex-1">
-                    <div className="font-bold text-gray-900 dark:text-gray-100 text-[13px]">{t("stepSecond.title")}</div>
+                    <div className="font-bold text-gray-900 dark:text-gray-100 text-[13px]">
+                      {t("stepSecond.title")}
+                    </div>
                     <div className="mt-1 text-gray-500 dark:text-gray-400 text-[12px]">
                       {formatRangeStepSecond({
                         startText: deliveryDateText,
@@ -398,8 +459,9 @@ export default function SearchHeader({
                   <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100 text-[11px]">
                     <Clock className="h-4 w-4" />
                     <span>
-                      {t("rentalDuration.prefix")} {dayCountText} {t("rentalDuration.daysSuffix")} {t("rentalDuration.branchSuffix")}{" "}
-                      <BranchById />
+                      {t("rentalDuration.prefix")} {dayCountText}{" "}
+                      {t("rentalDuration.daysSuffix")}{" "}
+                      {t("rentalDuration.branchSuffix")} <BranchById />
                     </span>
                   </div>
 
@@ -444,8 +506,9 @@ export default function SearchHeader({
                   <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
                     <Clock className="h-4 w-4" />
                     <span className="text-gray-700 dark:text-gray-200">
-                      {t("rentalDuration.prefix")} {dayCountText} {t("rentalDuration.daysSuffix")} {t("rentalDuration.branchSuffix")}{" "}
-                      <BranchById />
+                      {t("rentalDuration.prefix")} {dayCountText}{" "}
+                      {t("rentalDuration.daysSuffix")}{" "}
+                      {t("rentalDuration.branchSuffix")} <BranchById />
                     </span>
                   </div>
 
@@ -474,7 +537,9 @@ export default function SearchHeader({
               <div className="w-full overflow-x-auto hide-scrollbar">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 text-center">
-                    <div className="font-bold text-gray-900 dark:text-gray-100 text-base">{t("stepSecond.title")}</div>
+                    <div className="font-bold text-gray-900 dark:text-gray-100 text-base">
+                      {t("stepSecond.title")}
+                    </div>
                     <div className="mt-1 text-gray-500 dark:text-gray-400 text-sm">
                       {formatRangeStepSecond({
                         startText: deliveryDateText,
@@ -521,8 +586,9 @@ export default function SearchHeader({
                   <div className="inline-flex items-center gap-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
                     <Clock className="h-4 w-4" />
                     <span className="text-gray-700 dark:text-gray-200">
-                      {t("rentalDuration.prefix")} {dayCountText} {t("rentalDuration.daysSuffix")} {t("rentalDuration.branchSuffix")}{" "}
-                      <BranchById />
+                      {t("rentalDuration.prefix")} {dayCountText}{" "}
+                      {t("rentalDuration.daysSuffix")}{" "}
+                      {t("rentalDuration.branchSuffix")} <BranchById />
                     </span>
                   </div>
 
@@ -550,7 +616,6 @@ export default function SearchHeader({
             )}
           </div>
         )}
-
       </div>
     </div>
   )

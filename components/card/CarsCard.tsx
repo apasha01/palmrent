@@ -27,7 +27,7 @@ import { calcRentDaysWithGrace, normalizeTime } from "@/lib/rent-days";
 import { jalaliToDate, formatJalaliDate } from "@/lib/date-utils";
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Link, usePathname } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { DateRangePickerPopover } from "@/components/custom/calender/date-range-picker";
 import { useMobileSheet } from "@/providers/mobile-sheet-provider";
 import SearchHeader from "@/components/search/search-header";
@@ -116,6 +116,11 @@ function normalizePriceList(list: any) {
   }));
 }
 
+function toNumberSafe(value: unknown) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
 type PickerRange = { start: Date | null; end: Date | null };
 const EMPTY_RANGE: PickerRange = { start: null, end: null };
 
@@ -160,7 +165,6 @@ export default function SingleCar({
   const locale = useLocale();
   const optionList = useSelector((state: any) => state.carList.optionList);
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { openSheet } = useMobileSheet();
 
@@ -188,7 +192,9 @@ export default function SingleCar({
         (data as any).priceList ||
         Array.isArray((data as any).photo) ||
         Array.isArray((data as any).prices) ||
-        Array.isArray((data as any).dailyPrices));
+        Array.isArray((data as any).dailyPrices) ||
+        typeof (data as any).final_price !== "undefined" ||
+        typeof (data as any).rent_price !== "undefined");
 
     return alreadyCardModel ? data : adaptCarData(data);
   }, [data]);
@@ -342,7 +348,6 @@ export default function SingleCar({
       const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
       if (isMobile) {
-        // موبایل: شیت رو باز می‌کنیم (بدون تغییر URL به searchUrl)
         openReserveSheetMobile(hydrateKey);
         return;
       }
@@ -359,6 +364,7 @@ export default function SingleCar({
       localReturnTime,
       hydrateReserveStore,
       buildReserveSearchParams,
+      router,
       openReserveSheetMobile,
     ],
   );
@@ -448,14 +454,14 @@ export default function SingleCar({
           </div>
         </div>
 
-        {Number((car as any).discountPercent || (car as any).discount || 0) > 0 && (
+        {Number((car as any).discountPercent || (car as any).discount || (car as any).off || 0) > 0 && (
           <div
             className="absolute bottom-2 end-2"
             style={{ transform: "translateZ(0)", willChange: "transform" }}
           >
             <div className="bg-[#e1ff00] py-1.5 px-2.5 text-[#3b3d40] opacity-85 rounded-lg flex items-center gap-1">
               <IconDiscount size="20" />
-              {(car as any).discountPercent || (car as any).discount}% {t("discount")}
+              {Number((car as any).discountPercent || (car as any).discount || (car as any).off || 0)}% {t("discount")}
             </div>
           </div>
         )}
@@ -483,8 +489,19 @@ export default function SingleCar({
 
         <SingleCarPriceList
           priceList={(car as any).priceList || (car as any).dailyPrices || (car as any).prices}
-          defaultPrice={(car as any).price ?? 0}
-          oldPrice={(car as any).oldPrice ?? 0}
+          defaultPrice={
+            toNumberSafe((car as any).final_price) ||
+            toNumberSafe((car as any).currentPrice) ||
+            toNumberSafe((car as any).price) ||
+            0
+          }
+          oldPrice={
+            toNumberSafe((car as any).rent_price) ||
+            toNumberSafe((car as any).previousPrice) ||
+            toNumberSafe((car as any).oldPrice) ||
+            0
+          }
+          discountPercent={Number((car as any).discountPercent ?? (car as any).discount ?? (car as any).off ?? 0)}
           carDates={carDates}
           deliveryTime={deliveryTimeStore}
           returnTime={returnTimeStore}
@@ -556,7 +573,7 @@ export function SingleCarGallery({
   );
 
   return (
-    <div className="flex relative z-10 w-full lg:h-[220px] h-[220px] rounded-lg">
+    <div className="flex relative z-10 w-full lg:h-55 h-[220px] rounded-lg">
       {!firstImageLoaded && (
         <div className="absolute inset-0 z-10 rounded-lg bg-gray-200 animate-pulse pointer-events-none" />
       )}
@@ -711,6 +728,7 @@ export function SingleCarPriceList({
   priceList,
   defaultPrice,
   oldPrice,
+  discountPercent = 0,
   carDates,
   deliveryTime,
   returnTime,
@@ -720,6 +738,7 @@ export function SingleCarPriceList({
   priceList: any;
   defaultPrice?: number | null;
   oldPrice?: number | null;
+  discountPercent?: number;
   carDates: [string | null, string | null] | null;
   deliveryTime: string | null;
   returnTime: string | null;
@@ -779,7 +798,6 @@ export function SingleCarPriceList({
             </span>
           );
         }
-
         if (locale === "ar") {
           return (
             <span className="inline-flex items-center gap-1">
@@ -790,7 +808,6 @@ export function SingleCarPriceList({
             </span>
           );
         }
-
         if (locale === "tr") {
           return (
             <span className="inline-flex items-center gap-1">
@@ -801,7 +818,6 @@ export function SingleCarPriceList({
             </span>
           );
         }
-
         return (
           <span className="inline-flex items-center gap-1">
             <span>{aTxt}</span>
@@ -813,7 +829,6 @@ export function SingleCarPriceList({
       }
 
       const bTxt = numberFmt.format(b);
-
       if (locale === "fa") return `${aTxt} تا ${bTxt} روز`;
       if (locale === "ar") return `${aTxt} إلى ${bTxt} يوم`;
       if (locale === "tr") return `${aTxt} - ${bTxt} gün`;
@@ -828,28 +843,48 @@ export function SingleCarPriceList({
   );
 
   const daily = useMemo(() => {
-    const base = Number(defaultPrice ?? 0);
-    if (base > 0) return base;
+    const directFinal = Number(defaultPrice ?? 0);
+    if (directFinal > 0) return directFinal;
 
-    const list =
-      Array.isArray(priceList)
-        ? priceList
-        : priceList && typeof priceList === "object"
-          ? Object.values(priceList)
-          : [];
-
+    const list = normalizePriceList(priceList);
     const first: any = list?.[0];
-    const v = Number.parseFloat(first?.final_price ?? first?.currentPrice ?? first?.price ?? 0) || 0;
-    return v > 0 ? v : 0;
+
+    const fromList =
+      toNumberSafe(first?.final_price) ||
+      toNumberSafe(first?.currentPrice) ||
+      toNumberSafe(first?.price) ||
+      0;
+
+    return fromList > 0 ? fromList : 0;
   }, [defaultPrice, priceList]);
 
   const dailyOld = useMemo(() => {
-    const v = Number(oldPrice ?? 0);
-    return v > 0 ? v : 0;
-  }, [oldPrice]);
+    const directOld = Number(oldPrice ?? 0);
+    if (directOld > 0 && directOld >= daily) return directOld;
+
+    const list = normalizePriceList(priceList);
+    const first: any = list?.[0];
+
+    const fromList =
+      toNumberSafe(first?.base_price) ||
+      toNumberSafe(first?.previousPrice) ||
+      0;
+
+    if (fromList > 0 && fromList >= daily) return fromList;
+
+    const pct = Number(discountPercent ?? 0);
+    if (pct > 0 && pct < 100 && daily > 0) {
+      return Math.round(daily / (1 - pct / 100));
+    }
+
+    return 0;
+  }, [oldPrice, priceList, daily, discountPercent]);
 
   const total = useMemo(() => Number(daily || 0) * Number(days || 1), [daily, days]);
-  const totalOld = useMemo(() => Number(dailyOld || 0) * Number(days || 1), [dailyOld, days]);
+  const totalOld = useMemo(
+    () => (dailyOld > 0 ? Number(dailyOld || 0) * Number(days || 1) : 0),
+    [dailyOld, days],
+  );
   const daysText = locale === "fa" ? toFaDigits(String(days || 1)) : String(days || 1);
 
   if (noDateMode) {
@@ -861,8 +896,16 @@ export function SingleCarPriceList({
           const rangeRaw = String(row?.range ?? "").trim();
           const rangeText = formatRangeLabel(rangeRaw);
 
-          const rangeDaily = Number(row?.final_price ?? row?.currentPrice ?? row?.price ?? 0) || 0;
-          const rangeDailyOld = Number(row?.base_price ?? row?.previousPrice ?? 0) || 0;
+          const rangeDaily =
+            toNumberSafe(row?.final_price) ||
+            toNumberSafe(row?.currentPrice) ||
+            toNumberSafe(row?.price) ||
+            0;
+
+          const rangeDailyOld =
+            toNumberSafe(row?.base_price) ||
+            toNumberSafe(row?.previousPrice) ||
+            0;
 
           return (
             <div
@@ -871,9 +914,11 @@ export function SingleCarPriceList({
             >
               <span className="text-[#4b5259]">{rangeText} :</span>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 {rangeDailyOld > rangeDaily && (
-                  <span className="text-[#A7A7A7] line-through">{formatNum(rangeDailyOld)}</span>
+                  <span className="text-[#A7A7A7] line-through text-xs">
+                    {formatNum(rangeDailyOld)}
+                  </span>
                 )}
                 <span className="text-[#3B82F6] font-bold">{formatNum(rangeDaily)}</span>
                 {!!currencyLabel && <span>{currencyLabel}</span>}
@@ -891,8 +936,12 @@ export function SingleCarPriceList({
         <span>
           {t("BSPrice")} {daysText} {t("day")} :
         </span>
-        <div className="flex gap-2">
-          {dailyOld > daily && <span className="text-[#A7A7A7] line-through">{formatNum(dailyOld)}</span>}
+        <div className="flex gap-2 items-center">
+          {dailyOld > daily && (
+            <span className="text-[#A7A7A7] line-through text-xs">
+              {formatNum(dailyOld)}
+            </span>
+          )}
           <span className="text-[#3B82F6] font-bold">{formatNum(daily)}</span>
           {!!currencyLabel && <span>{currencyLabel}</span>}
         </div>
@@ -902,8 +951,12 @@ export function SingleCarPriceList({
         <span>
           {t("sum")} {daysText} {t("dayres")} :
         </span>
-        <div className="flex gap-2">
-          {totalOld > total && <span className="text-[#A7A7A7] line-through">{formatNum(totalOld)}</span>}
+        <div className="flex gap-2 items-center">
+          {totalOld > total && (
+            <span className="text-[#A7A7A7] line-through text-xs">
+              {formatNum(totalOld)}
+            </span>
+          )}
           <span>{formatNum(total)}</span>
           {!!currencyLabel && <span>{currencyLabel}</span>}
         </div>

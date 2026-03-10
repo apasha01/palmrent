@@ -10,7 +10,6 @@ type DescriptionPopupState =
     }
   | null;
 
-// ------- Car Types (برای UI مثل Redux قبلی) -------
 type CarCardPriceItem = {
   previousPrice: any;
   currentPrice: any;
@@ -33,7 +32,6 @@ type CarCardModel = {
 
 type ReelItem = any;
 
-// ✅ NEW: فقط برای رزرو داخل Sheet (ایزوله، بدون دخالت توی بقیه stateها)
 type ReserveDraft = {
   branch_id: number | null;
   car_id: number | null;
@@ -41,8 +39,6 @@ type ReserveDraft = {
   to: string | null;
   dt: string | null;
   rt: string | null;
-
-  // (اختیاری) اگر خواستی همراهش ببری
   sort?: string | null;
   search_title?: string | null;
   categories?: number[];
@@ -50,68 +46,64 @@ type ReserveDraft = {
   max_p?: number | null;
 };
 
+type YesNoValue = "yes" | "no" | null;
+type GearboxValue = "automatic" | "geared" | "hybrid";
+type FuelValue = "petrol" | "diesel" | "hybrid" | "electric";
+
 type SearchPageState = {
-  // ===== UI =====
   roadMapStep: number;
   isHeaderClose: boolean;
   isSearchOpen: boolean;
   isFilterOpen: boolean;
-
-  // ✅ وقتی هر Sheet/Modal بازه، هدر auto-hide نباید کار کنه
   isAnySheetOpen: boolean;
-
-  // ✅ برای باز کردن شیت موبایل از SingleCar
   isMobileInfoOpen: boolean;
-
-  // ✅ NEW: branch_id برای deep-link/refresh
   branchId: number | null;
 
-  // ===== Required (dates) =====
   carDates: [string | null, string | null];
-
-  // ===== Times =====
   deliveryTime: string;
   returnTime: string;
 
-  // ===== Filters =====
   sort: string | null;
   search_title: string;
-  selectedCategories: number[];
 
-  // ✅ NEW: برندهای انتخاب‌شده (sync بین SearchSection و SearchFilterSheet)
+  // قدیمی
+  selectedCategories: number[];
   selectedBrands: string[];
+
+  // جدید
+  selectedGearboxes: GearboxValue[];
+  selectedFuels: FuelValue[];
+  selectedPersons: number[];
+  selectedBaggages: number[];
+
+  selectedDeposit: YesNoValue;
+  selectedFreeDelivery: YesNoValue;
+  selectedInsurance: YesNoValue;
+  selectedKm: YesNoValue;
 
   selectedPriceRange: [number, number] | null;
   priceRange: [number, number] | null;
   currency: string | null;
   selectedCarId: number | null;
 
-  // ===== Cars =====
   carList: CarCardModel[];
 
-  // ===== Reels =====
   isReelActive: boolean;
   reelList: ReelItem[];
   activeIndex: number;
 
-  // ===== Extra =====
   descriptionPopup: DescriptionPopupState;
 
-  // ✅ NEW: رزرو داخل شیت (بدون وابستگی به URL)
   reserveDraft: ReserveDraft;
   setReserveDraft: (patch: Partial<ReserveDraft>) => void;
   resetReserveDraft: () => void;
 
-  // ===== Actions =====
   setRoadMapStep: (n: number) => void;
   setIsHeaderClose: (v: boolean) => void;
   setIsSearchOpen: (v: boolean) => void;
   setIsFilterOpen: (v: boolean) => void;
-
   setIsAnySheetOpen: (v: boolean) => void;
   setIsMobileInfoOpen: (v: boolean) => void;
-
-  // ✅ NEW
   setBranchId: (v: number | null) => void;
 
   setCarDates: (v: [string | null, string | null] | null) => void;
@@ -125,10 +117,31 @@ type SearchPageState = {
   toggleSelectedCategory: (id: number) => void;
   resetCategories: () => void;
 
-  // ✅ NEW: brand actions
   setSelectedBrands: (brands: string[]) => void;
   toggleSelectedBrand: (brand: string) => void;
   resetBrands: () => void;
+
+  setSelectedGearboxes: (v: GearboxValue[]) => void;
+  toggleSelectedGearbox: (v: GearboxValue) => void;
+  resetGearboxes: () => void;
+
+  setSelectedFuels: (v: FuelValue[]) => void;
+  toggleSelectedFuel: (v: FuelValue) => void;
+  resetFuels: () => void;
+
+  setSelectedPersons: (v: number[]) => void;
+  toggleSelectedPerson: (v: number) => void;
+  resetPersons: () => void;
+
+  setSelectedBaggages: (v: number[]) => void;
+  toggleSelectedBaggage: (v: number) => void;
+  resetBaggages: () => void;
+
+  setSelectedDeposit: (v: YesNoValue) => void;
+  setSelectedFreeDelivery: (v: YesNoValue) => void;
+  setSelectedInsurance: (v: YesNoValue) => void;
+  setSelectedKm: (v: YesNoValue) => void;
+  resetReserveFlags: () => void;
 
   setSelectedPriceRange: (v: [number, number] | null) => void;
   setPriceRange: (v: [number, number] | null) => void;
@@ -137,12 +150,10 @@ type SearchPageState = {
   setSelectedCarId: (v: number | null) => void;
   setDescriptionPopup: (v: DescriptionPopupState) => void;
 
-  // ===== Cars actions =====
   setCarList: (cars: CarCardModel[]) => void;
   addCarList: (cars: any[]) => void;
   clearCarList: () => void;
 
-  // ===== Reels actions =====
   setReelActive: (v: boolean) => void;
   setActiveIndex: (i: number) => void;
   addReelItem: (item: ReelItem) => void;
@@ -151,12 +162,6 @@ type SearchPageState = {
   resetAll: () => void;
 };
 
-/**
- * ✅ مهم: رنج priceList نباید "1:" بشه چون regex فقط "1" می‌گیره
- * و max=9999 میشه و برای 10 روز هم همون 1 رو match می‌کنه.
- *
- * خروجی استاندارد: "min-max" یا "min-9999"
- */
 function makeRangeKey(text: string) {
   if (!text) return null;
   const nums = String(text).match(/\d+/g);
@@ -170,6 +175,7 @@ function makeRangeKey(text: string) {
 function uniqStrings(arr: any[]) {
   const out: string[] = [];
   const seen = new Set<string>();
+
   for (const x of arr || []) {
     const s = String(x || "").trim();
     if (!s) continue;
@@ -177,6 +183,37 @@ function uniqStrings(arr: any[]) {
     seen.add(s);
     out.push(s);
   }
+
+  return out;
+}
+
+function uniqNumbers(arr: any[]) {
+  const out: number[] = [];
+  const seen = new Set<number>();
+
+  for (const x of arr || []) {
+    const n = Number(x);
+    if (!Number.isFinite(n) || n <= 0) continue;
+    if (seen.has(n)) continue;
+    seen.add(n);
+    out.push(n);
+  }
+
+  return out.sort((a, b) => a - b);
+}
+
+function uniqLiteralStrings<T extends string>(arr: T[]) {
+  const out: T[] = [];
+  const seen = new Set<string>();
+
+  for (const x of arr || []) {
+    const s = String(x || "").trim() as T;
+    if (!s) continue;
+    if (seen.has(s)) continue;
+    seen.add(s);
+    out.push(s);
+  }
+
   return out;
 }
 
@@ -192,7 +229,7 @@ function normalizeCarsToCardModel(rawCars: any[]): CarCardModel[] {
 
     let priceList: Record<string, CarCardPriceItem> = {};
 
-    if (car?.rent_price) {
+    if (car?.rent_price || car?.final_price) {
       priceList = {
         "1-9999": {
           previousPrice: car.rent_price,
@@ -203,6 +240,7 @@ function normalizeCarsToCardModel(rawCars: any[]): CarCardModel[] {
       car.prices.forEach((item: any) => {
         const key = makeRangeKey(item?.range);
         if (!key) return;
+
         priceList[key] = {
           previousPrice: item?.base_price,
           currentPrice: item?.final_price,
@@ -215,12 +253,14 @@ function normalizeCarsToCardModel(rawCars: any[]): CarCardModel[] {
       : car?.photo
         ? [car.photo]
         : [];
+
     const images = uniqStrings(imagesRaw);
 
     const gearBox =
       car?.gearbox === "اتوماتیک" || car?.gearbox === "automatic"
         ? "automatic"
         : "geared";
+
     const gasType = car?.fuel ? String(car.fuel).toLowerCase() : "petrol";
 
     const model: CarCardModel = {
@@ -242,9 +282,6 @@ function normalizeCarsToCardModel(rawCars: any[]): CarCardModel[] {
   });
 }
 
-// ==========================
-// ✅ Equality helpers (ضد لوپ)
-// ==========================
 const sameArrayNumbers = (a: number[] = [], b: number[] = []) => {
   if (a === b) return true;
   if (a.length !== b.length) return false;
@@ -252,7 +289,6 @@ const sameArrayNumbers = (a: number[] = [], b: number[] = []) => {
   return true;
 };
 
-// ✅ NEW: مقایسه آرایه رشته‌ها
 const sameArrayStrings = (a: string[] = [], b: string[] = []) => {
   if (a === b) return true;
   if (a.length !== b.length) return false;
@@ -277,15 +313,10 @@ const sameDatePair = (
   return a[0] === b[0] && a[1] === b[1];
 };
 
-// ✅ برای جلوگیری از rerender وقتی order دسته‌ها تغییر می‌کنه
 function normalizeCategoryList(arr: number[]) {
-  return (Array.isArray(arr) ? arr : [])
-    .map(Number)
-    .filter((n) => Number.isFinite(n) && n > 0)
-    .sort((x, y) => x - y);
+  return uniqNumbers(arr);
 }
 
-// ✅ NEW: initial reserve draft (ایزوله)
 const initialReserveDraft: ReserveDraft = {
   branch_id: null,
   car_id: null,
@@ -300,7 +331,6 @@ const initialReserveDraft: ReserveDraft = {
   max_p: null,
 };
 
-// --------- Initial State ---------
 const initialState = {
   roadMapStep: 1,
   isHeaderClose: false,
@@ -310,7 +340,6 @@ const initialState = {
   isAnySheetOpen: false,
   isMobileInfoOpen: false,
 
-  // ✅ NEW
   branchId: null as number | null,
 
   carDates: [null, null] as [string | null, string | null],
@@ -321,9 +350,17 @@ const initialState = {
   sort: null as string | null,
   search_title: "",
   selectedCategories: [] as number[],
-
-  // ✅ NEW: برندهای انتخاب‌شده
   selectedBrands: [] as string[],
+
+  selectedGearboxes: [] as GearboxValue[],
+  selectedFuels: [] as FuelValue[],
+  selectedPersons: [] as number[],
+  selectedBaggages: [] as number[],
+
+  selectedDeposit: null as YesNoValue,
+  selectedFreeDelivery: null as YesNoValue,
+  selectedInsurance: null as YesNoValue,
+  selectedKm: null as YesNoValue,
 
   selectedPriceRange: null as [number, number] | null,
   priceRange: null as [number, number] | null,
@@ -337,18 +374,16 @@ const initialState = {
   activeIndex: 0,
 
   descriptionPopup: null as DescriptionPopupState,
-
-  // ✅ NEW
   reserveDraft: initialReserveDraft as ReserveDraft,
 };
 
 export const useSearchPageStore = create<SearchPageState>((set, get) => ({
   ...initialState,
 
-  // ✅ NEW: رزرو داخل sheet (هیچ چیز دیگه رو دست نمیزنه)
   setReserveDraft: (patch) => {
     const cur = get().reserveDraft;
     const next = { ...cur, ...patch };
+
     const same =
       cur.branch_id === next.branch_id &&
       cur.car_id === next.car_id &&
@@ -370,7 +405,6 @@ export const useSearchPageStore = create<SearchPageState>((set, get) => ({
     set({ reserveDraft: { ...initialReserveDraft } });
   },
 
-  // ===== UI =====
   setRoadMapStep: (n) => {
     if (get().roadMapStep === n) return;
     set({ roadMapStep: n });
@@ -401,13 +435,11 @@ export const useSearchPageStore = create<SearchPageState>((set, get) => ({
     set({ isMobileInfoOpen: v });
   },
 
-  // ✅ NEW
   setBranchId: (v) => {
     if (get().branchId === v) return;
     set({ branchId: v });
   },
 
-  // ===== Dates & Times =====
   setCarDates: (v) => {
     const next: [string | null, string | null] = v ?? [null, null];
     const cur = get().carDates;
@@ -427,7 +459,6 @@ export const useSearchPageStore = create<SearchPageState>((set, get) => ({
     set({ returnTime: next });
   },
 
-  // ===== Filters =====
   setSort: (v) => {
     if (get().sort === v) return;
     set({ sort: v });
@@ -459,12 +490,10 @@ export const useSearchPageStore = create<SearchPageState>((set, get) => ({
   },
 
   resetCategories: () => {
-    const cur = get().selectedCategories || [];
-    if (!cur.length) return;
+    if (!get().selectedCategories.length) return;
     set({ selectedCategories: [] });
   },
 
-  // ✅ NEW: brand actions
   setSelectedBrands: (brands) => {
     const next = uniqStrings(brands);
     const cur = get().selectedBrands;
@@ -475,9 +504,11 @@ export const useSearchPageStore = create<SearchPageState>((set, get) => ({
   toggleSelectedBrand: (brand) => {
     const v = String(brand || "").trim();
     if (!v) return;
+
     const cur = get().selectedBrands;
     const exists = cur.includes(v);
     const next = exists ? cur.filter((b) => b !== v) : [...cur, v];
+
     if (sameArrayStrings(cur, next)) return;
     set({ selectedBrands: next });
   },
@@ -485,6 +516,134 @@ export const useSearchPageStore = create<SearchPageState>((set, get) => ({
   resetBrands: () => {
     if (!get().selectedBrands.length) return;
     set({ selectedBrands: [] });
+  },
+
+  setSelectedGearboxes: (v) => {
+    const next = uniqLiteralStrings(v || []);
+    const cur = get().selectedGearboxes;
+    if (sameArrayStrings(cur, next)) return;
+    set({ selectedGearboxes: next });
+  },
+
+  toggleSelectedGearbox: (v) => {
+    const cur = get().selectedGearboxes;
+    const exists = cur.includes(v);
+    const next = exists ? cur.filter((x) => x !== v) : [...cur, v];
+    if (sameArrayStrings(cur, next)) return;
+    set({ selectedGearboxes: next });
+  },
+
+  resetGearboxes: () => {
+    if (!get().selectedGearboxes.length) return;
+    set({ selectedGearboxes: [] });
+  },
+
+  setSelectedFuels: (v) => {
+    const next = uniqLiteralStrings(v || []);
+    const cur = get().selectedFuels;
+    if (sameArrayStrings(cur, next)) return;
+    set({ selectedFuels: next });
+  },
+
+  toggleSelectedFuel: (v) => {
+    const cur = get().selectedFuels;
+    const exists = cur.includes(v);
+    const next = exists ? cur.filter((x) => x !== v) : [...cur, v];
+    if (sameArrayStrings(cur, next)) return;
+    set({ selectedFuels: next });
+  },
+
+  resetFuels: () => {
+    if (!get().selectedFuels.length) return;
+    set({ selectedFuels: [] });
+  },
+
+  setSelectedPersons: (v) => {
+    const next = uniqNumbers(v || []);
+    const cur = get().selectedPersons;
+    if (sameArrayNumbers(cur, next)) return;
+    set({ selectedPersons: next });
+  },
+
+  toggleSelectedPerson: (v) => {
+    const n = Number(v);
+    if (!Number.isFinite(n) || n <= 0) return;
+
+    const cur = get().selectedPersons;
+    const exists = cur.includes(n);
+    const next = exists ? cur.filter((x) => x !== n) : [...cur, n];
+    const norm = uniqNumbers(next);
+
+    if (sameArrayNumbers(cur, norm)) return;
+    set({ selectedPersons: norm });
+  },
+
+  resetPersons: () => {
+    if (!get().selectedPersons.length) return;
+    set({ selectedPersons: [] });
+  },
+
+  setSelectedBaggages: (v) => {
+    const next = uniqNumbers(v || []);
+    const cur = get().selectedBaggages;
+    if (sameArrayNumbers(cur, next)) return;
+    set({ selectedBaggages: next });
+  },
+
+  toggleSelectedBaggage: (v) => {
+    const n = Number(v);
+    if (!Number.isFinite(n) || n <= 0) return;
+
+    const cur = get().selectedBaggages;
+    const exists = cur.includes(n);
+    const next = exists ? cur.filter((x) => x !== n) : [...cur, n];
+    const norm = uniqNumbers(next);
+
+    if (sameArrayNumbers(cur, norm)) return;
+    set({ selectedBaggages: norm });
+  },
+
+  resetBaggages: () => {
+    if (!get().selectedBaggages.length) return;
+    set({ selectedBaggages: [] });
+  },
+
+  setSelectedDeposit: (v) => {
+    if (get().selectedDeposit === v) return;
+    set({ selectedDeposit: v });
+  },
+
+  setSelectedFreeDelivery: (v) => {
+    if (get().selectedFreeDelivery === v) return;
+    set({ selectedFreeDelivery: v });
+  },
+
+  setSelectedInsurance: (v) => {
+    if (get().selectedInsurance === v) return;
+    set({ selectedInsurance: v });
+  },
+
+  setSelectedKm: (v) => {
+    if (get().selectedKm === v) return;
+    set({ selectedKm: v });
+  },
+
+  resetReserveFlags: () => {
+    if (
+      get().selectedDeposit === null &&
+      get().selectedFreeDelivery === null &&
+      get().selectedInsurance === null &&
+      get().selectedKm === null
+    ) {
+      return;
+    }
+
+    set({
+      selectedDeposit: null,
+      selectedFreeDelivery: null,
+      selectedInsurance: null,
+      selectedKm: null,
+    });
   },
 
   setSelectedPriceRange: (v) => {
@@ -510,12 +669,10 @@ export const useSearchPageStore = create<SearchPageState>((set, get) => ({
   },
 
   setDescriptionPopup: (v) => {
-    const cur = get().descriptionPopup;
-    if (cur === v) return;
+    if (get().descriptionPopup === v) return;
     set({ descriptionPopup: v });
   },
 
-  // ===== Cars =====
   setCarList: (cars) => {
     const next = Array.isArray(cars) ? cars : [];
     set({ carList: next });
@@ -534,12 +691,10 @@ export const useSearchPageStore = create<SearchPageState>((set, get) => ({
   },
 
   clearCarList: () => {
-    const cur = get().carList || [];
-    if (!cur.length) return;
+    if (!get().carList.length) return;
     set({ carList: [] });
   },
 
-  // ===== Reels =====
   setReelActive: (v) => {
     if (get().isReelActive === v) return;
     set({ isReelActive: v });
@@ -557,14 +712,20 @@ export const useSearchPageStore = create<SearchPageState>((set, get) => ({
     set({ reelList: [...cur, item] });
   },
 
-  // ===== Resets =====
   resetFilters: () => {
-    // ✅ فقط فیلترها و انتخاب‌ها ریست می‌شن (برندها هم ریست میشن)
     set({
       sort: null,
       search_title: "",
       selectedCategories: [],
       selectedBrands: [],
+      selectedGearboxes: [],
+      selectedFuels: [],
+      selectedPersons: [],
+      selectedBaggages: [],
+      selectedDeposit: null,
+      selectedFreeDelivery: null,
+      selectedInsurance: null,
+      selectedKm: null,
       selectedPriceRange: null,
       selectedCarId: null,
       descriptionPopup: null,

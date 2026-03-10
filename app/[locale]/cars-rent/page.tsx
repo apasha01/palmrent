@@ -9,17 +9,21 @@ import ImportantQuestions from "@/components/Branchs/Important-Questions";
 import QRApplication from "@/components/Branchs/QR-Application";
 import Header from "@/components/layouts/Header";
 import { useBranches } from "@/services/branches/branches.queries";
+
 import { useLocale } from "next-intl";
 import NavSection from "@/components/Branchs/Nav-SectionNew";
+import { useHubFaq } from "@/services/hub/hub.queries";
 
 const Page = () => {
   const locale = useLocale();
 
   const { data, isLoading } = useBranches(locale);
 
+  const { data: hubData, isLoading: hubLoading } = useHubFaq(locale);
+
   return (
-    <section className="mx-auto bg-white dark:bg-gray-800">
-      <Header />
+    <section className="mx-auto bg-white dark:bg-gray-950">
+      <Header shadowLess />
 
       <NavSection
         image="/images/head-list-branch.jpg"
@@ -27,33 +31,34 @@ const Page = () => {
         subtitle1="شهر و تاریخ را انتخاب کنید"
         subtitle2="تا خودروهای موجود و قیمت نهایی نمایش داده شود."
       />
+
       <div className="max-w-7xl mx-auto">
 
+        <BranchList branches={data} isLoading={isLoading} />
 
+        <div>
+          <ImportantQuestions onlySupportView />
+        </div>
 
-      <BranchList branches={data} isLoading={isLoading} />
+        <div className="mt-8">
+          <BranchCars branches={data} isLoading={isLoading} />
+        </div>
 
-      <div>
-        <ImportantQuestions onlySupportView />
-      </div>
+        <div className="mt-6">
+          <QRApplication />
+        </div>
 
-      <div className="mt-8">
-        <BranchCars branches={data} isLoading />
-      </div>
+        {/* FAQ */}
+        <div className="mt-4">
+          <FAQlanding data={hubData?.categories} loading={hubLoading} />
+        </div>
 
-      <div className="mt-6">
-        <QRApplication />
-      </div>
+        {/* Description */}
+        <div className="mt-8">
+          <HubFooter description={hubData?.description} />
+        </div>
 
-      <div className="mt-4">
-        <FAQlanding />
-      </div>
-
-      <div className="mt-8">
-        <HubFooter />
-      </div>
-
-      <Footer />
+        <Footer />
 
       </div>
     </section>

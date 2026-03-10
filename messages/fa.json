@@ -377,6 +377,18 @@
   "hour": "ساعت",
   "errorLoading": "خطا در بارگذاری اطلاعات",
   "noCarsFound": "خودرویی با این مشخصات یافت نشد.",
+  "default": "پیش فرض",
+  "palmrent_suggest": "پیشنهاد پالم رنت",
+  "businessCar": "بیزینسمی",
+  "sedan": "سدان",
+  "hybrid": "برقی",
+  "hybrid_fuel": "هایبریدی",
+  "electric": "برقی",
+  "quickApproval": "تأیید فوری",
+  "specialOffer": "پیشنهاد ویژه",
+  "hotelDelivery": "تحویل درب هتل",
+  "airportDelivery": "تحویل در فرودگاه",
+
 
   "InformationStep": {
     "meta": {

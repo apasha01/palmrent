@@ -1,11 +1,13 @@
 import Image from "next/image";
 import { Skeleton } from "../ui/skeleton";
 import { Link } from "@/i18n/navigation";
+import { useEffect, useState } from "react";
 
 type BranchItem = {
   id: number;
   slug: string;
   title: string;
+  photo: string | null;
 };
 
 type BranchListProps = {
@@ -13,39 +15,107 @@ type BranchListProps = {
   isLoading?: boolean;
 };
 
-const BranchList = ({ branches, isLoading }: BranchListProps) => {
+type BranchCardProps = {
+  item: BranchItem;
+};
+
+const FALLBACK_IMAGE = "/images/about-ser-1.png";
+
+const BranchCard = ({ item }: BranchCardProps) => {
+  const [imgSrc, setImgSrc] = useState(item.photo || FALLBACK_IMAGE);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    const nextSrc = item.photo || FALLBACK_IMAGE;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setImgSrc(nextSrc);
+    setIsImageLoaded(false);
+    setHasError(false);
+  }, [item.photo]);
+
   return (
-    <div className="w-full px-2 md:px-0 mt-6 md:mt-2">
-      <p className="font-bold text-2xl">شهر های اجاره خودرو</p>
-      <p className="mt-2 text-sm">
-        بهترین شهر ها برای اجاره خودرو و تجربه سفری راحت, سریع و بدون ودیعه
+    <div className="flex flex-col items-center gap-2">
+      <Link
+        href={`/cars-rent/${item.slug}`}
+        className="flex flex-col items-center gap-2"
+      >
+        <div className="relative h-[72px] w-[72px] overflow-hidden rounded-xl sm:h-[100px] sm:w-[100px]">
+          {!isImageLoaded && !hasError && (
+            <Skeleton className="absolute inset-0 h-full w-full rounded-xl bg-gray-200 dark:bg-gray-800" />
+          )}
+
+          <Image
+            src={imgSrc}
+            alt={item.title}
+            fill
+            loading="lazy"
+    
+            className={`rounded-xl object-cover transition-opacity duration-300 ${
+              isImageLoaded ? "opacity-100" : "opacity-0"
+            }`}
+            onLoad={() => {
+              setIsImageLoaded(true);
+            }}
+            onError={() => {
+              if (imgSrc !== FALLBACK_IMAGE) {
+                setImgSrc(FALLBACK_IMAGE);
+                setIsImageLoaded(false);
+              } else {
+                setHasError(true);
+                setIsImageLoaded(true);
+              }
+            }}
+          />
+
+          {hasError && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-gray-100 text-[10px] text-gray-500 dark:bg-gray-900 dark:text-gray-400">
+              تصویر موجود نیست
+            </div>
+          )}
+        </div>
+
+        <p className="mt-2 text-center text-sm text-gray-900 dark:text-gray-100">
+          {item.title}
+        </p>
+      </Link>
+    </div>
+  );
+};
+
+const BranchList = ({ branches, isLoading }: BranchListProps) => {
+  useEffect(() => {
+    branches?.forEach((item) => {
+      if (!item.photo) {
+        console.warn(
+          `Branch ${item.id} (${item.title}) has no photo. Fallback will be used.`,
+        );
+      }
+    });
+  }, [branches]);
+
+  return (
+    <div className="mt-6 w-full px-2 md:mt-2 md:px-0">
+      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        شهر های اجاره خودرو
       </p>
 
-      <div className="flex flex-wrap gap-4 mt-6 justify-center md:justify-start">
+      <p className="mt-2 text-xs text-gray-600 dark:text-gray-300">
+        بهترین شهرها برای اجاره خودرو و تجربه سفری راحت، سریع و بدون ودیعه
+      </p>
+
+      <div className="mt-6 grid grid-cols-4 gap-3 sm:flex sm:flex-wrap sm:justify-start sm:gap-4">
         {isLoading
           ? Array.from({ length: 10 }).map((_, index) => (
               <div key={index} className="flex flex-col items-center gap-2">
-                <div className="relative w-[80px] h-[80px] sm:w-[100px] sm:h-[100px]">
-                  <Skeleton className="w-full h-full rounded-lg" />
+                <div className="relative h-[72px] w-[72px] sm:h-[100px] sm:w-[100px]">
+                  <Skeleton className="h-full w-full rounded-xl bg-gray-200 dark:bg-gray-800" />
                 </div>
-                <Skeleton className="h-4 w-14" />
+                <Skeleton className="h-4 w-14 bg-gray-200 dark:bg-gray-800" />
               </div>
             ))
           : (branches ?? []).map((item) => (
-              <div key={item.id} className="flex flex-col items-center gap-2">
-                <Link href={`/cars-rent/${item.slug}`}>
-                <div className="relative w-[80px] h-[80px] sm:w-[100px] sm:h-[100px]">
-                  <Image
-                    src={`/images/about-ser-2.png`}
-                    alt={item.title}
-                    fill
-                    className="rounded-lg object-cover"
-                  />
-                </div>
-
-                <p className="text-center mt-2">{item.title}</p>
-                </Link>
-              </div>
+              <BranchCard key={item.id} item={item} />
             ))}
       </div>
     </div>

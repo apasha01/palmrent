@@ -2,9 +2,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
 import { useSelector } from "react-redux";
 import { useTranslations } from "next-intl";
+import { useParams } from "next/navigation";
+
 import TinyInformation from "@/components/Branchs/Tiny-Information";
 import ImportantQuestions from "@/components/Branchs/Important-Questions";
 import FavoriteBrands from "@/components/Branchs/Favorite-Brands";
@@ -13,9 +14,9 @@ import WhyUs from "@/components/Branchs/Why-Us";
 import GoogleReview from "@/components/Branchs/Google-Review";
 import FAQlanding from "@/components/Branchs/FAQ-landing";
 import DescriptionLanding from "@/components/Branchs/Description-Landing";
-import CarCategory from "@/components/Branchs/Category-List";
 import { SerarchSection } from "@/components/search/SearchSection";
 import { useBranchCars } from "@/services/branch-cars/branch-cars.queries";
+import type { BranchCarsParams } from "@/services/branch-cars/branch-cars.api";
 import SkeletonCarCard from "@/components/Loadings/SkeletonCarCard";
 import SkeletonSearchBar from "@/components/Loadings/SkeletonSearchBar";
 import { RainbowButton } from "@/components/ui/rainbow-button";
@@ -23,9 +24,12 @@ import { ArrowLeftIcon } from "@/components/ui/arrow-left";
 import type { ArrowLeftIconHandle } from "@/components/ui/arrow-left";
 import BranchName from "@/helpers/BranchNameHelper";
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store";
-import BranchCarCard from "@/components/card/CardCardBranch";
-import { useParams } from "next/navigation";
 import NavSection from "@/components/Branchs/Nav-SectionNew";
+import Header from "@/components/layouts/Header";
+import Footer from "@/components/Footer";
+import BranchCarCard from "@/components/card/CardCardBranch";
+import { Button } from "@/components/ui/button";
+import { Info, SlidersHorizontal } from "lucide-react";
 
 /* ---------------- shared calendar helpers ---------------- */
 
@@ -38,36 +42,37 @@ export type SharedCalendar = {
 };
 
 const EMPTY_RANGE: PickerRange = { start: null, end: null };
+const SEARCH_SECTION_SCROLL_ID = "branch-search-section";
 
 const normalizeTimeLocal = (t?: string | null) => {
   const s = String(t ?? "").trim();
   if (!s) return "10:00";
+
   const m = s.match(/^(\d{1,2}):(\d{1,2})$/);
   if (!m) return "10:00";
+
   const hh = String(Math.min(23, Math.max(0, Number(m[1])))).padStart(2, "0");
   const mm = String(Math.min(59, Math.max(0, Number(m[2])))).padStart(2, "0");
   return `${hh}:${mm}`;
 };
 
-/** ضد DST/Timezone: تاریخ‌ها روی 12:00 قفل */
 const atNoon = (d: Date) => {
   const x = new Date(d);
   x.setHours(12, 0, 0, 0);
   return x;
 };
 
-/** ✅ microtask defer — جلوگیری از setState سینک داخل effect body */
 const defer = (fn: () => void) => {
   if (typeof queueMicrotask === "function") return queueMicrotask(fn);
   Promise.resolve().then(fn);
 };
 
-/** ✅ ساخت توکن یکتا */
 const makeToken = () => {
   try {
     const c: any = globalThis as any;
     if (c?.crypto?.randomUUID) return c.crypto.randomUUID();
   } catch {}
+
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
@@ -79,24 +84,103 @@ type StoredCalendarPayload = {
   returnTime: string;
 };
 
+/* ---------------- value normalizers for filters ---------------- */
+
+const toNumberOrNull = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === "") return null;
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  if (typeof value === "object") {
+    const maybeId = (value as any)?.id;
+    if (maybeId !== null && maybeId !== undefined && maybeId !== "") {
+      const n = Number(maybeId);
+      return Number.isFinite(n) ? n : null;
+    }
+  }
+
+  return null;
+};
+
+const normalizeNumberArray = (values: unknown): number[] | null => {
+  if (!Array.isArray(values) || values.length === 0) return null;
+
+  const result = values
+    .map((item) => toNumberOrNull(item))
+    .filter((item): item is number => item !== null);
+
+  return result.length ? result : null;
+};
+
+const normalizeStringArray = (values: unknown): string[] | null => {
+  if (!Array.isArray(values) || values.length === 0) return null;
+
+  const result = values
+    .map((item) => {
+      if (typeof item === "string") return item.trim();
+      if (typeof item === "number") return String(item);
+      if (item && typeof item === "object") {
+        const candidate =
+          (item as any)?.value ??
+          (item as any)?.slug ??
+          (item as any)?.key ??
+          (item as any)?.title ??
+          "";
+        return String(candidate).trim();
+      }
+      return "";
+    })
+    .filter((item) => item !== "");
+
+  return result.length ? result : null;
+};
+
 export default function HomePage() {
   const t = useTranslations("branchLanding");
-
   const routeParams = useParams() as { locale?: string; cityName?: string };
 
   const resolvedLocale = String(routeParams?.locale || "fa");
   const slug = String(routeParams?.cityName || "");
 
-  // ✅ فیلترها از zustand
   const filterSort = useSearchPageStore((s) => s.sort);
-  const filterTitle = useSearchPageStore((s) => s.search_title);
-  const filterCats = useSearchPageStore((s) => s.selectedCategories);
+  const setSort = useSearchPageStore((s) => s.setSort);
 
-  // ✅ از Redux (sticky خراب نشود)
+  const filterTitle = useSearchPageStore((s) => s.search_title);
+  const setSearchTitle = useSearchPageStore((s) => s.setSearchTitle);
+
+  const filterCats = useSearchPageStore((s) => s.selectedCategories);
+  const selectedBrands = useSearchPageStore((s) => s.selectedBrands);
+  const selectedGearboxes = useSearchPageStore((s) => s.selectedGearboxes);
+  const selectedFuels = useSearchPageStore((s) => s.selectedFuels);
+  const selectedPersons = useSearchPageStore((s) => s.selectedPersons);
+  const selectedBaggages = useSearchPageStore((s) => s.selectedBaggages);
+
+  const selectedDeposit = useSearchPageStore((s) => s.selectedDeposit);
+  const selectedFreeDelivery = useSearchPageStore((s) => s.selectedFreeDelivery);
+  const selectedInsurance = useSearchPageStore((s) => s.selectedInsurance);
+  const selectedKm = useSearchPageStore((s) => s.selectedKm);
+
+  const selectedPriceRange = useSearchPageStore((s) => s.selectedPriceRange);
+  const setSelectedPriceRange = useSearchPageStore((s) => s.setSelectedPriceRange);
+
+  const resetBrands = useSearchPageStore((s) => s.resetBrands);
+  const resetCategories = useSearchPageStore((s) => s.resetCategories);
+  const resetGearboxes = useSearchPageStore((s) => s.resetGearboxes);
+  const resetFuels = useSearchPageStore((s) => s.resetFuels);
+  const resetPersons = useSearchPageStore((s) => s.resetPersons);
+  const resetBaggages = useSearchPageStore((s) => s.resetBaggages);
+  const resetReserveFlags = useSearchPageStore((s) => s.resetReserveFlags);
+
   const isHeaderClose = useSelector((state: any) => state.global?.isHeaderClose);
   const topOffset = isHeaderClose ? 0 : 64;
 
-  // ✅ cleanup filters on unmount (safe)
   useEffect(() => {
     return () => {
       const st = useSearchPageStore.getState() as any;
@@ -104,10 +188,9 @@ export default function HomePage() {
     };
   }, []);
 
-  // ==========================================================
-  // ✅ Shared Calendar scoped to THIS history entry
-  // Back => stays | New entry (link/menu) => cleared
-  // ==========================================================
+  /* --------------------------------------------------------
+     Shared Calendar scoped to THIS history entry
+  -------------------------------------------------------- */
   const calendarStorageKey = useMemo(() => {
     return `branch-search:calendar:${resolvedLocale}:${slug}`;
   }, [resolvedLocale, slug]);
@@ -121,7 +204,6 @@ export default function HomePage() {
   const [calendarHydrated, setCalendarHydrated] = useState(false);
   const [visitToken, setVisitToken] = useState<string>("");
 
-  // ✅ hydrate once (page-level)
   useEffect(() => {
     let cancelled = false;
 
@@ -136,23 +218,22 @@ export default function HomePage() {
 
         const prevState: any = window.history.state || {};
 
-        // ✅ همیشه string
         const existingToken =
-          typeof prevState.__branchCalendarToken === "string" ? (prevState.__branchCalendarToken as string) : null;
+          typeof prevState.__branchCalendarToken === "string"
+            ? (prevState.__branchCalendarToken as string)
+            : null;
 
         const finalToken = existingToken ?? makeToken();
 
-        // اگر نداشت، روی همین history entry ذخیره کن
         if (!existingToken) {
           window.history.replaceState(
             { ...prevState, __branchCalendarToken: finalToken },
-            document.title,
+            document.title
           );
         }
 
         setVisitToken(finalToken);
 
-        // از sessionStorage بخون
         const raw = sessionStorage.getItem(calendarStorageKey);
         if (!raw) {
           setCalendarHydrated(true);
@@ -161,7 +242,6 @@ export default function HomePage() {
 
         const parsed = JSON.parse(raw) as Partial<StoredCalendarPayload>;
 
-        // اگر token نخونه => یعنی این ورود “جدید” بوده => پاک
         if (!parsed?.token || parsed.token !== finalToken) {
           try {
             sessionStorage.removeItem(calendarStorageKey);
@@ -190,7 +270,6 @@ export default function HomePage() {
     };
   }, [calendarStorageKey]);
 
-  // ✅ persist whenever sharedCalendar changes (after hydration)
   useEffect(() => {
     if (!calendarHydrated) return;
     if (!visitToken) return;
@@ -198,7 +277,6 @@ export default function HomePage() {
     const s = sharedCalendar.range.start;
     const e = sharedCalendar.range.end;
 
-    // اگر خالی شد => حذف
     if (!s || !e) {
       try {
         sessionStorage.removeItem(calendarStorageKey);
@@ -219,7 +297,9 @@ export default function HomePage() {
     } catch {}
   }, [sharedCalendar, calendarHydrated, calendarStorageKey, visitToken]);
 
-  // ---------- Pagination ----------
+  /* --------------------------------------------------------
+     Pagination
+  -------------------------------------------------------- */
   const [page, setPage] = useState(1);
   const [cars, setCars] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
@@ -234,7 +314,11 @@ export default function HomePage() {
 
   const startCooldown = useCallback(() => {
     cooldownRef.current = true;
-    if (cooldownTimerRef.current) window.clearTimeout(cooldownTimerRef.current);
+
+    if (cooldownTimerRef.current) {
+      window.clearTimeout(cooldownTimerRef.current);
+    }
+
     cooldownTimerRef.current = window.setTimeout(() => {
       cooldownRef.current = false;
     }, COOLDOWN_MS);
@@ -246,60 +330,126 @@ export default function HomePage() {
     };
   }, []);
 
-  // ---------- Filters key ----------
+  /* --------------------------------------------------------
+     Normalized filters
+  -------------------------------------------------------- */
+  const normalizedCats = useMemo(() => normalizeNumberArray(filterCats), [filterCats]);
+  const normalizedBrands = useMemo(() => normalizeNumberArray(selectedBrands), [selectedBrands]);
+  const normalizedGearboxes = useMemo(
+    () => normalizeStringArray(selectedGearboxes),
+    [selectedGearboxes]
+  );
+  const normalizedFuels = useMemo(() => normalizeStringArray(selectedFuels), [selectedFuels]);
+  const normalizedPersons = useMemo(() => normalizeNumberArray(selectedPersons), [selectedPersons]);
+  const normalizedBaggages = useMemo(
+    () => normalizeNumberArray(selectedBaggages),
+    [selectedBaggages]
+  );
+
+  /* --------------------------------------------------------
+     Filters key — reset on change
+  -------------------------------------------------------- */
   const filterKey = useMemo(() => {
     return JSON.stringify({
       sort: filterSort || "",
       title: filterTitle || "",
-      cats: (filterCats || []).join(","),
+      cats: (normalizedCats || []).join(","),
+      brands: (normalizedBrands || []).join(","),
+      gearboxes: (normalizedGearboxes || []).join(","),
+      fuels: (normalizedFuels || []).join(","),
+      persons: (normalizedPersons || []).join(","),
+      baggages: (normalizedBaggages || []).join(","),
+      deposit: selectedDeposit || "",
+      freeDelivery: selectedFreeDelivery || "",
+      insurance: selectedInsurance || "",
+      km: selectedKm || "",
+      minP: selectedPriceRange?.[0] ?? "",
+      maxP: selectedPriceRange?.[1] ?? "",
       slug,
       locale: resolvedLocale,
     });
-  }, [filterSort, filterTitle, filterCats, slug, resolvedLocale]);
+  }, [
+    filterSort,
+    filterTitle,
+    normalizedCats,
+    normalizedBrands,
+    normalizedGearboxes,
+    normalizedFuels,
+    normalizedPersons,
+    normalizedBaggages,
+    selectedDeposit,
+    selectedFreeDelivery,
+    selectedInsurance,
+    selectedKm,
+    selectedPriceRange,
+    slug,
+    resolvedLocale,
+  ]);
 
-  // ✅ Reset when filters change
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setPage(1);
       setCars([]);
       setHasMore(true);
       setManualUnlocked(false);
-
       setPendingFilter(true);
-
       cooldownRef.current = false;
-      if (cooldownTimerRef.current) window.clearTimeout(cooldownTimerRef.current);
+
+      if (cooldownTimerRef.current) {
+        window.clearTimeout(cooldownTimerRef.current);
+      }
     }, 0);
 
     return () => window.clearTimeout(timer);
   }, [filterKey]);
 
-  // ---------- Query params ----------
-  const queryParams = useMemo(() => {
+  /* --------------------------------------------------------
+     Query
+  -------------------------------------------------------- */
+  const queryParams = useMemo<BranchCarsParams>(() => {
     return {
       page,
       sort: filterSort ?? null,
       search_title: filterTitle ?? null,
-      cat_id: Array.isArray(filterCats) && filterCats.length ? filterCats : null,
+      cat_id: normalizedCats,
+      brand: normalizedBrands,
+      gearbox: normalizedGearboxes,
+      fuel: normalizedFuels,
+      person: normalizedPersons,
+      baggage: normalizedBaggages,
+      deposit: selectedDeposit ?? null,
+      free_delivery: selectedFreeDelivery ?? null,
+      insurance: selectedInsurance ?? null,
+      km: selectedKm ?? null,
+      min_p: selectedPriceRange?.[0] ?? null,
+      max_p: selectedPriceRange?.[1] ?? null,
     };
-  }, [page, filterSort, filterTitle, filterCats]);
+  }, [
+    page,
+    filterSort,
+    filterTitle,
+    normalizedCats,
+    normalizedBrands,
+    normalizedGearboxes,
+    normalizedFuels,
+    normalizedPersons,
+    normalizedBaggages,
+    selectedDeposit,
+    selectedFreeDelivery,
+    selectedInsurance,
+    selectedKm,
+    selectedPriceRange,
+  ]);
 
   const query = useBranchCars(slug, resolvedLocale, queryParams);
 
-  // ✅ currency/rate از بک
   const currency = String(query.data?.currency || "");
   const rateToRial = query.data?.rate_to_rial ?? null;
-
-  // ✅ branchId واقعی از API
   const branchId = Number(query.data?.branch?.id || 0);
 
-  const categories = (query.data?.categories ?? []) as Array<{
-    id: number;
-    title: string;
-    image?: string | null;
-  }>;
-
-  // ---------- Append/Replace cars on data ----------
+  /* --------------------------------------------------------
+     Append / Replace cars
+  -------------------------------------------------------- */
   useEffect(() => {
     if (!query.data) return;
 
@@ -325,9 +475,10 @@ export default function HomePage() {
   }, [query.data, page, startCooldown]);
 
   const listLoading = (pendingFilter || query.isFetching) && cars.length === 0;
-  const refetching = query.isFetching && cars.length > 0;
 
-  // ---------- Refs (ضد stale) ----------
+  /* --------------------------------------------------------
+     Refs
+  -------------------------------------------------------- */
   const pageRef = useRef(page);
   const hasMoreRef = useRef(hasMore);
   const isFetchingRef = useRef(query.isFetching);
@@ -349,27 +500,32 @@ export default function HomePage() {
     manualUnlockedRef.current = manualUnlocked;
   }, [manualUnlocked]);
 
-  // ---------- Load more ----------
+  /* --------------------------------------------------------
+     Load more
+  -------------------------------------------------------- */
   const loadMore = useCallback(() => {
     if (isFetchingRef.current) return;
     if (!hasMoreRef.current) return;
     if (cooldownRef.current) return;
+
     setPage((p) => p + 1);
   }, []);
 
-  // ---------- Infinite scroll observer ----------
+  /* --------------------------------------------------------
+     Infinite scroll observer
+  -------------------------------------------------------- */
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   const infiniteSentinelRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (!node) return;
+
       observerRef.current?.disconnect();
 
       observerRef.current = new IntersectionObserver(
         (entries) => {
           const entry = entries[0];
           if (!entry?.isIntersecting) return;
-
           if (!hasMoreRef.current) return;
           if (isFetchingRef.current) return;
           if (cooldownRef.current) return;
@@ -379,19 +535,21 @@ export default function HomePage() {
 
           loadMore();
         },
-        { root: null, threshold: 0, rootMargin: "350px 0px 350px 0px" },
+        { root: null, threshold: 0, rootMargin: "350px 0px 350px 0px" }
       );
 
       observerRef.current.observe(node);
     },
-    [loadMore],
+    [loadMore]
   );
 
   useEffect(() => {
     return () => observerRef.current?.disconnect();
   }, []);
 
-  // ---------- Button logic ----------
+  /* --------------------------------------------------------
+     Manual load more button
+  -------------------------------------------------------- */
   const showLoadMoreButton = useMemo(() => {
     if (!hasMore) return false;
     if (manualUnlocked) return false;
@@ -401,6 +559,7 @@ export default function HomePage() {
   const onManualLoadOnce = useCallback(() => {
     if (query.isFetching) return;
     if (!hasMore) return;
+
     setManualUnlocked(true);
     loadMore();
   }, [query.isFetching, hasMore, loadMore]);
@@ -410,11 +569,12 @@ export default function HomePage() {
     return t("viewMore");
   }, [query.isFetching, t]);
 
-  // ---------- Sticky sentinel + fade ----------
+  /* --------------------------------------------------------
+     Sticky sentinel + fade
+  -------------------------------------------------------- */
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const [stuck, setStuck] = useState(false);
   const [playFade, setPlayFade] = useState(false);
-
   const stuckRef = useRef(false);
   const animatedRef = useRef(false);
 
@@ -444,14 +604,16 @@ export default function HomePage() {
       {
         threshold: 0,
         rootMargin: `-${topOffset}px 0px 0px 0px`,
-      },
+      }
     );
 
     io.observe(el);
     return () => io.disconnect();
   }, [topOffset]);
 
-  // ---------- Arrow animation on button hover ----------
+  /* --------------------------------------------------------
+     Arrow button animation
+  -------------------------------------------------------- */
   const arrowRef = useRef<ArrowLeftIconHandle | null>(null);
 
   const handleBtnEnter = useCallback(() => {
@@ -462,9 +624,85 @@ export default function HomePage() {
     arrowRef.current?.stopAnimation();
   }, []);
 
+  /* --------------------------------------------------------
+     Reset all filters
+  -------------------------------------------------------- */
+  const handleResetAllFilters = useCallback(() => {
+    resetCategories();
+    resetBrands();
+    resetGearboxes();
+    resetFuels();
+    resetPersons();
+    resetBaggages();
+    resetReserveFlags();
+
+    setSort(null);
+    setSearchTitle("");
+    setSelectedPriceRange(null);
+
+    setPage(1);
+    setCars([]);
+    setHasMore(true);
+    setManualUnlocked(false);
+    setPendingFilter(true);
+    cooldownRef.current = false;
+
+    if (cooldownTimerRef.current) {
+      window.clearTimeout(cooldownTimerRef.current);
+    }
+  }, [
+    resetCategories,
+    resetBrands,
+    resetGearboxes,
+    resetFuels,
+    resetPersons,
+    resetBaggages,
+    resetReserveFlags,
+    setSort,
+    setSearchTitle,
+    setSelectedPriceRange,
+  ]);
+
+  const hasActiveFilters = useMemo(() => {
+    return (
+      (normalizedCats?.length ?? 0) > 0 ||
+      (normalizedBrands?.length ?? 0) > 0 ||
+      (normalizedGearboxes?.length ?? 0) > 0 ||
+      (normalizedFuels?.length ?? 0) > 0 ||
+      (normalizedPersons?.length ?? 0) > 0 ||
+      (normalizedBaggages?.length ?? 0) > 0 ||
+      !!selectedDeposit ||
+      !!selectedFreeDelivery ||
+      !!selectedInsurance ||
+      !!selectedKm ||
+      !!filterSort ||
+      !!String(filterTitle || "").trim() ||
+      !!selectedPriceRange
+    );
+  }, [
+    normalizedCats,
+    normalizedBrands,
+    normalizedGearboxes,
+    normalizedFuels,
+    normalizedPersons,
+    normalizedBaggages,
+    selectedDeposit,
+    selectedFreeDelivery,
+    selectedInsurance,
+    selectedKm,
+    filterSort,
+    filterTitle,
+    selectedPriceRange,
+  ]);
+
+  /* --------------------------------------------------------
+     Render
+  -------------------------------------------------------- */
   return (
     <>
-      <main className="w-full mx-auto">
+      <Header shadowLess />
+
+      <main className="mx-auto w-full bg-white dark:bg-gray-900">
         <NavSection
           image="/images/head-list-branch.jpg"
           title={t.rich("heroTitle", { Branch: () => <BranchName /> })}
@@ -472,145 +710,173 @@ export default function HomePage() {
           subtitle2={t("heroSubtitle2")}
         />
 
-        <div className="max-w-7xl mx-auto">
-
-
-        {/* Categories */}
-        <div className="px-0 sm:px-2">
-          <CarCategory categories={categories} loading={query.isLoading} />
-        </div>
-
-        {/* sentinel دقیقا قبل از sticky سرچ */}
-        <div ref={sentinelRef} className="h-px w-full" />
-
-        {/* Sticky Search */}
-        <div
-          className={`
-            sticky top-0 z-40
-            transition-[transform,background-color,box-shadow,backdrop-filter]
-            mt-2
-            duration-500 ease-out
-            ${playFade ? "animate-fade-in" : ""}
-          `}
-          style={{
-            transform: stuck ? `translateY(${topOffset}px)` : "translateY(0px)",
-          }}
-        >
-          <div className="m-auto px-0 sm:px-2 mt-6">
-            {query.isLoading ? <SkeletonSearchBar stuck={stuck} /> : <SerarchSection searchDisable={query.isFetching} />}
+        <div className="mx-auto max-w-7xl">
+          <div>
+            <TinyInformation />
           </div>
-        </div>
 
-        {/* Cars */}
-        <div className="m-auto relative min-h-[50vh] px-0 md:px-2 mt-2">
-          {refetching && (
-            <div className="absolute inset-0 z-20 bg-white/40 dark:bg-black/30 backdrop-blur-[1px] rounded-xl pointer-events-none" />
-          )}
+       <div className="mt-6">
+            <ImportantQuestions
+              whatsappNumber={query.data?.branch?.whatsapp ?? undefined}
+              phoneNumber={query.data?.branch?.phone ?? undefined}
+            />
+          </div>
+          <div ref={sentinelRef} className="mt-2 h-px w-full" />
 
-          {listLoading && (
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <div key={`first-skel-${i}`} className="flex w-full">
-                  <SkeletonCarCard />
-                </div>
-              ))}
-            </div>
-          )}
+          <div id={SEARCH_SECTION_SCROLL_ID} className="h-px w-full" />
 
-          {!listLoading && !query.isError && (
-            <>
-              {cars.length === 0 ? (
-                <div className="text-center pt-6 text-gray-500 dark:text-gray-400">{t("noCarsFound")}</div>
+
+<p className="mt-4 px-2 text-center md:text-start font-bold"> لیست خودرو های <BranchName /> </p>
+          <div
+            className={`
+              sticky z-40 
+              transition-[top] duration-500 ease-in-out
+              ${playFade ? "animate-fade-in" : ""}
+            `}
+            style={{ top: `${topOffset}px` }}
+          >
+     
+            <div className="m-auto mt-4 px-0 sm:px-2">
+              {query.isLoading ? (
+                <SkeletonSearchBar stuck={stuck} />
               ) : (
-                <>
-                  <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-                    {cars.map((item: any, index: number) => (
-                      <div key={`${item.id}-${index}`} className="flex w-full">
-                        <BranchCarCard
-                          forceWhatsappNoDate
-                          data={item}
-                          currency={currency}
-                          rateToRial={rateToRial}
-                          branchId={branchId}
-                          sharedCalendar={sharedCalendar}
-                          onSharedCalendarChange={setSharedCalendar}
-                          calendarHydrated={calendarHydrated}
-                        />
-                      </div>
-                    ))}
+                <SerarchSection
+                  // hideDateFilterWhenEmpty
+                  redirectToSearchOnDateConfirm
+redirectbranch_id="1"
+                  searchDisable={query.isFetching}
+                  scrollTargetId={SEARCH_SECTION_SCROLL_ID}
+                  scrollOffset={topOffset}
+                />
+              )}
+            </div>
+          </div>
 
-                    {query.isFetching &&
-                      Array.from({ length: 6 }).map((_, i) => (
-                        <div key={`more-skel-${i}`} className="flex w-full">
-                          <SkeletonCarCard />
-                        </div>
-                      ))}
+          <div className="relative m-auto mt-2 min-h-[50vh] px-0 md:px-2">
+            {listLoading && (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div key={`first-skel-${i}`} className="flex w-full">
+                    <SkeletonCarCard />
                   </div>
+                ))}
+              </div>
+            )}
 
-                  <div ref={infiniteSentinelRef} className="h-6 w-full" />
+            {!listLoading && !query.isError && (
+              <>
+                {cars.length === 0 ? (
+                  <div className="flex flex-col items-center gap-4 py-20 text-center text-gray-500 dark:text-gray-400">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                      <Info size={28} className="opacity-40" />
+                    </div>
 
-                  <div className="flex justify-center">
-                    {hasMore ? (
-                      showLoadMoreButton ? (
-                        <RainbowButton
-                          variant="outline"
-                          type="button"
-                          onClick={onManualLoadOnce}
-                          disabled={query.isFetching}
-                          onMouseEnter={handleBtnEnter}
-                          onMouseLeave={handleBtnLeave}
-                          onFocus={handleBtnEnter}
-                          onBlur={handleBtnLeave}
-                        >
-                          {buttonText} <ArrowLeftIcon ref={arrowRef} />
-                        </RainbowButton>
-                      ) : (
-                        <div className="h-10" />
-                      )
-                    ) : (
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{t("noMoreResults")}</div>
+                    <span className="text-base font-medium">{t("noCarsFound")}</span>
+
+                    {hasActiveFilters && (
+                      <Button
+                        type="button"
+                        onClick={handleResetAllFilters}
+                        variant="outline"
+                        className="flex items-center gap-2 rounded-xl border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                      >
+                        <SlidersHorizontal className="size-4" />
+                        حذف همه فیلترها
+                      </Button>
                     )}
                   </div>
-                </>
-              )}
-            </>
-          )}
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                      {cars.map((item: any, index: number) => (
+                        <div key={`${item.id}-${index}`} className="flex w-full">
+                          <BranchCarCard
+                            forceWhatsappNoDate
+                            data={item}
+                            currency={currency}
+                            rateToRial={rateToRial}
+                            branchId={branchId}
+                            sharedCalendar={sharedCalendar}
+                            onSharedCalendarChange={setSharedCalendar}
+                            badgesOnImage
+                            calendarHydrated={calendarHydrated}
+                          />
+                        </div>
+                      ))}
 
-          {query.isError && !listLoading && <div className="text-center py-20 text-red-500">{t("fetchError")}</div>}
-        </div>
+                      {query.isFetching &&
+                        Array.from({ length: 6 }).map((_, i) => (
+                          <div key={`more-skel-${i}`} className="flex w-full">
+                            <SkeletonCarCard />
+                          </div>
+                        ))}
+                    </div>
 
-        {/* rest */}
-        <div className="mt-16">
-          <TinyInformation />
-        </div>
+                    <div ref={infiniteSentinelRef} className="h-6 w-full" />
 
-        <div className="mt-6">
-          <ImportantQuestions whatsappNumber={query.data?.branch?.whatsapp ?? undefined} phoneNumber={query.data?.branch?.phone ?? undefined} />
-        </div>
+                    <div className="mt-4 flex justify-center">
+                      {hasMore ? (
+                        showLoadMoreButton ? (
+                          <RainbowButton
+                            variant="outline"
+                            type="button"
+                            onClick={onManualLoadOnce}
+                            disabled={query.isFetching}
+                            onMouseEnter={handleBtnEnter}
+                            onMouseLeave={handleBtnLeave}
+                            onFocus={handleBtnEnter}
+                            onBlur={handleBtnLeave}
+                          >
+                            {buttonText} <ArrowLeftIcon ref={arrowRef} />
+                          </RainbowButton>
+                        ) : (
+                          <div className="h-10" />
+                        )
+                      ) : (
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {t("noMoreResults")}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
 
-        <div className="mt-8">
-          <FavoriteBrands />
-        </div>
-        <div className="mt-6">
-          <QRApplication />
-        </div>
-        <div className="mt-6">
-          <WhyUs />
-        </div>
-        <div className="mt-8">
-          <GoogleReview />
-        </div>
-        <div className="mt-6">
-          <FAQlanding />
-        </div>
-        <div className="mt-6">
-          <DescriptionLanding />
-        </div>
+            {query.isError && !listLoading && (
+              <div className="py-20 text-center text-red-500">{t("fetchError")}</div>
+            )}
+          </div>
 
+   
+
+          <div className="mt-8">
+            <FavoriteBrands />
+          </div>
+
+          <div className="mt-6">
+            <QRApplication />
+          </div>
+
+          <div className="mt-6">
+            <WhyUs />
+          </div>
+
+          <div className="mt-8">
+            <GoogleReview />
+          </div>
+
+          <div className="mt-6">
+            <FAQlanding />
+          </div>
+
+          <div className="mt-6">
+            <DescriptionLanding />
+          </div>
         </div>
-
-
       </main>
+
+      <Footer />
     </>
   );
 }

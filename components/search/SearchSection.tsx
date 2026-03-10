@@ -44,6 +44,9 @@ const PARAM_FROM = "from"
 const PARAM_TO = "to"
 const PARAM_DT = "dt"
 const PARAM_RT = "rt"
+const PARAM_MIN_P = "min_p"
+const PARAM_MAX_P = "max_p"
+const PARAM_BRANCH_ID = "branch_id"
 
 const MAX_SUGGESTIONS = 10
 
@@ -71,30 +74,30 @@ const FA_TO_BRAND: Record<string, string> = {
   "بیام و": "BMW",
   "بى ام و": "BMW",
   "بی": "BMW",
-  "bmw": "BMW",
+  bmw: "BMW",
 
-  "مرسدس": "Mercedes-Benz",
+  مرسدس: "Mercedes-Benz",
   "مرسدس بنز": "Mercedes-Benz",
   "مرسدس‌بنز": "Mercedes-Benz",
-  "بنز": "Mercedes-Benz",
+  بنز: "Mercedes-Benz",
 
   "آئودی": "Audi",
-  "اودی": "Audi",
-  "تویوتا": "Toyota",
-  "هیوندای": "Hyundai",
-  "کیا": "Kia",
-  "نیسان": "Nissan",
-  "هوندا": "Honda",
-  "فولکس": "Volkswagen",
+  اودی: "Audi",
+  تویوتا: "Toyota",
+  هیوندای: "Hyundai",
+  کیا: "Kia",
+  نیسان: "Nissan",
+  هوندا: "Honda",
+  فولکس: "Volkswagen",
   "فولکس واگن": "Volkswagen",
   "فولکس‌واگن": "Volkswagen",
-  "فورد": "Ford",
-  "میتسوبیشی": "Mitsubishi",
-  "میتسو": "Mitsubishi",
-  "شورلت": "Chevrolet",
-  "شورولت": "Chevrolet",
-  "فیات": "Fiat",
-  "رنو": "Renault",
+  فورد: "Ford",
+  میتسوبیشی: "Mitsubishi",
+  میتسو: "Mitsubishi",
+  شورلت: "Chevrolet",
+  شورولت: "Chevrolet",
+  فیات: "Fiat",
+  رنو: "Renault",
 }
 
 const normalize = (s: string) =>
@@ -121,7 +124,6 @@ function resolveBrandFromFaQuery(raw: string): string | null {
 
   let bestKey = ""
   let bestVal: string | null = null
-
   const qTokens = q.split(" ").filter(Boolean)
 
   for (const [kNorm, brand] of Object.entries(FA_TO_BRAND_NORM)) {
@@ -131,9 +133,7 @@ function resolveBrandFromFaQuery(raw: string): string | null {
     const kTokens = kNorm.split(" ").filter(Boolean)
     const hitTokens =
       qTokens.length > 0 &&
-      qTokens.every((qt) =>
-        kTokens.some((kt) => kt.startsWith(qt) || qt.startsWith(kt))
-      )
+      qTokens.every((qt) => kTokens.some((kt) => kt.startsWith(qt) || qt.startsWith(kt)))
 
     if (!(hitNoSpace || hitTokens)) continue
 
@@ -152,9 +152,10 @@ const buildSuggestion = (brand: string, model?: string): Suggestion => {
   return { value: v, display: v, brand, isModel: true }
 }
 
-const ALL_SUGGESTIONS: Suggestion[] = (CAR_DATA as CarEntry[]).flatMap(
-  ({ brand, models }) => [buildSuggestion(brand), ...models.map((m) => buildSuggestion(brand, m))]
-)
+const ALL_SUGGESTIONS: Suggestion[] = (CAR_DATA as CarEntry[]).flatMap(({ brand, models }) => [
+  buildSuggestion(brand),
+  ...models.map((m) => buildSuggestion(brand, m)),
+])
 
 const DEFAULT_SUGGESTIONS: Suggestion[] = POPULAR_BRANDS.map((b) => buildSuggestion(b)).slice(
   0,
@@ -208,14 +209,12 @@ function normalizeJalaliParam(input?: string | null) {
   const [y, m, d] = clean.split("/").map((x) => parseInt(x, 10))
 
   if (!y || !m || !d) return null
-
   return `${y}/${pad2(m)}/${pad2(d)}`
 }
 
 function toPersianDigits(input: string) {
   const en = "0123456789"
   const fa = "۰۱۲۳۴۵۶۷۸۹"
-
   return String(input).replace(/[0-9]/g, (d) => fa[en.indexOf(d)])
 }
 
@@ -245,9 +244,43 @@ function formatShortDate(dateString?: string | null, locale?: string) {
   return locale === "fa" ? toPersianDigits(norm) : norm
 }
 
-// ─────────────────────────────────────────
-// ✅ Sort Drawer
-// ─────────────────────────────────────────
+function formatNumberByLocale(value: number, locale?: string) {
+  const text = value.toLocaleString()
+  return locale === "fa" ? toPersianDigits(text) : text
+}
+
+function buildSearchPageUrl({
+  locale,
+  branch_id,
+  from,
+  to,
+  dt,
+  rt,
+}: {
+  locale?: string
+  branch_id?: string | number | null
+  from?: string | null
+  to?: string | null
+  dt?: string | null
+  rt?: string | null
+}) {
+  const p = new URLSearchParams()
+
+  if (branch_id !== null && branch_id !== undefined && String(branch_id).trim() !== "") {
+    p.set(PARAM_BRANCH_ID, String(branch_id))
+  }
+
+  if (from && String(from).trim()) p.set(PARAM_FROM, String(from).trim())
+  if (to && String(to).trim()) p.set(PARAM_TO, String(to).trim())
+  if (from && dt && String(dt).trim()) p.set(PARAM_DT, String(dt).trim())
+  if (to && rt && String(rt).trim()) p.set(PARAM_RT, String(rt).trim())
+
+  const basePath = locale ? `/${locale}/search` : "/search"
+  const query = p.toString()
+
+  return query ? `${basePath}?${query}` : basePath
+}
+
 function SortDrawer({
   open,
   onClose,
@@ -261,7 +294,7 @@ function SortDrawer({
 }) {
   const t = useTranslations()
 
-  const sortItems: { id: string | null; label: string; sub?: string }[] = [
+  const sortItems: { id: string | null; label: string }[] = [
     { id: null, label: "پیشنهاد پالم رنت" },
     { id: "price_min", label: t("price_min") },
     { id: "price_max", label: t("price_max") },
@@ -277,91 +310,93 @@ function SortDrawer({
         if (!o) onClose()
       }}
     >
-      <DrawerContent>
-        <div className="w-full max-w-3xl mx-auto">
-          <DrawerHeader className="flex flex-row items-center justify-between px-5 py-2.5 border-b border-gray-100 dark:border-gray-800 space-y-0">
-            <DrawerTitle className="font-bold text-sm text-gray-900 dark:text-gray-100">
-              مرتب‌سازی
-            </DrawerTitle>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 transition-colors"
-            >
-              <X className="size-4" />
-            </button>
+      <DrawerContent className="max-h-[85vh]">
+        <div className="mx-auto w-full max-w-lg md:max-w-2xl lg:max-w-3xl">
+          <DrawerHeader className="px-5 pt-4 pb-2">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                  <IconSort size="18" className={undefined} />
+                </span>
+                <DrawerTitle className="truncate text-right text-base font-extrabold text-gray-900 dark:text-gray-100">
+                  مرتب‌سازی
+                </DrawerTitle>
+              </div>
+            </div>
           </DrawerHeader>
 
-          <div className="py-2 px-3 w-full overflow-auto max-h-[calc(85vh-56px)]">
-            {sortItems.map((item, idx) => {
-              const isActive = activeId === item.id
+          <div className="px-5 pb-4">
+            <p className="mb-3 text-right text-xs leading-6 text-gray-500">
+              ترتیب نمایش خودروها را انتخاب کنید.
+            </p>
 
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => {
-                    onSelect(item.id)
-                    onClose()
-                  }}
-                  className={cn(
-                    "w-full flex items-center justify-between gap-3",
-                    "px-4 py-3 rounded-xl text-sm transition-all mb-0.5 last:mb-0",
-                    isActive
-                      ? "bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                  )}
-                >
-                  <div className="flex flex-col items-start gap-0.5 text-right">
-                    <span className="font-medium">{item.label}</span>
-                    {item.sub && (
-                      <span
-                        className={cn(
-                          "text-xs",
-                          isActive
-                            ? "text-blue-400 dark:text-blue-500"
-                            : "text-gray-400 dark:text-gray-500"
-                        )}
-                      >
-                        {item.sub}
-                      </span>
-                    )}
-                  </div>
+            <div className="space-y-2">
+              {sortItems.map((item) => {
+                const isActive = activeId === item.id
 
-                  <span
+                return (
+                  <button
+                    key={String(item.id)}
+                    type="button"
+                    onClick={() => {
+                      onSelect(item.id)
+                      onClose()
+                    }}
                     className={cn(
-                      "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
+                      "w-full rounded-2xl border p-3 text-right transition-all",
+                      "flex items-center justify-between gap-3",
                       isActive
-                        ? "border-blue-600 bg-blue-600 dark:border-blue-400 dark:bg-blue-400"
-                        : "border-gray-300 dark:border-gray-600"
+                        ? "border-blue-200 bg-blue-50/70 text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300"
+                        : "border-gray-200 text-gray-800 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800/60"
                     )}
                   >
-                    {isActive && <Check className="size-3 text-white dark:text-gray-900" />}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="flex min-w-0 flex-col items-start">
+                        <span className="truncate text-sm font-extrabold">{item.label}</span>
+                      </span>
+                    </div>
 
-          <div className="h-5" />
+                    <span
+                      className={cn(
+                        "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all",
+                        isActive
+                          ? "border-blue-600 bg-blue-600 dark:border-blue-400 dark:bg-blue-400"
+                          : "border-gray-300 dark:border-gray-600"
+                      )}
+                    >
+                      {isActive && <Check className="h-3 w-3 text-white dark:text-gray-900" />}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="h-4" />
+          </div>
         </div>
       </DrawerContent>
     </Drawer>
   )
 }
 
-// ─────────────────────────────────────────
-// ✅ Main Component
-// ─────────────────────────────────────────
 export function SerarchSection({
   searchDisable = false,
   containerClassName,
   carListLength = 0,
+  hideDateFilterWhenEmpty = false,
+  redirectToSearchOnDateConfirm = false,
+  redirectbranch_id = null,
+  scrollTargetId,
+  scrollOffset = 0,
 }: {
   searchDisable?: boolean
   containerClassName?: string
   carListLength?: number
+  hideDateFilterWhenEmpty?: boolean
+  redirectToSearchOnDateConfirm?: boolean
+  redirectbranch_id?: string | number | null
+  scrollTargetId?: string
+  scrollOffset?: number
 }) {
   const t = useTranslations()
   const locale = useLocale()
@@ -371,8 +406,11 @@ export function SerarchSection({
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
+  const rootRef = useRef<HTMLDivElement>(null)
+
   const sort = useSearchPageStore((s) => s.sort)
   const setSort = useSearchPageStore((s) => s.setSort)
+
   const selectedCategories = useSearchPageStore((s) => s.selectedCategories)
   const toggleSelectedCategory = useSearchPageStore((s) => s.toggleSelectedCategory)
 
@@ -381,6 +419,9 @@ export function SerarchSection({
 
   const storeBrands = useSearchPageStore((s) => s.selectedBrands)
   const setStoreBrands = useSearchPageStore((s) => s.setSelectedBrands)
+
+  const selectedPriceRange = useSearchPageStore((s) => s.selectedPriceRange)
+  const setSelectedPriceRange = useSearchPageStore((s) => s.setSelectedPriceRange)
 
   const carDates = useSearchPageStore((s) => s.carDates)
   const setCarDates = useSearchPageStore((s) => s.setCarDates)
@@ -408,19 +449,47 @@ export function SerarchSection({
 
   const hasDates = Boolean(carDates?.[0] && carDates?.[1])
 
+  const shouldShowDateFilter = useMemo(() => {
+    if (redirectToSearchOnDateConfirm) return true
+    return !hideDateFilterWhenEmpty || hasDates
+  }, [redirectToSearchOnDateConfirm, hideDateFilterWhenEmpty, hasDates])
+
   const initialRange = useMemo(() => {
     const start = parseJalaliToDateNoon(carDates?.[0] ?? null)
     const end = parseJalaliToDateNoon(carDates?.[1] ?? null)
     return { start, end }
   }, [carDates?.[0], carDates?.[1]])
 
-  const scrollToTop = useCallback((behavior: ScrollBehavior = "smooth") => {
-    if (typeof window === "undefined") return
+  const scrollToSearchSection = useCallback(
+    (behavior: ScrollBehavior = "smooth") => {
+      if (typeof window === "undefined") return
 
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => window.scrollTo({ top: 0, behavior }))
-    )
-  }, [])
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          let targetEl: HTMLElement | null = null
+
+          if (scrollTargetId) {
+            targetEl = document.getElementById(scrollTargetId)
+          }
+
+          if (!targetEl) {
+            targetEl = rootRef.current
+          }
+
+          if (!targetEl) return
+
+          const rect = targetEl.getBoundingClientRect()
+          const absoluteTop = window.scrollY + rect.top - scrollOffset
+
+          window.scrollTo({
+            top: Math.max(0, absoluteTop),
+            behavior,
+          })
+        })
+      })
+    },
+    [scrollTargetId, scrollOffset]
+  )
 
   const deliveryDateText = useMemo(
     () => formatShortDate(carDates?.[0] ?? null, locale),
@@ -447,6 +516,14 @@ export function SerarchSection({
     return `search-dates-${f}-${to}-${dtFallback}-${rtFallback}`
   }, [carDates?.[0], carDates?.[1], dtFallback, rtFallback])
 
+  const priceChipLabel = useMemo(() => {
+    if (!selectedPriceRange || selectedPriceRange.length !== 2) return ""
+    return `${formatNumberByLocale(selectedPriceRange[0], locale)} - ${formatNumberByLocale(
+      selectedPriceRange[1],
+      locale
+    )}`
+  }, [selectedPriceRange, locale])
+
   const pushURL = useCallback(
     (patch: {
       q?: string
@@ -457,10 +534,12 @@ export function SerarchSection({
       to?: string | null
       dt?: string | null
       rt?: string | null
+      minP?: number | null
+      maxP?: number | null
     }) => {
       const p = new URLSearchParams(searchParams.toString())
 
-      const q = patch.q !== undefined ? patch.q : (search_title || "")
+      const q = patch.q !== undefined ? patch.q : search_title || ""
       const brands = patch.brands !== undefined ? patch.brands : storeBrands
       const sortVal = "sortVal" in patch ? patch.sortVal : sort
       const cats = patch.cats !== undefined ? patch.cats : selectedCategories
@@ -469,6 +548,9 @@ export function SerarchSection({
       const toVal = patch.to !== undefined ? patch.to : (carDates?.[1] ?? null)
       const dtVal = patch.dt !== undefined ? patch.dt : dtFallback
       const rtVal = patch.rt !== undefined ? patch.rt : rtFallback
+
+      const minP = patch.minP !== undefined ? patch.minP : selectedPriceRange?.[0] ?? null
+      const maxP = patch.maxP !== undefined ? patch.maxP : selectedPriceRange?.[1] ?? null
 
       if (q && String(q).trim()) p.set(PARAM_Q, String(q).trim())
       else p.delete(PARAM_Q)
@@ -495,6 +577,12 @@ export function SerarchSection({
       if (toVal && rtVal && String(rtVal).trim()) p.set(PARAM_RT, String(rtVal).trim())
       else p.delete(PARAM_RT)
 
+      if (typeof minP === "number" && Number.isFinite(minP)) p.set(PARAM_MIN_P, String(minP))
+      else p.delete(PARAM_MIN_P)
+
+      if (typeof maxP === "number" && Number.isFinite(maxP)) p.set(PARAM_MAX_P, String(maxP))
+      else p.delete(PARAM_MAX_P)
+
       const nextParams = p.toString()
       pendingParamsRef.current = nextParams
       suppressUrlSyncRef.current = true
@@ -508,6 +596,7 @@ export function SerarchSection({
       storeBrands,
       sort,
       selectedCategories,
+      selectedPriceRange,
       carDates,
       dtFallback,
       rtFallback,
@@ -521,7 +610,6 @@ export function SerarchSection({
 
     if (suppressUrlSyncRef.current && pendingParamsRef.current) {
       if (currentParams !== pendingParamsRef.current) return
-
       suppressUrlSyncRef.current = false
       pendingParamsRef.current = null
     }
@@ -534,6 +622,12 @@ export function SerarchSection({
     const toRaw = normalizeJalaliParam(searchParams.get(PARAM_TO))
     const dtRaw = safeTime(searchParams.get(PARAM_DT), "10:00")
     const rtRaw = safeTime(searchParams.get(PARAM_RT), "10:00")
+
+    const minPRaw = searchParams.get(PARAM_MIN_P)
+    const maxPRaw = searchParams.get(PARAM_MAX_P)
+
+    const parsedMinP = minPRaw !== null ? Number(minPRaw) : null
+    const parsedMaxP = maxPRaw !== null ? Number(maxPRaw) : null
 
     const urlBrands = brandsRaw ? uniqBrands(brandsRaw.split(",").filter(Boolean)) : []
 
@@ -560,6 +654,18 @@ export function SerarchSection({
 
     if (safeTime(returnTime, "10:00") !== rtRaw) {
       setReturnTime(rtRaw)
+    }
+
+    if (
+      Number.isFinite(parsedMinP) &&
+      Number.isFinite(parsedMaxP) &&
+      (selectedPriceRange?.[0] !== parsedMinP || selectedPriceRange?.[1] !== parsedMaxP)
+    ) {
+      setSelectedPriceRange([parsedMinP as number, parsedMaxP as number])
+    }
+
+    if ((minPRaw === null || maxPRaw === null) && selectedPriceRange !== null) {
+      setSelectedPriceRange(null)
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -602,30 +708,38 @@ export function SerarchSection({
     )
   }, [searchValue])
 
-  const handleSuggestionClick = (s: Suggestion) => {
-    setShowSuggestions(false)
+  const handleSuggestionClick = useCallback(
+    (s: Suggestion) => {
+      setShowSuggestions(false)
+      setSearchValue("")
+      inputRef.current?.blur()
 
-    const brandOnly = s.brand
-    const nextBrands = storeBrands.includes(brandOnly)
-      ? storeBrands.filter((b) => b !== brandOnly)
-      : uniqBrands([...storeBrands, brandOnly])
+      if (s.isModel) {
+        const fullModelName = s.value
+        const nextBrands = storeBrands.filter((b) => b !== s.brand)
 
-    setStoreBrands(nextBrands)
-    setSearchTitle("")
-    setSearchValue("")
-    inputRef.current?.blur()
+        setStoreBrands(nextBrands)
+        setSearchTitle(fullModelName)
+        pushURL({ q: fullModelName, brands: nextBrands })
+      } else {
+        const nextBrands = storeBrands.includes(s.brand)
+          ? storeBrands.filter((b) => b !== s.brand)
+          : uniqBrands([...storeBrands, s.brand])
 
-    pushURL({ q: "", brands: nextBrands })
-    scrollToTop("smooth")
-  }
+        setStoreBrands(nextBrands)
+        setSearchTitle("")
+        pushURL({ q: "", brands: nextBrands })
+      }
+
+      scrollToSearchSection("smooth")
+    },
+    [storeBrands, pushURL, scrollToSearchSection, setSearchTitle, setStoreBrands]
+  )
 
   const handleInputChange = (vRaw: string) => {
     setSearchValue(vRaw)
     setShowSuggestions(true)
-
-    if (!vRaw.trim()) {
-      setShowSuggestions(false)
-    }
+    if (!vRaw.trim()) setShowSuggestions(false)
   }
 
   const commitSearch = useCallback(() => {
@@ -637,7 +751,6 @@ export function SerarchSection({
     }
 
     setShowSuggestions(false)
-
     const maybeBrand = resolveBrandFromFaQuery(raw)
 
     if (maybeBrand) {
@@ -652,7 +765,7 @@ export function SerarchSection({
       inputRef.current?.blur()
 
       pushURL({ q: "", brands: nextBrands })
-      scrollToTop("smooth")
+      scrollToSearchSection("smooth")
       return
     }
 
@@ -661,32 +774,38 @@ export function SerarchSection({
     inputRef.current?.blur()
 
     pushURL({ q: raw })
-    scrollToTop("smooth")
-  }, [searchValue, storeBrands, pushURL, scrollToTop, setSearchTitle, setStoreBrands])
+    scrollToSearchSection("smooth")
+  }, [searchValue, storeBrands, pushURL, scrollToSearchSection, setSearchTitle, setStoreBrands])
 
   const handleRemoveBrand = (brand: string) => {
     const nextBrands = storeBrands.filter((b) => b !== brand)
     setStoreBrands(nextBrands)
     pushURL({ brands: nextBrands })
-    scrollToTop("smooth")
+    scrollToSearchSection("smooth")
   }
 
   const handleRemoveSearchChip = () => {
     setSearchTitle("")
     pushURL({ q: "" })
-    scrollToTop("smooth")
-  }
-
-  const handleSortSelect = (val: string | null) => {
-    setSort(val)
-    pushURL({ sortVal: val })
-    scrollToTop("smooth")
+    scrollToSearchSection("smooth")
   }
 
   const handleRemoveSortChip = () => {
     setSort(null)
     pushURL({ sortVal: null })
-    scrollToTop("smooth")
+    scrollToSearchSection("smooth")
+  }
+
+  const handleSortSelect = (val: string | null) => {
+    setSort(val)
+    pushURL({ sortVal: val })
+    scrollToSearchSection("smooth")
+  }
+
+  const handleRemovePriceChip = () => {
+    setSelectedPriceRange(null)
+    pushURL({ minP: null, maxP: null })
+    scrollToSearchSection("smooth")
   }
 
   const handleCategoryToggle = (id: number) => {
@@ -696,7 +815,7 @@ export function SerarchSection({
 
     toggleSelectedCategory(id)
     pushURL({ cats: next })
-    scrollToTop("smooth")
+    scrollToSearchSection("smooth")
   }
 
   const handleDateConfirm = ({
@@ -728,6 +847,20 @@ export function SerarchSection({
     setDeliveryTime(safeDt)
     setReturnTime(safeRt)
 
+    if (redirectToSearchOnDateConfirm) {
+      const targetUrl = buildSearchPageUrl({
+        locale,
+        branch_id: redirectbranch_id,
+        from: fromStr,
+        to: toStr,
+        dt: safeDt,
+        rt: safeRt,
+      })
+
+      router.push(targetUrl)
+      return
+    }
+
     pushURL({
       from: fromStr,
       to: toStr,
@@ -735,13 +868,15 @@ export function SerarchSection({
       rt: safeRt,
     })
 
-    scrollToTop("smooth")
+    scrollToSearchSection("smooth")
   }
 
   const handleClearDates = () => {
     setCarDates([null, null])
     setDeliveryTime("10:00")
     setReturnTime("10:00")
+
+    if (redirectToSearchOnDateConfirm) return
 
     pushURL({
       from: null,
@@ -750,15 +885,21 @@ export function SerarchSection({
       rt: null,
     })
 
-    scrollToTop("smooth")
+    scrollToSearchSection("smooth")
   }
 
   const handleSheetOpenChange = (open: boolean) => {
     setFiltersOpen(open)
 
     if (!open) {
-      pushURL({ brands: storeBrands })
-      scrollToTop("smooth")
+      pushURL({
+        brands: storeBrands,
+        sortVal: sort,
+        cats: selectedCategories,
+        minP: selectedPriceRange?.[0] ?? null,
+        maxP: selectedPriceRange?.[1] ?? null,
+      })
+      scrollToSearchSection("smooth")
     }
   }
 
@@ -785,10 +926,15 @@ export function SerarchSection({
 
   const hasSearchChip = !!(search_title && String(search_title).trim())
   const hasSortChip = !!sort
+  const hasPriceChip = !!selectedPriceRange
+
+  // تاریخ اصلاً نباید توی چیپ‌ها بیاد
+  const hasDateChip = false
 
   const hasChips =
     hasSearchChip ||
     hasSortChip ||
+    hasPriceChip ||
     storeBrands.length > 0 ||
     selectedCategoryItems.length > 0
 
@@ -800,7 +946,7 @@ export function SerarchSection({
     return "پیشنهاد پالم رنت"
   }, [sort, t])
 
-  const dateTrigger = (
+  const dateTrigger = shouldShowDateFilter ? (
     <DateRangePickerPopover
       key={popoverKey}
       initialRange={initialRange}
@@ -812,7 +958,7 @@ export function SerarchSection({
         <button
           type="button"
           className={cn(
-            "flex shrink-0 items-center gap-2 p-2 h-[33px] rounded-lg border text-xs",
+            "flex h-[33px] shrink-0 items-center gap-2 rounded-lg border p-2 text-xs",
             "border-[#0000001f] text-[#4b5259] transition-all cursor-pointer",
             "sm:hover:bg-[#3B82F61A] sm:hover:text-[#3B82F6]"
           )}
@@ -822,28 +968,29 @@ export function SerarchSection({
         </button>
       }
     />
-  )
+  ) : null
 
   return (
     <>
       <Sheet open={filtersOpen} onOpenChange={handleSheetOpenChange}>
         <div
+          ref={rootRef}
           className={cn(
-            "relative bg-white z-20",
+            "relative z-20 bg-white",
             "transition-all",
             "sm:rounded-lg rounded-none",
             "sm:shadow-[0_4px_20px_0px_rgba(0,0,0,.06)]",
-            "sm:p-4 p-2 max-sm:py-3 m-0",
-            "max-sm:border-t-0 text-nowrap border border-[#E0E0E0]",
+            "m-0 border border-[#E0E0E0] sm:p-4 p-2 max-sm:py-3",
+            "max-sm:border-t-0 text-nowrap",
             containerClassName
           )}
         >
           <div className="relative space-y-2">
             <div
               ref={barRef}
-              className="rounded-md flex items-center p-4 sm:py-2 py-1 relative mb-2 border border-[#0000001f]"
+              className="relative mb-2 flex items-center rounded-md border border-[#0000001f] p-4 py-1 sm:py-2"
             >
-              <span className="text-[#4b5259] shrink-0">
+              <span className="shrink-0 text-[#4b5259]">
                 <Search size={20} />
               </span>
 
@@ -866,7 +1013,7 @@ export function SerarchSection({
                   }}
                   type="search"
                   placeholder={t("carSearch")}
-                  className="w-full px-2 outline-0 placeholder:text-[#4b5259] text-[14px] sm:text-xs leading-none"
+                  className="w-full px-2 text-[16px] leading-none outline-0 placeholder:text-[#4b5259] sm:text-xs"
                 />
               </div>
 
@@ -878,18 +1025,18 @@ export function SerarchSection({
                     setShowSuggestions(false)
                     inputRef.current?.focus()
                   }}
-                  className="p-1 rounded-md hover:bg-gray-100 text-gray-400 shrink-0"
+                  className="shrink-0 rounded-md p-1 text-gray-400 hover:bg-gray-100"
                   aria-label="clear"
                 >
                   <X className="size-4" />
                 </button>
               )}
 
-              <div className="flex items-center gap-1 text-[#75736F] shrink-0">
+              <div className="flex shrink-0 items-center gap-1 text-[#75736F]">
                 <SheetTrigger asChild>
                   <button
                     type="button"
-                    className="flex items-center gap-1 rtl:border-l ltr:border-r border-[#4b5259] px-2 cursor-pointer"
+                    className="flex cursor-pointer items-center gap-1 border-[#4b5259] px-2 ltr:border-r rtl:border-l"
                   >
                     <span className="text-[#626262]">
                       <span className="sm:hidden">
@@ -907,7 +1054,7 @@ export function SerarchSection({
                 <button
                   type="button"
                   onClick={() => setSortDrawerOpen(true)}
-                  className="flex items-center gap-1 cursor-pointer relative"
+                  className="relative flex cursor-pointer items-center gap-1"
                 >
                   <span className="text-[#626262]">
                     <span className="max-sm:hidden">
@@ -923,7 +1070,7 @@ export function SerarchSection({
                   </span>
 
                   {sort && (
-                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-blue-500 sm:hidden" />
+                    <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-blue-500 sm:hidden" />
                   )}
                 </button>
               </div>
@@ -937,15 +1084,15 @@ export function SerarchSection({
                     exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
                     className={cn(
-                      "absolute top-[calc(100%+8px)] left-0 right-0",
-                      "bg-white border border-[#E8E8E8] rounded-xl",
-                      "shadow-[0_8px_24px_rgba(0,0,0,0.08)]",
-                      "z-20 overflow-hidden"
+                      "absolute left-0 right-0 top-[calc(100%+8px)] z-20 overflow-hidden rounded-xl border border-[#E8E8E8] bg-white",
+                      "shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
                     )}
                   >
-                    <div className="p-2 max-h-[46vh] overflow-auto overscroll-contain">
+                    <div className="max-h-[46vh] overflow-auto overscroll-contain p-2">
                       {suggestions.map((item, i) => {
-                        const isActive = storeBrands.includes(item.brand)
+                        const isActive = item.isModel
+                          ? search_title === item.value
+                          : storeBrands.includes(item.brand)
 
                         return (
                           <motion.button
@@ -957,14 +1104,16 @@ export function SerarchSection({
                             onPointerDown={(e) => e.preventDefault()}
                             onClick={() => handleSuggestionClick(item)}
                             className={cn(
-                              "w-full text-left flex items-center justify-between gap-2",
-                              "px-3 py-1.75 rounded-lg text-xs transition-colors cursor-pointer",
+                              "flex w-full items-center justify-between gap-2 rounded-lg px-3 py-1.75 text-left text-xs transition-colors cursor-pointer",
                               isActive
                                 ? "bg-[#EBF4FF] text-[#0077db]"
                                 : "text-[#333] hover:bg-[#F5F8FC] hover:text-[#0077db]"
                             )}
                           >
                             <span>{item.display}</span>
+                            {item.isModel && (
+                              <span className="shrink-0 text-[10px] text-[#A0A0A0]">مدل</span>
+                            )}
                           </motion.button>
                         )
                       })}
@@ -974,22 +1123,22 @@ export function SerarchSection({
               </AnimatePresence>
 
               {searchDisable && (
-                <div className="absolute inset-0 bg-white/25 pointer-events-none z-5 rounded-md" />
+                <div className="pointer-events-none absolute inset-0 z-5 rounded-md bg-white/25" />
               )}
             </div>
 
             {hasChips && (
-              <div className="w-full overflow-auto hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                <div className="flex md:gap-2 gap-1">
+              <div className="hide-scrollbar w-full overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex gap-1 md:gap-2">
                   {hasSearchChip && (
                     <button
                       type="button"
                       onClick={handleRemoveSearchChip}
-                      className="flex shrink-0 items-center gap-2 p-2 h-8.25 rounded-lg transition-all text-xs bg-[#3B82F61A] border border-[#0077db] text-[#0077db] cursor-pointer mb-2 select-none"
+                      className="mb-2 flex h-8.25 shrink-0 cursor-pointer select-none items-center gap-2 rounded-lg border border-[#0077db] bg-[#3B82F61A] p-2 text-xs text-[#0077db] transition-all"
                       title={String(search_title)}
                     >
                       <span className="truncate">{String(search_title)}</span>
-                      <span className="size-3 flex items-center text-[#0077db]">
+                      <span className="flex size-3 items-center text-[#0077db]">
                         <IconClose className={undefined} />
                       </span>
                     </button>
@@ -999,11 +1148,25 @@ export function SerarchSection({
                     <button
                       type="button"
                       onClick={handleRemoveSortChip}
-                      className="flex shrink-0 items-center gap-2 p-2 h-8.25 rounded-lg transition-all text-xs bg-[#3B82F61A] border border-[#0077db] text-[#0077db] cursor-pointer mb-2 select-none"
+                      className="mb-2 flex h-8.25 shrink-0 cursor-pointer select-none items-center gap-2 rounded-lg border border-[#0077db] bg-[#3B82F61A] p-2 text-xs text-[#0077db] transition-all"
                       title={sortLabel}
                     >
                       <span className="truncate">{sortLabel}</span>
-                      <span className="size-3 flex items-center text-[#0077db]">
+                      <span className="flex size-3 items-center text-[#0077db]">
+                        <IconClose className={undefined} />
+                      </span>
+                    </button>
+                  )}
+
+                  {hasPriceChip && (
+                    <button
+                      type="button"
+                      onClick={handleRemovePriceChip}
+                      className="mb-2 flex h-8.25 shrink-0 cursor-pointer select-none items-center gap-2 rounded-lg border border-[#0077db] bg-[#3B82F61A] p-2 text-xs text-[#0077db] transition-all"
+                      title={priceChipLabel}
+                    >
+                      <span className="truncate">{priceChipLabel}</span>
+                      <span className="flex size-3 items-center text-[#0077db]">
                         <IconClose className={undefined} />
                       </span>
                     </button>
@@ -1014,27 +1177,27 @@ export function SerarchSection({
                       key={brand}
                       type="button"
                       onClick={() => handleRemoveBrand(brand)}
-                      className="flex shrink-0 items-center gap-2 p-2 h-8.25 rounded-lg transition-all text-xs bg-[#3B82F61A] border border-[#0077db] text-[#0077db] cursor-pointer mb-2 select-none"
+                      className="mb-2 flex h-8.25 shrink-0 cursor-pointer select-none items-center gap-2 rounded-lg border border-[#0077db] bg-[#3B82F61A] p-2 text-xs text-[#0077db] transition-all"
                     >
                       <span className="truncate">{brand}</span>
-                      <span className="size-3 flex items-center text-[#0077db]">
+                      <span className="flex size-3 items-center text-[#0077db]">
                         <IconClose className={undefined} />
                       </span>
                     </button>
                   ))}
 
                   {selectedCategoryItems.map((item) => (
-                    <label key={item.id} className="flex gap-2 mb-2 select-none shrink-0">
+                    <label key={item.id} className="mb-2 flex shrink-0 select-none gap-2">
                       <input
                         onChange={() => handleCategoryToggle(item.id)}
-                        checked={true}
+                        checked
                         className="peer hidden"
                         type="checkbox"
                         readOnly
                       />
-                      <div className="p-2 h-[33px] rounded-lg transition-all text-xs peer-checked:bg-[#3B82F61A] border border-[#0077db] peer-checked:text-[#0077db] flex gap-2 cursor-pointer items-center">
+                      <div className="flex h-[33px] cursor-pointer items-center gap-2 rounded-lg border border-[#0077db] p-2 text-xs text-[#0077db] transition-all peer-checked:bg-[#3B82F61A]">
                         {t(item.title)}
-                        <span className="size-3 flex items-center text-[#0077db]">
+                        <span className="flex size-3 items-center text-[#0077db]">
                           <IconClose className={undefined} />
                         </span>
                       </div>
@@ -1044,16 +1207,16 @@ export function SerarchSection({
               </div>
             )}
 
-            <div className="block md:flex-nowrap flex-wrap items-center justify-between gap-2 lg:text-sm md:text-xs text-xs relative">
-              <div className="flex md:w-auto w-full items-start gap-2 lg:text-sm md:text-xs text-xs">
-                <div className="w-full block overflow-auto hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                  <div className="flex md:gap-2 gap-1">
+            <div className="relative block flex-wrap items-center justify-between gap-2 text-xs md:flex-nowrap md:text-xs lg:text-sm">
+              <div className="flex w-full items-start gap-2 text-xs md:w-auto md:text-xs lg:text-sm">
+                <div className="hide-scrollbar block w-full overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                  <div className="flex gap-1 md:gap-2">
                     {!hasDates && dateTrigger}
 
                     {sortList
                       .filter((item) => !selectedCategories.includes(item.id))
                       .map((item) => (
-                        <label key={item.id} className="flex gap-2 select-none">
+                        <label key={item.id} className="flex select-none gap-2">
                           <input
                             checked={false}
                             onChange={() => handleCategoryToggle(item.id)}
@@ -1062,7 +1225,7 @@ export function SerarchSection({
                             type="checkbox"
                             readOnly
                           />
-                          <div className="p-2 h-[33px] rounded-lg border text-xs border-[#0000001f] text-[#4b5259] transition-all peer-checked:bg-[#7CABF9] sm:hover:bg-[#3B82F61A] sm:hover:text-[#3B82F6] peer-checked:text-white flex gap-2 cursor-pointer items-center">
+                          <div className="flex h-[33px] cursor-pointer items-center gap-2 rounded-lg border border-[#0000001f] p-2 text-xs text-[#4b5259] transition-all peer-checked:bg-[#7CABF9] peer-checked:text-white sm:hover:bg-[#3B82F61A] sm:hover:text-[#3B82F6]">
                             {item.icon}
                             {t(item.title)}
                           </div>
@@ -1073,15 +1236,16 @@ export function SerarchSection({
               </div>
 
               {searchDisable && (
-                <div className="absolute inset-0 bg-white/25 pointer-events-none z-[5] rounded-lg" />
+                <div className="pointer-events-none absolute inset-0 z-[5] rounded-lg bg-white/25" />
               )}
             </div>
           </div>
         </div>
 
         <SheetContent
+          showCloseButton={false}
           side={isRtl ? "left" : "right"}
-          className="w-full max-w-md p-0 bg-white shadow-2xl border-l"
+          className="w-full max-w-md border-l bg-white p-0 shadow-2xl"
         >
           <SearchFilterSheet
             closePopup={() => setFiltersOpen(false)}
