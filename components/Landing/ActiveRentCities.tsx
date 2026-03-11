@@ -3,7 +3,7 @@
 import React, { useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
-import { Link } from "@/i18n/navigation"; // ✅ localized link
+import { Link } from "@/i18n/navigation"; 
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 import { ChevronLeft } from "lucide-react";
@@ -60,14 +60,14 @@ function CityItem({
   isPrimary?: boolean;
   disabled?: boolean;
 }) {
-  const className = `${baseBtnClass} ${isPrimary ? outlinePrimary : outlineNeutral} ${
+  const className = `cursor-pointer ${baseBtnClass} ${isPrimary ? outlinePrimary : outlineNeutral} ${
     disabled ? "opacity-50 pointer-events-none" : ""
   }`;
 
   // ✅ اگر href داشت => لینک
   if (href && !disabled) {
     return (
-      <Link href={href} className="w-full">
+      <Link href={href} className="w-full cursor-pointer">
         <Button type="button" variant="ghost" className={className}>
           <span className="truncate">{label}</span>
           <ChevronLeft className="size-5 shrink-0" />
@@ -88,12 +88,11 @@ function CityItem({
 /* ---------------- Component ---------------- */
 const ActiveRentCities = ({ cities, isLoading }: ActiveRentCitiesProps) => {
   const t = useTranslations("ActiveRentCities");
-  const locale = useLocale();
 
   const loading = Boolean(isLoading || !cities);
   const visibleCities = useMemo(() => (cities ?? []).slice(0, 3), [cities]);
 
-  const carsRentBase = `/${locale}/cars-rent`;
+  const carsRentBase = `/cars-rent`;
 
   return (
     <div className="w-full ">
@@ -114,6 +113,7 @@ const ActiveRentCities = ({ cities, isLoading }: ActiveRentCitiesProps) => {
 
               return (
                 <CityItem
+                
                   key={city.id}
                   href={href}
                   label={city.title}

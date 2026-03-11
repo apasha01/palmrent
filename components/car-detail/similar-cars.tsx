@@ -14,26 +14,12 @@ export function SimilarCars({ items = [], currency = "درهم" }: Props) {
   const safeItems = Array.isArray(items) ? items : []
   if (safeItems.length === 0) return null
 
-  // ✅ تبدیل اعداد فارسی/عربی به لاتین + حذف RTL/LTR marks
-  const normalizeDigits = (input: string) => {
-    const fa = "۰۱۲۳۴۵۶۷۸۹"
-    const ar = "٠١٢٣٤٥٦٧٨٩"
-    let s = input
 
-    for (let i = 0; i < 10; i++) {
-      s = s.replaceAll(fa[i], String(i)).replaceAll(ar[i], String(i))
-    }
-
-    return s
-      .replace(/[\u200E\u200F\u202A-\u202E]/g, "")
-      .replace(/\s+/g, "")
-      .trim()
-  }
 
   const toNum = (v: any): number | null => {
     if (v === null || v === undefined || v === "") return null
     if (typeof v === "number") return Number.isFinite(v) ? v : null
-    const raw = normalizeDigits(String(v).replaceAll(",", ""))
+    const raw = (String(v).replaceAll(",", ""))
     const n = Number(raw)
     return Number.isFinite(n) ? n : null
   }

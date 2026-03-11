@@ -4,25 +4,10 @@
 
 export type JalaliToDateFn = (jy: number, jmZeroBased: number, jd: number) => Date
 
-export function toEnglishDigits(input: string) {
-  const fa = "۰۱۲۳۴۵۶۷۸۹"
-  const ar = "٠١٢٣٤٥٦٧٨٩"
-  const en = "0123456789"
 
-  return String(input)
-    .split("")
-    .map((ch) => {
-      const iFa = fa.indexOf(ch)
-      if (iFa !== -1) return en[iFa]
-      const iAr = ar.indexOf(ch)
-      if (iAr !== -1) return en[iAr]
-      return ch
-    })
-    .join("")
-}
 
 export function normalizeJalaliString(s?: string | null) {
-  return toEnglishDigits(String(s ?? "")).replace(/-/g, "/").trim()
+  return (String(s ?? "")).replace(/-/g, "/").trim()
 }
 
 /**
@@ -31,7 +16,7 @@ export function normalizeJalaliString(s?: string | null) {
  * اگر null/بدفرم => "10:00"
  */
 export function normalizeTime(t?: string | null, fallback = "10:00") {
-  const raw = toEnglishDigits(String(t ?? "")).trim()
+  const raw = (String(t ?? "")).trim()
   if (!raw) return fallback
 
   const m = raw.match(/^(\d{1,2}):(\d{1,2})$/)

@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { cache } from "react";
-
 import { routing } from "@/i18n/routing";
 import { hasLocale } from "next-intl";
-
 import "../globals.css";
 import localFont from "next/font/local";
 
@@ -22,14 +20,44 @@ async function getMessages(locale: string) {
   return (await import(`../../messages/${locale}.json`)).default;
 }
 
+// فونت فارسی
 const dana = localFont({
   src: [
-    { path: "../../fonts/iranyekanwebregularfanum.ttf", weight: "500", style: "normal" },
-    { path: "../../fonts/iranyekanwebboldfanum.ttf", weight: "700", style: "normal" },
-    // { path: "../../fonts/Dana-Bold.woff2", weight: "700", style: "normal" },
-    // { path: "../../fonts/Dana-Bold.woff", weight: "700", style: "normal" },
+    {
+      path: "../../fonts/iranyekanwebregularfanum.ttf",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/iranyekanwebboldfanum.ttf",
+      weight: "700",
+      style: "normal",
+    },
   ],
   variable: "--font-dana",
+  display: "swap",
+});
+
+// فونت انگلیسی
+const englishFont = localFont({
+  src: [
+    {
+      path: "../../fonts/Inter-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/Inter-Medium.ttf",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/Inter-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-english",
   display: "swap",
 });
 
@@ -46,6 +74,7 @@ async function getPathFromHeaders(locale: string) {
 }
 
 const RTL_LOCALES = new Set(["fa", "ar"]);
+const EN_LOCALES = new Set(["en"]);
 
 export async function generateMetadata({
   params,
@@ -67,6 +96,7 @@ export default async function RootLayout({
   const { locale } = await params;
 
   if (!hasLocale(routing.locales, locale)) notFound();
+
   const dir: "rtl" | "ltr" = RTL_LOCALES.has(locale) ? "rtl" : "ltr";
   const messages = await getMessages(locale);
   const path = await getPathFromHeaders(locale);
@@ -79,13 +109,15 @@ export default async function RootLayout({
     meta?.schemaSeo == null
       ? null
       : typeof meta.schemaSeo === "string"
-        ? meta.schemaSeo
-        : JSON.stringify(meta.schemaSeo);
+      ? meta.schemaSeo
+      : JSON.stringify(meta.schemaSeo);
+
+  // انتخاب فونت بر اساس زبان
+  const fontClass = EN_LOCALES.has(locale) ? englishFont.className : dana.className;
 
   return (
     <html lang={locale} dir={dir} suppressHydrationWarning>
-      <body className={dana.className}>
-        {/* ✅ فقط وقتی skip نیست */}
+      <body className={fontClass}>
         {!disableClientMetaSync ? <MetaSyncClient locale={locale} /> : null}
 
         {schemaJson ? (

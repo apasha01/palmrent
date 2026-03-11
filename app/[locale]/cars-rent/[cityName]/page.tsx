@@ -8,11 +8,8 @@ import { useParams } from "next/navigation";
 
 import TinyInformation from "@/components/Branchs/Tiny-Information";
 import ImportantQuestions from "@/components/Branchs/Important-Questions";
-import FavoriteBrands from "@/components/Branchs/Favorite-Brands";
 import QRApplication from "@/components/Branchs/QR-Application";
-import WhyUs from "@/components/Branchs/Why-Us";
-import GoogleReview from "@/components/Branchs/Google-Review";
-import FAQlanding from "@/components/Branchs/FAQ-landing";
+
 import DescriptionLanding from "@/components/Branchs/Description-Landing";
 import { SerarchSection } from "@/components/search/SearchSection";
 import { useBranchCars } from "@/services/branch-cars/branch-cars.queries";
@@ -30,6 +27,8 @@ import Footer from "@/components/Footer";
 import BranchCarCard from "@/components/card/CardCardBranch";
 import { Button } from "@/components/ui/button";
 import { Info, SlidersHorizontal } from "lucide-react";
+import { useBranchSupport } from "@/services/branches/branch-support.queries";
+import BranchFaq from "@/components/Branchs/BranchFaq";
 
 /* ---------------- shared calendar helpers ---------------- */
 
@@ -445,7 +444,18 @@ export default function HomePage() {
 
   const currency = String(query.data?.currency || "");
   const rateToRial = query.data?.rate_to_rial ?? null;
-  const branchId = Number(query.data?.branch?.id || 0);
+  const branchId = Number(query.data?.branch?.id || 1);
+
+  /* --------------------------------------------------------
+     Support Query
+  -------------------------------------------------------- */
+  const supportQuery = useBranchSupport(resolvedLocale, 1);
+
+  const branchSupportTitle = String(supportQuery.data?.branch?.title || "");
+  const branchSupportDescription = String(
+    supportQuery.data?.branch?.description_1 || ""
+  );
+  const branchSupportCategories = supportQuery.data?.categories || [];
 
   /* --------------------------------------------------------
      Append / Replace cars
@@ -695,9 +705,6 @@ export default function HomePage() {
     selectedPriceRange,
   ]);
 
-  /* --------------------------------------------------------
-     Render
-  -------------------------------------------------------- */
   return (
     <>
       <Header shadowLess />
@@ -715,35 +722,45 @@ export default function HomePage() {
             <TinyInformation />
           </div>
 
-       <div className="mt-6">
+
+                <div className="mt-6">
+            <BranchFaq
+              loading={supportQuery.isLoading || supportQuery.isFetching}
+              categories={branchSupportCategories}
+            />
+          </div>
+
+
+          <div className="mt-6">
             <ImportantQuestions
+              onlySupportView
               whatsappNumber={query.data?.branch?.whatsapp ?? undefined}
               phoneNumber={query.data?.branch?.phone ?? undefined}
             />
           </div>
-          <div ref={sentinelRef} className="mt-2 h-px w-full" />
 
+          <div ref={sentinelRef} className="mt-2 h-px w-full" />
           <div id={SEARCH_SECTION_SCROLL_ID} className="h-px w-full" />
 
+          <p className="mt-4 px-2 text-center font-bold md:text-start">
+            لیست خودرو های <BranchName />
+          </p>
 
-<p className="mt-4 px-2 text-center md:text-start font-bold"> لیست خودرو های <BranchName /> </p>
           <div
             className={`
-              sticky z-40 
+              sticky z-40
               transition-[top] duration-500 ease-in-out
               ${playFade ? "animate-fade-in" : ""}
             `}
             style={{ top: `${topOffset}px` }}
           >
-     
             <div className="m-auto mt-4 px-0 sm:px-2">
               {query.isLoading ? (
                 <SkeletonSearchBar stuck={stuck} />
               ) : (
                 <SerarchSection
-                  // hideDateFilterWhenEmpty
                   redirectToSearchOnDateConfirm
-redirectbranch_id="1"
+                  redirectbranch_id="1"
                   searchDisable={query.isFetching}
                   scrollTargetId={SEARCH_SECTION_SCROLL_ID}
                   scrollOffset={topOffset}
@@ -795,6 +812,7 @@ redirectbranch_id="1"
                             data={item}
                             currency={currency}
                             rateToRial={rateToRial}
+                            accordionPriceList
                             branchId={branchId}
                             sharedCalendar={sharedCalendar}
                             onSharedCalendarChange={setSharedCalendar}
@@ -848,30 +866,16 @@ redirectbranch_id="1"
             )}
           </div>
 
-   
-
-          <div className="mt-8">
-            <FavoriteBrands />
-          </div>
-
           <div className="mt-6">
             <QRApplication />
           </div>
 
+    
           <div className="mt-6">
-            <WhyUs />
-          </div>
-
-          <div className="mt-8">
-            <GoogleReview />
-          </div>
-
-          <div className="mt-6">
-            <FAQlanding />
-          </div>
-
-          <div className="mt-6">
-            <DescriptionLanding />
+            <DescriptionLanding
+              title={branchSupportTitle}
+              html={branchSupportDescription}
+            />
           </div>
         </div>
       </main>

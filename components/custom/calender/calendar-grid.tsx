@@ -3,7 +3,7 @@
 import {
   getDaysInMonth,
   jalaliMonthNames,
-  persianNumbers,
+
   weekDaysJalali,
   weekDaysGregorian,
   jalaliToDate,
@@ -101,7 +101,7 @@ export function CalendarGrid({
       : null;
 
   const title = isJalali
-    ? `${jalaliMonthNames[month]} ${persianNumbers(year)}`
+    ? `${jalaliMonthNames[month]} ${year}`
     : formatGregorianMonthYear(year, month, locale);
 
   return (
@@ -176,7 +176,7 @@ export function CalendarGrid({
               )}
               aria-label={isStart ? t("aria.start") : isEnd ? t("aria.end") : t("aria.day")}
             >
-              {isJalali ? persianNumbers(day) : day}
+              {isJalali ? (day) : day}
 
               {isStart && (
                 <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap z-20">

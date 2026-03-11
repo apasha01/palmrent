@@ -1,27 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React from "react";
-
-function toFaDigits(input: string | number | null | undefined) {
-  if (input === null || input === undefined) return "—";
-  const map: Record<string, string> = {
-    "0": "۰",
-    "1": "۱",
-    "2": "۲",
-    "3": "۳",
-    "4": "۴",
-    "5": "۵",
-    "6": "۶",
-    "7": "۷",
-    "8": "۸",
-    "9": "۹",
-  };
-  return String(input)
-    .split("")
-    .map((c) => (map[c] ? map[c] : c))
-    .join("");
-}
 
 type TechnicalSpecsCar = {
   title?: string | null;
@@ -52,24 +31,24 @@ export function TechnicalSpecs({ car }: { car: TechnicalSpecsCar }) {
     },
     {
       label: "ظرفیت نفرات",
-      value: car?.person ? `${toFaDigits(car.person)} نفر` : "—",
+      value: car?.person ? `${(car.person)} نفر` : "—",
     },
     {
       label: "ظرفیت چمدان",
-      value: car?.baggage ? `${toFaDigits(car.baggage)} چمدان` : "—",
+      value: car?.baggage ? `${(car.baggage)} چمدان` : "—",
     },
     {
       label: "سال",
-      value: car?.year ? toFaDigits(car.year) : "—",
+      value: car?.year ? (car.year) : "—",
     },
     {
       label: "تعداد درب",
-      value: car?.doors ? `${toFaDigits(car.doors)} درب` : "—",
+      value: car?.doors ? `${(car.doors)} درب` : "—",
     },
     {
       label: "حجم موتور",
       value: car?.engine_capacity
-        ? `${toFaDigits(car.engine_capacity)} سی‌سی`
+        ? `${(car.engine_capacity)} سی‌سی`
         : "—",
     },
   ].filter((x) => x.value !== "—"); // موارد ناموجود رو حذف می‌کنیم

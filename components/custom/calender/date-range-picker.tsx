@@ -18,12 +18,6 @@ export type Range = { start: Date | null; end: Date | null };
 type Props = {
   initialRange?: Range;
 
-  /**
-   * اگر پاس بدی، همین اولویت داره.
-   * اگر پاس ندی => بر اساس locale تصمیم می‌گیریم:
-   * fa/ar => jalali true
-   * en/tr => jalali false
-   */
   defaultIsJalali?: boolean;
 
   initialTimes?: { deliveryTime?: string; returnTime?: string };
@@ -31,11 +25,7 @@ type Props = {
   onClear?: () => void;
   trigger: React.ReactNode;
 
-  /**
-   * ✅ فقط بار اول که باز میشه (در همین mount)
-   * اگر true باشد => هیچ انتخاب پیش‌فرضی نشان نده
-   * دفعات بعد (همین صفحه) از initialRange استفاده می‌کند
-   */
+
   noDefaultSelectionOnFirstOpen?: boolean;
 };
 

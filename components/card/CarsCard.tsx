@@ -20,7 +20,7 @@ import {
   IconWhatsapp,
 } from "../Icons";
 
-import { capitalizeWords, toFaDigits } from "@/helpers/helper";
+
 import { STORAGE_URL } from "@/lib/apiClient";
 import { adaptCarData } from "@/lib/adapters";
 import { calcRentDaysWithGrace, normalizeTime } from "@/lib/rent-days";
@@ -83,21 +83,6 @@ function calcDaysWithGraceSafe(opts: {
   } catch {
     return 1;
   }
-}
-
-function toEnDigits(input: string) {
-  if (!input) return "";
-
-  const fa = "۰۱۲۳۴۵۶۷۸۹";
-  const ar = "٠١٢٣٤٥٦٧٨٩";
-  let s = String(input);
-
-  for (let i = 0; i < 10; i++) {
-    s = s.replaceAll(fa[i], String(i)).replaceAll(ar[i], String(i));
-  }
-
-  s = s.replace(/[\u200E\u200F\u202A-\u202E]/g, "").trim();
-  return s;
 }
 
 function getCarIdSafe(car: any, data: any): number {
@@ -328,13 +313,13 @@ export default function SingleCar({
       const safeEnd = args.end ?? localRange?.end ?? null;
       if (!safeStart || !safeEnd) return;
 
-      const dt = toEnDigits(normalizeTime(args.dt ?? localDeliveryTime) || "10:00");
-      const rt = toEnDigits(normalizeTime(args.rt ?? localReturnTime) || "10:00");
+      const dt = (normalizeTime(args.dt ?? localDeliveryTime) || "10:00");
+      const rt = (normalizeTime(args.rt ?? localReturnTime) || "10:00");
 
       const fromFa = formatJalaliDate(safeStart);
       const toFa = formatJalaliDate(safeEnd);
-      const from = toEnDigits(fromFa);
-      const to = toEnDigits(toFa);
+      const from = (fromFa);
+      const to = (toFa);
       if (!from || !to || !dt || !rt) return;
 
       const payload = { branchId: safeBranchId, carId, from, to, dt, rt };
@@ -480,8 +465,8 @@ export default function SingleCar({
 
           <div className="text-left my-2 text-lg font-bold">
             {locale === "fa"
-              ? toFaDigits(capitalizeWords((car as any).title))
-              : capitalizeWords((car as any).title)}
+              ? (((car as any).title))
+              : ((car as any).title)}
           </div>
         </div>
 
@@ -706,7 +691,7 @@ export function SingleCarOptions({ car, bigFont = false }: { car: any; bigFont?:
           <IconBag />
         </span>
         <span className="text-xs">
-          {toFaDigits(car.baggage ?? car.suitcase ?? 0) || 0} {t("suitCase")}
+          {(car.baggage ?? car.suitcase ?? 0) || 0} {t("suitCase")}
         </span>
       </div>
 
@@ -715,7 +700,7 @@ export function SingleCarOptions({ car, bigFont = false }: { car: any; bigFont?:
           <IconPerson />
         </span>
         <span className="text-xs">
-          {toFaDigits(car.passengers ?? car.person ?? 0) || 0} {t("people")}
+          {(car.passengers ?? car.person ?? 0) || 0} {t("people")}
         </span>
       </div>
     </div>
@@ -885,7 +870,7 @@ export function SingleCarPriceList({
     () => (dailyOld > 0 ? Number(dailyOld || 0) * Number(days || 1) : 0),
     [dailyOld, days],
   );
-  const daysText = locale === "fa" ? toFaDigits(String(days || 1)) : String(days || 1);
+  const daysText = locale === "fa" ? (String(days || 1)) : String(days || 1);
 
   if (noDateMode) {
     if (!pricesArray.length) return null;

@@ -39,7 +39,7 @@ const EMPTY_RANGE: Range = { start: null, end: null };
 function BranchCarCardSkeleton() {
   return (
     <div className="w-full overflow-hidden rounded-2xl border border-[#0000001f] bg-white p-2.5 shadow-[0_2px_5px_-1px_rgba(0,0,0,.08)]">
-      <div className="h-[220px] w-full animate-pulse rounded-lg bg-gray-200" />
+      <div className="h-55 w-full animate-pulse rounded-lg bg-gray-200" />
 
       <div className="mt-3 flex flex-col pl-2.5">
         <div className="mb-3 flex items-center justify-between">
@@ -260,7 +260,7 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
                     {city.title}
 
                     {activeCity === city.slug && (
-                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-sky-500" />
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-sky-500" />
                     )}
                   </button>
                 ))}
@@ -288,7 +288,7 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
           Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="w-[calc(100vw-32px)] shrink-0 snap-start sm:w-[350px] md:w-[380px]"
+              className="w-[calc(100vw-32px)] shrink-0 snap-start sm:w-87.5 md:w-95"
             >
               <BranchCarCardSkeleton />
             </div>
@@ -301,7 +301,7 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
           cars.map((car: any) => (
             <div
               key={car.id}
-              className="w-[calc(100vw-32px)] shrink-0 snap-start sm:w-[350px] md:w-[380px]"
+              className="w-[calc(100vw-32px)] shrink-0 snap-start sm:w-87.5 md:w-95"
             >
               <BranchCarCard
                 data={car}
@@ -322,7 +322,7 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
           <Button
             variant="outline-primary"
             size="lg"
-            className="w-full text-base md:w-auto md:px-12 md:py-3 md:text-lg"
+            className="w-full md:w-auto md:px-12 md:py-3  border border-[#0077db] text-[#0077db] bg-transparent hover:bg-[#0077db]/10 hover:text-[#0077db] text-base md:text-lg font-medium shadow-none"
           >
             مشاهده همه خودروهای {activeCityName}
           </Button>

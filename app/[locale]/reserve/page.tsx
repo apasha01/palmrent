@@ -17,20 +17,7 @@ import { useRouter } from "@/i18n/navigation";
 
 /* ---------------- helpers ---------------- */
 
-function toEnglishDigits(input: string) {
-  const fa = "۰۱۲۳۴۵۶۷۸۹";
-  const ar = "٠١٢٣٤٥٦٧٨٩";
-  return String(input)
-    .split("")
-    .map((ch) => {
-      const faIndex = fa.indexOf(ch);
-      if (faIndex !== -1) return String(faIndex);
-      const arIndex = ar.indexOf(ch);
-      if (arIndex !== -1) return String(arIndex);
-      return ch;
-    })
-    .join("");
-}
+
 
 function pad2(n: number) {
   return String(n).padStart(2, "0");
@@ -38,7 +25,7 @@ function pad2(n: number) {
 
 function normalizeJalaliParam(input?: string | null) {
   if (!input) return null;
-  const clean = toEnglishDigits(String(input)).replace(/-/g, "/").trim();
+  const clean = (String(input)).replace(/-/g, "/").trim();
   const [y, m, d] = clean.split("/").map((x) => parseInt(x, 10));
   if (!y || !m || !d) return null;
   return `${y}/${pad2(m)}/${pad2(d)}`;
@@ -46,7 +33,7 @@ function normalizeJalaliParam(input?: string | null) {
 
 function safePositiveInt(raw?: string | null) {
   if (!raw) return null;
-  const n = Number(toEnglishDigits(String(raw)));
+  const n = Number((String(raw)));
   if (!Number.isFinite(n) || n <= 0) return null;
   return Math.floor(n);
 }

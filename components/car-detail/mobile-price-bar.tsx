@@ -22,50 +22,16 @@ function addDays(d: Date, days: number) {
   return x;
 }
 
-function toFaDigits(input: string) {
-  const map: Record<string, string> = {
-    "0": "۰",
-    "1": "۱",
-    "2": "۲",
-    "3": "۳",
-    "4": "۴",
-    "5": "۵",
-    "6": "۶",
-    "7": "۷",
-    "8": "۸",
-    "9": "۹",
-    ".": "٫",
-    ",": "٬",
-  };
-  return String(input)
-    .split("")
-    .map((c) => (map[c] ? map[c] : c))
-    .join("");
-}
-
-function toEnDigits(input: string) {
-  if (!input) return "";
-  const fa = "۰۱۲۳۴۵۶۷۸۹";
-  const ar = "٠١٢٣٤٥٦٧٨٩";
-  let s = String(input);
-
-  for (let i = 0; i < 10; i++) {
-    s = s.replaceAll(fa[i], String(i)).replaceAll(ar[i], String(i));
-  }
-
-  s = s.replace(/[\u200E\u200F\u202A-\u202E]/g, "").trim();
-  return s;
-}
 
 function formatMoneyFa(value: unknown) {
   if (value === null || value === undefined) return "—";
   const str = String(value);
-  const num = Number(toEnDigits(str));
+  const num = Number((str));
   if (Number.isFinite(num)) {
     const fixed = num % 1 === 0 ? num.toFixed(0) : num.toFixed(2);
-    return toFaDigits(fixed);
+    return (fixed);
   }
-  return toFaDigits(str);
+  return (str);
 }
 
 type PickerRange = NonNullable<
@@ -193,11 +159,11 @@ export function MobilePriceBar({ car, dailyPrice, currency }: MobilePriceBarProp
       const fromFa = safeStart ? formatJalaliDate(safeStart) : "";
       const toFa = safeEnd ? formatJalaliDate(safeEnd) : "";
 
-      const from = toEnDigits(fromFa);
-      const to = toEnDigits(toFa);
+      const from = (fromFa);
+      const to = (toFa);
 
-      const dt = toEnDigits(v.deliveryTime || defaults.deliveryTime);
-      const rt = toEnDigits(v.returnTime || defaults.returnTime);
+      const dt = (v.deliveryTime || defaults.deliveryTime);
+      const rt = (v.returnTime || defaults.returnTime);
 
       const branchId = Number(car?.branch_id ?? 0);
       const carId = Number(car?.id ?? 0);

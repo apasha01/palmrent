@@ -154,50 +154,18 @@ function isYes(v: any) {
   return s === "yes" || s === "true" || s === "1";
 }
 
-function toEnDigits(input: string) {
-  if (!input) return "";
-  const fa = "۰۱۲۳۴۵۶۷۸۹";
-  const ar = "٠١٢٣٤٥٦٧٨٩";
-  let s = String(input);
-  for (let i = 0; i < 10; i++) {
-    s = s.replaceAll(fa[i], String(i)).replaceAll(ar[i], String(i));
-  }
-  return s.replace(/[\u200E\u200F\u202A-\u202E]/g, "").trim();
-}
-
-function toFaDigits(input: string) {
-  const map: Record<string, string> = {
-    "0": "۰",
-    "1": "۱",
-    "2": "۲",
-    "3": "۳",
-    "4": "۴",
-    "5": "۵",
-    "6": "۶",
-    "7": "۷",
-    "8": "۸",
-    "9": "۹",
-    ".": "٫",
-    ",": "٬",
-  };
-
-  return String(input)
-    .split("")
-    .map((c) => (map[c] ? map[c] : c))
-    .join("");
-}
 
 function moneyFa(value: any) {
   if (value === null || value === undefined) return "—";
   const str = String(value);
-  const num = Number(toEnDigits(str));
+  const num = Number((str));
 
   if (Number.isFinite(num)) {
     const fixed = num % 1 === 0 ? num.toFixed(0) : num.toFixed(2);
-    return toFaDigits(fixed);
+    return (fixed);
   }
 
-  return toFaDigits(str);
+  return (str);
 }
 
 export function AppDrawer({

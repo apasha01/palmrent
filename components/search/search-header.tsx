@@ -13,23 +13,9 @@ import { BranchById } from "@/helpers/BranchNameHelper"
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store"
 import { calcRentDaysWithGrace, normalizeTime } from "@/lib/rent-days"
 
-function toEnglishDigits(input: string) {
-  const fa = "۰۱۲۳۴۵۶۷۸۹"
-  const ar = "٠١٢٣٤٥٦٧٨٩"
-  return String(input)
-    .split("")
-    .map((ch) => {
-      const faIndex = fa.indexOf(ch)
-      if (faIndex !== -1) return String(faIndex)
-      const arIndex = ar.indexOf(ch)
-      if (arIndex !== -1) return String(arIndex)
-      return ch
-    })
-    .join("")
-}
 
 function normalizeJalaliString(s: string) {
-  return toEnglishDigits(s).replace(/-/g, "/").trim()
+  return (s).replace(/-/g, "/").trim()
 }
 
 function pad2(n: number) {
@@ -38,17 +24,13 @@ function pad2(n: number) {
 
 function normalizeJalaliParam(input?: string | null) {
   if (!input) return null
-  const clean = toEnglishDigits(String(input)).replace(/-/g, "/").trim()
+  const clean = (String(input)).replace(/-/g, "/").trim()
   const [y, m, d] = clean.split("/").map((x) => parseInt(x, 10))
   if (!y || !m || !d) return null
   return `${y}/${pad2(m)}/${pad2(d)}`
 }
 
-function toPersianDigits(input: string) {
-  const en = "0123456789"
-  const fa = "۰۱۲۳۴۵۶۷۸۹"
-  return String(input).replace(/[0-9]/g, (d) => fa[en.indexOf(d)])
-}
+
 
 function parseJalaliToDateNoon(s?: string | null) {
   const norm = normalizeJalaliParam(s)
@@ -221,7 +203,7 @@ export default function SearchHeader({
       return t("common.emptyDate")
     }
 
-    const dayStr = locale === "fa" ? toPersianDigits(String(d)) : String(d)
+    const dayStr = locale === "fa" ? (String(d)) : String(d)
     return t("common.shortDate", { day: dayStr, month: monthNames[m - 1] })
   }
 
@@ -241,8 +223,8 @@ export default function SearchHeader({
     deliveryTime: string
     returnTime: string
   }) {
-    const dt = locale === "fa" ? toPersianDigits(opts.deliveryTime) : opts.deliveryTime
-    const rt = locale === "fa" ? toPersianDigits(opts.returnTime) : opts.returnTime
+    const dt = locale === "fa" ? (opts.deliveryTime) : opts.deliveryTime
+    const rt = locale === "fa" ? (opts.returnTime) : opts.returnTime
     return t("formats.mobileRange", {
       start: opts.startText,
       end: opts.endText,
@@ -258,9 +240,9 @@ export default function SearchHeader({
     returnTime: string
     dayCount: number
   }) {
-    const dt = locale === "fa" ? toPersianDigits(opts.deliveryTime) : opts.deliveryTime
-    const rt = locale === "fa" ? toPersianDigits(opts.returnTime) : opts.returnTime
-    const days = locale === "fa" ? toPersianDigits(String(opts.dayCount)) : String(opts.dayCount)
+    const dt = locale === "fa" ? (opts.deliveryTime) : opts.deliveryTime
+    const rt = locale === "fa" ? (opts.returnTime) : opts.returnTime
+    const days = locale === "fa" ? (String(opts.dayCount)) : String(opts.dayCount)
 
     return t("formats.stepSecondRange", {
       start: opts.startText,
@@ -325,7 +307,7 @@ export default function SearchHeader({
   }, [carDates?.[0], carDates?.[1], dtFallback, rtFallback])
 
   const dayCountText =
-    locale === "fa" ? toPersianDigits(String(carDayCount)) : String(carDayCount)
+    locale === "fa" ? (String(carDayCount)) : String(carDayCount)
 
   const desktopActsLikeSearch = stepSecond && stepSecondDesktopLikeSearch
 
@@ -490,7 +472,7 @@ export default function SearchHeader({
                     <span className="font-semibold">{t("desktop.deliveryTitle")}</span>
                     <span>
                       {deliveryDateText} &nbsp; {t("desktop.hour")}{" "}
-                      {locale === "fa" ? toPersianDigits(dtFallback) : dtFallback}
+                      {locale === "fa" ? (dtFallback) : dtFallback}
                     </span>
                   </div>
 
@@ -499,7 +481,7 @@ export default function SearchHeader({
                     <span className="font-semibold">{t("desktop.returnTitle")}</span>
                     <span>
                       {returnDateText} &nbsp; {t("desktop.hour")}{" "}
-                      {locale === "fa" ? toPersianDigits(rtFallback) : rtFallback}
+                      {locale === "fa" ? (rtFallback) : rtFallback}
                     </span>
                   </div>
 
@@ -570,7 +552,7 @@ export default function SearchHeader({
                     <span className="font-semibold">{t("desktop.deliveryTitle")}</span>
                     <span>
                       {deliveryDateText} &nbsp; {t("desktop.hour")}{" "}
-                      {locale === "fa" ? toPersianDigits(dtFallback) : dtFallback}
+                      {locale === "fa" ? (dtFallback) : dtFallback}
                     </span>
                   </div>
 
@@ -579,7 +561,7 @@ export default function SearchHeader({
                     <span className="font-semibold">{t("desktop.returnTitle")}</span>
                     <span>
                       {returnDateText} &nbsp; {t("desktop.hour")}{" "}
-                      {locale === "fa" ? toPersianDigits(rtFallback) : rtFallback}
+                      {locale === "fa" ? (rtFallback) : rtFallback}
                     </span>
                   </div>
 

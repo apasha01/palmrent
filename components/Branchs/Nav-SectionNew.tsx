@@ -28,30 +28,9 @@ import { useParams } from "next/navigation";
 
 /* ---------------- utils ---------------- */
 
-function toPersianDigits(input: string) {
-  const en = "0123456789";
-  const fa = "۰۱۲۳۴۵۶۷۸۹";
-  return String(input).replace(/[0-9]/g, (d) => fa[en.indexOf(d)]);
-}
-
-function toEnglishDigits(input: string) {
-  const fa = "۰۱۲۳۴۵۶۷۸۹";
-  const ar = "٠١٢٣٤٥٦٧٨٩";
-  const en = "0123456789";
-
-  return String(input).replace(/[۰-۹٠-٩]/g, (d) => {
-    const iFa = fa.indexOf(d);
-    if (iFa !== -1) return en[iFa];
-    const iAr = ar.indexOf(d);
-    if (iAr !== -1) return en[iAr];
-    return d;
-  });
-}
-
-/** ✅ تاریخ جلالی YYYY/MM/DD با اعداد فارسی */
 function formatJalaliYMD(date: Date | null) {
   if (!date) return "---";
-  return toPersianDigits(toEnglishDigits(formatJalaliDate(date)));
+  return formatJalaliDate(date);
 }
 
 /** ✅ Trigger UI */
@@ -81,7 +60,7 @@ function DateTimeTrigger({
                 {formatJalaliYMD(date)}{" "}
                 <span className="text-gray-900 dark:text-gray-100 font-medium">
                   {" - "}
-                  {hasDate && time ? toPersianDigits(time) : timePlaceholder}
+                  {hasDate && time ? (time) : timePlaceholder}
                 </span>
               </p>
             ) : (
@@ -108,7 +87,7 @@ function DateTimeTrigger({
               {formatJalaliYMD(date)}{" "}
               <span className="text-gray-900 dark:text-gray-100 font-medium">
                 {" - "}
-                {hasDate && time ? toPersianDigits(time) : timePlaceholder}
+                {hasDate && time ? (time) : timePlaceholder}
               </span>
             </p>
           ) : (
@@ -160,7 +139,7 @@ function DateTimeTrigger({
         <Clock className="text-gray-500 shrink-0" size={18} />
         {hasDate && time ? (
           <p className="truncate text-sm text-gray-900 dark:text-gray-100 font-medium">
-            {toPersianDigits(time)}
+            {(time)}
           </p>
         ) : (
           <p className="truncate text-sm text-gray-500">{timePlaceholder}</p>
@@ -180,7 +159,7 @@ function normalizeSlugLike(s: string) {
 
 function jalaliQueryDate(date: Date | null) {
   if (!date) return "";
-  return toEnglishDigits(formatJalaliDate(date));
+  return (formatJalaliDate(date));
 }
 
 function safeTime(t?: string | null) {
@@ -302,7 +281,7 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
   const cityLoading = Boolean(isLoading || isFetching || !data);
 
   React.useEffect(() => {
-    const url = `/${locale}/search`;
+    const url = `/search`;
     router.prefetch(url as any);
   }, [router, locale]);
 
@@ -366,7 +345,7 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
 
     setClickedOnce(true);
 
-    const url = `/${locale}/search?branch_id=${encodeURIComponent(
+    const url = `/search?branch_id=${encodeURIComponent(
       branchId,
     )}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(
       to,
@@ -581,7 +560,7 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
                       side="bottom"
                       align="start"
                       sideOffset={4}
-                      className="z-[60] w-[var(--radix-select-trigger-width)]"
+                      className="z-[60] w-(--radix-select-trigger-width)"
                     >
                       {cityLoading ? (
                         <div className="py-3 px-3 flex items-center justify-center">

@@ -3,7 +3,7 @@
 
 import { useTranslations, useLocale } from "next-intl"
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
-import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 import { AnimatePresence, motion } from "framer-motion"
@@ -32,6 +32,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "../ui/drawer"
 import { DateRangePickerPopover } from "@/components/custom/calender/date-range-picker"
 import { jalaliToDate, formatJalaliDate } from "@/lib/date-utils"
 import { normalizeTime } from "@/lib/rent-days"
+import { usePathname, useRouter } from "@/i18n/navigation"
 
 type CarEntry = { brand: string; slug: string; models: string[] }
 type Suggestion = { value: string; display: string; brand: string; isModel: boolean }
@@ -176,26 +177,8 @@ function uniqBrands(arr: string[]) {
   return out
 }
 
-function toEnglishDigits(input: string) {
-  const fa = "۰۱۲۳۴۵۶۷۸۹"
-  const ar = "٠١٢٣٤٥٦٧٨٩"
-
-  return String(input)
-    .split("")
-    .map((ch) => {
-      const faIndex = fa.indexOf(ch)
-      if (faIndex !== -1) return String(faIndex)
-
-      const arIndex = ar.indexOf(ch)
-      if (arIndex !== -1) return String(arIndex)
-
-      return ch
-    })
-    .join("")
-}
-
 function normalizeJalaliString(s: string) {
-  return toEnglishDigits(s).replace(/-/g, "/").trim()
+  return (s).replace(/-/g, "/").trim()
 }
 
 function pad2(n: number) {
@@ -205,17 +188,11 @@ function pad2(n: number) {
 function normalizeJalaliParam(input?: string | null) {
   if (!input) return null
 
-  const clean = toEnglishDigits(String(input)).replace(/-/g, "/").trim()
+  const clean = (String(input)).replace(/-/g, "/").trim()
   const [y, m, d] = clean.split("/").map((x) => parseInt(x, 10))
 
   if (!y || !m || !d) return null
   return `${y}/${pad2(m)}/${pad2(d)}`
-}
-
-function toPersianDigits(input: string) {
-  const en = "0123456789"
-  const fa = "۰۱۲۳۴۵۶۷۸۹"
-  return String(input).replace(/[0-9]/g, (d) => fa[en.indexOf(d)])
 }
 
 function parseJalaliToDateNoon(s?: string | null) {
@@ -241,12 +218,12 @@ function safeTime(input: any, fallback: string) {
 function formatShortDate(dateString?: string | null, locale?: string) {
   const norm = normalizeJalaliParam(dateString)
   if (!norm) return ""
-  return locale === "fa" ? toPersianDigits(norm) : norm
+  return locale === "fa" ? (norm) : norm
 }
 
 function formatNumberByLocale(value: number, locale?: string) {
   const text = value.toLocaleString()
-  return locale === "fa" ? toPersianDigits(text) : text
+  return locale === "fa" ? (text) : text
 }
 
 function buildSearchPageUrl({
@@ -275,7 +252,7 @@ function buildSearchPageUrl({
   if (from && dt && String(dt).trim()) p.set(PARAM_DT, String(dt).trim())
   if (to && rt && String(rt).trim()) p.set(PARAM_RT, String(rt).trim())
 
-  const basePath = locale ? `/${locale}/search` : "/search"
+  const basePath = locale ? `/search` : "/search"
   const query = p.toString()
 
   return query ? `${basePath}?${query}` : basePath
@@ -504,8 +481,8 @@ export function SerarchSection({
   const dateChipLabel = useMemo(() => {
     if (!hasDates) return ""
 
-    const dtText = locale === "fa" ? toPersianDigits(dtFallback) : dtFallback
-    const rtText = locale === "fa" ? toPersianDigits(rtFallback) : rtFallback
+    const dtText = locale === "fa" ? (dtFallback) : dtFallback
+    const rtText = locale === "fa" ? (rtFallback) : rtFallback
 
     return `${deliveryDateText} (${dtText}) - ${returnDateText} (${rtText})`
   }, [hasDates, locale, dtFallback, rtFallback, deliveryDateText, returnDateText])

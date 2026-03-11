@@ -7,7 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useSelector } from "react-redux";
-import { ChevronLeft, ArrowRight, InfinityIcon } from "lucide-react";
+import { ChevronLeft, ArrowRight, ChevronDown } from "lucide-react";
 
 import {
   IconBag,
@@ -20,10 +20,7 @@ import {
   IconWhatsapp,
 } from "../Icons";
 
-import {
-  capitalizeWords,
-  toFaDigits as toFaDigitsHelper,
-} from "@/helpers/helper";
+
 import { STORAGE_URL } from "@/lib/apiClient";
 import { adaptCarData } from "@/lib/adapters";
 import { normalizeTime } from "@/lib/rent-days";
@@ -96,21 +93,6 @@ type PickerRange = NonNullable<
 >;
 
 const EMPTY_RANGE: PickerRange = { start: null, end: null };
-
-function toEnDigits(input: string) {
-  if (!input) return "";
-
-  const fa = "۰۱۲۳۴۵۶۷۸۹";
-  const ar = "٠١٢٣٤٥٦٧٨٩";
-  let s = String(input);
-
-  for (let i = 0; i < 10; i++) {
-    s = s.replaceAll(fa[i], String(i)).replaceAll(ar[i], String(i));
-  }
-
-  s = s.replace(/[\u200E\u200F\u202A-\u202E]/g, "").trim();
-  return s;
-}
 
 function getCarIdSafe(car: any, data: any): number {
   const v = car?.id ?? car?.car_id ?? data?.id ?? data?.car_id ?? 0;
@@ -461,6 +443,8 @@ export default function BranchCarCard({
   onSharedCalendarChange,
   calendarHydrated = true,
   badgesOnImage = false,
+  // ─── پراپ جدید: اگر true باشد، قیمت‌ها با اکاردئون (۲ تا نشان داده می‌شود) ───
+  accordionPriceList = false,
 }: {
   data: any;
   noBtn?: boolean;
@@ -480,6 +464,8 @@ export default function BranchCarCard({
   }) => void;
   calendarHydrated?: boolean;
   badgesOnImage?: boolean;
+  /** اگر true باشد فقط ۲ قیمت اول نشان داده می‌شود و بقیه در اکاردئون پنهان می‌شوند */
+  accordionPriceList?: boolean;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -667,10 +653,10 @@ export default function BranchCarCard({
 
       const fromFa = formatJalaliDate(safeStart);
       const toFa = formatJalaliDate(safeEnd);
-      const from = toEnDigits(fromFa);
-      const to = toEnDigits(toFa);
-      const dt = toEnDigits(normalizeTime(args.dt ?? deliveryTime) || "10:00");
-      const rt = toEnDigits(normalizeTime(args.rt ?? returnTime) || "10:00");
+      const from = (fromFa);
+      const to = (toFa);
+      const dt = (normalizeTime(args.dt ?? deliveryTime) || "10:00");
+      const rt = (normalizeTime(args.rt ?? returnTime) || "10:00");
 
       if (!from || !to || !dt || !rt) return;
 
@@ -753,8 +739,8 @@ export default function BranchCarCard({
 
           <div className="my-2 text-left text-lg font-bold">
             {locale === "fa"
-              ? toFaDigitsHelper(capitalizeWords((car as any).title))
-              : capitalizeWords((car as any).title)}
+              ? (((car as any).title))
+              : ((car as any).title)}
           </div>
         </div>
 
@@ -784,6 +770,8 @@ export default function BranchCarCard({
           returnTime={returnTimeStore}
           currency={currency || ""}
           rateToRial={rateToRial}
+          // ─── پراپ جدید به SingleCarPriceList پاس داده می‌شود ───
+          accordionPriceList={accordionPriceList}
         />
 
         {!noBtn && (
@@ -893,7 +881,7 @@ export function SingleCarGallery({
       : ["/images/placeholder.png"];
 
   const goCar = useCallback(
-    (e?: React.MouseEvent | React.MouseEvent<HTMLDivElement>) => {
+    (e?: React.MouseEvent) => {
       if (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -905,14 +893,54 @@ export function SingleCarGallery({
   );
 
   return (
-    <div className="relative z-10 flex h-[220px] w-full overflow-hidden rounded-lg lg:h-[220px]">
+    <div className="flex relative z-10 w-full lg:h-55 h-[220px] rounded-lg">
+
+      {/* ─── shimmer skeleton ─── */}
       {!firstImageLoaded && (
-        <div className="pointer-events-none absolute inset-0 z-10 animate-pulse rounded-lg bg-gray-200" />
+        <>
+          <style>{`
+            @keyframes shimmer-slide {
+              0%   { transform: translateX(-100%); }
+              100% { transform: translateX(200%);  }
+            }
+          `}</style>
+
+          <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden rounded-lg">
+            <div className="absolute inset-0 bg-gray-200" />
+
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%)",
+                animation: "shimmer-slide 1.6s infinite",
+              }}
+            />
+
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+              <svg
+                className="size-12 text-gray-300"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 7h2l2-3h10l2 3h2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"
+                />
+                <circle cx="12" cy="13" r="3" />
+              </svg>
+              <div className="h-2.5 w-24 rounded-full bg-gray-300" />
+            </div>
+          </div>
+        </>
       )}
 
-      <div className="hide-scrollbar flex h-full w-full max-md:z-10 max-md:overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex h-full w-full max-md:overflow-x-auto max-md:z-10 hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <div
-          className="top-0 right-0 h-full w-full rounded-lg max-md:flex max-md:gap-2 md:absolute md:-z-10"
+          className="md:absolute max-md:flex w-full h-full top-0 right-0 rounded-lg -z-10 max-md:gap-2"
           onClick={(e) => e.stopPropagation()}
         >
           {safeImageList.map((src: any, index: number) => (
@@ -922,12 +950,8 @@ export function SingleCarGallery({
                 md:rounded-lg
                 max-md:first:rounded-r-lg max-md:last-of-type:rounded-l-lg
                 max-md:shrink-0 max-md:w-[calc(100vw-80px)] max-md:snap-center
-                h-full w-full cursor-pointer object-cover md:absolute
-                ${
-                  index === activeImageIndex
-                    ? "md:z-10 md:opacity-100"
-                    : "md:opacity-0"
-                }
+                w-full h-full object-cover md:absolute
+                ${index === activeImageIndex ? "md:z-10 md:opacity-100" : "md:opacity-0"}
                 md:transition-opacity md:duration-200 md:ease-out
               `}
               src={toStorageUrl(src)}
@@ -935,17 +959,14 @@ export function SingleCarGallery({
               height={253}
               alt={`Car image ${index + 1}`}
               loading="eager"
-              onClick={goCar}
               onLoad={index === 0 ? () => setFirstImageLoaded(true) : undefined}
-              onError={
-                index === 0 ? () => setFirstImageLoaded(true) : undefined
-              }
+              onError={index === 0 ? () => setFirstImageLoaded(true) : undefined}
             />
           ))}
 
           {safeImageList.length > 1 && (
-            <div className="relative flex flex-col items-center justify-center gap-2 px-4 font-bold text-black text-nowrap md:hidden">
-              <span className="flex size-8 items-center justify-center rounded-full bg-[#F1F1F1]">
+            <div className="flex md:hidden flex-col items-center justify-center text-black text-nowrap relative gap-2 font-bold px-4">
+              <span className="flex items-center justify-center bg-[#F1F1F1] rounded-full size-8">
                 <ChevronLeft className="size-4" />
               </span>
               {t("moredetail")}
@@ -955,24 +976,23 @@ export function SingleCarGallery({
           <div
             className={`${
               activeImageIndex === safeImageList.length - 1 ? "z-10" : ""
-            } h-full w-full rounded-lg max-md:hidden md:absolute`}
+            } rounded-lg w-full h-full max-md:hidden md:absolute`}
             onClick={goCar}
           >
             <div
-              className={`absolute flex h-full w-full flex-col items-center justify-center rounded-lg bg-[#000000aa] text-white md:transition-opacity md:duration-200 md:ease-out ${
+              className={`absolute w-full h-full rounded-lg ${
                 activeImageIndex === safeImageList.length - 1 ? "z-20" : ""
-              }`}
+              } bg-[#000000aa] text-white flex flex-col items-center justify-center md:transition-opacity md:duration-200 md:ease-out`}
             >
-              <span className="flex size-16 items-center justify-center rounded-full border-2 border-white">
+              <span className="flex items-center justify-center border-2 border-white rounded-full size-16">
                 <ArrowRight className="size-6" />
               </span>
               {t("moredetail")}
             </div>
-
             <Image
-              className={`h-full w-full rounded-lg object-cover md:absolute ${
+              className={`${
                 activeImageIndex === safeImageList.length - 1 ? "z-10" : ""
-              }`}
+              } rounded-lg w-full h-full object-cover md:absolute`}
               src={toStorageUrl(safeImageList[safeImageList.length - 1])}
               width={395}
               height={253}
@@ -984,24 +1004,35 @@ export function SingleCarGallery({
         <div className="z-20">{children}</div>
 
         <div
-          className="absolute hidden h-full w-full cursor-pointer flex-row-reverse items-end p-2 opacity-0 transition-all hover:opacity-100 md:flex"
+          className="absolute w-full h-full md:flex items-end flex-row-reverse p-2 cursor-pointer transition-all opacity-0 hover:opacity-100 hidden"
           onMouseLeave={() => setActiveImageIndex(0)}
         >
-          {safeImageList.map((_: any, index: number) => (
-            <div
-              key={index}
-              onMouseEnter={() => setActiveImageIndex(index)}
-              onClick={goCar}
-              className="group flex h-full w-full items-end px-1"
-            >
-              <span className="h-1 w-full rounded-2xl bg-[#00000070] transition-all group-hover:bg-white" />
-            </div>
-          ))}
+          {safeImageList.map((_: any, index: number) =>
+            index !== safeImageList.length - 1 ? (
+              <div
+                key={index}
+                onMouseEnter={() => setActiveImageIndex(index)}
+                className="w-full h-full flex items-end group px-1"
+              >
+                <span className="w-full h-1 rounded-2xl bg-[#00000070] group-hover:bg-white transition-all" />
+              </div>
+            ) : (
+              <div
+                key={index}
+                onMouseEnter={() => setActiveImageIndex(index)}
+                onClick={goCar}
+                className="w-full h-full flex items-end group px-1"
+              >
+                <span className="w-full h-1 rounded-2xl bg-[#00000070] group-hover:bg-white transition-all" />
+              </div>
+            ),
+          )}
         </div>
       </div>
     </div>
   );
 }
+
 
 /* ---------------- options ---------------- */
 
@@ -1052,7 +1083,7 @@ export function SingleCarOptions({
           <IconBag />
         </span>
         <span className="text-xs">
-          {toFaDigitsHelper(car.baggage ?? car.suitcase ?? 0) || 0}{" "}
+          {(car.baggage ?? car.suitcase ?? 0) || 0}{" "}
           {t("suitCase")}
         </span>
       </div>
@@ -1062,7 +1093,7 @@ export function SingleCarOptions({
           <IconPerson />
         </span>
         <span className="text-xs">
-          {toFaDigitsHelper(car.passengers ?? car.person ?? 0) || 0}{" "}
+          {(car.passengers ?? car.person ?? 0) || 0}{" "}
           {t("people")}
         </span>
       </div>
@@ -1070,11 +1101,13 @@ export function SingleCarOptions({
   );
 }
 
-/* ---------------- price list ---------------- */
+/* ---------------- price list (با اکاردئون اختیاری) ---------------- */
 
 export function SingleCarPriceList({
   priceList,
   currency,
+  // ─── پراپ جدید: کنترل رفتار اکاردئون ───
+  accordionPriceList = false,
 }: {
   priceList: any;
   defaultPrice?: number | null;
@@ -1084,9 +1117,17 @@ export function SingleCarPriceList({
   returnTime: string | null;
   currency: string;
   rateToRial?: number | null;
+  /**
+   * اگر true باشد: فقط ۲ قیمت اول نمایش داده می‌شود و بقیه در اکاردئون پنهان می‌شوند
+   * اگر false باشد (پیش‌فرض): تمام قیمت‌ها به‌صورت کامل نمایش داده می‌شوند
+   */
+  accordionPriceList?: boolean;
 }) {
   const t = useTranslations();
   const locale = useLocale();
+
+  // ─── state اکاردئون (فقط زمانی که accordionPriceList=true استفاده می‌شود) ───
+  const [expanded, setExpanded] = useState(false);
 
   const numberFmt = useMemo(() => {
     if (locale === "fa") return new Intl.NumberFormat("fa-IR");
@@ -1131,41 +1172,33 @@ export function SingleCarPriceList({
         if (locale === "fa") {
           return (
             <span className="inline-flex items-center gap-1">
+              <span>بیشتر از</span>
               <span>{aTxt}</span>
-              <span>تا</span>
-              <InfinityIcon className="size-4 translate-y-[1px]" />
               <span>روز</span>
             </span>
           );
         }
-
         if (locale === "ar") {
           return (
             <span className="inline-flex items-center gap-1">
+              <span>أكثر من</span>
               <span>{aTxt}</span>
-              <span>إلى</span>
-              <InfinityIcon className="size-4 translate-y-[1px]" />
               <span>يوم</span>
             </span>
           );
         }
-
         if (locale === "tr") {
           return (
             <span className="inline-flex items-center gap-1">
               <span>{aTxt}</span>
-              <span>-</span>
-              <InfinityIcon className="size-4 translate-y-[1px]" />
-              <span>gün</span>
+              <span>günden fazla</span>
             </span>
           );
         }
-
         return (
           <span className="inline-flex items-center gap-1">
+            <span>More than</span>
             <span>{aTxt}</span>
-            <span>to</span>
-            <InfinityIcon className="size-4 translate-y-[1px]" />
             <span>days</span>
           </span>
         );
@@ -1182,37 +1215,113 @@ export function SingleCarPriceList({
 
   if (!pricesArray.length) return null;
 
+  const renderRow = (row: any, idx: number) => {
+    const rangeRaw = String(row?.range ?? "").trim();
+    const rangeText = formatRangeLabel(rangeRaw);
+    const daily = Number(row?.final_price ?? row?.currentPrice ?? 0) || 0;
+    const dailyOld = Number(row?.base_price ?? row?.previousPrice ?? 0) || 0;
+
+    return (
+      <div
+        key={`${rangeRaw || "range"}-${idx}`}
+        className="flex items-center justify-between text-sm font-bold"
+      >
+        <span className="text-[#4b5259]">{rangeText} :</span>
+        <div className="flex gap-2">
+          {dailyOld > daily && (
+            <span className="text-[#A7A7A7] line-through">
+              {formatNum(dailyOld)}
+            </span>
+          )}
+          <span className="font-bold text-[#3B82F6]">{formatNum(daily)}</span>
+          {!!currencyLabel && <span>{currencyLabel}</span>}
+        </div>
+      </div>
+    );
+  };
+
+  /* ══════════════════════════════════════════════════
+     حالت بدون اکاردئون: همه قیمت‌ها نمایش داده می‌شوند
+     ══════════════════════════════════════════════════ */
+  if (!accordionPriceList) {
+    return (
+      <div className="mb-4 flex flex-col gap-2 border-[#0000001f]">
+        {pricesArray.map((row, idx) => renderRow(row, idx))}
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════
+     حالت اکاردئون: ۲ ردیف اول + بقیه در اکاردئون
+     ══════════════════════════════════════════════════ */
+  const ALWAYS_VISIBLE = 2;
+  const visibleRows = pricesArray.slice(0, ALWAYS_VISIBLE);
+  const hiddenRows = pricesArray.slice(ALWAYS_VISIBLE);
+  const hasMore = hiddenRows.length > 0;
+
   return (
     <div className="mb-4 flex flex-col gap-2 border-[#0000001f]">
-      {pricesArray.map((row: any, idx: number) => {
-        const rangeRaw = String(row?.range ?? "").trim();
-        const rangeText = formatRangeLabel(rangeRaw);
+      {/* ─── ۲ ردیف اول (همیشه نمایش) ─── */}
+      {visibleRows.map((row, idx) => renderRow(row, idx))}
 
-        const daily = Number(row?.final_price ?? row?.currentPrice ?? 0) || 0;
-        const dailyOld =
-          Number(row?.base_price ?? row?.previousPrice ?? 0) || 0;
-
-        return (
+      {/* ─── اکاردئون (فقط اگر بیشتر از ۲ ردیف وجود داشته باشد) ─── */}
+      {hasMore && (
+        <>
+          {/* ─── محتوای پنهان با انیمیشن CSS grid ─── */}
           <div
-            key={`${rangeRaw || "range"}-${idx}`}
-            className="flex items-center justify-between text-sm font-bold"
+            className={`
+              grid transition-[grid-template-rows] duration-300 ease-in-out
+              ${expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}
+            `}
           >
-            <span className="text-[#4b5259]">{rangeText} :</span>
-
-            <div className="flex gap-2">
-              {dailyOld > daily && (
-                <span className="text-[#A7A7A7] line-through">
-                  {formatNum(dailyOld)}
-                </span>
-              )}
-              <span className="font-bold text-[#3B82F6]">
-                {formatNum(daily)}
-              </span>
-              {!!currencyLabel && <span>{currencyLabel}</span>}
+            <div className="overflow-hidden">
+              <div className="flex flex-col gap-2 pt-1">
+                {hiddenRows.map((row, idx) =>
+                  renderRow(row, ALWAYS_VISIBLE + idx),
+                )}
+              </div>
             </div>
           </div>
-        );
-      })}
+
+          {/* ─── دکمه toggle اکاردئون ─── */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setExpanded((prev) => !prev);
+            }}
+            className="
+              mx-auto border p-1 w-full rounded-md justify-center flex items-center gap-1.5
+              text-xs font-medium text-[#0077db]
+              transition-opacity hover:opacity-70
+            "
+          >
+            <span>
+              {expanded
+                ? locale === "fa"
+                  ? "بستن"
+                  : locale === "ar"
+                    ? "إغلاق"
+                    : locale === "tr"
+                      ? "Kapat"
+                      : "Close"
+                : locale === "fa"
+                  ? "نمایش قیمت‌های بیشتر"
+                  : locale === "ar"
+                    ? "عرض المزيد من الأسعار"
+                    : locale === "tr"
+                      ? "Daha fazla fiyat"
+                      : "Show more prices"}
+            </span>
+            <ChevronDown
+              className={`size-3.5 transition-transform duration-300 ${
+                expanded ? "rotate-180" : "rotate-0"
+              }`}
+            />
+          </button>
+        </>
+      )}
     </div>
   );
 }

@@ -37,26 +37,11 @@ type ProcessingCardProps = {
   initialSeconds?: number; // default 120
 };
 
-const toFaDigits = (input: string) => {
-  const map: Record<string, string> = {
-    "0": "۰",
-    "1": "۱",
-    "2": "۲",
-    "3": "۳",
-    "4": "۴",
-    "5": "۵",
-    "6": "۶",
-    "7": "۷",
-    "8": "۸",
-    "9": "۹",
-  };
-  return input.replace(/[0-9]/g, (d) => map[d] ?? d);
-};
 
 const formatTime = (s: number) => {
   const m = Math.floor(s / 60);
   const sec = s % 60;
-  return toFaDigits(`${m}:${sec.toString().padStart(2, "0")}`);
+  return (`${m}:${sec.toString().padStart(2, "0")}`);
 };
 
 const formatMoney = (value: any) => {
@@ -115,7 +100,7 @@ export function ProcessingCard({ rentData, initialSeconds = 120 }: ProcessingCar
     const d = typeof days === "number" && days > 0 ? days : null;
     const money = formatMoney(total);
     if (!d && !money) return "—";
-    const daysText = d ? `جمع کل (${toFaDigits(String(d))} روز):` : "جمع کل:";
+    const daysText = d ? `جمع کل (${(String(d))} روز):` : "جمع کل:";
     const moneyText = money ? `${money} ${currency}` : `— ${currency}`;
     return { daysText, moneyText };
   }, [days, total, currency]);

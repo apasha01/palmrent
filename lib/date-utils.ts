@@ -2,8 +2,6 @@ import jalaali from "jalaali-js"
 
 export type CalendarType = "jalali" | "gregorian"
 
-export const persianNumbers = (str: string | number) => str.toString().replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[+d])
-
 export const jalaliMonthNames = [
   "فروردین",
   "اردیبهشت",
@@ -44,9 +42,9 @@ export const getJalaliParts = (date: Date) => {
 
 export const formatJalaliDate = (date: Date) => {
   const { jy, jm, jd } = jalaali.toJalaali(date)
-  const year = persianNumbers(jy)
-  const month = persianNumbers(jm.toString().padStart(2, "0"))
-  const day = persianNumbers(jd.toString().padStart(2, "0"))
+  const year = (jy)
+  const month = (jm.toString().padStart(2, "0"))
+  const day = (jd.toString().padStart(2, "0"))
   return `${year}/${month}/${day}`
 }
 

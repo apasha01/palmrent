@@ -33,47 +33,6 @@ function addDays(d: Date, days: number) {
   return x;
 }
 
-function toFaDigits(input: string) {
-  const map: Record<string, string> = {
-    "0": "۰",
-    "1": "۱",
-    "2": "۲",
-    "3": "۳",
-    "4": "۴",
-    "5": "۵",
-    "6": "۶",
-    "7": "۷",
-    "8": "۸",
-    "9": "۹",
-    ".": "٫",
-    ",": "٬",
-    ":": ":",
-    "/": "/",
-    "-": "-",
-    " ": " ",
-  };
-  return String(input)
-    .split("")
-    .map((c) => (map[c] ? map[c] : c))
-    .join("");
-}
-
-function toEnDigits(input: string) {
-  if (!input) return "";
-  const fa = "۰۱۲۳۴۵۶۷۸۹";
-  const ar = "٠١٢٣٤٥٦٧٨٩";
-  let s = String(input);
-
-  for (let i = 0; i < 10; i++) {
-    s = s.replaceAll(fa[i], String(i)).replaceAll(ar[i], String(i));
-  }
-  s = s.replace(/[\u200E\u200F\u202A-\u202E]/g, "").trim();
-  return s;
-}
-
-function formatTimeFa(t: string) {
-  return toFaDigits(t);
-}
 
 function yesNoFa(v: any, yesText: string, noText: string) {
   const s = String(v ?? "").toLowerCase();
@@ -87,12 +46,12 @@ function yesNoFa(v: any, yesText: string, noText: string) {
 function formatMoneyFa(value: any) {
   if (value === null || value === undefined) return "—";
   const str = String(value);
-  const num = Number(toEnDigits(str));
+  const num = Number((str));
   if (Number.isFinite(num)) {
     const fixed = num % 1 === 0 ? num.toFixed(0) : num.toFixed(2);
-    return toFaDigits(fixed);
+    return (fixed);
   }
-  return toFaDigits(str);
+  return (str);
 }
 
 type PickerRange = NonNullable<
@@ -109,7 +68,7 @@ function buildDefault(): { range: PickerRange; deliveryTime: string; returnTime:
 /** ✅ واتساپ: نرمال‌سازی شماره (فقط عدد، و حذف 00 اگر داشت) */
 function normalizeWhatsappPhone(phone?: string | null) {
   if (!phone) return "";
-  const digits = toEnDigits(String(phone)).replace(/[^\d]/g, "");
+  const digits = (String(phone)).replace(/[^\d]/g, "");
   if (!digits) return "";
   return digits.startsWith("00") ? digits.slice(2) : digits;
 }
@@ -330,11 +289,11 @@ export function PricingCard({
       const toFa = safeEnd ? formatJalaliDate(safeEnd) : "";
 
       // ✅ فرمت مشابه سرچ: جلالی ولی رقم انگلیسی
-      const from = toEnDigits(fromFa);
-      const to = toEnDigits(toFa);
+      const from = (fromFa);
+      const to = (toFa);
 
-      const dt = toEnDigits(args.deliveryTime || defaults.deliveryTime);
-      const rt = toEnDigits(args.returnTime || defaults.returnTime);
+      const dt = (args.deliveryTime || defaults.deliveryTime);
+      const rt = (args.returnTime || defaults.returnTime);
 
       const branchId = Number(car?.branch_id ?? 0);
       const carId = Number(car?.id ?? 0);
@@ -408,12 +367,12 @@ export function PricingCard({
 
   const deliveryText = React.useMemo(() => {
     const datePart = range.start ? formatJalaliDate(range.start) : "";
-    return `${toFaDigits(datePart)} - ${formatTimeFa(deliveryTime)}`;
+    return `${(datePart)} - ${(deliveryTime)}`;
   }, [range.start, deliveryTime]);
 
   const returnText = React.useMemo(() => {
     const datePart = range.end ? formatJalaliDate(range.end) : "";
-    return `${toFaDigits(datePart)} - ${formatTimeFa(returnTime)} `;
+    return `${(datePart)} - ${(returnTime)} `;
   }, [range.end, returnTime]);
 
   const pricesDrawerData = React.useMemo(() => {
@@ -427,7 +386,7 @@ export function PricingCard({
 
         {hasOff && (
           <span className="bg-amber-400 text-white px-4 py-1.5 rounded-full text-sm font-medium">
-            {toFaDigits(String(off))}٪ تخفیف
+            {(String(off))}٪ تخفیف
           </span>
         )}
       </div>
