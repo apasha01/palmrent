@@ -446,8 +446,10 @@
       "hint21Days": "Depozito, aracın iadesinden 21 gün sonra iade edilir ve kira ücretinden ayrıdır."
     },
     "noDepositBanner": {
-      "title": "Depozito yok",
-      "desc": "Bu araç için depozito ödemeniz gerekmez; yalnızca kira ücretini ödersiniz."
+      "title": "Depozito Yok",
+      "desc": "Bu aracı rezerve etmek için depozito ödemeniz gerekmez. Sadece kiralama ücretini ödersiniz.",
+      "penaltyDeposit": "Trafik cezası depozitosu",
+      "currency": "Dirhem"
     },
     "deliveryCard": {
       "title": "Aracı nereden teslim almak istersiniz?",
@@ -494,7 +496,7 @@
       "apply": "Kodu uygula"
     },
     "mobileBar": {
-      "payableAmount": "Ödenecek tutar"
+      "payableAmount": "Ödenecek Nihai Tutar"
     },
     "places": {
       "deliveryPrefix": "Teslim",

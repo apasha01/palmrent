@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 async function getPostBySlug(slug, locale) {
   try {
     if (!slug) return null;
-    const lang = locale || "fa";
+    const lang = locale;
     const data = await getData(`${BASE_URL}/blog/${slug}/${lang}`);
     return data ?? null;
   } catch (error) {
@@ -27,8 +27,6 @@ export default async function BlogPost({ params }) {
   const { id, locale } = await Promise.resolve(params);
 
   const post = await getPostBySlug(id, locale);
-
-  if (!post?.data?.item) notFound();
 
   const data = post.data;
   const item = data.item;

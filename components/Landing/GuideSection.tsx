@@ -11,7 +11,8 @@ import useEmblaCarousel from "embla-carousel-react";
 import { useBlogs } from "@/services/blog/blogs.queries";
 import { STORAGE_URL } from "@/lib/apiClient";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 
 export default function GuidesSection() {
   const router = useRouter();

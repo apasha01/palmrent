@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { formatNum } from "@/components/search/helpers/utils";
-import { Info } from "lucide-react";
+import { Percent } from "lucide-react";
 
 type Props = {
   showButton: boolean;
@@ -18,7 +18,9 @@ type Props = {
   offPercent: number;
   dailyBefore: number;
   dailyAfter: number;
+  totalBefore: number;
   pendingSummaryIds: Record<number, boolean>;
+  isSummaryPending: boolean;
   onOpenCoupon: () => void;
   onSubmit: () => void;
   isSubmitting: boolean;
@@ -33,19 +35,20 @@ export default function SummaryCard({
   offPercent,
   dailyBefore,
   dailyAfter,
+  totalBefore,
   pendingSummaryIds,
+  isSummaryPending,
   onOpenCoupon,
   onSubmit,
   isSubmitting,
 }: Props) {
   const t = useTranslations("InformationStep");
-  const tRow = useTranslations("SummaryRow"); // ✅ اینجا free وجود دارد
+  const tRow = useTranslations("SummaryRow");
 
-  // ✅ FIX: formatter (no TS error) + correct i18n key for "free"
   const formatMoneyOrFreeFixed = React.useCallback(
     (n: number) => {
       const v = Number(n || 0);
-      if (!Number.isFinite(v) || v <= 0) return tRow("common.free"); // ✅ درست
+      if (!Number.isFinite(v) || v <= 0) return tRow("common.free");
       return currencyLabel
         ? `${formatNum(v)} ${currencyLabel}`
         : `${formatNum(v)}`;
@@ -53,30 +56,35 @@ export default function SummaryCard({
     [currencyLabel, tRow]
   );
 
+  const showDiscount = offPercent > 0 && totalBefore > 0 && totalBefore > totals.total;
+
   return (
-    <Card className="border border-gray-200 p-0 pt-2 pb-1 rounded-xl shadow-sm gap-0 overflow-hidden bg-white">
-      <CardHeader className="px-4">
+    <Card className="border border-gray-200 p-0 pt-3 pb-1 rounded-xl shadow-sm gap-0 overflow-hidden bg-white">
+      <CardHeader className="px-4 pb-2 flex justify-between items-center">
         <CardTitle className="text-md font-bold text-gray-700 p-0 m-0 text-start">
           {t("summary.title")}
         </CardTitle>
+        <button
+          type="button"
+          onClick={onOpenCoupon}
+          className="text-[12px] font-bold text-blue-500"
+        >
+          <div className="flex gap-1">
+            <Percent size={14} />
+            {t("summary.haveCoupon")}
+          </div>
+        </button>
       </CardHeader>
 
       <Separator />
 
       <CardContent className="pt-2 px-4">
         <div>
+          {/* ردیف اجاره پایه */}
           <SummaryRow
             label={t("summary.rentPriceLabel", { days: totals.rentDays })}
             value={formatMoneyOrFreeFixed(baseRentAfter)}
-            valueHint={
-              <button
-                type="button"
-                onClick={onOpenCoupon}
-                className="text-[10px] font-medium text-blue-600 mt-0.5"
-              >
-                {t("summary.haveCoupon")}
-              </button>
-            }
+            loading={isSummaryPending}
             subLabel={
               offPercent > 0 ? (
                 <span className="inline-flex items-center gap-1 flex-wrap justify-end">
@@ -102,22 +110,18 @@ export default function SummaryCard({
             }
           />
 
-          {totals.extraItems.slice(0, 12).map((x: any, i: number) => {
-            const optId = Number(x?.optionId);
-            const shouldSkeleton =
-              Number.isFinite(optId) && Boolean(pendingSummaryIds[optId]);
+          {/* ردیف‌های اکسترا */}
+          {totals.extraItems.slice(0, 12).map((x: any, i: number) => (
+            <SummaryRow
+              key={i}
+              label={x.title}
+              value={formatMoneyOrFreeFixed(Number(x.price))}
+              subLabel={x.subLabel}
+              loading={isSummaryPending}
+            />
+          ))}
 
-            return (
-              <SummaryRow
-                key={i}
-                label={x.title}
-                value={formatMoneyOrFreeFixed(Number(x.price))}
-                subLabel={x.subLabel}
-                loading={shouldSkeleton}
-              />
-            );
-          })}
-
+          {/* مالیات */}
           {totals.tax > 0 && (
             <SummaryRow
               label={t("summary.tax")}
@@ -125,33 +129,43 @@ export default function SummaryCard({
                 percent: (apiData.item as any).tax_percent || "0",
               })}
               value={formatMoneyOrFreeFixed(Number(totals.tax))}
+              loading={isSummaryPending}
             />
           )}
         </div>
 
-        <div className="mt-4 pt-4 border-gray-200">
-          <div className="flex items-end justify-between">
+        {/* جمع کل */}
+        <div className="mt-2 pt-2 border-gray-200 pb-4">
+          <div className="flex items-center justify-between">
             <div className="text-start">
-              <div className="text-lg text-gray-800">
+              <div className="text-sm text-gray-800">
                 {t("summary.finalCostForDays", { days: totals.rentDays })}
               </div>
             </div>
 
-            <div className="text-lg text-blue-600 whitespace-nowrap text-end">
-              {formatNum(totals.total)} {currencyLabel}
+            <div className="text-end whitespace-nowrap">
+              {isSummaryPending ? (
+                <div className="h-6 w-32 rounded bg-gray-200 animate-pulse" />
+              ) : (
+                <>
+                  <div className="text-sm font-bold text-blue-600">
+                    {formatNum(totals.total)} {currencyLabel}
+                  </div>
+                  {showDiscount && (
+                    <div className="text-[11px] text-gray-400 line-through">
+                      {formatNum(totalBefore)} {currencyLabel}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
-        </div>
-
-        <div className="mt-4 py-4 pb-6 border-t border-gray-200 text-xs text-gray-500 flex items-center gap-2">
-          <Info size={16} className="text-gray-400" />
-          <span>{t("summary.acceptRulesHint")}</span>
         </div>
 
         {showButton && (
           <Button
             onClick={onSubmit}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isSummaryPending}
             className="w-full h-14 mb-4 rounded-xl text-base bg-blue-600 hover:bg-blue-700"
           >
             {isSubmitting ? t("common.submitting") : t("common.finalSubmit")}
@@ -162,7 +176,6 @@ export default function SummaryCard({
   );
 }
 
-/* ================= SummaryRow ================= */
 function SummaryRow({
   label,
   value,
@@ -251,7 +264,6 @@ function SummaryRow({
                     {valueBefore}
                   </span>
                 ) : null}
-
                 <span
                   className={`text-sm ${isFree ? "text-gray-500" : "text-gray-800"}`}
                 >

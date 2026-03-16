@@ -111,8 +111,9 @@ function buildBadgesFromRaw(car: any): Array<{
     type: "noDeposit" | "default";
   }> = [];
 
+  // بدون دپوزیت = وقتی deposit برابر "no" یا null یا خالی است
   const deposit = car?.deposit ?? car?.deposit_val ?? null;
-  if (deposit === "yes") {
+  if (!deposit || deposit === "no") {
     badges.push({
       key: "noDeposit",
       label: "noDeposite",
@@ -231,201 +232,227 @@ function BranchCarBadges({
 
   if (!hasRawBadges && (!rawOptions || rawOptions.length === 0)) return null;
 
-  if (onImage) {
-    return (
-      <div
-        className="absolute top-2 start-2 z-20 max-w-[calc(100%-16px)] pointer-events-none"
-        style={{ transform: "translateZ(0)", willChange: "transform" }}
-      >
-        <div className="flex flex-wrap gap-2 max-[380px]:gap-1 text-[10px] text-nowrap pointer-events-auto">
-          {hasRawBadges
-            ? rawBadges.map((badge) => {
-                const drawerConfig = getRawBadgeDrawerConfig(
-                  badge.key,
-                  dataSource,
-                  currency,
-                );
+  const badgeCount = hasRawBadges ? rawBadges.length : rawOptions.length;
 
-                const isNoDeposit = badge.key === "noDeposit";
+  const sizeClass = (() => {
+    if (onImage) {
+      if (badgeCount <= 2) {
+        return {
+          badge: "px-3 py-2 text-[10px] sm:px-2.5 sm:py-1.5",
+          icon: "size-3.5",
+          gap: "gap-2",
+          innerGap: "gap-1",
+        };
+      }
+      if (badgeCount === 3) {
+        return {
+          badge: "px-2.5 py-1.5 text-[9.5px] sm:px-2 sm:py-1",
+          icon: "size-3.5",
+          gap: "gap-1.5",
+          innerGap: "gap-[5px]",
+        };
+      }
+      if (badgeCount === 4) {
+        return {
+          badge: "px-2 py-1.5 text-[9px] sm:px-1.5 sm:py-1",
+          icon: "size-3",
+          gap: "gap-1",
+          innerGap: "gap-[4px]",
+        };
+      }
+      return {
+        badge: "px-2 py-1 text-[8.5px] sm:px-1.5 sm:py-1",
+        icon: "size-3",
+        gap: "gap-1",
+        innerGap: "gap-[4px]",
+      };
+    }
 
-                return (
-                  <div
-                    key={badge.key}
-                    onClick={(e) => e.stopPropagation()}
-                    className={`relative shrink-0 rounded-full border border-white px-3 py-2 font-bold transition-all hover:scale-[105%] sm:px-2 sm:py-1 max-[405px]:px-2 max-[405px]:text-[9px] ${
-                      isNoDeposit
-                        ? "border-[#eafaee] bg-[#eafaee]"
-                        : "bg-[#e2e6e9]"
-                    }`}
-                  >
-                    <span
-                      className={`flex items-center gap-1 font-bold ${
-                        isNoDeposit ? "text-[#1e7b33]" : "text-[#4b5259]"
-                      }`}
-                    >
-                      {t(badge.label)}
+    if (badgeCount <= 2) {
+      return {
+        badge: "px-2.5 py-1 text-xs",
+        icon: "size-4",
+        gap: "gap-1.5",
+        innerGap: "gap-1",
+      };
+    }
+    if (badgeCount === 3) {
+      return {
+        badge: "px-2 py-1 text-[11px]",
+        icon: "size-3.5",
+        gap: "gap-1.5",
+        innerGap: "gap-[5px]",
+      };
+    }
+    if (badgeCount === 4) {
+      return {
+        badge: "px-1 py-1 text-[9px]",
+        icon: "size-3",
+        gap: "gap-1",
+        innerGap: "gap-[2px]",
+      };
+    }
+    return {
+      badge: "px-1.5 py-1 text-[10px]",
+      icon: "size-3",
+      gap: "gap-1",
+      innerGap: "gap-[4px]",
+    };
+  })();
 
-                      <AppDrawer
-                        kind={drawerConfig.kind}
-                        data={drawerConfig.data}
-                        trigger={({ open }) => (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              open();
-                            }}
-                            className="inline-flex items-center justify-center"
-                            aria-label="نمایش توضیحات"
-                          >
-                            <IconInfoCircle />
-                          </button>
-                        )}
-                      />
-                    </span>
-                  </div>
-                );
-              })
-            : rawOptions.map((item: any, index: number) => {
-                if (!optionList?.[item]) return null;
+  const wrapperClass = [
+    "flex w-full items-center overflow-x-auto overflow-y-hidden whitespace-nowrap",
+    "hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+    onImage ? "max-w-full" : "",
+    sizeClass.gap,
+  ].join(" ");
 
-                const optionTitle = String(optionList[item]?.title || "");
-                const optionDescription =
-                  optionList[item]?.description ||
-                  optionList[item]?.desc ||
-                  "";
-                const optionId = Number(item);
-                const isNoDeposit = optionTitle === "noDeposite";
+  const getBadgeClass = (isNoDeposit: boolean) => {
+    if (onImage) {
+      return [
+        "shrink-0 inline-flex items-center justify-center rounded-full border font-bold transition-all",
+        "max-w-max",
+        "appearance-none outline-none ring-0 shadow-none",
+        "focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 active:outline-none active:ring-0",
+        sizeClass.badge,
+        isNoDeposit
+          ? "border-[#eafaee] bg-[#eafaee] text-[#1e7b33]"
+          : "border-white bg-[#e2e6e9] text-[#4b5259]",
+      ].join(" ");
+    }
 
-                return (
-                  <div
-                    key={index}
-                    onClick={(e) => e.stopPropagation()}
-                    className={`relative shrink-0 rounded-full border border-white px-3 py-2 font-bold transition-all hover:scale-[105%] sm:px-2 sm:py-1 max-[405px]:px-2 max-[405px]:text-[9px] ${
-                      isNoDeposit
-                        ? "border-[#eafaee] bg-[#eafaee]"
-                        : "bg-[#e2e6e9]"
-                    }`}
-                  >
-                    <span
-                      className={`flex items-center gap-1 font-bold ${
-                        isNoDeposit ? "text-[#1e7b33]" : "text-[#4b5259]"
-                      }`}
-                    >
-                      {t(optionTitle)}
+    return [
+      "shrink-0 inline-flex items-center justify-center rounded-full font-bold transition-all",
+      "max-w-max",
+      "appearance-none outline-none ring-0 shadow-none border-0",
+      "focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 active:outline-none active:ring-0",
+      sizeClass.badge,
+      isNoDeposit
+        ? "bg-[#ecfdf5] text-[#059669]"
+        : "bg-[#ecfdf5] text-[#059669]",
+    ].join(" ");
+  };
 
-                      <AppDrawer
-                        kind="extra_option"
-                        data={{
-                          optionId,
-                          optionTitle: t(optionTitle),
-                          optionDescriptionFromApi: optionDescription
-                            ? t(optionDescription)
-                            : "",
-                        }}
-                        trigger={({ open }) => (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              open();
-                            }}
-                            className="inline-flex items-center justify-center"
-                            aria-label="نمایش توضیحات آپشن"
-                          >
-                            <IconInfoCircle />
-                          </button>
-                        )}
-                      />
-                    </span>
-                  </div>
-                );
-              })}
-        </div>
-      </div>
+  const contentClass = [
+    "inline-flex items-center whitespace-nowrap leading-none",
+    sizeClass.innerGap,
+  ].join(" ");
+
+  const renderRawBadge = (badge: {
+    key: string;
+    label: string;
+    type: "noDeposit" | "default";
+  }) => {
+    const drawerConfig = getRawBadgeDrawerConfig(
+      badge.key,
+      dataSource,
+      currency,
     );
-  }
 
+    const isNoDeposit = badge.key === "noDeposit";
+
+    return (
+      <AppDrawer
+        key={badge.key}
+        kind={drawerConfig.kind}
+        data={drawerConfig.data}
+        trigger={({ open }) => (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              open();
+            }}
+            className={getBadgeClass(isNoDeposit)}
+            aria-label={String(t(badge.label))}
+          >
+            <span className={contentClass}>
+              <span
+                className={`inline-flex shrink-0 items-center justify-center ${sizeClass.icon}`}
+              >
+                <IconInfoCircle />
+              </span>
+
+              <span className="whitespace-nowrap leading-none">
+                {t(badge.label)}
+              </span>
+            </span>
+          </button>
+        )}
+      />
+    );
+  };
+
+  const renderOptionBadge = (item: any, index: number) => {
+    if (!optionList?.[item]) return null;
+
+    const optionTitle = String(optionList[item]?.title || "");
+    const optionDescription =
+      optionList[item]?.description || optionList[item]?.desc || "";
+    const optionId = Number(item);
+    const isNoDeposit = optionTitle === "noDeposite";
+
+    return (
+      <AppDrawer
+        key={`${item}-${index}`}
+        kind="extra_option"
+        data={{
+          optionId,
+          optionTitle: t(optionTitle),
+          optionDescriptionFromApi: optionDescription
+            ? t(optionDescription)
+            : "",
+        }}
+        trigger={({ open }) => (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              open();
+            }}
+            className={getBadgeClass(isNoDeposit)}
+            aria-label={String(t(optionTitle))}
+          >
+            <span className={contentClass}>
+              <span
+                className={`inline-flex shrink-0 items-center justify-center ${sizeClass.icon}`}
+              >
+                <IconInfoCircle />
+              </span>
+
+              <span className="whitespace-nowrap leading-none">
+                {t(optionTitle)}
+              </span>
+            </span>
+          </button>
+        )}
+      />
+    );
+  };
+
+if (onImage) {
   return (
-    <div className="mb-3 flex min-h-[26px] flex-wrap items-start gap-1.5 text-[10px]">
-      {hasRawBadges
-        ? rawBadges.map((badge) => {
-            const drawerConfig = getRawBadgeDrawerConfig(
-              badge.key,
-              dataSource,
-              currency,
-            );
-
-            return (
-              <div
-                key={badge.key}
-                className="flex items-center gap-1 whitespace-nowrap rounded-full bg-[#ecfdf5] px-2 py-1 text-[#059669]"
-              >
-                <AppDrawer
-                  kind={drawerConfig.kind}
-                  data={drawerConfig.data}
-                  trigger={({ open }) => (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        open();
-                      }}
-                      className="flex items-center justify-center"
-                      aria-label="نمایش توضیحات"
-                    >
-                      <IconInfoCircle />
-                    </button>
-                  )}
-                />
-                <span>{t(badge.label)}</span>
-              </div>
-            );
-          })
-        : rawOptions.map((item: any, index: number) => {
-            if (!optionList?.[item]) return null;
-
-            const optionTitle = String(optionList[item]?.title || "");
-            const optionDescription =
-              optionList[item]?.description || optionList[item]?.desc || "";
-            const optionId = Number(item);
-
-            return (
-              <div
-                key={index}
-                className="flex items-center gap-1 whitespace-nowrap rounded-full bg-[#ecfdf5] px-2 py-1 text-[#059669]"
-              >
-                <AppDrawer
-                  kind="extra_option"
-                  data={{
-                    optionId,
-                    optionTitle: t(optionTitle),
-                    optionDescriptionFromApi: optionDescription
-                      ? t(optionDescription)
-                      : "",
-                  }}
-                  trigger={({ open }) => (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        open();
-                      }}
-                      className="flex items-center justify-center"
-                      aria-label="نمایش توضیحات آپشن"
-                    >
-                      <IconInfoCircle />
-                    </button>
-                  )}
-                />
-                <span>{t(optionTitle)}</span>
-              </div>
-            );
-          })}
+    <div
+      className="absolute top-2 start-2 z-20 w-[calc(100%-16px)]"
+      style={{ transform: "translateZ(0)", willChange: "transform" }}
+    >
+      <div className={`${wrapperClass} pointer-events-auto`}>
+        {hasRawBadges
+          ? rawBadges.map(renderRawBadge)
+          : rawOptions.map(renderOptionBadge)}
+      </div>
+    </div>
+  );
+}
+  return (
+    <div className="mb-3 min-h-[26px] w-full">
+      <div className={wrapperClass}>
+        {hasRawBadges
+          ? rawBadges.map(renderRawBadge)
+          : rawOptions.map(renderOptionBadge)}
+      </div>
     </div>
   );
 }
@@ -720,7 +747,7 @@ export default function BranchCarCard({
 
         {discountPercent > 0 && (
           <div
-            className="absolute bottom-2 end-2 z-20"
+            className="absolute bottom-2 end-2 z-20 pointer-events-auto"
             style={{ transform: "translateZ(0)", willChange: "transform" }}
           >
             <div className="flex items-center gap-1 rounded-lg bg-[#e1ff00] px-2.5 py-1.5 text-[#3b3d40] opacity-85">
@@ -870,7 +897,6 @@ export function SingleCarGallery({
   carHref?: string;
 }) {
   const t = useTranslations();
-  const router = useRouter();
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [firstImageLoaded, setFirstImageLoaded] = useState(false);
@@ -880,22 +906,13 @@ export function SingleCarGallery({
       ? imageList
       : ["/images/placeholder.png"];
 
-  const goCar = useCallback(
-    (e?: React.MouseEvent) => {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      if (!carHref) return;
-      router.push(carHref);
-    },
-    [carHref, router],
-  );
-
   return (
-    <div className="flex relative z-10 w-full lg:h-55 h-[220px] rounded-lg">
-
-      {/* ─── shimmer skeleton ─── */}
+    /*
+      outer div: relative container — Link فقط تصاویر را پوشش می‌دهد.
+      children (badges / drawer) خارج از Link هستند تا overlay drawer
+      بتواند بدون تداخل با navigate، drawer را ببندد.
+    */
+    <div className="relative z-10 flex w-full rounded-lg lg:h-55 h-[220px]">
       {!firstImageLoaded && (
         <>
           <style>{`
@@ -938,11 +955,12 @@ export function SingleCarGallery({
         </>
       )}
 
-      <div className="flex h-full w-full max-md:overflow-x-auto max-md:z-10 hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        <div
-          className="md:absolute max-md:flex w-full h-full top-0 right-0 rounded-lg -z-10 max-md:gap-2"
-          onClick={(e) => e.stopPropagation()}
-        >
+      {/* ─── Link: فقط ناحیه تصاویر را navigate می‌کند ─── */}
+      <Link
+        href={carHref || "#"}
+        className="absolute inset-0 z-10 cursor-pointer max-md:overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      >
+        <div className="md:absolute max-md:flex w-full h-full top-0 right-0 rounded-lg max-md:gap-2">
           {safeImageList.map((src: any, index: number) => (
             <Image
               key={`${String(src)}-${index}`}
@@ -965,19 +983,19 @@ export function SingleCarGallery({
           ))}
 
           {safeImageList.length > 1 && (
-            <div className="flex md:hidden flex-col items-center justify-center text-black text-nowrap relative gap-2 font-bold px-4">
-              <span className="flex items-center justify-center bg-[#F1F1F1] rounded-full size-8">
+            <div className="relative z-20 flex md:hidden flex-col items-center justify-center gap-2 px-4 font-bold text-black text-nowrap">
+              <span className="flex size-8 items-center justify-center rounded-full bg-[#F1F1F1]">
                 <ChevronLeft className="size-4" />
               </span>
               {t("moredetail")}
             </div>
           )}
 
+          {/* لایه نمایش more detail در دسکتاپ */}
           <div
             className={`${
-              activeImageIndex === safeImageList.length - 1 ? "z-10" : ""
+              activeImageIndex === safeImageList.length - 1 ? "z-10" : "pointer-events-none"
             } rounded-lg w-full h-full max-md:hidden md:absolute`}
-            onClick={goCar}
           >
             <div
               className={`absolute w-full h-full rounded-lg ${
@@ -989,6 +1007,7 @@ export function SingleCarGallery({
               </span>
               {t("moredetail")}
             </div>
+
             <Image
               className={`${
                 activeImageIndex === safeImageList.length - 1 ? "z-10" : ""
@@ -1001,38 +1020,35 @@ export function SingleCarGallery({
           </div>
         </div>
 
-        <div className="z-20">{children}</div>
-
+        {/* ─── hover zones برای دسکتاپ ─── */}
         <div
-          className="absolute w-full h-full md:flex items-end flex-row-reverse p-2 cursor-pointer transition-all opacity-0 hover:opacity-100 hidden"
+          className="absolute w-full h-full md:flex items-end flex-row-reverse p-2 cursor-pointer transition-all opacity-0 hover:opacity-100 hidden z-20"
           onMouseLeave={() => setActiveImageIndex(0)}
+          onClick={(e) => e.stopPropagation()}
         >
-          {safeImageList.map((_: any, index: number) =>
-            index !== safeImageList.length - 1 ? (
-              <div
-                key={index}
-                onMouseEnter={() => setActiveImageIndex(index)}
-                className="w-full h-full flex items-end group px-1"
-              >
-                <span className="w-full h-1 rounded-2xl bg-[#00000070] group-hover:bg-white transition-all" />
-              </div>
-            ) : (
-              <div
-                key={index}
-                onMouseEnter={() => setActiveImageIndex(index)}
-                onClick={goCar}
-                className="w-full h-full flex items-end group px-1"
-              >
-                <span className="w-full h-1 rounded-2xl bg-[#00000070] group-hover:bg-white transition-all" />
-              </div>
-            ),
-          )}
+          {safeImageList.map((_: any, index: number) => (
+            <div
+              key={index}
+              onMouseEnter={() => setActiveImageIndex(index)}
+              className="w-full h-full flex items-end group px-1"
+            >
+              <span className="w-full h-1 rounded-2xl bg-[#00000070] group-hover:bg-white transition-all" />
+            </div>
+          ))}
         </div>
+      </Link>
+
+      {/*
+        ─── children (badges / AppDrawer) کاملاً خارج از Link هستند ───
+        این باعث می‌شود overlay drawer بتواند بدون تداخل با Link بسته شود.
+        z-20 > z-10 (Link) تا badge روی عکس قرار بگیرد.
+      */}
+      <div className="absolute inset-0 z-20 pointer-events-none">
+        {children}
       </div>
     </div>
   );
 }
-
 
 /* ---------------- options ---------------- */
 
@@ -1251,7 +1267,7 @@ export function SingleCarPriceList({
     );
   }
 
-  /* ══════════════════════════════════════════════════
+  /* ═══════════════��══════════════════════════════════
      حالت اکاردئون: ۲ ردیف اول + بقیه در اکاردئون
      ══════════════════════════════════════════════════ */
   const ALWAYS_VISIBLE = 2;
@@ -1293,7 +1309,7 @@ export function SingleCarPriceList({
             }}
             className="
               mx-auto border p-1 w-full rounded-md justify-center flex items-center gap-1.5
-              text-xs font-medium text-[#0077db]
+              text-xs font-medium text-[#757678]
               transition-opacity hover:opacity-70
             "
           >

@@ -85,7 +85,7 @@ export default function StepRent({
   };
 
   return (
-    <div className="w-full my-2">
+    <div className="w-full">
       {/* ===================== DESKTOP ===================== */}
       <div className="hidden md:block">
         <div className="mx-auto w-full max-w-[980px] px-2">

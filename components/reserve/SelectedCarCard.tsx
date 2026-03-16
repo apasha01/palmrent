@@ -12,6 +12,40 @@ import { Separator } from "@/components/ui/separator"
 import { PriceGroupsResponsive } from "@/components/search/extra/PriceGroupsResponsive"
 import { SelectedCarMeta, formatNum } from "@/components/search/helpers/utils"
 import { Info, Coins } from "lucide-react"
+import {
+  AppDrawer,
+  type AppDrawerData,
+  type AppDrawerKind,
+} from "@/components/common/AppDrawer"
+
+function getBadgeDrawerConfig(
+  badgeKey: string,
+  car: any,
+  currency: string,
+): { kind: AppDrawerKind; data: AppDrawerData } {
+  switch (badgeKey) {
+    case "unlimitedKm":
+      return { kind: "km", data: { km: "yes" } }
+    case "freeDelivery":
+      return { kind: "delivery", data: { free_delivery: "yes" } }
+    case "freeInsurance":
+      return { kind: "insurance", data: { insurance: "yes" } }
+    case "noDeposit":
+      return {
+        kind: "no_deposit",
+        data: { currency, deposit: car?.deposit_amount ?? car?.deposit_value ?? 0 },
+      }
+    default:
+      return {
+        kind: "extra_option",
+        data: {
+          optionTitle: "جزئیات",
+          optionDescriptionFromApi:
+            "برای این مورد توضیحی ثبت نشده است. برای اطلاعات بیشتر با پشتیبانی هماهنگ کنید.",
+        },
+      }
+  }
+}
 
 type Props = {
   apiData: any
@@ -20,12 +54,10 @@ type Props = {
   offPercent: number
   dailyBefore: number
   dailyAfter: number
-
   showUnlimitedKm: boolean
   showFreeDelivery: boolean
   showFreeInsurance: boolean
   showNoDeposit: boolean
-
   showDeposit: boolean
   depositPrice: number
 }
@@ -52,11 +84,20 @@ export default function SelectedCarCard({
       ? (apiData.item as any).photo
       : ""
 
+  const badgeList = [
+    { key: "unlimitedKm", show: showUnlimitedKm, label: t("badges.unlimitedKm") },
+    { key: "freeDelivery", show: showFreeDelivery, label: t("badges.freeDelivery") },
+    { key: "freeInsurance", show: showFreeInsurance, label: t("badges.freeInsurance") },
+    { key: "noDeposit", show: showNoDeposit, label: t("badges.noDeposit") },
+  ].filter((b) => b.show)
+
   return (
     <Card className="border border-gray-200 rounded-none lg:rounded-xl shadow-sm p-0 bg-white dark:bg-gray-900 gap-0 overflow-hidden">
       <div className="hidden md:block">
-        <CardHeader className="px-3 pt-4 pb-2 m-0">
-          <CardTitle className="text-sm text-gray-700 dark:text-gray-200">{t("selectedCar.title")}</CardTitle>
+        <CardHeader className="px-3 pt-3 pb-1 m-0">
+          <CardTitle className="text-sm text-gray-700 dark:text-gray-200">
+            {t("selectedCar.title")}
+          </CardTitle>
         </CardHeader>
         <Separator />
       </div>
@@ -73,7 +114,17 @@ export default function SelectedCarCard({
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="text-right font-bold text-gray-800 truncate leading-5">{(apiData.item as any).title}</div>
+            {/* title + discount badge */}
+            <div className="flex items-center justify-between gap-1">
+              <div className=" font-bold text-gray-800 truncate leading-5">
+                {(apiData.item as any).title}
+              </div>
+              {offPercent > 0 ? (
+                <Badge className="shrink-0 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-600 dark:text-amber-100 px-1 py-0.5 text-[12px]">
+                  {t("selectedCar.discountBadge", { percent: formatNum(offPercent) })}
+                </Badge>
+              ) : null}
+            </div>
 
             <SelectedCarMeta
               fuel={(apiData.item as any).fuel}
@@ -82,57 +133,60 @@ export default function SelectedCarCard({
               passengers={(apiData.item as any).person}
             />
 
-            <div className="mt-2 flex items-center justify-between text-[11px] text-gray-600 ">
-              <div className="flex items-center gap-0.5 min-w-0">
-                <span>{t("selectedCar.dailyPriceFor")}</span>
-                <span className="text-gray-700">{t("common.days", { count: totals.rentDays })}</span>
-
-                <PriceGroupsResponsive
-                  prices={(apiData as any)?.item?.prices}
-                  currencyLabel={currencyLabel}
-                  trigger={<Info className="size-4 text-gray-700" />}
-                />
-
-                <span>:</span>
-
-                {offPercent > 0 ? <span className="text-gray-400 line-through">{formatNum(dailyBefore)}</span> : null}
-                <span className="text-gray-900 font-bold">{formatNum(dailyAfter)}</span>
-                <span className="text-gray-500">{currencyLabel}</span>
-              </div>
-
-              {offPercent > 0 ? (
-                <Badge className="rounded-full bg-amber-100 text-amber-900 dark:bg-amber-600 dark:text-amber-100 px-1 py-0.5 text-[12px]">
-                  {t("selectedCar.discountBadge", { percent: formatNum(offPercent) })}
-                </Badge>
-              ) : null}
-            </div>
+            {/* ردیف قیمت روزانه - کل ردیف trigger دراور */}
+            <PriceGroupsResponsive
+              prices={(apiData as any)?.item?.prices}
+              currencyLabel={currencyLabel}
+              trigger={
+                <div className="mt-2 flex items-center gap-0.5 text-[12px] text-gray-600 cursor-pointer select-none">
+                  <span>{t("selectedCar.dailyPriceFor")}</span>
+                  <span className="text-gray-700">
+                    {t("common.days", { count: totals.rentDays })}
+                  </span>
+                  <Info className="size-4 text-gray-700" />
+                  <span>:</span>
+                  {offPercent > 0 ? (
+                    <span className="text-gray-400 line-through">{formatNum(dailyBefore)}</span>
+                  ) : null}
+                  <span className="text-gray-900 font-bold">{formatNum(dailyAfter)}</span>
+                  <span className="text-gray-500">{currencyLabel}</span>
+                </div>
+              }
+            />
           </div>
         </div>
 
         <Separator className="my-3" />
 
-        <div className="flex flex-wrap gap-2">
-          {showUnlimitedKm ? (
-            <Badge variant="secondary" className="rounded-full bg-emerald-50 text-emerald-700 px-2 py-1 text-[11px]">
-              {t("badges.unlimitedKm")}
-            </Badge>
-          ) : null}
-          {showFreeDelivery ? (
-            <Badge variant="secondary" className="rounded-full bg-emerald-50 text-emerald-700 px-2 py-1 text-[11px]">
-              {t("badges.freeDelivery")}
-            </Badge>
-          ) : null}
-          {showFreeInsurance ? (
-            <Badge variant="secondary" className="rounded-full bg-emerald-50 text-emerald-700 px-2 py-1 text-[11px]">
-              {t("badges.freeInsurance")}
-            </Badge>
-          ) : null}
-          {showNoDeposit ? (
-            <Badge variant="secondary" className="rounded-full bg-emerald-50 text-emerald-700 px-2 py-1 text-[11px]">
-              {t("badges.noDeposit")}
-            </Badge>
-          ) : null}
-        </div>
+        {badgeList.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {badgeList.map((badge) => {
+              const drawerConfig = getBadgeDrawerConfig(badge.key, apiData?.item, currencyLabel)
+
+              return (
+                <AppDrawer
+                  key={badge.key}
+                  kind={drawerConfig.kind}
+                  data={drawerConfig.data}
+                  trigger={({ open }) => (
+                    <Badge
+                      variant="secondary"
+                      className="cursor-pointer rounded-full px-1 py-1 text-[12px] flex items-center gap-1 bg-emerald-50 text-emerald-700"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        open()
+                      }}
+                    >
+                      <Info className="size-3 shrink-0" />
+                      {badge.label}
+                    </Badge>
+                  )}
+                />
+              )
+            })}
+          </div>
+        )}
 
         {showDeposit ? (
           <>
@@ -143,15 +197,18 @@ export default function SelectedCarCard({
               <div className="mt-2 flex items-center justify-between">
                 <div className="text-right flex items-center gap-2">
                   <Coins size={16} className="text-gray-500" />
-                  <span className="text-sm font-semibold text-gray-500">{t("deposit.trafficDepositLabel")}</span>
+                  <span className="text-sm font-semibold text-gray-500">
+                    {t("deposit.trafficDepositLabel")}
+                  </span>
                 </div>
-
                 <div className="text-left text-gray-700 whitespace-nowrap">
                   {formatNum(depositPrice)} {currencyLabel}
                 </div>
               </div>
 
-              <div className="text-xs text-gray-500 mt-3 leading-5">{t("deposit.hint21Days")}</div>
+              <div className="text-xs text-gray-500 mt-3 leading-5">
+                {t("deposit.hint21Days")}
+              </div>
             </div>
           </>
         ) : null}

@@ -79,7 +79,6 @@ function safeTime(input: any, fallback: string) {
 function NoDateBanner({
   onTrigger,
   t,
-  mobileBranchOnlyMode = false,
 }: {
   onTrigger: React.ReactNode
   t: any

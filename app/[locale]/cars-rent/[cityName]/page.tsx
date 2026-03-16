@@ -709,7 +709,7 @@ export default function HomePage() {
     <>
       <Header shadowLess />
 
-      <main className="mx-auto w-full bg-white dark:bg-gray-900">
+      <main className="mx-auto w-full bg-white dark:bg-gray-950">
         <NavSection
           image="/images/head-list-branch.jpg"
           title={t.rich("heroTitle", { Branch: () => <BranchName /> })}
@@ -832,30 +832,32 @@ export default function HomePage() {
 
                     <div ref={infiniteSentinelRef} className="h-6 w-full" />
 
-                    <div className="mt-4 flex justify-center">
-                      {hasMore ? (
-                        showLoadMoreButton ? (
-                          <RainbowButton
-                            variant="outline"
-                            type="button"
-                            onClick={onManualLoadOnce}
-                            disabled={query.isFetching}
-                            onMouseEnter={handleBtnEnter}
-                            onMouseLeave={handleBtnLeave}
-                            onFocus={handleBtnEnter}
-                            onBlur={handleBtnLeave}
-                          >
-                            {buttonText} <ArrowLeftIcon ref={arrowRef} />
-                          </RainbowButton>
-                        ) : (
-                          <div className="h-10" />
-                        )
-                      ) : (
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {t("noMoreResults")}
-                        </div>
-                      )}
-                    </div>
+                 <div className="mt-4 flex justify-center px-4 sm:px-0 md:px-0">
+  {hasMore ? (
+    showLoadMoreButton ? (
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onManualLoadOnce}
+        disabled={query.isFetching}
+        onMouseEnter={handleBtnEnter}
+        onMouseLeave={handleBtnLeave}
+        onFocus={handleBtnEnter}
+        onBlur={handleBtnLeave}
+        className="w-full border border-[#0077db] bg-transparent text-base font-medium text-[#0077db] shadow-none hover:bg-[#0077db]/10 hover:text-[#0077db] md:w-auto md:px-12 md:py-3 md:text-lg"
+      >
+        {buttonText}
+        <ArrowLeftIcon ref={arrowRef} />
+      </Button>
+    ) : (
+      <div className="h-10" />
+    )
+  ) : (
+    <div className="text-sm text-gray-500 dark:text-gray-400">
+      {t("noMoreResults")}
+    </div>
+  )}
+</div>
                   </>
                 )}
               </>

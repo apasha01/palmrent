@@ -390,7 +390,7 @@
   "airportDelivery": "تحویل در فرودگاه",
 
 
-  "InformationStep": {
+"InformationStep": {
     "meta": {
       "title": "انتخاب محل تحویل{branch}{car}{days} | PalmRent",
       "desc": "محل تحویل و عودت خودرو را انتخاب کنید{branchPart}{daysPart}{carPart} و رزرو را تکمیل کنید.",
@@ -444,15 +444,21 @@
     },
     "noDepositBanner": {
       "title": "بدون ودیعه (دیپوزیت)",
-      "desc": "برای رزرو این خودرو نیازی به پرداخت ودیعه (دیپوزیت) نیست؛ فقط هزینه اجاره را پرداخت می‌کنید."
+      "desc": "برای رزرو این خودرو نیازی به پرداخت ودیعه (دیپوزیت) نیست؛ فقط هزینه اجاره را پرداخت می‌کنید.",
+      "penaltyDeposit": "ودیعه خلافی",
+      "currency": "درهم"
     },
     "deliveryCard": {
       "title": "دوست دارید خودرو را کجا تحویل بگیرید؟",
       "deliveryPickerTitle": "محل تحویل را انتخاب کنید",
       "deliveryPickerPlaceholder": "محل تحویل خودرو را انتخاب کنید",
+      "deliveryRequiredPlaceholder": "محل تحویل الزامی است",
+      "deliveryRequiredError": "انتخاب محل تحویل الزامی است",
       "returnDifferentLabel": "خودرو را در محل دیگری عودت می‌دهم",
       "returnPickerTitle": "محل عودت را انتخاب کنید",
-      "returnPickerPlaceholder": "محل عودت خودرو را انتخاب کنید"
+      "returnPickerPlaceholder": "محل عودت خودرو را انتخاب کنید",
+      "returnRequiredPlaceholder": "محل عودت الزامی است",
+      "returnRequiredError": "انتخاب محل عودت الزامی است"
     },
     "extras": {
       "title": "آپشن‌های اضافی را انتخاب کنید",
@@ -464,6 +470,10 @@
       "placeholders": {
         "fullName": "نام و نام خانوادگی",
         "email": "ایمیل"
+      },
+      "errors": {
+        "nameRequired": "وارد کردن نام الزامی است",
+        "phoneRequired": "وارد کردن شماره تماس الزامی است"
       }
     },
     "rules": {
@@ -491,7 +501,7 @@
       "apply": "اعمال کد"
     },
     "mobileBar": {
-      "payableAmount": "مبلغ قابل پرداخت"
+      "payableAmount": "مبلغ هزینه نهایی"
     },
     "places": {
       "deliveryPrefix": "محل تحویل",

@@ -370,8 +370,8 @@ declare const messages: {
 
   "InformationStep": {
     "meta": {
-      "title": "Choose delivery location{branch}{car}{days} | PalmRent",
-      "desc": "Choose the car delivery and return locations{branchPart}{daysPart}{carPart} and complete your reservation.",
+      "title": "Select Delivery Location{branch}{car}{days} | PalmRent",
+      "desc": "Choose the delivery and return location for your car{branchPart}{daysPart}{carPart} and complete your reservation.",
       "branchIn": " in {branch}",
       "forDays": " for {days} days",
       "carInParens": " ({car})"
@@ -385,10 +385,10 @@ declare const messages: {
     },
     "common": {
       "days": "{count} days",
-      "daily": "per day",
+      "daily": "daily",
       "dailyPrice": "Daily price",
       "unknown": "Unknown",
-      "finalSubmit": "Finalize reservation",
+      "finalSubmit": "Confirm Reservation",
       "submitting": "Submitting..."
     },
     "toast": {
@@ -397,79 +397,89 @@ declare const messages: {
       "selectReturnPlace": "Please select a return location",
       "invalidReservationInfo": "Invalid reservation information",
       "carNotSelected": "No car selected",
-      "reserveSubmitError": "Failed to submit reservation",
+      "reserveSubmitError": "Error submitting reservation",
       "reservedButNoRentCode": "Reservation submitted but rent_code was not received",
-      "reserveRequestDone": "Reservation request submitted",
+      "reserveRequestDone": "Reservation request completed",
       "serverConnectionError": "Server connection error.",
-      "fetchInfoError": "Failed to fetch information.",
+      "fetchInfoError": "Error fetching information.",
       "invalidServerResponse": "Invalid server response."
     },
     "selectedCar": {
-      "title": "Selected car",
+      "title": "Your Selected Car",
       "dailyPriceFor": "Daily price for",
-      "discountBadge": "{percent}% OFF"
+      "discountBadge": "{percent}% off"
     },
     "badges": {
-      "unlimitedKm": "Unlimited mileage",
+      "unlimitedKm": "Unlimited km",
       "freeDelivery": "Free delivery",
       "freeInsurance": "Free insurance",
       "noDeposit": "No deposit"
     },
     "deposit": {
       "title": "Deposit",
-      "trafficDepositLabel": "Traffic/penalty deposit:",
-      "hint21Days": "The deposit is refunded 21 days after returning the car and is separate from the rental fee."
+      "trafficDepositLabel": "Traffic deposit:",
+      "hint21Days": "The deposit will be returned 21 days after the car is returned, and is separate from the rental cost."
     },
     "noDepositBanner": {
-      "title": "No deposit",
-      "desc": "No deposit is required for this car. You only pay the rental fee."
+      "title": "No Deposit Required",
+      "desc": "No deposit is required to reserve this car; you only pay the rental fee.",
+      "penaltyDeposit": "Traffic deposit",
+      "currency": "AED"
     },
     "deliveryCard": {
       "title": "Where would you like to receive the car?",
       "deliveryPickerTitle": "Select delivery location",
-      "deliveryPickerPlaceholder": "Choose where to receive the car",
-      "returnDifferentLabel": "I will return the car to a different location",
+      "deliveryPickerPlaceholder": "Select car delivery location",
+      "deliveryRequiredPlaceholder": "Delivery location is required",
+      "deliveryRequiredError": "Selecting a delivery location is required",
+      "returnDifferentLabel": "I will return the car at a different location",
       "returnPickerTitle": "Select return location",
-      "returnPickerPlaceholder": "Choose where to return the car"
+      "returnPickerPlaceholder": "Select car return location",
+      "returnRequiredPlaceholder": "Return location is required",
+      "returnRequiredError": "Selecting a return location is required"
     },
     "extras": {
-      "title": "Select extra options",
-      "insuranceCompleteTitle": "Full damage coverage package"
+      "title": "Select additional options",
+      "insuranceCompleteTitle": "Comprehensive damage package"
     },
     "personalInfo": {
       "title": "Enter your details",
-      "alreadyRegistered": "I already have an account",
+      "alreadyRegistered": "I have an account",
       "placeholders": {
         "fullName": "Full name",
         "email": "Email"
+      },
+      "errors": {
+        "nameRequired": "Full name is required",
+        "phoneRequired": "Phone number is required"
       }
     },
     "rules": {
-      "rulesB": "By submitting the reservation, you accept",
-      "rules2": "PalmRent rules",
-      "rulesA": "."
+      "rulesB": "By confirming,",
+      "rules2": "PalmRent Terms",
+      "rulesA": "you agree to our terms."
     },
     "summary": {
-      "title": "Billing details",
+      "title": "Price Details",
       "rentPriceLabel": "Rental price for {days} days",
-      "haveCoupon": "I have a coupon code",
-      "discountInline": "{percent}% off",
+      "haveCoupon": "I have a discount code",
+      "discountInline": "{percent}% discount",
       "tax": "Tax",
       "taxPercent": "{percent}%",
-      "finalCostForDays": "Final cost for {days} days",
-      "acceptRulesHint": "By submitting, you accept PalmRent rules"
+      "finalCostForDays": "Total cost for {days} days",
+      "acceptRulesHint": "By confirming you agree to PalmRent terms"
     },
     "coupon": {
-      "title": "Coupon code",
-      "enterLabel": "Enter your coupon code",
+      "title": "Discount Code",
+      "enterLabel": "Enter discount code",
       "placeholder": "e.g. PALM15",
-      "invalidText": "Invalid coupon code.",
-      "invalidToast": "Invalid coupon code",
+      "invalidText": "Invalid discount code.",
+      "invalidToast": "Invalid discount code",
       "checking": "Checking...",
       "apply": "Apply code"
     },
     "mobileBar": {
-      "payableAmount": "Payable amount"
+      "payableAmount": "Total amount"
     },
     "places": {
       "deliveryPrefix": "Delivery",

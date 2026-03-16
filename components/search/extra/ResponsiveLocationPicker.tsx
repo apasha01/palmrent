@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -38,23 +37,21 @@ type PlaceRow = {
 type Props = {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-
   title: string;
   currencyLabel: string;
-
   places: PlaceRow[];
-
   value: LocationState;
   onChange: (next: LocationState) => void;
-
-  placeholder?: string; // ✅ will fallback to i18n if not provided
+  placeholder?: string;
+  /** کلاس اضافی برای دکمه trigger — برای نمایش حالت خطا */
   triggerClassName?: string;
+  /** کلاس اضافی برای متن placeholder — برای قرمز کردن متن در حالت خطا */
+  placeholderClassName?: string;
 };
 
 // ---------------- Helpers ----------------
 function useIsMobile(breakpoint = 1024) {
   const [isMobile, setIsMobile] = React.useState(false);
-
   React.useEffect(() => {
     const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
     const onChange = () => setIsMobile(mq.matches);
@@ -62,7 +59,6 @@ function useIsMobile(breakpoint = 1024) {
     mq.addEventListener?.("change", onChange);
     return () => mq.removeEventListener?.("change", onChange);
   }, [breakpoint]);
-
   return isMobile;
 }
 
@@ -81,6 +77,20 @@ function shortText(s: string, max = 44) {
   return x.length > max ? x.slice(0, max) + "…" : x;
 }
 
+const SHEET_STYLE: React.CSSProperties = {
+  width: "100vw",
+  maxWidth: "100vw",
+  height: "100dvh",
+  top: 0,
+  right: 0,
+  left: 0,
+  bottom: 0,
+  margin: 0,
+  padding: 0,
+  borderRadius: 0,
+  border: "none",
+};
+
 export default function ResponsiveLocationPicker({
   open,
   onOpenChange,
@@ -91,6 +101,7 @@ export default function ResponsiveLocationPicker({
   onChange,
   placeholder,
   triggerClassName,
+  placeholderClassName,
 }: Props) {
   const t = useTranslations("ResponsiveLocationPicker");
 
@@ -102,7 +113,6 @@ export default function ResponsiveLocationPicker({
 
   const fallbackPlaceholder = placeholder ?? t("trigger.placeholder");
 
-  // ===== selected from value (only committed selection) =====
   const selectedKey = value?.location != null ? String(value.location) : "";
   const selectedPlace = React.useMemo(
     () => placesSafe.find((p) => String((p as any)?.id) === String(selectedKey)),
@@ -117,7 +127,6 @@ export default function ResponsiveLocationPicker({
     ? String((selectedPlace as any)?.address_title || t("address.defaultLabel"))
     : t("address.defaultLabel");
 
-  // ===== open states =====
   const [mobileOpen, setMobileOpen] = React.useState<boolean>(Boolean(open));
   const [desktopOpen, setDesktopOpen] = React.useState(false);
 
@@ -133,9 +142,7 @@ export default function ResponsiveLocationPicker({
     [onOpenChange],
   );
 
-  // ===== Pending selection for address-required flow (MOBILE ONLY) =====
   const [addressSheetOpen, setAddressSheetOpen] = React.useState(false);
-
   const [pendingKey, setPendingKey] = React.useState<string>("");
   const [pendingTitle, setPendingTitle] = React.useState<string>("");
   const [pendingAddressLabel, setPendingAddressLabel] =
@@ -161,7 +168,6 @@ export default function ResponsiveLocationPicker({
     emitOpenChange(true);
   }, [emitOpenChange, resetPending]);
 
-  // ===== Selection handler =====
   const selectPlace = React.useCallback(
     (key: string) => {
       const p = placesSafe.find((x) => String((x as any)?.id) === String(key));
@@ -169,21 +175,13 @@ export default function ResponsiveLocationPicker({
 
       const needAddress = String((p as any)?.need_address || "no") === "yes";
 
-      // ✅ if no address: commit immediately
       if (!needAddress) {
-        onChange({
-          ...value,
-          isDesired: false,
-          location: String(key),
-          address: "",
-        });
-
+        onChange({ ...value, isDesired: false, location: String(key), address: "" });
         emitOpenChange(false);
         setDesktopOpen(false);
         return;
       }
 
-      // ✅ needs address
       setPendingKey(String(key));
       setPendingTitle(String((p as any)?.title ?? ""));
       setPendingAddressLabel(
@@ -192,7 +190,6 @@ export default function ResponsiveLocationPicker({
 
       const isSameCommitted =
         value?.location != null && String(value.location) === String(key);
-
       setPendingAddress(isSameCommitted ? String(value.address || "") : "");
 
       emitOpenChange(false);
@@ -208,25 +205,14 @@ export default function ResponsiveLocationPicker({
   const confirmAddress = React.useCallback(() => {
     const addr = oneLine(pendingAddress);
     if (!addr) return;
-
-    onChange({
-      ...value,
-      isDesired: true,
-      location: String(pendingKey),
-      address: addr,
-    });
-
+    onChange({ ...value, isDesired: true, location: String(pendingKey), address: addr });
     setAddressSheetOpen(false);
     resetPending();
   }, [onChange, pendingAddress, pendingKey, resetPending, value]);
 
-  // if committed option doesn't need address, clear any saved address
   React.useEffect(() => {
     if (!selectedKey) return;
-    if (
-      !selectedNeedAddress &&
-      oneLine(String((value as any)?.address || "")).length > 0
-    ) {
+    if (!selectedNeedAddress && oneLine(String((value as any)?.address || "")).length > 0) {
       onChange({ ...value, isDesired: false, address: "" });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -234,7 +220,6 @@ export default function ResponsiveLocationPicker({
 
   const mobileCommittedAddress = oneLine(String((value as any)?.address || ""));
 
-  // ✅ Button label logic (mobile: show "enter address" hint)
   const buttonLabel = selectedPlace
     ? isMobile && selectedNeedAddress
       ? mobileCommittedAddress
@@ -249,6 +234,14 @@ export default function ResponsiveLocationPicker({
       : String((selectedPlace as any)?.title ?? "")
     : fallbackPlaceholder;
 
+  /* ---- آیا placeholder نمایش داده می‌شه (هیچ مکانی انتخاب نشده) ---- */
+  const isShowingPlaceholder = !selectedPlace;
+
+  /* ---- کلاس متن trigger بر اساس وضعیت ---- */
+  const triggerTextClass = isShowingPlaceholder
+    ? cn("truncate text-gray-500", placeholderClassName)
+    : "truncate text-gray-800";
+
   const TriggerButton = (
     <Button
       type="button"
@@ -258,26 +251,22 @@ export default function ResponsiveLocationPicker({
         triggerClassName,
       )}
     >
-      <span className={cn("truncate", selectedPlace ? "text-gray-800" : "text-gray-500")}>
+      <span className={triggerTextClass}>
         {buttonLabel}
       </span>
       <ChevronsUpDown size={18} className="text-gray-500" />
     </Button>
   );
 
-  // ✅ Desktop inline address (i18n)
   const DesktopAddressInline =
     !isMobile && selectedNeedAddress ? (
       <div className="mt-2">
         <div className="flex items-center justify-between mb-2">
-          <Label className="text-xs text-gray-600 text-right">
-            {addressLabel}
-          </Label>
+          <Label className="text-xs text-gray-600 text-right">{addressLabel}</Label>
           <div className="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
             {t("badges.needsAddress")}
           </div>
         </div>
-
         <div className="relative">
           <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
@@ -290,7 +279,6 @@ export default function ResponsiveLocationPicker({
             className="h-11 rounded-lg border-gray-300 pr-9"
           />
         </div>
-
         <div className="text-[11px] text-gray-500 text-right mt-2 flex items-start gap-2">
           <Info size={14} className="mt-0.5 text-gray-400" />
           <span>{t("address.requiredHint")}</span>
@@ -301,22 +289,22 @@ export default function ResponsiveLocationPicker({
   // ---------------- Mobile UI ----------------
   const MobileHeader = (
     <div className="shrink-0 border-b bg-white dark:bg-gray-800">
-      <div className="px-4 py-2 flex items-center">
+      <div className="px-4 py-4 flex items-center">
         <button
           type="button"
           onClick={() => emitOpenChange(false)}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-gray-100"
+          className="flex items-center gap-2 justify-center rounded-full hover:bg-gray-100"
           aria-label={t("a11y.back")}
         >
           <ArrowRight size={20} className="text-gray-700" />
+          <div className="mx-2 font-bold text-gray-900 text-right">{title}</div>
         </button>
-        <div className="mr-2 font-bold text-gray-900 text-right">{title}</div>
       </div>
     </div>
   );
 
   const MobileList = (
-    <div className="space-y-3 p-4 pb-28">
+    <div className="space-y-2 p-4">
       {placesSafe.map((item, index) => {
         const id = String((item as any)?.id ?? index);
         const priceNum = toPriceNumber((item as any)?.price_pay);
@@ -331,50 +319,53 @@ export default function ResponsiveLocationPicker({
             tabIndex={0}
             onClick={() => selectPlace(id)}
             className={cn(
-              "rounded-2xl border bg-white transition-colors cursor-pointer select-none",
+              "rounded-lg border bg-white transition-colors cursor-pointer select-none",
               checked ? "border-blue-200" : "border-gray-200",
               "hover:bg-gray-50",
             )}
           >
-            <div className="flex items-center justify-between gap-3 p-3">
-              <div className="min-w-0">
-                <div className="text-sm font-semibold text-gray-900 truncate">
+            <div className="flex items-center justify-between gap-2 p-3">
+              {/* متن سمت راست */}
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold text-gray-900 break-words whitespace-normal leading-snug">
                   {String((item as any)?.title ?? "")}
                 </div>
-
-                <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
-                  <span>
-                    {t("rows.cost")}{" "}
-                    {isFree
-                      ? t("common.free")
-                      : t("common.priceWithCurrency", {
-                          price: priceNum.toLocaleString(),
-                          currency: currencyLabel,
-                        })}
-                  </span>
-
-                  {needAddress ? (
+                {needAddress && (
+                  <div className="mt-1">
                     <span className="inline-flex items-center gap-1 text-[11px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
                       {t("badges.needsAddress")}
                     </span>
-                  ) : null}
-                </div>
+                  </div>
+                )}
               </div>
 
-              <Badge variant="secondary" className="rounded-full whitespace-nowrap shrink-0">
-                {isFree ? t("common.free") : priceNum.toLocaleString()}
-              </Badge>
+              {/* قیمت سمت چپ */}
+              <div className="shrink-0 text-left">
+                {isFree ? (
+                  <div className="text-[11px] flex gap-1">
+                    <p className="text-gray-500">هزینه:</p>
+                    <p className="font-bold">{t("common.free")}</p>
+                  </div>
+                ) : (
+                  <div className="flex items-end gap-1">
+                    <span className="text-[11px] text-gray-500">هزینه: </span>
+                    <span className="text-sm font-bold text-gray-900">
+                      {priceNum.toLocaleString()}
+                    </span>
+                    <span className="text-[11px] text-gray-500">{currencyLabel}</span>
+                  </div>
+                )}
+              </div>
             </div>
 
+            {/* آدرس ذخیره‌شده */}
             {checked && needAddress && oneLine(String((value as any)?.address || "")).length > 0 ? (
               <div className="px-3 pb-3">
                 <div className="flex items-start gap-2 rounded-xl bg-gray-50 px-3 py-2 border border-gray-100">
-                  <MapPin className="size-4 text-gray-400 mt-0.5" />
+                  <MapPin className="size-4 text-gray-400 mt-0.5 shrink-0" />
                   <div className="min-w-0">
-                    <div className="text-[11px] text-gray-500">
-                      {t("address.savedTitle")}
-                    </div>
-                    <div className="text-xs text-gray-800 truncate">
+                    <div className="text-[11px] text-gray-500">{t("address.savedTitle")}</div>
+                    <div className="text-xs text-gray-800 break-words whitespace-normal leading-relaxed">
                       {oneLine(String((value as any)?.address || ""))}
                     </div>
                   </div>
@@ -398,7 +389,6 @@ export default function ResponsiveLocationPicker({
         >
           <ArrowRight size={20} className="text-gray-700" />
         </button>
-
         <div className="flex-1 mr-2">
           <div className="font-extrabold text-gray-900 text-right truncate">
             {pendingTitle || t("address.defaultLabel")}
@@ -414,9 +404,7 @@ export default function ResponsiveLocationPicker({
   const AddressMobileContent = (
     <div className="p-4 space-y-4">
       <div className="space-y-2">
-        <Label className="text-xs text-gray-600 text-right">
-          {pendingAddressLabel}
-        </Label>
+        <Label className="text-xs text-gray-600 text-right">{pendingAddressLabel}</Label>
         <div className="relative">
           <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
@@ -426,13 +414,11 @@ export default function ResponsiveLocationPicker({
             className="h-11 rounded-lg border-gray-300 pr-9"
           />
         </div>
-
         <div className="text-[11px] text-gray-500 text-right flex items-start gap-2">
           <Info size={14} className="mt-0.5 text-gray-400" />
           <span>{t("address.requiredHint")}</span>
         </div>
       </div>
-
       <Button
         type="button"
         className="w-full h-12 rounded-xl font-extrabold"
@@ -444,7 +430,7 @@ export default function ResponsiveLocationPicker({
     </div>
   );
 
-  // ✅ RENDER
+  // ✅ RENDER MOBILE
   if (isMobile) {
     const needsAddrAndEmpty =
       Boolean(selectedPlace) &&
@@ -466,10 +452,8 @@ export default function ResponsiveLocationPicker({
             className={cn(
               "truncate",
               selectedPlace
-                ? needsAddrAndEmpty
-                  ? "text-gray-500"
-                  : "text-gray-800"
-                : "text-gray-500",
+                ? needsAddrAndEmpty ? "text-gray-500" : "text-gray-800"
+                : cn("text-gray-500", placeholderClassName),
             )}
           >
             {buttonLabel}
@@ -482,21 +466,16 @@ export default function ResponsiveLocationPicker({
           <SheetContent
             showCloseButton={false}
             side="right"
-            className={cn(
-              "p-0",
-              "h-dvh w-screen max-w-none",
-              "rounded-none border-0",
-              "overflow-hidden",
-            )}
+            style={SHEET_STYLE}
+            className="overflow-hidden"
           >
             <SheetHeader className="sr-only">
               <SheetTitle>{title}</SheetTitle>
             </SheetHeader>
-
-            <div className="h-dvh w-full flex flex-col overflow-hidden">
+            <div className="flex flex-col overflow-hidden" style={{ height: "100dvh", width: "100%" }}>
               {MobileHeader}
-              <div className="flex-1 overflow-hidden">
-                <ScrollArea className="h-full">{MobileList}</ScrollArea>
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <ScrollArea className="h-full w-full">{MobileList}</ScrollArea>
               </div>
             </div>
           </SheetContent>
@@ -510,16 +489,12 @@ export default function ResponsiveLocationPicker({
           <SheetContent
             showCloseButton={false}
             side="right"
-            className={cn(
-              "p-0",
-              "h-dvh w-screen max-w-none",
-              "rounded-none border-0",
-              "overflow-hidden",
-            )}
+            style={SHEET_STYLE}
+            className="overflow-hidden"
           >
-            <div className="h-dvh w-full flex flex-col overflow-hidden">
+            <div className="flex flex-col overflow-hidden" style={{ height: "100dvh", width: "100%" }}>
               {AddressMobileHeader}
-              <div className="flex-1 overflow-auto">{AddressMobileContent}</div>
+              <div className="flex-1 min-h-0 overflow-auto">{AddressMobileContent}</div>
             </div>
           </SheetContent>
         </Sheet>
@@ -527,12 +502,11 @@ export default function ResponsiveLocationPicker({
     );
   }
 
-  // ✅ Desktop
+  // ✅ RENDER DESKTOP
   return (
     <>
       <Popover open={desktopOpen} onOpenChange={setDesktopOpen}>
         <PopoverTrigger asChild>{TriggerButton}</PopoverTrigger>
-
         <PopoverContent
           align="start"
           className={cn(
@@ -542,22 +516,17 @@ export default function ResponsiveLocationPicker({
           )}
         >
           <div className="px-4 py-3">
-            <div className="text-right font-extrabold text-gray-900">
-              {title}
-            </div>
+            <div className="text-right font-extrabold text-gray-900">{title}</div>
           </div>
-
           <Command className="w-full">
             <CommandList className="w-full max-h-125 overflow-auto">
               <CommandEmpty>{t("rows.empty")}</CommandEmpty>
-
               <CommandGroup className="w-full">
                 {placesSafe.map((item, idx) => {
                   const id = String((item as any)?.id ?? idx);
                   const priceNum = toPriceNumber((item as any)?.price_pay);
                   const isFree = priceNum <= 0;
-                  const needAddress =
-                    String((item as any)?.need_address || "no") === "yes";
+                  const needAddress = String((item as any)?.need_address || "no") === "yes";
                   const active = selectedKey === id;
 
                   return (
@@ -580,16 +549,13 @@ export default function ResponsiveLocationPicker({
                           <span className="font-semibold text-gray-900">
                             {String((item as any)?.title ?? "")}
                           </span>
-
                           {needAddress ? (
                             <span className="text-[11px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 shrink-0">
                               {t("badges.needsAddress")}
                             </span>
                           ) : null}
                         </div>
-
                         <div className="text-xs text-gray-500 mt-1">
-                          {t("rows.cost")}{" "}
                           {isFree
                             ? t("common.free")
                             : t("common.priceWithCurrency", {
@@ -598,17 +564,17 @@ export default function ResponsiveLocationPicker({
                               })}
                         </div>
                       </div>
-
                       <div className="flex items-center gap-2 shrink-0">
-                        <Badge
-                          variant="secondary"
-                          className="rounded-full whitespace-nowrap shrink-0"
-                        >
-                          {isFree ? t("common.free") : priceNum.toLocaleString()}
-                        </Badge>
-                        {active ? (
-                          <Check className="h-4 w-4 text-blue-600 shrink-0" />
-                        ) : null}
+                        {!isFree && (
+                          <div className="flex flex-col items-end gap-0.5">
+                            <span className="text-sm font-bold text-gray-900">
+                              {priceNum.toLocaleString()}
+                            </span>
+                            <span className="text-[11px] text-gray-500">{currencyLabel}</span>
+                          </div>
+                        )}
+                        {isFree && <p>{t("common.free")}</p>}
+                        {active ? <Check className="h-4 w-4 text-blue-600 shrink-0" /> : null}
                       </div>
                     </CommandItem>
                   );

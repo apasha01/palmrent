@@ -370,10 +370,10 @@
   "price": "السعر",
   "hour": "الساعة",
 
-  "InformationStep": {
+"InformationStep": {
     "meta": {
-      "title": "اختيار مكان التسليم{branch}{car}{days} | PalmRent",
-      "desc": "اختر مكان تسليم وإرجاع السيارة{branchPart}{daysPart}{carPart} وأكمل الحجز.",
+      "title": "اختيار موقع التسليم{branch}{car}{days} | PalmRent",
+      "desc": "اختر موقع تسليم السيارة وإعادتها{branchPart}{daysPart}{carPart} وأكمل الحجز.",
       "branchIn": " في {branch}",
       "forDays": " لمدة {days} أيام",
       "carInParens": " ({car})"
@@ -387,98 +387,107 @@
     },
     "common": {
       "days": "{count} أيام",
-      "daily": "يوميًا",
+      "daily": "يومي",
       "dailyPrice": "السعر اليومي",
       "unknown": "غير معروف",
-      "finalSubmit": "تأكيد الحجز النهائي",
+      "finalSubmit": "تأكيد الحجز",
       "submitting": "جارٍ الإرسال..."
     },
     "toast": {
       "enterNamePhone": "يرجى إدخال الاسم ورقم الهاتف",
-      "selectDeliveryPlace": "يرجى اختيار مكان التسليم",
-      "selectReturnPlace": "يرجى اختيار مكان الإرجاع",
-      "invalidReservationInfo": "معلومات الحجز غير صالحة",
+      "selectDeliveryPlace": "يرجى اختيار موقع التسليم",
+      "selectReturnPlace": "يرجى اختيار موقع الإعادة",
+      "invalidReservationInfo": "معلومات الحجز غير صحيحة",
       "carNotSelected": "لم يتم اختيار سيارة",
-      "reserveSubmitError": "فشل في إرسال الحجز",
-      "reservedButNoRentCode": "تم إرسال الحجز لكن لم يتم استلام rent_code",
+      "reserveSubmitError": "خطأ في تقديم الحجز",
+      "reservedButNoRentCode": "تم الحجز ولكن لم يُستلم رمز الإيجار",
       "reserveRequestDone": "تم إرسال طلب الحجز",
       "serverConnectionError": "خطأ في الاتصال بالخادم.",
-      "fetchInfoError": "فشل في جلب المعلومات.",
-      "invalidServerResponse": "استجابة الخادم غير صالحة."
+      "fetchInfoError": "خطأ في جلب المعلومات.",
+      "invalidServerResponse": "استجابة الخادم غير صحيحة."
     },
     "selectedCar": {
       "title": "السيارة المختارة",
-      "dailyPriceFor": "السعر اليومي لمدة",
-      "discountBadge": "خصم {percent}%"
+      "dailyPriceFor": "السعر اليومي لـ",
+      "discountBadge": "خصم {percent}٪"
     },
     "badges": {
       "unlimitedKm": "كيلومترات غير محدودة",
-      "freeDelivery": "تسليم مجاني",
+      "freeDelivery": "توصيل مجاني",
       "freeInsurance": "تأمين مجاني",
       "noDeposit": "بدون وديعة"
     },
     "deposit": {
       "title": "الوديعة",
       "trafficDepositLabel": "وديعة المخالفات:",
-      "hint21Days": "تُعاد الوديعة بعد 21 يومًا من إرجاع السيارة وهي منفصلة عن رسوم الإيجار."
+      "hint21Days": "يتم إعادة الوديعة بعد 21 يومًا من إعادة السيارة، وهي منفصلة عن تكلفة الإيجار."
     },
     "noDepositBanner": {
-      "title": "بدون وديعة",
-      "desc": "لا تحتاج لدفع وديعة لهذه السيارة؛ تدفع فقط رسوم الإيجار."
+      "title": "بدون وديعة (دبوزيت)",
+      "desc": "لا تحتاج إلى دفع وديعة لحجز هذه السيارة؛ تدفع فقط رسوم الإيجار.",
+      "penaltyDeposit": "وديعة المخالفات",
+      "currency": "درهم"
     },
     "deliveryCard": {
-      "title": "أين ترغب باستلام السيارة؟",
-      "deliveryPickerTitle": "اختر مكان التسليم",
-      "deliveryPickerPlaceholder": "اختر مكان استلام السيارة",
-      "returnDifferentLabel": "سأعيد السيارة في مكان مختلف",
-      "returnPickerTitle": "اختر مكان الإرجاع",
-      "returnPickerPlaceholder": "اختر مكان إعادة السيارة"
+      "title": "أين تريد استلام السيارة؟",
+      "deliveryPickerTitle": "اختر موقع التسليم",
+      "deliveryPickerPlaceholder": "اختر موقع استلام السيارة",
+      "deliveryRequiredPlaceholder": "موقع التسليم مطلوب",
+      "deliveryRequiredError": "يجب اختيار موقع التسليم",
+      "returnDifferentLabel": "سأعيد السيارة في موقع مختلف",
+      "returnPickerTitle": "اختر موقع الإعادة",
+      "returnPickerPlaceholder": "اختر موقع إعادة السيارة",
+      "returnRequiredPlaceholder": "موقع الإعادة مطلوب",
+      "returnRequiredError": "يجب اختيار موقع الإعادة"
     },
     "extras": {
-      "title": "اختر الإضافات",
-      "insuranceCompleteTitle": "حزمة تغطية الأضرار الشاملة"
+      "title": "اختر الخيارات الإضافية",
+      "insuranceCompleteTitle": "حزمة تأمين شاملة"
     },
     "personalInfo": {
       "title": "أدخل بياناتك",
-      "alreadyRegistered": "لدي حساب بالفعل",
+      "alreadyRegistered": "لدي حساب مسبق",
       "placeholders": {
         "fullName": "الاسم الكامل",
         "email": "البريد الإلكتروني"
+      },
+      "errors": {
+        "nameRequired": "الاسم الكامل مطلوب",
+        "phoneRequired": "رقم الهاتف مطلوب"
       }
     },
     "rules": {
-      "rulesB": "بإتمام الحجز، أنت توافق على",
-      "rules2": "قوانين PalmRent",
-      "rulesA": "."
+      "rulesB": "بتأكيد الحجز،",
+      "rules2": "شروط PalmRent",
+      "rulesA": "أنت توافق على الشروط."
     },
     "summary": {
-      "title": "تفاصيل الفاتورة",
-      "rentPriceLabel": "سعر الإيجار لمدة {days} أيام",
-      "haveCoupon": "لدي رمز خصم",
-      "discountInline": "خصم {percent}%",
+      "title": "تفاصيل السعر",
+      "rentPriceLabel": "سعر الإيجار لـ {days} أيام",
+      "haveCoupon": "لدي كود خصم",
+      "discountInline": "خصم {percent}٪",
       "tax": "الضريبة",
-      "taxPercent": "{percent}%",
-      "finalCostForDays": "التكلفة النهائية لمدة {days} أيام",
-      "acceptRulesHint": "بتأكيد الحجز أنت توافق على قوانين PalmRent"
+      "taxPercent": "{percent}٪",
+      "finalCostForDays": "التكلفة الإجمالية لـ {days} أيام",
+      "acceptRulesHint": "بتأكيد الحجز توافق على شروط PalmRent"
     },
     "coupon": {
-      "title": "رمز الخصم",
-      "enterLabel": "أدخل رمز الخصم",
+      "title": "كود الخصم",
+      "enterLabel": "أدخل كود الخصم",
       "placeholder": "مثال: PALM15",
-      "invalidText": "رمز الخصم غير صحيح.",
-      "invalidToast": "رمز الخصم غير صحيح",
+      "invalidText": "كود الخصم غير صحيح.",
+      "invalidToast": "كود الخصم غير صحيح",
       "checking": "جارٍ التحقق...",
-      "apply": "تطبيق"
+      "apply": "تطبيق الكود"
     },
     "mobileBar": {
-      "payableAmount": "المبلغ المطلوب دفعه"
+      "payableAmount": "المبلغ الإجمالي"
     },
     "places": {
-      "deliveryPrefix": "التسليم",
-      "returnPrefix": "الإرجاع"
+      "deliveryPrefix": "موقع التسليم",
+      "returnPrefix": "موقع الإعادة"
     }
   },
-
 
   "SearchHeader": {
     "noDate": {

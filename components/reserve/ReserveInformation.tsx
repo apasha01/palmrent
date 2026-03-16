@@ -4,7 +4,7 @@ import * as React from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import jalaali from "jalaali-js"
-import { toast } from "react-toastify"
+
 import SearchMetaClient from "@/services/seo/SearchMetaClient"
 import { getBranchNameById } from "@/helpers/BranchNameHelper"
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store"
@@ -14,12 +14,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Switch } from "@/components/ui/switch"
 import { UserSearch } from "lucide-react"
-import { PhoneInput } from "react-international-phone"
-import "react-international-phone/style.css"
+
 import { InformationStepSkeleton } from "@/components/Loadings/InformationSetupSkeleton"
-import InfoListDialog from "@/components/InfoListPopup"
 import ResponsiveLocationPicker from "@/components/search/extra/ResponsiveLocationPicker"
 import { ExtrasList, formatNum } from "@/components/search/helpers/utils"
 import { signIn, signOut, useSession } from "next-auth/react"
@@ -28,10 +25,14 @@ import SelectedCarCard from "./SelectedCarCard"
 import SummaryCard from "./SummaryCard"
 import NoDepositBanner from "./NoDepositeBanner"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Link } from "@/i18n/navigation"
+import { Switch } from "../ui/switch"
+import RulesSheet from "./RulesDrawer"
+import PhoneInputCustom from "./PhoneInputCustom"
+import { toast } from "react-toastify"
+import ToastBanner from "../ui/toast"
+import LoginDialog from "../auth/login-dialog"
 
-
-/* ---------------- types (minimal) ---------------- */
+/* ---------------- types ---------------- */
 type ApiCalcResponse = any
 type LocationState = { isDesired: boolean; location: any; address: string }
 type Totals = {
@@ -48,6 +49,9 @@ type UserInfo = { name: string; email: string; phone: string }
 /* ---------------- cache ---------------- */
 const calcCache = new Map<string, ApiCalcResponse>()
 const calcInflight = new Map<string, Promise<ApiCalcResponse>>()
+
+/* ---------------- statics ---------------- */
+const EMPTY_LOCATION: LocationState = { isDesired: false, location: null, address: "" }
 
 /* ---------------- utils ---------------- */
 function oneLine(s: any) {
@@ -74,20 +78,193 @@ function normalizePhone(p: any) {
   if (s.startsWith("0") && s.length === 11) return "+98" + s.slice(1)
   return s
 }
-
-
 function pad2(n: number) {
   return String(n).padStart(2, "0")
 }
 function normalizeJalaliParam(input?: string | null) {
   if (!input) return null
-  const clean = (String(input)).replace(/-/g, "/").trim()
+  const clean = String(input).replace(/-/g, "/").trim()
   const [y, m, d] = clean.split("/").map((x) => parseInt(x, 10))
   if (!y || !m || !d) return null
   return `${y}/${pad2(m)}/${pad2(d)}`
 }
 
-/** ✅ pricing extractor */
+function isElementActuallyVisible(el: HTMLElement) {
+  const style = window.getComputedStyle(el)
+  if (style.display === "none" || style.visibility === "hidden") return false
+  if (el.getClientRects().length === 0) return false
+
+  let current: HTMLElement | null = el
+  while (current) {
+    const cs = window.getComputedStyle(current)
+    if (cs.display === "none" || cs.visibility === "hidden") return false
+    current = current.parentElement
+  }
+
+  return true
+}
+
+function scrollToFirstErrorAnchor(anchorNames: string[], offset = 110) {
+  const candidates: HTMLElement[] = []
+
+  anchorNames.forEach((name) => {
+    const nodes = Array.from(
+      document.querySelectorAll<HTMLElement>(`[data-error-anchor="${name}"]`),
+    )
+
+    nodes.forEach((node) => {
+      if (isElementActuallyVisible(node)) {
+        candidates.push(node)
+      }
+    })
+  })
+
+  if (!candidates.length) return
+
+  const topmost = candidates
+    .sort((a, b) => {
+      const aTop = a.getBoundingClientRect().top + window.scrollY
+      const bTop = b.getBoundingClientRect().top + window.scrollY
+      return aTop - bTop
+    })[0]
+
+  const top = Math.max(topmost.getBoundingClientRect().top + window.scrollY - offset, 0)
+
+  window.scrollTo({
+    top,
+    behavior: "smooth",
+  })
+}
+
+/* ---------------- DeliveryCard types ---------------- */
+type DeliveryCardProps = {
+  activePlaces: any[]
+  currencyLabel: string
+  deliveryLocation: LocationState
+  setDeliveryLocation: (v: LocationState) => void
+  returnDifferent: boolean
+  setReturnDifferent: (v: boolean) => void
+  returnLocation: LocationState
+  setReturnLocation: (v: LocationState) => void
+  triggerSummarySkeleton: (id: number) => void
+  t: any
+  deliveryError: boolean
+  returnError: boolean
+  onDeliveryChange: (val: LocationState) => void
+  onReturnChange: (val: LocationState) => void
+}
+
+/* ---------------- DeliveryCard ---------------- */
+const DeliveryCard = React.memo(function DeliveryCard({
+  activePlaces,
+  currencyLabel,
+  deliveryLocation,
+  setDeliveryLocation,
+  returnDifferent,
+  setReturnDifferent,
+  returnLocation,
+  setReturnLocation,
+  triggerSummarySkeleton,
+  t,
+  deliveryError,
+  returnError,
+  onDeliveryChange,
+  onReturnChange,
+}: DeliveryCardProps) {
+  const handleDeliveryChange = useCallback((val: LocationState) => {
+    triggerSummarySkeleton(0)
+    setDeliveryLocation(val)
+    onDeliveryChange(val)
+  }, [triggerSummarySkeleton, setDeliveryLocation, onDeliveryChange])
+
+  const handleReturnChange = useCallback((val: LocationState) => {
+    triggerSummarySkeleton(0)
+    setReturnLocation(val)
+    onReturnChange(val)
+  }, [triggerSummarySkeleton, setReturnLocation, onReturnChange])
+
+  const handleSwitchChange = useCallback((v: boolean) => {
+    const next = Boolean(v)
+    triggerSummarySkeleton(0)
+    setReturnDifferent(next)
+    if (!next) setReturnLocation(EMPTY_LOCATION)
+  }, [triggerSummarySkeleton, setReturnDifferent, setReturnLocation])
+
+  return (
+    <Card>
+      <CardHeader className="m-0 px-4">
+        <CardTitle className="text-base text-gray-900 flex items-center gap-2">
+          {t("deliveryCard.title")}
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="space-y-2 px-4">
+        <div className="space-y-1">
+          <ResponsiveLocationPicker
+            title={t("deliveryCard.deliveryPickerTitle")}
+            currencyLabel={currencyLabel}
+            places={activePlaces}
+            value={deliveryLocation}
+            onChange={handleDeliveryChange}
+            placeholder={
+              deliveryError
+                ? t("deliveryCard.deliveryRequiredPlaceholder") ?? "محل تحویل الزامی است"
+                : t("deliveryCard.deliveryPickerPlaceholder")
+            }
+            placeholderClassName={deliveryError ? "text-red-500" : undefined}
+            triggerClassName={deliveryError ? "border-red-500 ring-red-200 ring-1" : undefined}
+          />
+
+          {deliveryError && (
+            <p className="text-xs px-1 text-red-500">
+              {t("deliveryCard.deliveryRequiredPlaceholder") ?? "محل تحویل الزامی است"}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between p-0 py-2 m-0">
+          <Label className="flex items-center gap-3 cursor-pointer select-none">
+            <Switch
+              dir="ltr"
+              checked={returnDifferent}
+              onCheckedChange={handleSwitchChange}
+            />
+            <span className="text-gray-800 font-semibold">
+              {t("deliveryCard.returnDifferentLabel")}
+            </span>
+          </Label>
+        </div>
+
+        {returnDifferent && (
+          <div className="space-y-1">
+            <ResponsiveLocationPicker
+              title={t("deliveryCard.returnPickerTitle")}
+              currencyLabel={currencyLabel}
+              places={activePlaces}
+              value={returnLocation}
+              onChange={handleReturnChange}
+              placeholder={
+                returnError
+                  ? t("deliveryCard.returnRequiredPlaceholder") ?? "محل بازگشت الزامی است"
+                  : t("deliveryCard.returnPickerPlaceholder")
+              }
+              placeholderClassName={returnError ? "text-red-500" : undefined}
+              triggerClassName={returnError ? "border-red-500 ring-red-200 ring-1" : undefined}
+            />
+
+            {returnError && (
+              <p className="text-xs px-1 text-red-500">
+                {t("deliveryCard.returnRequiredPlaceholder") ?? "محل بازگشت الزامی است"}
+              </p>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+})
+
+/** pricing extractor */
 function useRentPricing(apiData: ApiCalcResponse | null, rentDays: number) {
   return useMemo(() => {
     const item: any = apiData?.item || {}
@@ -121,19 +298,16 @@ export default function ReserveInformation() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  // STORE
   const storeCarDates = useSearchPageStore((s) => s.carDates)
   const storeDt = useSearchPageStore((s) => s.deliveryTime)
   const storeRt = useSearchPageStore((s) => s.returnTime)
   const storeSelectedCarId = useSearchPageStore((s) => s.selectedCarId)
 
-  // URL (normalized)
   const urlFrom = normalizeJalaliParam(searchParams.get("from"))
   const urlTo = normalizeJalaliParam(searchParams.get("to"))
   const urlDt = normalizeTime(searchParams.get("dt") || "10:00")
   const urlRt = normalizeTime(searchParams.get("rt") || "10:00")
 
-  // effective dates (store has priority, then url)
   const carDates = useMemo(() => {
     const s0 = normalizeJalaliParam(storeCarDates?.[0] ?? null)
     const s1 = normalizeJalaliParam(storeCarDates?.[1] ?? null)
@@ -142,7 +316,6 @@ export default function ReserveInformation() {
     return null
   }, [storeCarDates, urlFrom, urlTo])
 
-  // effective times
   const dt = useMemo(() => normalizeTime(storeDt || urlDt || "10:00"), [storeDt, urlDt])
   const rt = useMemo(() => normalizeTime(storeRt || urlRt || "10:00"), [storeRt, urlRt])
 
@@ -162,40 +335,49 @@ export default function ReserveInformation() {
   }, [searchParams, storeSelectedCarId])
 
   const tBranches = useTranslations("branchs")
-
   const branchName = useMemo(() => {
     const id = searchParams.get("branch_id")
     return getBranchNameById(tBranches, id, "")
   }, [searchParams, tBranches])
 
-  // UI State
-  const [deliveryLocation, setDeliveryLocation] = useState<LocationState>({
-    isDesired: false,
-    location: null,
-    address: "",
-  })
-  const [returnLocation, setReturnLocation] = useState<LocationState>({
-    isDesired: false,
-    location: null,
-    address: "",
-  })
+  const [deliveryLocation, setDeliveryLocation] = useState<LocationState>(EMPTY_LOCATION)
+  const [returnLocation, setReturnLocation] = useState<LocationState>(EMPTY_LOCATION)
   const [returnDifferent, setReturnDifferent] = useState<boolean>(false)
 
-  const [isInfoListOpen, setIsInfoListOpen] = useState<boolean>(false)
   const [apiData, setApiData] = useState<ApiCalcResponse | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [selectedOptions, setSelectedOptions] = useState<number[]>([])
   const [insuranceComplete, setInsuranceComplete] = useState<boolean>(false)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
-
   const [userInfo, setUserInfo] = useState<UserInfo>({ name: "", email: "", phone: "" })
-
+const [loginDialogOpen, setLoginDialogOpen] = useState(false)
+  const [isSummaryPending, setIsSummaryPending] = useState(false)
+  const summaryPendingTimerRef = useRef<any>(null)
   const [pendingSummaryIds, setPendingSummaryIds] = useState<Record<number, boolean>>({})
   const pendingTimersRef = useRef<Record<number, any>>({})
 
-  function triggerSummarySkeleton(optionId: number, ms = 1000) {
+  /* ---- validation errors ---- */
+  const [deliveryError, setDeliveryError] = useState(false)
+  const [returnError, setReturnError] = useState(false)
+  const [nameError, setNameError] = useState(false)
+  const [phoneError, setPhoneError] = useState(false)
+
+  /* ---- banner ---- */
+  const [bannerTriggerKey, setBannerTriggerKey] = useState(0)
+  const [showBanner, setShowBanner] = useState(false)
+
+  const triggerSummarySkeleton = useCallback((optionId: number, ms = 800) => {
     const id = Number(optionId)
     if (!Number.isFinite(id)) return
+
+    setIsSummaryPending(true)
+
+    if (summaryPendingTimerRef.current) clearTimeout(summaryPendingTimerRef.current)
+    summaryPendingTimerRef.current = setTimeout(() => {
+      setIsSummaryPending(false)
+      summaryPendingTimerRef.current = null
+    }, ms)
+
     if (pendingTimersRef.current[id]) clearTimeout(pendingTimersRef.current[id])
 
     setPendingSummaryIds((prev) => ({ ...prev, [id]: true }))
@@ -207,24 +389,27 @@ export default function ReserveInformation() {
       })
       delete pendingTimersRef.current[id]
     }, ms)
-  }
+  }, [])
 
   useEffect(() => {
     return () => {
       Object.values(pendingTimersRef.current).forEach((tt) => tt && clearTimeout(tt))
       pendingTimersRef.current = {}
+      if (summaryPendingTimerRef.current) clearTimeout(summaryPendingTimerRef.current)
     }
   }, [])
 
-  // session autofill
   const { data: session, status: sessionStatus } = useSession()
+
   useEffect(() => {
     if (sessionStatus !== "authenticated") return
+
     const u: any = (session as any)?.user ?? {}
     const fullName =
       (u?.name && String(u.name).trim()) ||
       [u?.first_name, u?.last_name].filter(Boolean).join(" ").trim() ||
       ""
+
     const phoneRaw = u?.phone ?? u?.username ?? u?.mobile ?? ""
     const phone = normalizePhone(phoneRaw)
     const email = (u?.email && String(u.email).trim()) || ""
@@ -236,7 +421,6 @@ export default function ReserveInformation() {
     }))
   }, [sessionStatus, session])
 
-  // reset when car changes
   const prevCarRef = useRef<string | null>(null)
   useEffect(() => {
     const cur = selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : null
@@ -248,13 +432,17 @@ export default function ReserveInformation() {
       prevCarRef.current = cur
       setSelectedOptions([])
       setInsuranceComplete(false)
-      setDeliveryLocation({ isDesired: false, location: null, address: "" })
-      setReturnLocation({ isDesired: false, location: null, address: "" })
+      setDeliveryLocation(EMPTY_LOCATION)
+      setReturnLocation(EMPTY_LOCATION)
       setReturnDifferent(false)
+      setDeliveryError(false)
+      setReturnError(false)
+      setNameError(false)
+      setPhoneError(false)
+      setShowBanner(false)
     }
   }, [selectedCarId])
 
-  // ✅ Coupon dialog
   const [couponOpen, setCouponOpen] = useState(false)
 
   const rentDaysForTitle = useMemo(() => {
@@ -276,7 +464,6 @@ export default function ReserveInformation() {
     }
   }, [carDates, dt, rt])
 
-  // fetchKey
   const fetchKey = useMemo(() => {
     const carId = selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : ""
     const branchId = branchIdFromUrl ? String(branchIdFromUrl) : ""
@@ -286,28 +473,8 @@ export default function ReserveInformation() {
     return `${carId}|${branchId}|${from}|${to}|${loc}|${dt}|${rt}`
   }, [selectedCarId, branchIdFromUrl, carDates, locale, dt, rt])
 
-  /**
-   * ✅ FIX اصلی:
-   *
-   * مشکل قبلی:
-   * lastFetchKeyRef روی module-level یا بین mount/unmountها persist میشد.
-   * وقتی component remount میشد (key جدید)، lastFetchKeyRef.current
-   * هنوز مقدار قبلی داشت (چون ref مقداری از closure قبلی نگه داشته بود).
-   * نتیجه: fetchKey === lastFetchKeyRef.current => return زودهنگام
-   * => isLoading هیچ‌وقت false نمیشد => skeleton ابدی!
-   *
-   * راه‌حل:
-   * lastFetchKeyRef رو با مقدار "" initialize کن (هر بار mount جدید = مقدار خالی)
-   * و دیگه از early return بر اساس ref استفاده نکن.
-   * به جاش از یه flag داخل effect استفاده میکنیم که اگه fetchKey
-   * همون چیزی بود که قبلاً fetch شده (و apiData موجوده)، skip کنیم.
-   */
   const lastFetchKeyRef = useRef<string>("")
-  // ✅ این ref رو هر بار mount ریست کن
-  // چون useRef مقدار اولیه "" داره، هر بار که component از نو mount میشه (key جدید)
-  // این ref هم از نو "" میشه — این کافیه!
 
-  // ✅ fetch api
   useEffect(() => {
     const carIdRaw = selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : null
     const branchIdRaw = branchIdFromUrl != null ? String(branchIdFromUrl) : null
@@ -315,22 +482,17 @@ export default function ReserveInformation() {
     const to = carDates?.[1]
 
     if (!carIdRaw || !branchIdRaw || !from || !to) {
-      // پارامترهای لازم نیستن => نه loading، نه data
       lastFetchKeyRef.current = ""
       setIsLoading(false)
       setApiData(null)
       return
     }
 
-    // ✅ FIX: اگه همین fetchKey قبلاً fetch شده AND apiData داریم => skip
-    // (نه فقط ref check — چون ممکنه ref درست باشه ولی apiData null باشه)
     if (lastFetchKeyRef.current === fetchKey && apiData !== null) {
-      // داده موجوده، نیازی به fetch مجدد نیست
       setIsLoading(false)
       return
     }
 
-    // ✅ اگه fetchKey جدیده (یا apiData null هست)، fetch کن
     lastFetchKeyRef.current = fetchKey
     setIsLoading(true)
     setApiData(null)
@@ -339,7 +501,6 @@ export default function ReserveInformation() {
 
     async function run() {
       try {
-        // ✅ اول cache چک کن
         const cached = calcCache.get(fetchKey)
         if (cached) {
           if (!alive) return
@@ -348,7 +509,6 @@ export default function ReserveInformation() {
           return
         }
 
-        // ✅ اگه inflight هست، صبر کن
         const inflight = calcInflight.get(fetchKey)
         if (inflight) {
           const data = await inflight
@@ -371,7 +531,6 @@ export default function ReserveInformation() {
           const res: any = await api.get(url)
           const payload = (res?.data ?? res) as ApiCalcResponse
           const status = res?.status ?? (payload as any)?.status
-
           if (status && Number(status) !== 200) throw new Error((payload as any)?.message || t("toast.fetchInfoError"))
           if (!payload?.item) throw new Error(t("toast.invalidServerResponse"))
           return payload
@@ -386,26 +545,21 @@ export default function ReserveInformation() {
         setApiData(data)
       } catch (error: any) {
         calcInflight.delete(fetchKey)
-        if (alive) {
-          toast.error(error?.message || t("toast.serverConnectionError"))
-        }
+        if (alive) toast.error(error?.message || t("toast.serverConnectionError"))
       } finally {
-        if (alive) {
-          setIsLoading(false)
-        }
+        if (alive) setIsLoading(false)
       }
     }
 
     run()
-    return () => {
-      alive = false
-    }
-    // ✅ apiData رو از dependency list حذف میکنیم تا loop نشه
-    // چون apiData set شدنش باعث re-run effect میشه که دوباره fetch میکنه
+    return () => { alive = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchKey, selectedCarId, branchIdFromUrl, carDates, locale, dt, rt, t])
 
-  const activePlaces = useMemo(() => (Array.isArray(apiData?.places) ? apiData!.places!.filter(Boolean) : []), [apiData])
+  const activePlaces = useMemo(
+    () => (Array.isArray(apiData?.places) ? apiData!.places!.filter(Boolean) : []),
+    [apiData],
+  )
 
   const currencyLabel = useMemo(() => {
     const cur = String((apiData as any)?.currency || "").trim().toUpperCase()
@@ -415,16 +569,13 @@ export default function ReserveInformation() {
 
   const payableOptions = useMemo(() => {
     const opts = Array.isArray((apiData as any)?.options) ? (apiData as any).options.filter(Boolean) : []
-    return opts.filter((o: any) => {
-      const p = safeNum(o?.price, 0)
-      const pp = safeNum(o?.price_pay, 0)
-      return p > 0 || pp > 0
-    })
+    return opts.filter((o: any) => safeNum(o?.price, 0) > 0 || safeNum(o?.price_pay, 0) > 0)
   }, [apiData])
 
-  const canSelectInsuranceComplete = useMemo(() => {
-    return String((apiData?.item as any)?.insurance_complete_status || "no").toLowerCase() === "yes"
-  }, [apiData])
+  const canSelectInsuranceComplete = useMemo(
+    () => String((apiData?.item as any)?.insurance_complete_status || "no").toLowerCase() === "yes",
+    [apiData],
+  )
 
   const shouldShowExtrasSection = useMemo(
     () => payableOptions.length > 0 || canSelectInsuranceComplete,
@@ -437,7 +588,16 @@ export default function ReserveInformation() {
   }, [payableOptions])
 
   const totals: Totals = useMemo(() => {
-    const safeTotals: Totals = { total: 0, prePay: 0, debt: 0, tax: 0, rentDays: 0, dailyPrice: 0, extraItems: [] }
+    const safeTotals: Totals = {
+      total: 0,
+      prePay: 0,
+      debt: 0,
+      tax: 0,
+      rentDays: 0,
+      dailyPrice: 0,
+      extraItems: [],
+    }
+
     if (!apiData?.item) return safeTotals
 
     let totalPrice = safeNum((apiData.item as any).pay_price, 0)
@@ -461,9 +621,11 @@ export default function ReserveInformation() {
     } catch {
       rentDays = safeNum((apiData.item as any).rent_days, 1)
     }
+
     rentDays = rentDays > 0 ? rentDays : 1
 
     const extraItems: Totals["extraItems"] = []
+    const deliveryReturnItems: Totals["extraItems"] = []
 
     selectedOptions.forEach((optId) => {
       const opt = (payableOptions as any[]).find((o) => Number(o?.id) === Number(optId))
@@ -471,7 +633,6 @@ export default function ReserveInformation() {
 
       const optPrice = safeNum((opt as any).price_pay, 0)
       const preOpt = safeNum((opt as any).pre_price_pay, 0)
-
       totalPrice += optPrice
       prePayPrice += preOpt
 
@@ -484,9 +645,7 @@ export default function ReserveInformation() {
         subLabel: (
           <span className="inline-flex items-center gap-1">
             <span className="text-gray-500">{t("common.dailyPrice")}:</span>
-            <span className="text-gray-500">
-              {formatNum(perDay)} {currencyLabel}
-            </span>
+            <span className="text-gray-500">{formatNum(perDay)} {currencyLabel}</span>
           </span>
         ),
       })
@@ -508,9 +667,7 @@ export default function ReserveInformation() {
         price: insPrice,
         subLabel: (
           <span className="inline-flex items-center gap-1">
-            <span className="text-gray-500">
-              {formatNum(perDay)} {currencyLabel}
-            </span>
+            <span className="text-gray-500">{formatNum(perDay)} {currencyLabel}</span>
             <span className="text-gray-500">{t("common.daily")}</span>
           </span>
         ),
@@ -544,7 +701,7 @@ export default function ReserveInformation() {
         const delNeedAddr = String((del as any)?.need_address || "no") === "yes"
         const delHotel = delNeedAddr ? hotelSuffix(del, (deliveryLocation as any)?.address) : ""
 
-        extraItems.push({
+        deliveryReturnItems.push({
           title: `${t("places.deliveryPrefix")}: ${(del as any)?.title || t("common.unknown")}${delHotel}`,
           price: delPrice,
         })
@@ -562,10 +719,12 @@ export default function ReserveInformation() {
         }
 
         const retNeedAddr = String((ret as any)?.need_address || "no") === "yes"
-        const retAddrValue = returnDifferent ? (returnLocation as any)?.address : (deliveryLocation as any)?.address
+        const retAddrValue = returnDifferent
+          ? (returnLocation as any)?.address
+          : (deliveryLocation as any)?.address
         const retHotel = retNeedAddr ? hotelSuffix(ret, retAddrValue) : ""
 
-        extraItems.push({
+        deliveryReturnItems.push({
           title: `${t("places.returnPrefix")}: ${(ret as any)?.title || t("common.unknown")}${retHotel}`,
           price: retPrice,
         })
@@ -587,7 +746,7 @@ export default function ReserveInformation() {
       tax,
       rentDays,
       dailyPrice: 0,
-      extraItems,
+      extraItems: [...deliveryReturnItems, ...extraItems],
     }
   }, [apiData, payableOptions, selectedOptions, insuranceComplete, deliveryLocation, returnLocation, returnDifferent, carDates, dt, rt, currencyLabel, t])
 
@@ -596,6 +755,13 @@ export default function ReserveInformation() {
   const dailyBefore = pricing.dailyBefore
   const dailyAfter = pricing.dailyAfter
   const baseRentAfter = pricing.totalAfter
+
+  const totalBefore = useMemo(() => {
+    if (offPercent <= 0 || pricing.totalBefore <= 0) return 0
+    const rentDiff = pricing.totalBefore - pricing.totalAfter
+    if (rentDiff <= 0) return 0
+    return totals.total + rentDiff
+  }, [offPercent, pricing.totalBefore, pricing.totalAfter, totals.total])
 
   const dynamicTitle = useMemo(() => {
     const b = branchName ? ` - ${branchName}` : ""
@@ -613,19 +779,53 @@ export default function ReserveInformation() {
     return t("meta.desc", { branchPart, daysPart, carPart })
   }, [branchName, rentDaysForTitle, apiData, t])
 
+  const handleDeliveryLocationChange = useCallback((val: LocationState) => {
+    setDeliveryLocation(val)
+  }, [])
+
+  const handleReturnLocationChange = useCallback((val: LocationState) => {
+    setReturnLocation(val)
+  }, [])
+
+  const handleDeliveryErrorClear = useCallback((val: LocationState) => {
+    if (val?.location) setDeliveryError(false)
+  }, [])
+
+  const handleReturnErrorClear = useCallback((val: LocationState) => {
+    if (val?.location) setReturnError(false)
+  }, [])
+
   const handleSubmit = useCallback(async () => {
     if (isSubmitting) return
 
-    if (!userInfo.name || !userInfo.phone) {
-      toast.warning(t("toast.enterNamePhone"))
-      return
-    }
-    if (!deliveryLocation?.location) {
-      toast.warning(t("toast.selectDeliveryPlace"))
-      return
-    }
-    if (returnDifferent && !returnLocation?.location) {
-      toast.warning(t("toast.selectReturnPlace"))
+    const nextDeliveryError = !deliveryLocation?.location
+    const nextReturnError = Boolean(returnDifferent && !returnLocation?.location)
+    const nextNameError = !userInfo.name?.trim()
+    const nextPhoneError = !userInfo.phone?.trim()
+
+    setDeliveryError(nextDeliveryError)
+    setReturnError(nextReturnError)
+    setNameError(nextNameError)
+    setPhoneError(nextPhoneError)
+
+    const hasError =
+      nextDeliveryError || nextReturnError || nextNameError || nextPhoneError
+
+    if (hasError) {
+      setShowBanner(true)
+      setBannerTriggerKey((k) => k + 1)
+
+      const errorAnchors: string[] = []
+      if (nextDeliveryError || nextReturnError) errorAnchors.push("delivery")
+      if (nextNameError) errorAnchors.push("name")
+      if (nextPhoneError) errorAnchors.push("phone")
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          scrollToFirstErrorAnchor(errorAnchors, 110)
+        })
+      })
+
       return
     }
 
@@ -635,14 +835,17 @@ export default function ReserveInformation() {
     const sessionPhone = wasLoggedIn
       ? normalizePhone(
           (session as any)?.user?.mobile ??
-            (session as any)?.user?.username ??
-            (session as any)?.user?.phone ??
-            "",
+          (session as any)?.user?.username ??
+          (session as any)?.user?.phone ??
+          "",
         )
       : ""
-    const formPhone = normalizePhone(userInfo.phone)
 
-    const shouldLogoutBeforeSubmit = Boolean(wasLoggedIn && sessionPhone && formPhone && sessionPhone !== formPhone)
+    const formPhone = normalizePhone(userInfo.phone)
+    const shouldLogoutBeforeSubmit = Boolean(
+      wasLoggedIn && sessionPhone && formPhone && sessionPhone !== formPhone,
+    )
+
     if (shouldLogoutBeforeSubmit) {
       try {
         await signOut({ redirect: false })
@@ -654,6 +857,7 @@ export default function ReserveInformation() {
         toast.error(t("toast.invalidReservationInfo"))
         return
       }
+
       if (!selectedCarId) {
         toast.error(t("toast.carNotSelected"))
         return
@@ -668,6 +872,7 @@ export default function ReserveInformation() {
       const retId = returnDifferent
         ? (returnLocation as any).location || (deliveryLocation as any).location
         : (deliveryLocation as any).location
+
       const retObj = findPlace(retId)
       const retNeed = retObj?.need_address === "yes"
 
@@ -677,10 +882,8 @@ export default function ReserveInformation() {
         to: carDates[1],
         dt: normalizeTime(dt),
         rt: normalizeTime(rt),
-
         place_delivery: (deliveryLocation as any).location,
         address_delivery: delNeed ? (deliveryLocation as any).address || "" : "",
-
         place_return: returnDifferent
           ? (returnLocation as any).location || (deliveryLocation as any).location
           : (deliveryLocation as any).location,
@@ -689,9 +892,7 @@ export default function ReserveInformation() {
             ? (returnLocation as any).address || ""
             : (deliveryLocation as any).address || ""
           : "",
-
         place_r_custom: returnDifferent ? "yes" : "no",
-
         first_name: userInfo.name,
         last_name: "",
         phone: userInfo.phone,
@@ -703,7 +904,9 @@ export default function ReserveInformation() {
       const res: any = await api.post(`/car/rent/${selectedCarId}/${locale}/registration`, payload)
       const raw: any = res?.data ?? res
       const status = res?.status ?? raw?.status
-      if (status && Number(status) !== 200) throw new Error(raw?.message || t("toast.reserveSubmitError"))
+      if (status && Number(status) !== 200) {
+        throw new Error(raw?.message || t("toast.reserveSubmitError"))
+      }
 
       const payloadData: any = raw?.data ?? raw
       const rentCode =
@@ -721,7 +924,6 @@ export default function ReserveInformation() {
       const isNewUser = payloadData?.is_new_user === true || payloadData?.data?.is_new_user === true
       const token = payloadData?.access_token ?? payloadData?.data?.access_token ?? null
       const userId = payloadData?.user_id ?? payloadData?.data?.user_id ?? null
-
       const username =
         payloadData?.username ??
         payloadData?.data?.username ??
@@ -729,9 +931,23 @@ export default function ReserveInformation() {
         payloadData?.data?.item?.phone ??
         ""
 
-      const nameFromApi = payloadData?.item?.name ?? payloadData?.data?.item?.name ?? userInfo.name ?? ""
-      const phoneFromApi = payloadData?.item?.phone ?? payloadData?.data?.item?.phone ?? userInfo.phone ?? ""
-      const emailFromApi = payloadData?.item?.email ?? payloadData?.data?.item?.email ?? userInfo.email ?? ""
+      const nameFromApi =
+        payloadData?.item?.name ??
+        payloadData?.data?.item?.name ??
+        userInfo.name ??
+        ""
+
+      const phoneFromApi =
+        payloadData?.item?.phone ??
+        payloadData?.data?.item?.phone ??
+        userInfo.phone ??
+        ""
+
+      const emailFromApi =
+        payloadData?.item?.email ??
+        payloadData?.data?.item?.email ??
+        userInfo.email ??
+        ""
 
       if (isNewUser && token) {
         try {
@@ -748,7 +964,9 @@ export default function ReserveInformation() {
       }
 
       const paymentUrl = payloadData?.payment_url || payloadData?.item?.payment_url
-      const cb = encodeURIComponent(`/rent/reservation?status=initialize&code=${encodeURIComponent(rentCode)}`)
+      const cb = encodeURIComponent(
+        `/rent/reservation?status=initialize&code=${encodeURIComponent(rentCode)}`,
+      )
 
       if (paymentUrl) {
         const joiner = String(paymentUrl).includes("?") ? "&" : "?"
@@ -784,10 +1002,21 @@ export default function ReserveInformation() {
     userInfo,
   ])
 
-  const handleSelectUser = (user: { name?: string; phone?: string; email?: string }) => {
-    setUserInfo({ name: user.name || "", phone: user.phone || "", email: user.email || "" })
-    setIsInfoListOpen(false)
-  }
+
+
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserInfo((p) => ({ ...p, name: e.target.value }))
+    if (e.target.value.trim()) setNameError(false)
+  }, [])
+
+  const handlePhoneChange = useCallback((phone: string) => {
+    setUserInfo((p) => ({ ...p, phone }))
+    if (phone?.trim()) setPhoneError(false)
+  }, [])
+
+  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserInfo((p) => ({ ...p, email: e.target.value }))
+  }, [])
 
   if (isLoading || !apiData) {
     return (
@@ -802,56 +1031,79 @@ export default function ReserveInformation() {
   const showUnlimitedKm = String((apiData.item as any)?.km || "").toLowerCase() === "no"
   const showFreeDelivery = String((apiData.item as any)?.free_delivery || "").toLowerCase() === "yes"
   const showFreeInsurance = String((apiData.item as any)?.insurance || "").toLowerCase() === "yes"
-
   const showDeposit = String((apiData.item as any)?.deposit || "").toLowerCase() === "yes"
   const depositPrice = safeNum((apiData.item as any)?.deposit_price, 0)
 
   const PersonalInfoCard = (
-    <Card className="border p-4 m-0 border-gray-200 dark:border-gray-800 rounded-xl shadow-sm">
+    <Card className="border px-2 py-4 m-0 border-gray-200 dark:border-gray-800 rounded-xl shadow-sm">
       <CardHeader className="p-0 m-0">
-        <CardTitle className="text-base text-gray-900 flex justify-between items-center gap-2">
+        <CardTitle className="text-sm text-gray-900 flex justify-between items-center">
           <p>{t("personalInfo.title")}</p>
-
           <div className="flex items-center justify-between">
-            <Button variant="link" className="px-0 text-blue-600 font-semibold" onClick={() => setIsInfoListOpen(true)}>
-              <UserSearch size={16} className="ml-2" />
-              {t("personalInfo.alreadyRegistered")}
-            </Button>
+<Button
+  variant="link"
+  className="px-0 text-blue-600 text-xs font-bold"
+  onClick={() => setLoginDialogOpen(true)}
+>
+  <UserSearch size={14} />
+  {t("personalInfo.alreadyRegistered")}
+</Button>
           </div>
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="p-0 m-0">
+      <CardContent className="px-2 m-0">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
-          <div className="md:col-span-5">
+          {/* نام */}
+          <div data-error-anchor="name" className="md:col-span-4 space-y-1">
             <Input
               value={userInfo.name}
-              onChange={(e) => setUserInfo((p) => ({ ...p, name: e.target.value }))}
-              className="h-12 rounded-lg border-gray-300"
-              placeholder={t("personalInfo.placeholders.fullName")}
+              onChange={handleNameChange}
+              className={`h-12 rounded-lg transition-colors ${
+                nameError
+                  ? "border-red-500 ring-1 ring-red-200 placeholder:text-red-400 focus-visible:ring-red-300"
+                  : "border-gray-300"
+              }`}
+              placeholder={
+                nameError
+                  ? t("personalInfo.errors.nameRequired") ?? "نام الزامی است"
+                  : t("personalInfo.placeholders.fullName")
+              }
             />
+            {nameError && (
+              <p className="text-xs px-1 text-red-500">
+                {t("personalInfo.errors.nameRequired") ?? "وارد کردن نام الزامی است"}
+              </p>
+            )}
           </div>
 
-          <div className="md:col-span-4 overflow-visible">
+          {/* شماره */}
+          <div data-error-anchor="phone" className="md:col-span-5 overflow-visible space-y-1">
             <div dir="ltr" className="w-full overflow-visible relative z-20">
-              <PhoneInput
-                defaultCountry="ir"
+              <PhoneInputCustom
                 value={userInfo.phone}
-                onChange={(phone: string) => setUserInfo((p) => ({ ...p, phone }))}
-                className="w-full"
-                inputClassName="!h-12 !w-full !border-0 !bg-transparent !text-sm !outline-none !shadow-none !ring-0 !focus:ring-0 !focus:outline-none !pl-3"
-                countrySelectorStyleProps={{
-                  buttonClassName:
-                    "!h-12 !px-3 !border-0 !bg-transparent !outline-none !shadow-none !ring-0 !focus:ring-0 !focus:outline-none",
-                }}
+                onChange={handlePhoneChange}
+                error={phoneError}
+                placeholder={
+                  phoneError
+                    ? t("personalInfo.errors.phoneRequired") ?? "وارد کردن شماره موبایل الزامی است"
+                    : t("personalInfo.placeholders.phone") ?? "شماره وارد کنید (واتساپ)"
+                }
               />
             </div>
+
+            {phoneError && (
+              <p className="text-xs px-1 text-red-500">
+                {t("personalInfo.errors.phoneRequired") ?? "وارد کردن شماره موبایل الزامی است"}
+              </p>
+            )}
           </div>
 
+          {/* ایمیل */}
           <div className="md:col-span-3">
             <Input
               value={userInfo.email}
-              onChange={(e) => setUserInfo((p) => ({ ...p, email: e.target.value }))}
+              onChange={handleEmailChange}
               className="h-12 rounded-lg border-gray-300"
               placeholder={t("personalInfo.placeholders.email")}
               type="email"
@@ -859,58 +1111,11 @@ export default function ReserveInformation() {
           </div>
         </div>
 
-        <div className="text-xs text-gray-500 text-center mt-6">
-          {t("rules.rulesB")}{" "}
-          <Link className="text-blue-600 underline" href={"/rules"}>
-            {t("rules.rules2")}
-          </Link>{" "}
+        <div className="text-xs text-gray-500 text-center mt-6 flex gap-1 justify-center">
+          {t("rules.rulesB")}
+          <RulesSheet />
           {t("rules.rulesA")}
         </div>
-      </CardContent>
-    </Card>
-  )
-
-  const DeliveryCard = (
-    <Card className="border border-gray-200 rounded-xl shadow-sm py-3">
-      <CardHeader className="m-0 px-4">
-        <CardTitle className="text-base text-gray-900 flex items-center gap-2">{t("deliveryCard.title")}</CardTitle>
-      </CardHeader>
-
-      <CardContent className="space-y-4 px-4">
-        <ResponsiveLocationPicker
-          title={t("deliveryCard.deliveryPickerTitle")}
-          currencyLabel={currencyLabel}
-          places={activePlaces as any}
-          value={deliveryLocation}
-          onChange={setDeliveryLocation}
-          placeholder={t("deliveryCard.deliveryPickerPlaceholder")}
-        />
-
-        <div className="flex items-center justify-between p-0 pb-4 m-0">
-          <Label className="flex items-center gap-3 cursor-pointer select-none">
-            <Switch
-              dir="ltr"
-              checked={returnDifferent}
-              onCheckedChange={(v) => {
-                const next = Boolean(v)
-                setReturnDifferent(next)
-                if (!next) setReturnLocation({ isDesired: false, location: null, address: "" })
-              }}
-            />
-            <span className="text-gray-800 font-semibold">{t("deliveryCard.returnDifferentLabel")}</span>
-          </Label>
-        </div>
-
-        {returnDifferent && (
-          <ResponsiveLocationPicker
-            title={t("deliveryCard.returnPickerTitle")}
-            currencyLabel={currencyLabel}
-            places={activePlaces as any}
-            value={returnLocation}
-            onChange={setReturnLocation}
-            placeholder={t("deliveryCard.returnPickerPlaceholder")}
-          />
-        )}
       </CardContent>
     </Card>
   )
@@ -918,7 +1123,9 @@ export default function ReserveInformation() {
   const ExtrasCard = !shouldShowExtrasSection ? null : (
     <Card className="border border-gray-200 dark:border-gray-800 rounded-xl md:mb-4 shadow-sm p-0 m-0 gap-0 bg-white dark:bg-gray-900">
       <CardHeader className="p-0 px-4 pt-2">
-        <CardTitle className="text-base text-gray-900 flex items-center">{t("extras.title")}</CardTitle>
+        <CardTitle className="text-base text-gray-900 flex items-center">
+          {t("extras.title")}
+        </CardTitle>
       </CardHeader>
 
       <CardContent className="p-0 m-0 pb-1">
@@ -941,69 +1148,112 @@ export default function ReserveInformation() {
     </Card>
   )
 
+  const sharedCarCardProps = {
+    apiData,
+    totals,
+    currencyLabel,
+    offPercent,
+    dailyBefore,
+    dailyAfter,
+    showUnlimitedKm,
+    showFreeDelivery,
+    showFreeInsurance,
+    showNoDeposit,
+    showDeposit,
+    depositPrice,
+  }
+
+  const sharedSummaryProps = {
+    apiData,
+    totals,
+    currencyLabel,
+    baseRentAfter,
+    offPercent,
+    dailyBefore,
+    dailyAfter,
+    totalBefore,
+    pendingSummaryIds,
+    isSummaryPending,
+    onOpenCoupon: () => setCouponOpen(true),
+    onSubmit: handleSubmit,
+    isSubmitting,
+  }
+
+  const deliveryCardProps = {
+    activePlaces,
+    currencyLabel,
+    deliveryLocation,
+    setDeliveryLocation: handleDeliveryLocationChange,
+    returnDifferent,
+    setReturnDifferent,
+    returnLocation,
+    setReturnLocation: handleReturnLocationChange,
+    triggerSummarySkeleton,
+    t,
+    deliveryError,
+    returnError,
+    onDeliveryChange: handleDeliveryErrorClear,
+    onReturnChange: handleReturnErrorClear,
+  }
+
   return (
     <>
       <SearchMetaClient title={dynamicTitle} description={dynamicDesc} />
       <CouponDialog open={couponOpen} onOpenChange={setCouponOpen} />
 
+      {showBanner && (
+        <ToastBanner
+          text={"لطفاً اطلاعات الزامی را تکمیل کنید"}
+          triggerKey={bannerTriggerKey}
+          mobilePosition={{ side: "bottom", offset: 110 }}
+          onClose={() => setShowBanner(false)}
+        />
+      )}
+
       <div className="relative">
         {/* MOBILE */}
-        <div className="lg:hidden pb-28">
-          <SelectedCarCard
-            apiData={apiData}
-            totals={totals}
-            currencyLabel={currencyLabel}
-            offPercent={offPercent}
-            dailyBefore={dailyBefore}
-            dailyAfter={dailyAfter}
-            showUnlimitedKm={showUnlimitedKm}
-            showFreeDelivery={showFreeDelivery}
-            showFreeInsurance={showFreeInsurance}
-            showNoDeposit={showNoDeposit}
-            showDeposit={showDeposit}
-            depositPrice={depositPrice}
-          />
-
+        <div className="lg:hidden">
+          <SelectedCarCard {...sharedCarCardProps} />
           <div className="px-2">
-            {showNoDeposit ? <div className="mt-2"> <NoDepositBanner /> </div> : null}
-            <div className="mt-2">{DeliveryCard}</div>
-            <div className="mt-2">{ExtrasCard}</div>
+            {showNoDeposit ? <div className="mt-2"><NoDepositBanner /></div> : null}
 
-            <div className="mt-2">
-              <SummaryCard
-                showButton={false}
-                apiData={apiData}
-                totals={totals}
-                currencyLabel={currencyLabel}
-                baseRentAfter={baseRentAfter}
-                offPercent={offPercent}
-                dailyBefore={dailyBefore}
-                dailyAfter={dailyAfter}
-                pendingSummaryIds={pendingSummaryIds}
-                onOpenCoupon={() => setCouponOpen(true)}
-                onSubmit={handleSubmit}
-                isSubmitting={isSubmitting}
-              />
+            <div data-error-anchor="delivery">
+              <DeliveryCard {...deliveryCardProps} />
             </div>
 
+            <div className="mt-2">{ExtrasCard}</div>
+            <div className="mt-2">
+              <SummaryCard showButton={false} {...sharedSummaryProps} />
+            </div>
             <div className="mt-2">{PersonalInfoCard}</div>
           </div>
         </div>
 
-        {/* Sticky Bottom Bar (Mobile) */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-gray-200">
-          <div className="max-w-130 mx-auto px-4 py-3">
-            <div className="flex items-center justify-between mb-2">
+        {/* Sticky Bottom Bar - Mobile */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-gray-200 shadow-[0_-2px_12px_rgba(0,0,0,0.08)]">
+          <div className="mx-auto px-4 py-3">
+            <div className="flex items-center gap-20 justify-between mb-2">
               <div className="text-xs text-gray-500">{t("mobileBar.payableAmount")}</div>
-              <div className="text-lg font-extrabold text-blue-600">
-                {formatNum(totals.prePay)} {currencyLabel}
+              <div className="text-md flex items-center gap-2 font-extrabold text-blue-600">
+                {isSummaryPending ? (
+                  <div className="h-6 w-28 rounded bg-gray-200 animate-pulse" />
+                ) : (
+                  <>
+                    {offPercent > 0 && totalBefore > 0 && totalBefore > totals.total && (
+                      <div className="text-xs text-gray-400 line-through inline-block mr-2">
+                        {formatNum(totalBefore)}
+                      </div>
+                    )}
+                    {formatNum(totals.total)} {currencyLabel}
+                  </>
+                )}
               </div>
             </div>
 
             <Button
               onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="w-full h-12 rounded-xl text-base font-extrabold bg-blue-600 hover:bg-blue-700"
+              disabled={isSubmitting || isSummaryPending}
+              className="w-full h-11 rounded-lg text-base font-extrabold bg-blue-500 hover:bg-blue-700"
             >
               {isSubmitting ? t("common.submitting") : t("common.finalSubmit")}
             </Button>
@@ -1015,52 +1265,28 @@ export default function ReserveInformation() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div className="lg:col-span-8 space-y-4">
               {showNoDeposit ? <NoDepositBanner /> : null}
-              {DeliveryCard}
+
+              <div data-error-anchor="delivery">
+                <DeliveryCard {...deliveryCardProps} />
+              </div>
+
               {ExtrasCard}
               {PersonalInfoCard}
             </div>
 
-            <div className="lg:col-span-4 space-y-0">
-              <SelectedCarCard
-                apiData={apiData}
-                totals={totals}
-                currencyLabel={currencyLabel}
-                offPercent={offPercent}
-                dailyBefore={dailyBefore}
-                dailyAfter={dailyAfter}
-                showUnlimitedKm={showUnlimitedKm}
-                showFreeDelivery={showFreeDelivery}
-                showFreeInsurance={showFreeInsurance}
-                showNoDeposit={showNoDeposit}
-                showDeposit={showDeposit}
-                depositPrice={depositPrice}
-              />
-
-              <div className="mt-4">
-                <SummaryCard
-                  showButton
-                  apiData={apiData}
-                  totals={totals}
-                  currencyLabel={currencyLabel}
-                  baseRentAfter={baseRentAfter}
-                  offPercent={offPercent}
-                  dailyBefore={dailyBefore}
-                  dailyAfter={dailyAfter}
-                  pendingSummaryIds={pendingSummaryIds}
-                  onOpenCoupon={() => setCouponOpen(true)}
-                  onSubmit={handleSubmit}
-                  isSubmitting={isSubmitting}
-                />
-              </div>
+            <div className="lg:col-span-4 space-y-4">
+              <SelectedCarCard {...sharedCarCardProps} />
+              <SummaryCard showButton={true} {...sharedSummaryProps} />
             </div>
           </div>
         </div>
-
-        {/* InfoList */}
-        {isInfoListOpen && (
-          <InfoListDialog open={isInfoListOpen} onOpenChange={setIsInfoListOpen} onSelect={handleSelectUser} />
-        )}
       </div>
+
+<LoginDialog
+  open={loginDialogOpen}
+  onOpenChange={setLoginDialogOpen}
+  hideTrigger
+/>
     </>
   )
 }
