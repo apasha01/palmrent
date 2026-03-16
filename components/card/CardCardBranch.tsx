@@ -447,7 +447,7 @@ if (onImage) {
   );
 }
   return (
-    <div className="mb-3 min-h-[26px] w-full">
+    <div className="mb-3 min-h-6.5 w-full">
       <div className={wrapperClass}>
         {hasRawBadges
           ? rawBadges.map(renderRawBadge)
@@ -912,7 +912,7 @@ export function SingleCarGallery({
       children (badges / drawer) خارج از Link هستند تا overlay drawer
       بتواند بدون تداخل با navigate، drawer را ببندد.
     */
-    <div className="relative z-10 flex w-full rounded-lg lg:h-55 h-[220px]">
+    <div className="relative z-10 flex w-full rounded-lg lg:h-55 h-55">
       {!firstImageLoaded && (
         <>
           <style>{`

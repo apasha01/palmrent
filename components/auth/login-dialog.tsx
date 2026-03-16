@@ -227,7 +227,7 @@ export default function LoginDialog({
             "bg-background dark:bg-gray-950",
             // Desktop: centered modal
             "sm:inset-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2",
-            "sm:h-auto sm:w-full sm:max-w-[480px]",
+            "sm:h-auto sm:w-full sm:max-w-120",
             "sm:rounded-3xl sm:border sm:border-border/50 sm:shadow-2xl"
           )}
         >
@@ -267,13 +267,13 @@ export default function LoginDialog({
               "px-6 py-10 sm:px-10 sm:py-12"
             )}
           >
-            <div className="w-full max-w-[420px]">
+            <div className="w-full max-w-105">
               <div className="mb-6 sm:mb-8 flex justify-center">
                 <div
                   className={cn(
                     "flex h-16 w-16 items-center justify-center rounded-2xl",
                     "border border-border/50",
-                    "bg-muted/30 dark:bg-white/[0.03]"
+                    "bg-muted/30 dark:bg-white/3"
                   )}
                 >
                   <ShieldCheck
@@ -307,9 +307,9 @@ export default function LoginDialog({
                       error={showMobileError && !isPhoneValid}
                       placeholder={t("placeholders.phone") ?? "912 345 6789"}
                       className={cn(
-                        "h-[54px] w-full rounded-2xl",
+                        "h-13.5 w-full rounded-2xl",
                         "border border-border/70",
-                        "bg-background dark:bg-white/[0.03]",
+                        "bg-background dark:bg-white/3",
                         "text-foreground placeholder:text-muted-foreground/70",
                         "focus-within:border-ring focus-within:ring-1 focus-within:ring-ring/25",
                         "transition-all duration-150"
@@ -328,7 +328,7 @@ export default function LoginDialog({
                     disabled={loading}
                     onClick={sendOtp}
                     className={cn(
-                      "flex h-[44px] w-full items-center justify-center gap-2 rounded-lg",
+                      "flex h-11 w-full items-center justify-center gap-2 rounded-lg",
                       "bg-foreground text-background",
                       "text-[15px] font-semibold",
                        "bg-blue-500",
@@ -352,7 +352,7 @@ export default function LoginDialog({
                         className={cn(
                           "inline-flex items-center gap-2 rounded-full px-3 py-1.5",
                           "border border-border/60",
-                          "bg-background dark:bg-white/[0.03]",
+                          "bg-background dark:bg-white/3",
                           "text-xs text-muted-foreground tabular-nums"
                         )}
                       >
@@ -377,12 +377,12 @@ export default function LoginDialog({
                             key={i}
                             index={i}
                             className={cn(
-                              "h-[60px] w-[52px] rounded-2xl",
+                              "h-15 w-13 rounded-2xl",
                               "border-2 border-border/70",
-                              "bg-background dark:bg-white/[0.03]",
+                              "bg-background dark:bg-white/3",
                               "text-xl font-bold text-foreground",
                               "data-[active=true]:border-ring",
-                              "data-[active=true]:bg-muted/60 dark:data-[active=true]:bg-white/[0.06]",
+                              "data-[active=true]:bg-muted/60 dark:data-[active=true]:bg-white/6",
                               "transition-all duration-150"
                             )}
                           />
@@ -396,7 +396,7 @@ export default function LoginDialog({
                     disabled={otp.length !== 5 || loading}
                     onClick={() => verifyOtp(otp)}
                     className={cn(
-                      "flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl",
+                      "flex h-13.5 w-full items-center justify-center gap-2 rounded-2xl",
                       "bg-foreground text-background",
                       "text-[15px] font-semibold",
                       "hover:opacity-90 active:scale-[0.98]",
@@ -417,7 +417,7 @@ export default function LoginDialog({
                     disabled={cooldown > 0 || loading}
                     onClick={sendOtp}
                     className={cn(
-                      "flex h-[46px] w-full items-center justify-center gap-2 rounded-xl",
+                      "flex h-11.5 w-full items-center justify-center gap-2 rounded-xl",
                       "border border-border/60",
                       "bg-transparent",
                       "text-sm font-medium text-muted-foreground",
