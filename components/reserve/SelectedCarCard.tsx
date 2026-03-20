@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { PriceGroupsResponsive } from "@/components/search/extra/PriceGroupsResponsive"
 import { SelectedCarMeta, formatNum } from "@/components/search/helpers/utils"
-import { Info, Coins } from "lucide-react"
+import { Info } from "lucide-react"
 import {
   AppDrawer,
   type AppDrawerData,
@@ -58,8 +58,6 @@ type Props = {
   showFreeDelivery: boolean
   showFreeInsurance: boolean
   showNoDeposit: boolean
-  showDeposit: boolean
-  depositPrice: number
 }
 
 export default function SelectedCarCard({
@@ -73,8 +71,6 @@ export default function SelectedCarCard({
   showFreeDelivery,
   showFreeInsurance,
   showNoDeposit,
-  showDeposit,
-  depositPrice,
 }: Props) {
   const t = useTranslations("InformationStep")
 
@@ -156,62 +152,38 @@ export default function SelectedCarCard({
           </div>
         </div>
 
-        <Separator className="my-3" />
-
         {badgeList.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {badgeList.map((badge) => {
-              const drawerConfig = getBadgeDrawerConfig(badge.key, apiData?.item, currencyLabel)
-
-              return (
-                <AppDrawer
-                  key={badge.key}
-                  kind={drawerConfig.kind}
-                  data={drawerConfig.data}
-                  trigger={({ open }) => (
-                    <Badge
-                      variant="secondary"
-                      className="cursor-pointer rounded-full px-1 py-1 text-[12px] flex items-center gap-1 bg-emerald-50 text-emerald-700"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        open()
-                      }}
-                    >
-                      <Info className="size-3 shrink-0" />
-                      {badge.label}
-                    </Badge>
-                  )}
-                />
-              )
-            })}
-          </div>
-        )}
-
-        {showDeposit ? (
           <>
-            <Separator className="my-4" />
-            <div className="text-right">
-              <div className="text-md font-bold text-gray-800">{t("deposit.title")}</div>
+            <Separator className="my-3" />
+            <div className="flex flex-wrap gap-1">
+              {badgeList.map((badge) => {
+                const drawerConfig = getBadgeDrawerConfig(badge.key, apiData?.item, currencyLabel)
 
-              <div className="mt-2 flex items-center justify-between">
-                <div className="text-right flex items-center gap-2">
-                  <Coins size={16} className="text-gray-500" />
-                  <span className="text-sm font-semibold text-gray-500">
-                    {t("deposit.trafficDepositLabel")}
-                  </span>
-                </div>
-                <div className="text-left text-gray-700 whitespace-nowrap">
-                  {formatNum(depositPrice)} {currencyLabel}
-                </div>
-              </div>
-
-              <div className="text-xs text-gray-500 mt-3 leading-5">
-                {t("deposit.hint21Days")}
-              </div>
+                return (
+                  <AppDrawer
+                    key={badge.key}
+                    kind={drawerConfig.kind}
+                    data={drawerConfig.data}
+                    trigger={({ open }) => (
+                      <Badge
+                        variant="secondary"
+                        className="cursor-pointer rounded-full px-1 py-1 text-[12px] flex items-center gap-1 bg-emerald-50 text-emerald-700"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          open()
+                        }}
+                      >
+                        <Info className="size-3 shrink-0" />
+                        {badge.label}
+                      </Badge>
+                    )}
+                  />
+                )
+              })}
             </div>
           </>
-        ) : null}
+        )}
       </CardContent>
     </Card>
   )

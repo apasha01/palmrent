@@ -53,10 +53,18 @@ export default function SummaryCard({
         ? `${formatNum(v)} ${currencyLabel}`
         : `${formatNum(v)}`;
     },
-    [currencyLabel, tRow]
+    [currencyLabel, tRow],
   );
 
-  const showDiscount = offPercent > 0 && totalBefore > 0 && totalBefore > totals.total;
+  const showDiscount =
+    offPercent > 0 && totalBefore > 0 && totalBefore > totals.total;
+
+  const baseRentBefore =
+    showDiscount && dailyBefore > 0 ? dailyBefore * totals.rentDays : undefined;
+
+  const extraItems: any[] = totals.extraItems?.slice(0, 12) ?? [];
+
+  const hasTax = totals.tax > 0;
 
   return (
     <Card className="border border-gray-200 p-0 pt-3 pb-1 rounded-xl shadow-sm gap-0 overflow-hidden bg-white">
@@ -78,95 +86,145 @@ export default function SummaryCard({
 
       <Separator />
 
-      <CardContent className="pt-2 px-4">
-        <div>
-          {/* ردیف اجاره پایه */}
-          <SummaryRow
-            label={t("summary.rentPriceLabel", { days: totals.rentDays })}
-            value={formatMoneyOrFreeFixed(baseRentAfter)}
-            loading={isSummaryPending}
-            subLabel={
-              offPercent > 0 ? (
-                <span className="inline-flex items-center gap-1 flex-wrap justify-end">
-                  <span className="line-through text-gray-400">
-                    {formatNum(dailyBefore)}
-                  </span>
-                  <span>
-                    {formatNum(dailyAfter)} {currencyLabel}
-                  </span>
-                  <span className="text-gray-500">{t("common.daily")}</span>
-                  <span>(</span>
-                  <span>{t("summary.discountInline", { percent: offPercent })}</span>
-                  <span>)</span>
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 flex-wrap justify-end">
-                  <span>
-                    {formatNum(dailyAfter)} {currencyLabel}
-                  </span>
-                  <span className="text-gray-500">{t("common.daily")}</span>
-                </span>
-              )
-            }
+      <CardContent className="px-4!">
+        <div className="relative bg-green-100 my-2 mb-2">
+          {/* بوردر موجی بالا */}
+          <div
+            className="absolute top-0 left-0 right-0 h-3"
+            style={{
+              background: "white",
+              maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpolygon points='0,0 6,12 12,0' fill='black'/%3E%3C/svg%3E")`,
+              maskSize: "11.5px 6px",
+              maskRepeat: "repeat-x",
+              WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpolygon points='0,0 6,12 12,0' fill='black'/%3E%3C/svg%3E")`,
+              WebkitMaskSize: "11.5px 6px",
+              WebkitMaskRepeat: "repeat-x",
+            }}
           />
 
-          {/* ردیف‌های اکسترا */}
-          {totals.extraItems.slice(0, 12).map((x: any, i: number) => (
-            <SummaryRow
-              key={i}
-              label={x.title}
-              value={formatMoneyOrFreeFixed(Number(x.price))}
-              subLabel={x.subLabel}
-              loading={isSummaryPending}
-            />
-          ))}
-
-          {/* مالیات */}
-          {totals.tax > 0 && (
-            <SummaryRow
-              label={t("summary.tax")}
-              subLabel={t("summary.taxPercent", {
-                percent: (apiData.item as any).tax_percent || "0",
-              })}
-              value={formatMoneyOrFreeFixed(Number(totals.tax))}
-              loading={isSummaryPending}
-            />
-          )}
-        </div>
-
-        {/* جمع کل */}
-        <div className="mt-2 pt-2 border-gray-200 pb-4">
-          <div className="flex items-center justify-between">
-            <div className="text-start">
-              <div className="text-sm text-gray-800">
-                {t("summary.finalCostForDays", { days: totals.rentDays })}
-              </div>
+          {/* محتوا */}
+          <div className="px-4 pt-5 pb-2">
+            {/* ردیف اجاره پایه */}
+            <div className="border-b border-green-300/70 pb-0.5 mb-0.5">
+              <SummaryRow
+                label={t("summary.rentPriceLabel", { days: totals.rentDays })}
+                value={formatMoneyOrFreeFixed(baseRentAfter)}
+                valueBefore={
+                  baseRentBefore ? `${formatNum(baseRentBefore)}` : undefined
+                }
+                loading={isSummaryPending}
+                subLabel={
+                  offPercent > 0 ? (
+                    <span className="inline-flex items-center gap-1 flex-wrap justify-end">
+                      <span className="line-through text-gray-400">
+                        {formatNum(dailyBefore)}
+                      </span>
+                      <span>
+                        {formatNum(dailyAfter)} {currencyLabel}
+                      </span>
+                      <span className="text-gray-500">{t("common.daily")}</span>
+                      <span>(</span>
+                      <span>
+                        {t("summary.discountInline", { percent: offPercent })}
+                      </span>
+                      <span>)</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 flex-wrap justify-end">
+                      <span>
+                        {formatNum(dailyAfter)} {currencyLabel}
+                      </span>
+                      <span className="text-gray-500">{t("common.daily")}</span>
+                    </span>
+                  )
+                }
+              />
             </div>
 
-            <div className="text-end whitespace-nowrap">
-              {isSummaryPending ? (
-                <div className="h-6 w-32 rounded bg-gray-200 animate-pulse" />
-              ) : (
-                <>
-                  <div className="text-sm font-bold text-blue-600">
-                    {formatNum(totals.total)} {currencyLabel}
+            {/* ردیف‌های اکسترا */}
+            {extraItems.map((x: any, i: number) => {
+              const isLastExtra = i === extraItems.length - 1;
+              const needsBorder = !isLastExtra || hasTax;
+              return (
+                <div
+                  key={i}
+                  className={needsBorder ? "border-b border-green-300/70 pb-0.5 mb-0.5" : ""}
+                >
+                  <SummaryRow
+                    label={x.title}
+                    value={formatMoneyOrFreeFixed(Number(x.price))}
+                    subLabel={x.subLabel}
+                    loading={isSummaryPending}
+                  />
+                </div>
+              );
+            })}
+
+            {/* مالیات */}
+            {hasTax && (
+              <div>
+                <SummaryRow
+                  label={t("summary.tax")}
+                  subLabel={t("summary.taxPercent", {
+                    percent: (apiData.item as any).tax_percent || "0",
+                  })}
+                  value={formatMoneyOrFreeFixed(Number(totals.tax))}
+                  loading={isSummaryPending}
+                />
+              </div>
+            )}
+
+            {/* جمع کل */}
+            <div className="mt-2 pt-2 pb-4">
+              <div className="flex items-center justify-between">
+                <div className="text-start">
+                  <div className="text-sm text-gray-800">
+                    {t("summary.finalCostForDays", { days: totals.rentDays })}
                   </div>
-                  {showDiscount && (
-                    <div className="text-[11px] text-gray-400 line-through">
-                      {formatNum(totalBefore)} {currencyLabel}
+                </div>
+
+                <div className="text-end">
+                  {isSummaryPending ? (
+                    <div className="h-6 w-32 rounded bg-gray-200 animate-pulse" />
+                  ) : (
+                    <div className="flex items-center gap-1.5">
+                      {showDiscount && (
+                        <div className="text-sm text-gray-400 line-through">
+                          {formatNum(totalBefore)}
+                        </div>
+                      )}
+                      <div className="text-sm font-bold text-blue-600">
+                        {formatNum(totals.total)} {currencyLabel}
+                      </div>
                     </div>
                   )}
-                </>
-              )}
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* بوردر موجی پایین */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-3"
+            style={{
+              background: "white",
+              maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpolygon points='0,12 6,0 12,12' fill='black'/%3E%3C/svg%3E")`,
+              maskSize: "11.5px 6px",
+              maskRepeat: "repeat-x",
+              maskPosition: "bottom",
+              WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpolygon points='0,12 6,0 12,12' fill='black'/%3E%3C/svg%3E")`,
+              WebkitMaskSize: "11.5px 6px",
+              WebkitMaskRepeat: "repeat-x",
+              WebkitMaskPosition: "bottom",
+            }}
+          />
         </div>
 
         {showButton && (
           <Button
             onClick={onSubmit}
             disabled={isSubmitting || isSummaryPending}
-            className="w-full h-14 mb-4 rounded-xl text-base bg-blue-600 hover:bg-blue-700"
+            className="w-full h-13 mb-4 rounded-lg text-base bg-blue-600 hover:bg-blue-700"
           >
             {isSubmitting ? t("common.submitting") : t("common.finalSubmit")}
           </Button>
@@ -195,10 +253,6 @@ function SummaryRow({
 }) {
   const t = useTranslations("SummaryRow");
 
-  const freeWord = t("common.free");
-  const isFree =
-    String(value).includes(freeWord) || String(value).includes("رایگان");
-
   const deliveryPrefix = t("prefix.delivery");
   const returnPrefix = t("prefix.return");
 
@@ -215,7 +269,7 @@ function SummaryRow({
     ? String(label).replace(deliveryPrefix, "").trim()
     : isReturn
       ? String(label).replace(returnPrefix, "").trim()
-      : subLabel ?? null;
+      : (subLabel ?? null);
 
   const hasSub = Boolean(normalizedSub);
   const hasDaily = Boolean(dailyPriceLabel);
@@ -260,15 +314,11 @@ function SummaryRow({
             ) : (
               <>
                 {valueBefore ? (
-                  <span className="text-xs text-gray-400 line-through">
+                  <span className="text-sm text-gray-400 line-through">
                     {valueBefore}
                   </span>
                 ) : null}
-                <span
-                  className={`text-sm ${isFree ? "text-gray-500" : "text-gray-800"}`}
-                >
-                  {value}
-                </span>
+                <span className="text-sm text-gray-800">{value}</span>
               </>
             )}
           </div>

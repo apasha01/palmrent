@@ -444,7 +444,8 @@
       "alreadyRegistered": "I have an account",
       "placeholders": {
         "fullName": "Full name",
-        "email": "Email"
+        "email": "Email" ,
+        "phone": "Phone number (WhatsApp)"
       },
       "errors": {
         "nameRequired": "Full name is required",
@@ -486,35 +487,50 @@
 
   "Auth": {
     "LoginDialog": {
-      "srTitle": "Login",
+      "srTitle": "Login or Sign Up",
       "button": {
-        "open": "Login / Sign up",
-        "sendOtp": "Get verification code",
-        "verify": "Verify & login",
-        "resend": "Resend code",
-        "resendWithCountdown": "Resend code ({seconds})",
-        "editMobile": "Edit phone number"
+        "open": "Login / Sign Up",
+        "close": "Close",
+        "back": "Back",
+        "sendOtp": "Confirm & Get Code",
+        "verify": "Confirm & Continue",
+        "resend": "Resend Code",
+        "resendWithCountdown": "Resend in {seconds}s",
+        "editMobile": "Edit Number"
       },
       "header": {
-        "kicker": "Account",
-        "titleMobile": "Login / Sign up",
-        "titleOtp": "Verify code"
+        "titleMobile": "Login or Sign Up",
+        "titleOtp": "Enter Verification Code"
       },
       "hint": {
-        "mobile": "Enter your phone number to receive a verification code.",
-        "otp": "Enter the 5-digit code we sent to log in."
+        "mobile": "Please enter your mobile number to continue.",
+        "otp": "A 5-digit code was sent to {mobile}."
+      },
+      "placeholders": {
+        "phone": "phone number"
+      },
+      "terms": {
+        "link": "Terms & Conditions",
+        "suffix-text": "By using Palm Rent you agree to our",
+        "prefix-text": ""
       },
       "toast": {
-        "invalidMobile": "Please enter a valid phone number",
+        "invalidMobile": "Please enter a valid mobile number",
         "otpSent": "Verification code sent",
-        "sendError": "Failed to send code",
+        "sendError": "Failed to send code. Please try again",
         "wrongOtp": "The code you entered is incorrect",
         "loginSuccess": "Logged in successfully",
-        "verifyError": "Failed to verify code"
+        "verifyError": "Failed to verify code. Please try again",
+        "smsFailed": "Failed to send SMS. Please try again",
+        "networkError": "Could not connect to server. Check your internet connection",
+        "tooManyRequests": "Too many requests. Please wait a moment",
+        "userBlocked": "Your account has been blocked",
+        "serverError": "Server error. Please try again",
+        "otpExpired": "Code has expired. Please request a new one",
+        "tooManyAttempts": "Too many attempts. Please request a new code"
       }
     }
   },
-
 
   "SearchHeader": {
     "noDate": {

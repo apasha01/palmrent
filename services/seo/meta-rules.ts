@@ -20,7 +20,6 @@ export const META_RULES: Rule[] = [
     match: (p) => normalizePath(p).startsWith("/search"),
     skipServerMeta: true,
     metadata: {
-      // ✅ title رو حذف کردیم تا SearchMetaClient کنترلش کنه و انگلیسی نشه
       robots: {
         index: false,
         follow: false,
@@ -47,6 +46,18 @@ export const META_RULES: Rule[] = [
     match: (p) =>
       normalizePath(p).startsWith("/filter") ||
       normalizePath(p).startsWith("/compare"),
+    skipServerMeta: true,
+    metadata: {
+      robots: {
+        index: false,
+        follow: false,
+      },
+    },
+  },
+
+  // 🚗 Reservation → noindex + title رو client کنترل میکنه
+  {
+    match: (p) => normalizePath(p).startsWith("/reservation"),
     skipServerMeta: true,
     metadata: {
       robots: {

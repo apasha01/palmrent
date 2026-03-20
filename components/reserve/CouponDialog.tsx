@@ -1,93 +1,140 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useRef, useState } from "react"
-import { useTranslations } from "next-intl"
-import { toast } from "react-toastify"
+import * as React from "react";
+import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import ToastBanner from "@/components/ui/toast";
 
 type Props = {
-  open: boolean
-  onOpenChange: (v: boolean) => void
-}
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+};
 
-export default function CouponDialog({ open, onOpenChange }: Props) {
-  const t = useTranslations("InformationStep")
+export default function CouponDrawer({ open, onOpenChange }: Props) {
+  const t = useTranslations("InformationStep");
 
-  const [couponCode, setCouponCode] = useState("")
-  const [couponState, setCouponState] = useState<"idle" | "checking" | "invalid">("idle")
+  const [couponCode, setCouponCode] = useState("");
+  const [couponState, setCouponState] = useState<"idle" | "checking" | "invalid">("idle");
 
-  // ✅ درست‌ترین تایپ برای هم Node و هم Browser
-  const couponTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /* ---- toast state ---- */
+  const [toastText, setToastText] = useState("");
+  const [toastKey, setToastKey] = useState(0);
+  const [toastVisible, setToastVisible] = useState(false);
 
-  const clearCouponTimer = () => {
+  const showToastError = (text: string) => {
+    setToastText(text);
+    setToastKey((k) => k + 1);
+    setToastVisible(true);
+  };
+
+  const couponTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearTimers = () => {
     if (couponTimerRef.current) {
-      clearTimeout(couponTimerRef.current)
-      couponTimerRef.current = null
+      clearTimeout(couponTimerRef.current);
+      couponTimerRef.current = null;
     }
-  }
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  const resetState = () => {
+    setCouponCode("");
+    setCouponState("idle");
+    setToastVisible(false);
+    clearTimers();
+  };
 
   React.useEffect(() => {
-    return () => {
-      clearCouponTimer()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    return () => clearTimers();
+  }, []);
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => {
-        onOpenChange(v)
-        if (!v) {
-          setCouponCode("")
-          setCouponState("idle")
-          clearCouponTimer()
-        }
-      }}
-    >
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-right">{t("coupon.title")}</DialogTitle>
-        </DialogHeader>
+    <>
+      {/* ── toast اینجاست، خارج از Drawer تا z-index مشکل نداشته باشه ── */}
+      {toastVisible && (
+        <ToastBanner
+          variant="error"
+          text={toastText}
+          triggerKey={toastKey}
+          mobilePosition={{ side: "bottom", offset: 120 }}
+          desktopBottomOffset={48}
+          onClose={() => setToastVisible(false)}
+        />
+      )}
 
-        <div className="space-y-3">
-          <Label className="text-right text-sm text-gray-700">{t("coupon.enterLabel")}</Label>
+      <Drawer
+        open={open}
+        onOpenChange={(v) => {
+          onOpenChange(v);
+          if (!v) resetState();
+        }}
+      >
+        <DrawerContent className="w-full rounded-t-2xl">
+          <DrawerHeader className="px-4 pt-2 pb-1">
+            <DrawerTitle className="text-right">
+              {t("coupon.title")}
+            </DrawerTitle>
+          </DrawerHeader>
 
-          <Input
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
-            className="h-12 rounded-lg border-gray-300"
-            placeholder={t("coupon.placeholder")}
-          />
+          <div className="space-y-3 px-4 pb-4">
+            <Label className="block text-right text-sm text-gray-700 dark:text-gray-300">
+              {t("coupon.enterLabel")}
+            </Label>
 
-          {couponState === "invalid" ? (
-            <div className="text-sm text-red-600 text-right">{t("coupon.invalidText")}</div>
-          ) : null}
+            <Input
+              value={couponCode}
+              onChange={(e) => {
+                setCouponCode(e.target.value);
+                if (couponState === "invalid") setCouponState("idle");
+              }}
+              className="h-12 rounded-lg border-gray-300"
+              placeholder={t("coupon.placeholder")}
+              dir="ltr"
+            />
 
-          <Button
-            type="button"
-            className="w-full h-12 rounded-xl font-extrabold"
-            disabled={couponState === "checking" || couponCode.trim().length === 0}
-            onClick={() => {
-              clearCouponTimer()
-              setCouponState("checking")
+            <Button
+              type="button"
+              className="h-12 w-full rounded-xl font-extrabold"
+              disabled={
+                couponState === "checking" || couponCode.trim().length === 0
+              }
+              onClick={() => {
+                clearTimers();
+                setCouponState("checking");
 
-              couponTimerRef.current = setTimeout(() => {
-                setCouponState("invalid")
-                toast.error(t("coupon.invalidToast"))
-                couponTimerRef.current = null
-              }, 2000)
-            }}
-          >
-            {couponState === "checking" ? t("coupon.checking") : t("coupon.apply")}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
+                couponTimerRef.current = setTimeout(() => {
+                  setCouponState("invalid");
+                  showToastError(t("coupon.invalidToast"));
+                  couponTimerRef.current = null;
+
+                  closeTimerRef.current = setTimeout(() => {
+                    onOpenChange(false);
+                    closeTimerRef.current = null;
+                  }, 150);
+                }, 2000);
+              }}
+            >
+              {couponState === "checking"
+                ? t("coupon.checking")
+                : t("coupon.apply")}
+            </Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    </>
+  );
 }

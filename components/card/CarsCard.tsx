@@ -37,6 +37,8 @@ import {
   type AppDrawerData,
   type AppDrawerKind,
 } from "@/components/common/AppDrawer";
+// ✅ فقط این یه خط اضافه شد
+import { useTopLoader } from "nextjs-toploader";
 
 /* ---------------- helpers ---------------- */
 
@@ -290,6 +292,8 @@ export default function SingleCar({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { openSheet } = useMobileSheet();
+  // ✅ اضافه شد
+  const loader = useTopLoader();
 
   const carDates = useSearchPageStore((s) => s.carDates);
   const deliveryTimeStore = useSearchPageStore((s) => s.deliveryTime);
@@ -448,11 +452,14 @@ export default function SingleCar({
         openReserveSheetMobile(hydrateKey);
         return;
       }
+      // ✅ لودر شروع میشه قبل از push دسکتاپ
+      loader.start();
       router.push(`/reserve?${buildReserveSearchParams(payload).toString()}`, { scroll: true });
     },
-    [car, data, branchId, localRange?.start, localRange?.end, localDeliveryTime, localReturnTime, hydrateReserveStore, buildReserveSearchParams, router, openReserveSheetMobile],
+    [car, data, branchId, localRange?.start, localRange?.end, localDeliveryTime, localReturnTime, hydrateReserveStore, buildReserveSearchParams, router, openReserveSheetMobile, loader],
   );
 
+  // ✅ goReserve با loader.start
   const goReserve = useCallback(() => {
     if (noDateMode) return;
     if (isDrawerOpen) return;
@@ -461,10 +468,14 @@ export default function SingleCar({
     const carId = Number((car as any)?.id);
     if (!Number.isFinite(carId) || carId <= 0) return;
 
+    // موبایل: sheet باز میشه، لودر نمیخواد
     if (onMobileReserve && typeof window !== "undefined" && window.innerWidth < 768) {
       onMobileReserve(car);
       return;
     }
+
+    // ✅ لودر شروع میشه قبل از push دسکتاپ
+    loader.start();
 
     const params = new URLSearchParams(searchParams.toString());
     params.set("car_id", String(carId));
@@ -472,7 +483,7 @@ export default function SingleCar({
     params.set("dt", normalizeTime(deliveryTimeStore) || "10:00");
     params.set("rt", normalizeTime(returnTimeStore) || "10:00");
     router.push(`/reserve?${params.toString()}`, { scroll: true });
-  }, [noDateMode, isDrawerOpen, car, onMobileReserve, searchParams, deliveryTimeStore, returnTimeStore, router]);
+  }, [noDateMode, isDrawerOpen, car, onMobileReserve, searchParams, deliveryTimeStore, returnTimeStore, router, loader]);
 
   if (!car) return null;
   if (noDateMode && !calendarHydrated) return null;
@@ -599,7 +610,6 @@ export function SingleCarGallery({
   children?: React.ReactNode;
   imageList?: any[];
   carHref?: string;
-  // When used standalone (e.g. detail page) these won't be passed — that's fine
   drawerJustClosedRef?: React.MutableRefObject<boolean>;
   isDrawerOpen?: boolean;
   goReserve?: () => void;
@@ -636,24 +646,16 @@ export function SingleCarGallery({
         </>
       )}
 
-      {/*
-        The Link here is the clickable image area.
-        - tabIndex={-1} so it never steals focus from keyboard/drawer events.
-        - We intercept onClick to decide: reserve vs. detail navigation.
-        - The last "مشاهده بیشتر" overlay navigates to carHref via its own handler.
-      */}
       <Link
         href={carHref || "#"}
         tabIndex={-1}
         className="absolute inset-0 z-10 cursor-pointer max-md:overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         onClick={(e) => {
-          // Block drawer ghost clicks
           if (isDrawerOpen || drawerJustClosedRef?.current) {
             e.preventDefault();
             e.stopPropagation();
             return;
           }
-          // For the main link area (non-last-slide), trigger reserve instead of navigating
           e.preventDefault();
           e.stopPropagation();
           if (!noDateMode && goReserve) {
@@ -683,7 +685,6 @@ export function SingleCarGallery({
             />
           ))}
 
-          {/* Mobile: "جزئیات بیشتر" chip — always navigates to detail page */}
           {safeImageList.length > 1 && (
             <div
               className="relative z-20 flex md:hidden flex-col items-center justify-center gap-2 px-4 font-bold text-black text-nowrap cursor-pointer pointer-events-auto"
@@ -702,7 +703,6 @@ export function SingleCarGallery({
             </div>
           )}
 
-          {/* Desktop: last slide overlay — always navigates to detail page */}
           <div
             className={`${
               activeImageIndex === safeImageList.length - 1 ? "z-10" : "pointer-events-none"
@@ -737,12 +737,6 @@ export function SingleCarGallery({
           </div>
         </div>
 
-        {/*
-          Desktop: hover strips to switch active image.
-          Each strip handles its own click:
-          - last strip → detail page
-          - other strips → reserve
-        */}
         <div
           className="absolute w-full h-full md:flex items-end flex-row-reverse p-2 cursor-pointer transition-all opacity-0 hover:opacity-100 hidden z-20"
           onMouseLeave={() => setActiveImageIndex(0)}

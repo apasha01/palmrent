@@ -40,6 +40,8 @@ import {
 
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store";
 import { useRouter } from "next/navigation";
+// ✅ اضافه شد
+import { useTopLoader } from "nextjs-toploader";
 
 /* ---------------- helpers ---------------- */
 
@@ -111,7 +113,6 @@ function buildBadgesFromRaw(car: any): Array<{
     type: "noDeposit" | "default";
   }> = [];
 
-  // بدون دپوزیت = وقتی deposit برابر "no" یا null یا خالی است
   const deposit = car?.deposit ?? car?.deposit_val ?? null;
   if (!deposit || deposit === "no") {
     badges.push({
@@ -432,20 +433,20 @@ function BranchCarBadges({
     );
   };
 
-if (onImage) {
-  return (
-    <div
-      className="absolute top-2 start-2 z-20 w-[calc(100%-16px)]"
-      style={{ transform: "translateZ(0)", willChange: "transform" }}
-    >
-      <div className={`${wrapperClass} pointer-events-auto`}>
-        {hasRawBadges
-          ? rawBadges.map(renderRawBadge)
-          : rawOptions.map(renderOptionBadge)}
+  if (onImage) {
+    return (
+      <div
+        className="absolute top-2 start-2 z-20 w-[calc(100%-16px)]"
+        style={{ transform: "translateZ(0)", willChange: "transform" }}
+      >
+        <div className={`${wrapperClass} pointer-events-auto`}>
+          {hasRawBadges
+            ? rawBadges.map(renderRawBadge)
+            : rawOptions.map(renderOptionBadge)}
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
   return (
     <div className="mb-3 min-h-6.5 w-full">
       <div className={wrapperClass}>
@@ -470,7 +471,6 @@ export default function BranchCarCard({
   onSharedCalendarChange,
   calendarHydrated = true,
   badgesOnImage = false,
-  // ─── پراپ جدید: اگر true باشد، قیمت‌ها با اکاردئون (۲ تا نشان داده می‌شود) ───
   accordionPriceList = false,
 }: {
   data: any;
@@ -491,13 +491,14 @@ export default function BranchCarCard({
   }) => void;
   calendarHydrated?: boolean;
   badgesOnImage?: boolean;
-  /** اگر true باشد فقط ۲ قیمت اول نشان داده می‌شود و بقیه در اکاردئون پنهان می‌شوند */
   accordionPriceList?: boolean;
 }) {
   const t = useTranslations();
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
+  // ✅ اضافه شد
+  const loader = useTopLoader();
 
   const { openSheet } = useMobileSheet();
   const optionList = useSelector((state: any) => state.carList.optionList);
@@ -680,10 +681,10 @@ export default function BranchCarCard({
 
       const fromFa = formatJalaliDate(safeStart);
       const toFa = formatJalaliDate(safeEnd);
-      const from = (fromFa);
-      const to = (toFa);
-      const dt = (normalizeTime(args.dt ?? deliveryTime) || "10:00");
-      const rt = (normalizeTime(args.rt ?? returnTime) || "10:00");
+      const from = fromFa;
+      const to = toFa;
+      const dt = normalizeTime(args.dt ?? deliveryTime) || "10:00";
+      const rt = normalizeTime(args.rt ?? returnTime) || "10:00";
 
       if (!from || !to || !dt || !rt) return;
 
@@ -700,11 +701,14 @@ export default function BranchCarCard({
         typeof window !== "undefined" && window.innerWidth < 768;
 
       if (isMobile) {
+        // موبایل: sheet باز میشه، لودر نمیخواد
         router.replace(searchUrl, { scroll: false });
         openReserveSheetMobile(hydrateKey);
         return;
       }
 
+      // ✅ دسکتاپ: لودر شروع میشه قبل از push
+      loader.start();
       router.push(reserveUrl, { scroll: true });
     },
     [
@@ -720,6 +724,7 @@ export default function BranchCarCard({
       router,
       pathname,
       openReserveSheetMobile,
+      loader,
     ],
   );
 
@@ -766,8 +771,8 @@ export default function BranchCarCard({
 
           <div className="my-2 text-left text-lg font-bold">
             {locale === "fa"
-              ? (((car as any).title))
-              : ((car as any).title)}
+              ? (car as any).title
+              : (car as any).title}
           </div>
         </div>
 
@@ -797,7 +802,6 @@ export default function BranchCarCard({
           returnTime={returnTimeStore}
           currency={currency || ""}
           rateToRial={rateToRial}
-          // ─── پراپ جدید به SingleCarPriceList پاس داده می‌شود ───
           accordionPriceList={accordionPriceList}
         />
 
@@ -907,11 +911,6 @@ export function SingleCarGallery({
       : ["/images/placeholder.png"];
 
   return (
-    /*
-      outer div: relative container — Link فقط تصاویر را پوشش می‌دهد.
-      children (badges / drawer) خارج از Link هستند تا overlay drawer
-      بتواند بدون تداخل با navigate، drawer را ببندد.
-    */
     <div className="relative z-10 flex w-full rounded-lg lg:h-55 h-55">
       {!firstImageLoaded && (
         <>
@@ -955,7 +954,6 @@ export function SingleCarGallery({
         </>
       )}
 
-      {/* ─── Link: فقط ناحیه تصاویر را navigate می‌کند ─── */}
       <Link
         href={carHref || "#"}
         className="absolute inset-0 z-10 cursor-pointer max-md:overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
@@ -991,7 +989,6 @@ export function SingleCarGallery({
             </div>
           )}
 
-          {/* لایه نمایش more detail در دسکتاپ */}
           <div
             className={`${
               activeImageIndex === safeImageList.length - 1 ? "z-10" : "pointer-events-none"
@@ -1020,7 +1017,6 @@ export function SingleCarGallery({
           </div>
         </div>
 
-        {/* ─── hover zones برای دسکتاپ ─── */}
         <div
           className="absolute w-full h-full md:flex items-end flex-row-reverse p-2 cursor-pointer transition-all opacity-0 hover:opacity-100 hidden z-20"
           onMouseLeave={() => setActiveImageIndex(0)}
@@ -1038,11 +1034,6 @@ export function SingleCarGallery({
         </div>
       </Link>
 
-      {/*
-        ─── children (badges / AppDrawer) کاملاً خارج از Link هستند ───
-        این باعث می‌شود overlay drawer بتواند بدون تداخل با Link بسته شود.
-        z-20 > z-10 (Link) تا badge روی عکس قرار بگیرد.
-      */}
       <div className="absolute inset-0 z-20 pointer-events-none">
         {children}
       </div>
@@ -1122,7 +1113,6 @@ export function SingleCarOptions({
 export function SingleCarPriceList({
   priceList,
   currency,
-  // ─── پراپ جدید: کنترل رفتار اکاردئون ───
   accordionPriceList = false,
 }: {
   priceList: any;
@@ -1133,16 +1123,11 @@ export function SingleCarPriceList({
   returnTime: string | null;
   currency: string;
   rateToRial?: number | null;
-  /**
-   * اگر true باشد: فقط ۲ قیمت اول نمایش داده می‌شود و بقیه در اکاردئون پنهان می‌شوند
-   * اگر false باشد (پیش‌فرض): تمام قیمت‌ها به‌صورت کامل نمایش داده می‌شوند
-   */
   accordionPriceList?: boolean;
 }) {
   const t = useTranslations();
   const locale = useLocale();
 
-  // ─── state اکاردئون (فقط زمانی که accordionPriceList=true استفاده می‌شود) ───
   const [expanded, setExpanded] = useState(false);
 
   const numberFmt = useMemo(() => {
@@ -1256,9 +1241,6 @@ export function SingleCarPriceList({
     );
   };
 
-  /* ══════════════════════════════════════════════════
-     حالت بدون اکاردئون: همه قیمت‌ها نمایش داده می‌شوند
-     ══════════════════════════════════════════════════ */
   if (!accordionPriceList) {
     return (
       <div className="mb-4 flex flex-col gap-2 border-[#0000001f]">
@@ -1267,9 +1249,6 @@ export function SingleCarPriceList({
     );
   }
 
-  /* ═══════════════��══════════════════════════════════
-     حالت اکاردئون: ۲ ردیف اول + بقیه در اکاردئون
-     ══════════════════════════════════════════════════ */
   const ALWAYS_VISIBLE = 2;
   const visibleRows = pricesArray.slice(0, ALWAYS_VISIBLE);
   const hiddenRows = pricesArray.slice(ALWAYS_VISIBLE);
@@ -1277,13 +1256,10 @@ export function SingleCarPriceList({
 
   return (
     <div className="mb-4 flex flex-col gap-2 border-[#0000001f]">
-      {/* ─── ۲ ردیف اول (همیشه نمایش) ─── */}
       {visibleRows.map((row, idx) => renderRow(row, idx))}
 
-      {/* ─── اکاردئون (فقط اگر بیشتر از ۲ ردیف وجود داشته باشد) ─── */}
       {hasMore && (
         <>
-          {/* ─── محتوای پنهان با انیمیشن CSS grid ─── */}
           <div
             className={`
               grid transition-[grid-template-rows] duration-300 ease-in-out
@@ -1299,7 +1275,6 @@ export function SingleCarPriceList({
             </div>
           </div>
 
-          {/* ─── دکمه toggle اکاردئون ─── */}
           <button
             type="button"
             onClick={(e) => {

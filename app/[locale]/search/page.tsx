@@ -98,7 +98,7 @@ function SearchResultPageContent() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const { openSheet } = useMobileSheet();
+  const { openSheet, closeSheet } = useMobileSheet();
   const isHeaderClose = useSelector((state: any) => state.global.isHeaderClose);
 
   const freezeUrlSyncRef = useRef(false);
@@ -802,6 +802,20 @@ function SearchResultPageContent() {
       ? ((q.error as any)?.message ?? tGlobal("errorLoading"))
       : null;
 
+  // callback که بعد از موفقیت رزرو شیت رو میبنده
+  const handleReserveSuccess = useCallback(() => {
+    freezeUrlSyncRef.current = true;
+    setIsAnySheetOpen(false);
+    setSelectedCarId(null);
+    resetReserveDraft();
+    sheetOpenedRef.current = false;
+    closeSheet();
+
+    setTimeout(() => {
+      freezeUrlSyncRef.current = false;
+    }, 0);
+  }, [closeSheet, setIsAnySheetOpen, setSelectedCarId, resetReserveDraft]);
+
   const openReserveSheet = useCallback(
     (carId: number) => {
       if (!Number.isFinite(carId) || carId <= 0) return;
@@ -860,19 +874,18 @@ function SearchResultPageContent() {
           title: tReserve("reserve"),
           content: (
             <div>
-     <div className="flex items-center sticky top-0 z-50 bg-white dark:bg-gray-800 border-b">
-  <SheetClose>
-    <ArrowRight className="size-11  px-3" />
-  </SheetClose>
-  <SearchHeader stepSecond />
-
-</div>
+              <div className="flex items-center sticky top-0 z-50 bg-white dark:bg-gray-800 border-b">
+                <SheetClose>
+                  <ArrowRight className="size-12 px-3" strokeWidth={2.5} />
+                </SheetClose>
+                <SearchHeader stepSecond onTitleClick={closeSheet} />
+              </div>
 
               <div className="mb-30">
                 <div className="md:bg-none bg-white dark:bg-gray-950 py-3">
                   <StepRent step={3} />
                 </div>
-                <ReserveInformation />
+                <ReserveInformation onReserveSuccess={handleReserveSuccess} />
               </div>
             </div>
           ),
@@ -912,6 +925,7 @@ function SearchResultPageContent() {
       searchParams,
       router,
       openSheet,
+      closeSheet,
       tReserve,
       setSelectedCarId,
       setBranchId,
@@ -925,6 +939,7 @@ function SearchResultPageContent() {
       typedSearchTitle,
       selectedCategories,
       selectedPriceRange,
+      handleReserveSuccess,
     ],
   );
 

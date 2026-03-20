@@ -20,13 +20,11 @@ const nextConfig: NextConfig = {
 
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "commondatastorage.googleapis.com" },
       {
         protocol: "https",
         hostname: "cdn.palmrentcar.com",
         pathname: "/**",
       },
-
       {
         protocol: "https",
         hostname: "images.unsplash.com",

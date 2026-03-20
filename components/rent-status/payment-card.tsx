@@ -21,7 +21,6 @@ function formatDateTimeFa(input?: string) {
   const iso = input.replace(" ", "T");
   const d = new Date(iso);
   if (isNaN(d.getTime())) return input.replace(" 00:00:00", "");
-
   return new Intl.DateTimeFormat("fa-IR", {
     year: "numeric",
     month: "2-digit",
@@ -36,46 +35,30 @@ export function PaymentCard({ rentData, payFailed, reason }: any) {
   const [payError, setPayError] = useState<string | null>(null);
 
   const payment = rentData?.payment || {};
-  const car = rentData?.car || {};
+  const summary = rentData?.summary || {};
   const info = rentData?.rent_info || {};
 
   const canPay = payment?.can_pay === true;
-
   const rentId = Number(
     payment?.pay_payload_example?.rent_id ?? rentData?.rent_id ?? 0,
   );
 
-  // =========================
-  // ✅ FIX: tax_in normalization
-  // هر چیزی غیر از "yes" => "no"
-  // =========================
   const taxInRaw = String(payment?.tax_in ?? "no").toLowerCase().trim();
   const taxIn: "yes" | "no" = taxInRaw === "yes" ? "yes" : "no";
 
-  // =========================
-  // ✅ amounts from backend
-  // =========================
-  const prePayAed = Number(payment?.pre_pay ?? 0); // درهم
-  const taxAed = Number(payment?.tax_price ?? 0); // درهم
-  const tomanRate = Number(payment?.toman_rate ?? 0); // تومان برای هر 1 درهم
-  const payNowToman = Number(payment?.amount_to_pay ?? 0); // تومان (همون مبلغ زرین‌پال)
+  const prePayAed = Number(payment?.pre_pay ?? 0);
+  const taxAed = Number(payment?.tax_price ?? 0);
+  const tomanRate = Number(payment?.toman_rate ?? 0);
+  const payNowToman = Number(payment?.amount_to_pay ?? 0);
+  const totalAed = Number(summary?.total ?? 0);
 
-  const totalAed = Number(rentData?.summary?.total ?? 0); // کل رزرو (درهم)
-
-  // ✅ پرداخت الان (درهم): اگر tax_in=no => pre_pay + tax_price
   const payNowAed = taxIn === "no" ? prePayAed + taxAed : prePayAed;
-
-  // ✅ جمع کل تومان
   const totalToman =
     totalAed > 0 && tomanRate > 0 ? Math.round(totalAed * tomanRate) : 0;
-
-  // ✅ باقی‌مانده
   const remainingAed = Math.max(totalAed - payNowAed, 0);
 
-  const carTitle = useMemo(
-    () => [car?.brand, car?.model, car?.year].filter(Boolean).join(" "),
-    [car?.brand, car?.model, car?.year],
-  );
+  // ✅ اسم فارسی از summary.car_name
+  const carTitle = summary?.car_name || "—";
 
   const fromText = formatDateTimeFa(info?.from_date);
   const toText = formatDateTimeFa(info?.to_date);
@@ -83,20 +66,16 @@ export function PaymentCard({ rentData, payFailed, reason }: any) {
 
   const onPay = async () => {
     if (!canPay || !rentId || rentId <= 0) return;
-
     try {
       setPayError(null);
       setLoadingPay(true);
-
       const res = await requestZarinpalPayment({ rent_id: rentId });
-
       if (!res?.ok || !res?.payment_url) {
         const msg =
           res?.message || res?.errors?.message || "لینک پرداخت دریافت نشد";
         setPayError(String(msg));
         return;
       }
-
       window.location.href = res.payment_url;
     } catch (e: any) {
       setPayError(
@@ -112,10 +91,11 @@ export function PaymentCard({ rentData, payFailed, reason }: any) {
   return (
     <div className="min-h-screen w-full bg-white dark:bg-gray-900 p-0 m-0">
       <Card className="w-full p-0! m-0! relative overflow-hidden shadow-none bg-white dark:bg-gray-900 border-none">
-        {/* ===== TOP LOTTIE ===== */}
+
+        {/* ===== LOTTIE ===== */}
         <div className="w-full py-0">
           <div className="max-w-7xl mx-auto w-full">
-            <div className="w-full h-56">
+            <div className="w-full h-40">
               <Lottie
                 animationData={sucess}
                 className="w-full h-full"
@@ -127,34 +107,28 @@ export function PaymentCard({ rentData, payFailed, reason }: any) {
 
         {/* ===== CONTENT ===== */}
         <div className="max-w-5xl md:max-w-6xl w-full mx-auto px-2 py-0! sm:px-4">
+
           {/* ===== HEADER ===== */}
-          <CardHeader className="p-0">
+          <CardHeader className="p-0 mb-3">
             <div className="w-full flex justify-center">
               <div className="text-center w-full max-w-3xl mx-auto">
+
                 <CardTitle className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white p-0 m-0">
                   <span className="inline-flex items-center gap-2 justify-center">
                     <CheckCircle2 className="h-6 w-6 text-emerald-500 shrink-0" />
-                    <span className="whitespace-normal sm:whitespace-nowrap">
-                      رزرو شما تایید شد
-                    </span>
+                    <span>رزرو شما تایید شد</span>
                   </span>
                 </CardTitle>
 
-                <p className="mt-3 text-base text-gray-700 dark:text-gray-200 leading-9 text-center">
-                  برای قطعی شدن رزرو، پیش‌پرداخت را انجام دهید.
-                  <br />
-                  <span className="whitespace-normal sm:whitespace-nowrap">
-                    در این مرحله فقط هزینه پیش‌پرداخت انجام می‌شود.
-                  </span>
-                  <br />
-                  <span className="whitespace-normal sm:whitespace-nowrap">
-                    باقی‌مانده هنگام تحویل خودرو پرداخت می‌شود.
-                  </span>
-                </p>
+                {/* notice box */}
+                <div className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50 dark:bg-cyan-950 dark:border-cyan-800 px-4 py-3 text-center">
+                  <p className="text-cyan-700 dark:text-cyan-300 font-semibold text-xs leading-6">
+                    برای قطعی شدن رزرو لطفا مبلغ پیش پرداخت را در این صفحه پرداخت کنید
+                  </p>
+                </div>
 
-                {/* ✅ اگر از قبل در URL payFailed/reason داری */}
                 {payFailed ? (
-                  <div className="mt-3 text-sm font-bold text-red-600">
+                  <div className="mt-2 text-sm font-bold text-red-600">
                     پرداخت ناموفق بود{reason ? `: ${String(reason)}` : ""}
                   </div>
                 ) : null}
@@ -162,7 +136,8 @@ export function PaymentCard({ rentData, payFailed, reason }: any) {
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-4 p-0 m-0">
+          <CardContent className="space-y-2 p-0 m-0">
+
             {/* ===== STEPPER ===== */}
             <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 md:p-4">
               <div className="flex justify-evenly items-center font-bold text-[11px] sm:text-xs md:text-sm">
@@ -170,16 +145,12 @@ export function PaymentCard({ rentData, payFailed, reason }: any) {
                   <CheckCircle2 className="h-5 w-5 shrink-0" />
                   <span className="whitespace-nowrap">ثبت درخواست</span>
                 </div>
-
                 <ChevronLeft className="h-7 w-7 md:h-8 md:w-8 text-emerald-500 shrink-0" />
-
                 <div className="flex items-center gap-1 md:gap-2 text-emerald-600">
                   <CheckCircle2 className="h-5 w-5 shrink-0" />
                   <span className="whitespace-nowrap">تایید رزرو</span>
                 </div>
-
                 <ChevronLeft className="h-7 w-7 md:h-8 md:w-8 text-gray-300 dark:text-gray-600 shrink-0" />
-
                 <div className="flex items-center gap-1 md:gap-2 text-emerald-600">
                   <CreditCard className="h-5 w-5 shrink-0" />
                   <span className="whitespace-nowrap">پرداخت پیش‌پرداخت</span>
@@ -189,96 +160,64 @@ export function PaymentCard({ rentData, payFailed, reason }: any) {
 
             {/* ===== PAYMENT DETAILS ===== */}
             <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
-              <div className="py-6">
-                <div className="flex items-center">
-                  <div className="flex w-full">
-                    <div className="h-10 rounded-l-lg bg-gray-700 w-2 md:hidden" />
-                    <div className="flex items-center gap-2 w-full px-6 md:px-6">
-                      <CreditCard className="h-7 w-7 text-gray-600 dark:text-gray-300 shrink-0" />
-                      <span className="font-black text-xl text-gray-900 dark:text-white">
-                        جزئیات پرداخت
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              <div className="py-3 px-4">
 
-                <div className="mt-5 space-y-4 text-sm px-6">
-                  <div className="flex flex-wrap gap-2">
-                    <span className="text-gray-500 whitespace-nowrap">
-                      خودرو:
+                <span className="font-black text-lg text-gray-900 dark:text-white">
+                  جزئیات حساب
+                </span>
+
+                {/* توضیح یه‌پارچه فارسی */}
+                <p className="mt-2 text-sm text-gray-700 dark:text-gray-300 leading-8 font-medium">
+                  اجاره {carTitle} از {fromText}
+                  <br />
+                  تا {toText} به مدت{" "}
+                  {typeof dayRent !== "undefined" ? toFaNumber(dayRent) : "—"}{" "}
+                  روز
+                </p>
+
+                <div className="mt-3 space-y-2 text-xs border-t border-gray-200 dark:border-gray-700 pt-2">
+
+                  {/* total */}
+                  <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2">
+                    <span className="text-gray-700 dark:text-gray-200 font-bold whitespace-nowrap">
+                      جمع کل هزینه :
                     </span>
-                    <strong className="whitespace-nowrap">
-                      {carTitle || "—"}
-                    </strong>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <span className="text-gray-500 whitespace-nowrap">
-                      تاریخ:
+                    <span className="font-black text-gray-900 dark:text-white">
+                      {toFaNumber(totalAed)} درهم ( {toFaNumber(totalToman)} تومان )
                     </span>
-                    <strong>
-                      از {fromText} تا {toText}
-                    </strong>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    <span className="text-gray-500 whitespace-nowrap">
-                      تعداد روز:
+                  {/* pay now */}
+                  <div className="flex items-center justify-between bg-blue-100 dark:bg-blue-900 rounded-lg px-3 py-2">
+                    <span className="font-black whitespace-nowrap text-gray-900 dark:text-white">
+                      پیش پرداخت (پرداخت الان) :
                     </span>
-                    <strong className="whitespace-nowrap">
-                      {typeof dayRent !== "undefined"
-                        ? toFaNumber(dayRent)
-                        : "—"}
-                    </strong>
+                    <span className="font-black text-gray-900 dark:text-white">
+                      {toFaNumber(payNowAed)} درهم ( {toFaNumber(payNowToman)} تومان )
+                    </span>
                   </div>
 
-                  <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
-                    {/* ✅ total */}
-                    <div className="flex items-center gap-3">
-                      <span className="text-gray-700 dark:text-gray-200 font-bold">
-                        جمع کل:
-                      </span>
-                      <span className="font-black text-gray-900 dark:text-white">
-                        {toFaNumber(totalAed)} درهم = {toFaNumber(totalToman)} تومان
-                      </span>
-                    </div>
-
-                    {/* ✅ pay now */}
-                    <div className="flex items-center gap-3">
-                      <span className="text-emerald-700 dark:text-emerald-300 font-black">
-                        پرداخت الآن (پیش‌پرداخت):
-                      </span>
-                      <span className="font-black text-emerald-700 dark:text-emerald-300">
-                        {toFaNumber(payNowAed)} درهم = {toFaNumber(payNowToman)} تومان
-                      </span>
-                    </div>
-
-      
-                    {/* ✅ remaining */}
-                    <div className="flex items-center gap-3">
-                      <span className="text-gray-600 dark:text-gray-300 font-bold">
-                        پرداخت هنگام تحویل:
-                      </span>
-                      <span className="font-black text-gray-900 dark:text-white">
-                        {toFaNumber(remainingAed)} درهم
-                        {/* اگر خواستی تومان هم نشون بده:
-                        {" "} = {toFaNumber(remainingToman)} تومان
-                        */}
-                      </span>
-                    </div>
-
-                    {payError ? (
-                      <div className="mt-2 text-xs text-red-600 text-right">
-                        {payError}
-                      </div>
-                    ) : null}
+                  {/* remaining */}
+                  <div className="flex items-center justify-between bg-green-100 dark:bg-green-900 rounded-lg px-3 py-2">
+                    <span className="text-gray-700 dark:text-gray-300 font-bold whitespace-nowrap">
+                      مانده حساب (پرداخت هنگام تحویل خودرو) :
+                    </span>
+                    <span className="font-black text-gray-900 dark:text-white">
+                      {toFaNumber(remainingAed)} درهم
+                    </span>
                   </div>
+
+                  {payError ? (
+                    <div className="mt-2 text-xs text-red-600 text-right">
+                      {payError}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
 
             {/* ===== PAY BUTTON ===== */}
-            <div className="flex justify-center pt-2">
+            <div className="flex justify-center">
               <Button
                 onClick={onPay}
                 disabled={disabled}
@@ -290,58 +229,31 @@ export function PaymentCard({ rentData, payFailed, reason }: any) {
               </Button>
             </div>
 
-            <p className="text-center text-muted-foreground">
+            <p className="text-center text-muted-foreground text-sm">
               پرداخت امن از طریق درگاه زرین پال
             </p>
 
+            {/* ===== TRUST BADGES ===== */}
             <div className="w-full overflow-x-auto pb-8">
               <div className="flex flex-nowrap items-center justify-center gap-4 px-4 min-w-max">
                 <div className="relative h-12 md:h-16 lg:h-20 aspect-square shrink-0">
-                  <Image
-                    src="/images/peyment/1.webp"
-                    alt="1"
-                    fill
-                    className="object-contain"
-                  />
+                  <Image src="/images/peyment/1.webp" alt="1" fill className="object-contain" />
                 </div>
-
                 <div className="relative h-12 md:h-16 lg:h-20 aspect-square shrink-0">
-                  <Image
-                    src="/images/peyment/2.webp"
-                    alt="2"
-                    fill
-                    className="object-contain"
-                  />
+                  <Image src="/images/peyment/2.webp" alt="2" fill className="object-contain" />
                 </div>
-
                 <div className="relative h-12 md:h-16 lg:h-20 aspect-5/3 shrink-0">
-                  <Image
-                    src="/images/peyment/5.webp"
-                    alt="5"
-                    fill
-                    className="object-contain"
-                  />
+                  <Image src="/images/peyment/5.webp" alt="5" fill className="object-contain" />
                 </div>
-
                 <div className="relative h-12 md:h-16 lg:h-20 aspect-square shrink-0">
-                  <Image
-                    src="/images/peyment/3.webp"
-                    alt="3"
-                    fill
-                    className="object-contain"
-                  />
+                  <Image src="/images/peyment/3.webp" alt="3" fill className="object-contain" />
                 </div>
-
                 <div className="relative h-12 md:h-16 lg:h-20 aspect-square shrink-0">
-                  <Image
-                    src="/images/peyment/4.webp"
-                    alt="4"
-                    fill
-                    className="object-contain"
-                  />
+                  <Image src="/images/peyment/4.webp" alt="4" fill className="object-contain" />
                 </div>
               </div>
             </div>
+
           </CardContent>
         </div>
       </Card>

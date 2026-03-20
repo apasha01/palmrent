@@ -67,7 +67,6 @@ function InputOTPSlot({
       className={cn(
         // ✅ همون دیزاین خودت + ردیوس‌ها حفظ
         "dark:bg-input/30 border-input relative flex h-9 w-9 items-center justify-center border-y border-r text-sm shadow-xs transition-all outline-none",
-        "first:rounded-r-md first:border-l last:rounded-l-md",
         "data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-[3px] data-[active=true]:ring-ring/50",
         "aria-invalid:border-destructive data-[active=true]:aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/20 dark:data-[active=true]:aria-invalid:ring-destructive/40",
         className

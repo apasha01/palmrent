@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import jalaali from "jalaali-js";
-import { toast } from "react-toastify";
+
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { api } from "@/lib/apiClient";
@@ -79,14 +79,12 @@ export function useInformationStepLogic() {
     if (!carIdRaw) return;
 
     if (!branchIdRaw) {
-      toast.error(t("errors.invalidBranch"));
       setIsLoading(false);
       setApiData(null);
       return;
     }
 
     if (!urlFrom || !urlTo) {
-      toast.error(t("errors.invalidDates"));
       setIsLoading(false);
       setApiData(null);
       return;
@@ -148,7 +146,7 @@ export function useInformationStepLogic() {
       } catch (error: any) {
         calcInflight.delete(fetchKey);
         console.error("Calculation Error:", error);
-        toast.error(error?.message || t("errors.network"));
+
       } finally {
         if (alive) setIsLoading(false);
       }

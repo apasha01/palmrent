@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React from "react";
 
+import React from "react";
+import NextTopLoader from 'nextjs-toploader';
 import { SessionProvider } from "next-auth/react";
 import ReduxProvider from "@/components/ReduxProvider";
 
@@ -61,6 +62,15 @@ export default function Providers({
                 disableTransitionOnChange
               >
                 <AppBoot>
+                 <NextTopLoader
+                 
+                 
+  color="#2299DD"       
+  height={3}       
+  showSpinner={false}   
+  speed={200}         
+  shadow="0 0 10px #2299DD, 0 0 5px #2299DD" 
+/>
                   {children}
 
                           <ConditionalBottomNav />

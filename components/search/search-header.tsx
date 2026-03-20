@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 import { BranchById } from "@/helpers/BranchNameHelper"
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store"
 import { calcRentDaysWithGrace, normalizeTime } from "@/lib/rent-days"
+import { SheetClose } from "../ui/sheet"
 
 
 function normalizeJalaliString(s: string) {
@@ -132,11 +133,13 @@ function NoDateBanner({
 export default function SearchHeader({
   isSticky = false,
   timerValue,
+  onTitleClick,
   stepSecond = false,
   stepSecondDesktopLikeSearch = false,
 }: {
   isSticky?: boolean
   timerValue?: string
+  onTitleClick?: () => void // ← اضافه کن
   stepSecond?: boolean
   stepSecondDesktopLikeSearch?: boolean
 }) {
@@ -383,8 +386,14 @@ export default function SearchHeader({
               <div className="w-full hide-scrollbar">
                 <div className="flex w-full items-center justify-between">
                   <div className="flex flex-col flex-1">
-                    <div className="font-bold text-gray-900 dark:text-gray-100 text-[13px]">
-                      {t("stepSecond.title")}
+
+
+                <div
+  className="font-bold text-gray-900 dark:text-gray-100 text-[13px] cursor-pointer"
+  onClick={onTitleClick}
+>
+  {t("stepSecond.title")}
+
                     </div>
                     <div className="mt-1 text-gray-500 dark:text-gray-400 text-[12px]">
                       {formatRangeStepSecond({
@@ -519,7 +528,9 @@ export default function SearchHeader({
                 <div className="flex items-center justify-between">
                   <div className="flex-1 text-center">
                     <div className="font-bold text-gray-900 dark:text-gray-100 text-base">
-                      {t("stepSecond.title")}
+                   
+                      {t("stepSecond.title")} 
+                 
                     </div>
                     <div className="mt-1 text-gray-500 dark:text-gray-400 text-sm">
                       {formatRangeStepSecond({

@@ -468,7 +468,8 @@
       "alreadyRegistered": "Zaten hesabım var",
       "placeholders": {
         "fullName": "Ad Soyad",
-        "email": "E-posta"
+        "email": "E-posta",
+        "phone": "Telefon numarası (WhatsApp)"
       }
     },
     "rules": {
@@ -630,33 +631,49 @@
     }
   },
 
-   "Auth": {
+  "Auth": {
     "LoginDialog": {
-      "srTitle": "Giriş",
+      "srTitle": "Giriş veya Kayıt",
       "button": {
         "open": "Giriş / Kayıt",
-        "sendOtp": "Doğrulama kodu al",
-        "verify": "Doğrula ve giriş yap",
-        "resend": "Kodu tekrar gönder",
-        "resendWithCountdown": "Kodu tekrar gönder ({seconds})",
-        "editMobile": "Telefon numarasını düzenle"
+        "close": "Kapat",
+        "back": "Geri",
+        "sendOtp": "Onayla ve Kodu Al",
+        "verify": "Onayla ve Devam Et",
+        "resend": "Kodu Tekrar Gönder",
+        "resendWithCountdown": "{seconds} saniye sonra tekrar gönder",
+        "editMobile": "Numarayı Düzenle"
       },
       "header": {
-        "kicker": "Hesap",
-        "titleMobile": "Giriş / Kayıt",
-        "titleOtp": "Kodu doğrula"
+        "titleMobile": "Giriş veya Kayıt",
+        "titleOtp": "Doğrulama Kodunu Girin"
       },
       "hint": {
-        "mobile": "Doğrulama kodu almak için telefon numaranızı girin.",
-        "otp": "Giriş yapmak için gönderilen 5 haneli kodu girin."
+        "mobile": "Devam etmek için cep telefonu numaranızı girin.",
+        "otp": "{mobile} numarasına 5 haneli kod gönderildi."
+      },
+      "placeholders": {
+        "phone": "Telefon numarası"
+      },
+      "terms": {
+        "link": "Şartlar ve Koşullar",
+        "suffix-text": "Palm Rent'i kullanarak",
+        "prefix-text": "kabul etmiş olursunuz"
       },
       "toast": {
-        "invalidMobile": "Lütfen geçerli bir telefon numarası girin",
+        "invalidMobile": "Geçerli bir telefon numarası girin",
         "otpSent": "Doğrulama kodu gönderildi",
-        "sendError": "Kod gönderilemedi",
-        "wrongOtp": "Girdiğiniz kod yanlış",
+        "sendError": "Kod gönderilemedi. Lütfen tekrar deneyin",
+        "wrongOtp": "Girdiğiniz kod hatalı",
         "loginSuccess": "Başarıyla giriş yapıldı",
-        "verifyError": "Kod doğrulanamadı"
+        "verifyError": "Kod doğrulanamadı. Lütfen tekrar deneyin",
+        "smsFailed": "SMS gönderilemedi. Lütfen tekrar deneyin",
+        "networkError": "Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin",
+        "tooManyRequests": "Çok fazla istek gönderildi. Lütfen biraz bekleyin",
+        "userBlocked": "Hesabınız engellendi",
+        "serverError": "Sunucu hatası. Lütfen tekrar deneyin",
+        "otpExpired": "Kodun süresi doldu. Lütfen yeni bir kod isteyin",
+        "tooManyAttempts": "İzin verilen deneme sayısı aşıldı. Lütfen yeni kod isteyin"
       }
     }
   },

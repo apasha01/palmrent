@@ -25,6 +25,8 @@ import { formatJalaliDate } from "@/lib/date-utils";
 import { Spinner } from "../ui/spinner";
 import { useRouter } from "@/i18n/navigation";
 import { useParams } from "next/navigation";
+// ✅ اضافه شد
+import { useTopLoader } from "nextjs-toploader";
 
 /* ---------------- utils ---------------- */
 
@@ -60,7 +62,7 @@ function DateTimeTrigger({
                 {formatJalaliYMD(date)}{" "}
                 <span className="text-gray-900 dark:text-gray-100 font-medium">
                   {" - "}
-                  {hasDate && time ? (time) : timePlaceholder}
+                  {hasDate && time ? time : timePlaceholder}
                 </span>
               </p>
             ) : (
@@ -87,7 +89,7 @@ function DateTimeTrigger({
               {formatJalaliYMD(date)}{" "}
               <span className="text-gray-900 dark:text-gray-100 font-medium">
                 {" - "}
-                {hasDate && time ? (time) : timePlaceholder}
+                {hasDate && time ? time : timePlaceholder}
               </span>
             </p>
           ) : (
@@ -139,7 +141,7 @@ function DateTimeTrigger({
         <Clock className="text-gray-500 shrink-0" size={18} />
         {hasDate && time ? (
           <p className="truncate text-sm text-gray-900 dark:text-gray-100 font-medium">
-            {(time)}
+            {time}
           </p>
         ) : (
           <p className="truncate text-sm text-gray-500">{timePlaceholder}</p>
@@ -159,7 +161,7 @@ function normalizeSlugLike(s: string) {
 
 function jalaliQueryDate(date: Date | null) {
   if (!date) return "";
-  return (formatJalaliDate(date));
+  return formatJalaliDate(date);
 }
 
 function safeTime(t?: string | null) {
@@ -222,6 +224,8 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
   const router = useRouter();
   const locale = useLocale();
   const params = useParams() as any;
+  // ✅ اضافه شد
+  const loader = useTopLoader();
 
   const isDesktop = useIsDesktop(768);
 
@@ -350,6 +354,9 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
     )}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(
       to,
     )}&dt=${encodeURIComponent(dt)}&rt=${encodeURIComponent(rt)}`;
+
+    // ✅ لودر شروع میشه قبل از navigation
+    loader.start();
 
     startTransition(() => {
       router.push(url as any);
