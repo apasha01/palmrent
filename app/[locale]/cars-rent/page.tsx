@@ -10,12 +10,13 @@ import QRApplication from "@/components/Branchs/QR-Application";
 import Header from "@/components/layouts/Header";
 import NavSection from "@/components/Branchs/Nav-SectionNew";
 
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useBranches } from "@/services/branches/branches.queries";
 import { useHubFaq } from "@/services/hub/hub.queries";
 
 const Page = () => {
   const locale = useLocale();
+  const t = useTranslations("HubLandingPage");
 
   const { data: branches, isLoading: branchesLoading } = useBranches(locale);
   const { data: hubData, isLoading: hubLoading } = useHubFaq(locale);
@@ -26,9 +27,9 @@ const Page = () => {
 
       <NavSection
         image="/images/head-list-branch.jpg"
-        title="اجاره خودرو در شهر های فعال پالم رنت"
-        subtitle1="شهر و تاریخ را انتخاب کنید"
-        subtitle2="تا خودروهای موجود و قیمت نهایی نمایش داده شود."
+        title={t("heroTitle")}
+        subtitle1={t("heroSubtitle1")}
+        subtitle2={t("heroSubtitle2")}
       />
 
       <main className="mx-auto w-full max-w-7xl">

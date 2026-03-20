@@ -668,12 +668,22 @@
     "cityButtonAria": "مشاهده خودروهای اجاره‌ای در شهر {city}"
   },
 
+    "BranchFaq": {
+    "yourQuestions": "پرسش‌های شما",
+    "commonQuestions": "پرسش‌های متداول",
+    "loading": "در حال دریافت اطلاعات...",
+    "empty": "سوالی برای این شعبه ثبت نشده است.",
+    "openQuestion": "نمایش سوال {question}"
+  },
+
+
   "GuidesSection": {
     "title": "راهنماها و مقالات",
     "prev": "قبلی",
     "next": "بعدی",
-    "openArticleAria": "باز کردن مقاله {title}"
+    "openArticle": "مشاهده مقاله {title}"
   },
+
 
   "ImportantQuestions": {
     "faqTitle": "سوالات متداول",
@@ -787,6 +797,44 @@
       }
     }
   },
+    "QRApplication": {
+    "qrAlt": "تصویر کد QR",
+    "scanText": "برای دانلود اسکن کنید !",
+    "title": "اپلیکیشن پالم رنت",
+    "subtitle": "اجاره خودرو آنلاین سریع‌تر و مطمئن‌تر",
+    "downloadLinks": "مشاهده لینک های دانلود",
+    "androidAlt": "اندروید",
+    "iosAlt": "iOS",
+    "platforms": "قابل نصب روی Android و IOS",
+    "appImageAlt": "تصویر اپلیکیشن"
+  },
+
+
+    "HubSupportSection": {
+    "items": {
+      "payment": {
+        "title": "پرداخت متنوع و انعطاف‌پذیر",
+        "description": {
+          "line1": "امکان پرداخت ریالی و سایر روش‌های پرداخت،",
+          "line2": "متناسب با شهر و خودرو."
+        }
+      },
+      "support": {
+        "title": "پشتیبانی ۲۴ ساعته، ۷ روز هفته",
+        "description": {
+          "line1": "از انتخاب تا تحویل و عودت، پاسخگو هستیم و",
+          "line2": "مسیر رزرو را همراهی می‌کنیم."
+        }
+      },
+      "tracking": {
+        "title": "رزرو شفاف و قابل پیگیری",
+        "description": {
+          "line1": "قبل از ثبت نهایی، جزئیات رزرو و شرایط",
+          "line2": "به‌صورت واضح نمایش داده می‌شود."
+        }
+      }
+    }
+  },
 
     "dateRangePicker": {
     "clear": "پاک کردن",
@@ -817,6 +865,353 @@
     }
   },
 
+  
+  "FAQlanding": {
+    "yourQuestions": "پرسش‌های شما",
+    "commonQuestions": "پرسش‌های متداول",
+    "openQuestion": "نمایش سوال {question}"
+  },
+
+
+    "HubLandingPage": {
+    "heroTitle": "اجاره خودرو در شهر های فعال پالم رنت",
+    "heroSubtitle1": "شهر و تاریخ را انتخاب کنید",
+    "heroSubtitle2": "تا خودروهای موجود و قیمت نهایی نمایش داده شود."
+  },
+  "HubBranchList": {
+    "title": "شهر های اجاره خودرو",
+    "subtitle": "بهترین شهرها برای اجاره خودرو و تجربه سفری راحت، سریع و بدون ودیعه",
+    "imageUnavailable": "تصویر موجود نیست",
+    "openBranch": "مشاهده خودروهای شهر {city}"
+  },
+  "HubBranchCars": {
+    "title": "آغاز سفر با پالم رنت از همین جاست",
+    "subtitle": "اجاره خودرو بدون ودیعه و پرداخت در محل برای یک تجربه راحت و مطمئن",
+    "empty": "خودرویی نیست",
+    "viewAllCars": "مشاهده همه خودروهای {city}",
+    "selectCity": "انتخاب شهر {city}",
+    "scrollNext": "اسکرول به بعد",
+    "scrollPrev": "اسکرول به قبل"
+  },
+
+   "AppDrawer": {
+    "prices": {
+      "title": "گروه‌های قیمتی",
+      "desc": "قیمت‌ها به‌ازای هر روز محاسبه شده‌اند و با توجه به تعداد روزهای اجاره تغییر می‌کنند.",
+      "empty": "قیمت‌ها موجود نیست.",
+      "subOff": "قیمت پایه و قیمت بعد از تخفیف",
+      "subNormal": "قیمت روزانه"
+    },
+    "noDeposit": {
+      "title": "بدون ودیعه",
+      "desc": "برای این خودرو در اطلاعات فعلی، ودیعه ضمانت/ودیعه خلافی دریافت نمی‌شود.\n\n• در زمان تحویل خودرو مبلغی بابت ودیعه از شما دریافت نخواهد شد.\n• با این حال، جریمه‌ها، خسارت‌ها یا هزینه‌های خارج از قرارداد همچنان طبق قوانین مجموعه برعهده اجاره‌کننده است.\n• برای جزئیات دقیق شرایط قرارداد، پیش از نهایی‌کردن رزرو می‌توانید با پشتیبانی هماهنگ کنید."
+    },
+    "deposit": {
+      "title": "ودیعه خلافی",
+      "desc": "ودیعه خلافی مبلغی است که برای پوشش جریمه‌ها/خلافی‌های احتمالی در زمان اجاره دریافت می‌شود.\n\n• مبلغ: {amountText} {currency}\n• معمولاً پس از تسویه خلافی‌ها و بررسی وضعیت، برگشت داده می‌شود.\n• زمان برگشت و نحوه تسویه بسته به قوانین مجموعه/شعبه ممکن است متفاوت باشد."
+    },
+    "delivery": {
+      "title": "تحویل خودرو",
+      "freeDesc": "تحویل برای این خودرو رایگان است.\n\n• تحویل و عودت طبق هماهنگی با شعبه انجام می‌شود.\n• در برخی لوکیشن‌های خاص یا ساعات غیرمعمول ممکن است هماهنگی جداگانه لازم باشد.\n• پیش از ثبت نهایی رزرو، جزئیات دقیق محل و زمان تحویل را می‌توانید از پشتیبانی بگیرید.",
+      "paidDesc": "تحویل برای این خودرو رایگان نیست.\n\n• هزینه تحویل و عودت بسته به محل، زمان و شرایط شعبه ممکن است متفاوت باشد.\n• قبل از نهایی‌کردن رزرو، می‌توانید مبلغ دقیق تحویل را از پشتیبانی استعلام بگیرید."
+    },
+    "insurance": {
+      "title": "بیمه خودرو",
+      "hasDesc": "برای این خودرو بیمه پایه رایگان در نظر گرفته شده است.\n\n• بیمه پایه حداقل پوشش‌های معمول را شامل می‌شود.\n• در برخی شرایط، پوشش‌های تکمیلی با هزینه جداگانه قابل ارائه هستند.\n• برای اطلاع از سقف تعهدات و استثناهای بیمه، بهتر است قبل از رزرو جزئیات را بررسی کنید.",
+      "noDesc": "برای این خودرو در اطلاعات فعلی بیمه رایگان ثبت نشده است.\n\n• ممکن است بیمه پایه یا بیمه تکمیلی به‌صورت جداگانه ارائه شود.\n• برای اطلاع از شرایط دقیق بیمه، قبل از رزرو با پشتیبانی هماهنگ کنید."
+    },
+    "km": {
+      "title": "شرایط کیلومتر",
+      "unlimitedDesc": "این خودرو کیلومتر نامحدود دارد.\n\n• محدودیت روزانه کیلومتر برای این خودرو اعمال نمی‌شود.\n• استفاده متعارف و طبق قوانین مجموعه همچنان لازم است.\n• در صورت وجود شرایط خاص برای برخی مسیرها یا کاربری‌ها، جزئیات هنگام رزرو اعلام می‌شود.",
+      "limitedDesc": "این خودرو کیلومتر محدود دارد.\n\n• معمولاً سقف کیلومتر روزانه یا کل دوره برای آن در نظر گرفته می‌شود.\n• مبلغ اضافه‌کیلومتر طبق قوانین مجموعه محاسبه خواهد شد.\n• برای اطلاع از سقف دقیق کیلومتر، از پشتیبانی استعلام بگیرید."
+    },
+    "optionById": {
+      "2": "صندلی کودک\n• مناسب کودکان خردسال\n• نصب و تحویل هنگام دریافت خودرو انجام می‌شود\n• مسئولیت انتخاب سایز و مدل مناسب کودک با مشتری است\n• در صورت نیاز، قبل از رزرو با پشتیبانی هماهنگ کنید",
+      "10": "راننده اضافی\n• این گزینه اجازه می‌دهد فرد دیگری هم به‌عنوان راننده خودرو ثبت شود\n• برای راننده اضافی ارائه مدارک شناسایی و گواهینامه معتبر لازم است\n• مسئولیت استفاده از خودرو طبق قوانین قرارداد خواهد بود"
+    },
+    "extraOption": {
+      "titleFallback": "جزئیات آپشن",
+      "descFallback": "برای این آپشن توضیحی ثبت نشده است. برای اطلاعات بیشتر می‌توانید قبل از رزرو با پشتیبانی هماهنگ کنید."
+    },
+    "insuranceComplete": {
+      "title": "بسته جامع خسارت",
+      "desc": "با انتخاب این گزینه، پوشش کامل‌تری برای خسارت‌ها و ریسک‌های احتمالی در طول اجاره فعال می‌شود."
+    }
+  },
+    "ReservationPage": {
+    "continueReservationLogin": "ادامه رزرو ، ورود به حساب",
+    "uploadAndReviewDocuments": "آپلود و بررسی مدارک",
+    "reservationReview": "بررسی رزرو",
+    "waitingForPayment": "در انتظار پرداخت",
+    "serverConnectionError": "خطا در ارتباط با سرور"
+  },
+
+  
+  "PaymentSuccessCard": {
+    "common": {
+      "free": "رایگان"
+    },
+    "otp": {
+      "back": "بازگشت",
+      "title": "برای تکمیل فرآیند، ابتدا وارد شوید",
+      "banner1": "شماره تلفن شما قبلاً در سامانه ثبت‌نام شده است.",
+      "banner2": "لطفاً برای ادامه فرآیند رزرو، وارد حساب کاربری خود شوید.",
+      "registeredMobile": "شماره موبایل ( ثبت‌شده )",
+      "checkingLogin": "در حال بررسی وضعیت ورود...",
+      "sendCodeHint": "با کلیک بر روی دکمه، کد تایید برای شما ارسال می‌شود.",
+      "enterCode": "کد تایید را وارد کنید",
+      "codeSentPrefix": "کد ۵ رقمی به شماره",
+      "codeSentSuffix": "ارسال شد.",
+      "edit": "ویرایش",
+      "wrongCode": "کد وارد شده صحیح نیست",
+      "resendCooldown": "تا درخواست مجدد کد",
+      "resendCode": "ارسال مجدد کد",
+      "confirmAndSend": "تایید و دریافت کد",
+      "confirmAndContinue": "تایید و ادامه",
+      "sendCodeError": "خطا در ارسال کد",
+      "resendError": "ارسال مجدد ناموفق بود",
+      "verifyErrorToast": "خطا در تایید کد"
+    },
+    "thanksDialog": {
+      "title": "مدارک ثبت شد",
+      "description": "ممنون 🙏 مدارک شما دریافت شد و در حال بررسی است.\nتا چند لحظه دیگر به صفحه اصلی هدایت می‌شوید…",
+      "supportTitle": "پشتیبانی",
+      "supportText": "اگر عکس‌ها خوانا نبود یا مشکلی داشت (نور، برش، تاری و ...)، با پشتیبانی هماهنگ کنید تا سریع‌تر بررسی شود.",
+      "goHomeNow": "همین الان برو صفحه اصلی",
+      "seconds": "ثانیه"
+    },
+    "upload": {
+      "remove": "حذف",
+      "required": "این مورد الزامی است"
+    },
+    "success": {
+      "title": "پرداخت با موفقیت انجام شد",
+      "description": "رزرو شما قطعی شد. وچر و مدارک از همین صفحه قابل مدیریت است."
+    },
+    "reservationInfo": "اطلاعات رزرو",
+    "downloadingVoucher": "در حال دانلود...",
+    "downloadVoucher": "دانلود وچر",
+    "toggleInfo": "نمایش یا مخفی کردن اطلاعات",
+    "days": "روز",
+    "fromTo": "از {from} تا {to}",
+    "remainAtDelivery": "مانده هنگام تحویل",
+    "uploadPrompt": "برای صرفه‌جویی در زمان تحویل، عکس‌های مدارک خود را آپلود کنید",
+    "sections": {
+      "idCard": "گذرنامه/کارت شناسایی",
+      "driverLicense": "گواهینامه رانندگی",
+      "internationalDriverLicense": "گواهینامه رانندگی بین المللی",
+      "visa": "ویزا"
+    },
+    "labels": {
+      "photo": "عکس",
+      "front": "جبهه",
+      "back": "سمت عقب"
+    },
+    "noIntl": "گواهینامه رانندگی بین المللی ندارم",
+    "noVisa": "من ویزا ندارم",
+    "sending": "در حال ارسال...",
+    "submitDocuments": "ارسال مدارک",
+    "invoice": {
+      "title": "ریز فاکتور رزرو",
+      "rentPriceForDays": "قیمت اجاره {days} روز",
+      "daily": "روزانه",
+      "discount": "تخفیف",
+      "option": "آپشن",
+      "optionsTotal": "جمع آپشن‌ها",
+      "tax": "مالیات ({percent}٪)",
+      "prepay": "پیش پرداخت",
+      "remaining": "مانده حساب",
+      "paidValue": "{value} (پرداخت شده)",
+      "finalCostForDays": "هزینه نهایی برای {days} روز"
+    },
+    "toasts": {
+      "loginRequired": "برای ادامه باید وارد شوید",
+      "loginRequiredForUpload": "برای آپلود مدارک باید وارد شوید",
+      "completeRequiredDocuments": "لطفاً مدارک الزامی را تکمیل کنید",
+      "uploadDone": "آپلود انجام شد",
+      "preparingVoucher": "در حال آماده‌سازی وچر...",
+      "voucherDownloaded": "وچر دانلود شد"
+    },
+    "errors": {
+      "uploadFailed": "خطا در آپلود مدارک",
+      "uploadNotDone": "آپلود انجام نشد",
+      "rentIdNotFound": "rent_id پیدا نشد",
+      "voucherDownloadFailed": "دانلود وچر ناموفق بود"
+    }
+  },
+
+    "Auth": {
+    "LoginDialog": {
+      "srTitle": "ورود با شماره موبایل",
+      "image": {
+        "logoAlt": "لوگو"
+      },
+      "header": {
+        "titleMobile": "ورود / ثبت‌نام",
+        "titleOtp": "تأیید کد"
+      },
+      "hint": {
+        "mobile": "شماره تماس خود را وارد کنید تا کد تأیید برای شما ارسال شود."
+      },
+      "placeholders": {
+        "phone": "شماره تماس"
+      },
+      "button": {
+        "open": "ورود",
+        "back": "بازگشت",
+        "close": "بستن",
+        "sendOtp": "ارسال کد تأیید",
+        "verify": "تأیید و ادامه",
+        "resend": "ارسال مجدد",
+        "editMobile": "ویرایش"
+      },
+      "terms": {
+        "suffix-text": "با ادامه،",
+        "link": "قوانین و شرایط",
+        "prefix-text": "را می‌پذیرید."
+      },
+      "otp": {
+        "sentPrefix": " کد ۵ رقمی به شماره ",
+        "sentDone": " ارسال شد.",
+        "resendCountdown": "{time} تا درخواست مجدد کد"
+      },
+      "toast": {
+        "invalidMobile": "شماره تماس واردشده معتبر نیست.",
+        "wrongOtp": "کد واردشده صحیح نیست.",
+        "tooManyRequests": "درخواست‌های شما بیش از حد مجاز است. کمی بعد دوباره تلاش کنید.",
+        "smsFailed": "ارسال پیامک با مشکل مواجه شد. دوباره تلاش کنید.",
+        "networkError": "خطا در اتصال به اینترنت. دوباره تلاش کنید.",
+        "userBlocked": "دسترسی این کاربر موقتاً محدود شده است.",
+        "otpExpired": "کد تأیید منقضی شده یا درخواست نشده است.",
+        "tooManyAttempts": "تعداد تلاش‌ها بیش از حد مجاز است.",
+        "serverError": "خطای سرور. لطفاً بعداً دوباره تلاش کنید."
+      }
+    }
+  },
+
+
+    "PaymentCard": {
+    "reservationConfirmed": "رزرو شما تایید شد",
+    "payNotice": "برای قطعی شدن رزرو لطفا مبلغ پیش پرداخت را در این صفحه پرداخت کنید",
+    "paymentFailed": "پرداخت ناموفق بود",
+    "paymentFailedWithReason": "پرداخت ناموفق بود: {reason}",
+    "stepRequestRegistered": "ثبت درخواست",
+    "stepReservationConfirmed": "تایید رزرو",
+    "stepPrepayment": "پرداخت پیش‌پرداخت",
+    "accountDetails": "جزئیات حساب",
+    "rentDescription": "اجاره {carTitle} از {fromText}\nتا {toText} به مدت {days} روز",
+    "totalCost": "جمع کل هزینه :",
+    "payNow": "پیش پرداخت (پرداخت الان) :",
+    "remainingAmount": "مانده حساب (پرداخت هنگام تحویل خودرو) :",
+    "aedAndTomanValue": "{aed} درهم ( {toman} تومان )",
+    "aedOnlyValue": "{aed} درهم",
+    "redirectingToGateway": "در حال انتقال به درگاه...",
+    "payAndConfirm": "پرداخت پیش‌پرداخت و قطعی کردن رزرو",
+    "securePayment": "پرداخت امن از طریق درگاه زرین پال",
+    "paymentLinkNotReceived": "لینک پرداخت دریافت نشد",
+    "serverConnectionError": "خطا در ارتباط با سرور"
+  },
+
+
+    "ProcessingCard": {
+    "requestRegistered": "درخواست رزرو شما ثبت شد",
+    "doNotLeavePage": "لطفا صفحه را ترک نفرمایید ، رزرو شما در حال بررسی است",
+    "reviewingMessage1": "تیم پالم رنت درحال بررسی و تایید نهایی رزرو شماست",
+    "reviewingMessage2": "معمولا بررسی رزرو در کمتر از ۲ دقیقه انجام میشود .",
+    "reviewingMessage3": "لطفا این صفحه را نبندید؛ نتیجه بررسی همینجا نمایش داده میشود.",
+    "stepRequestRegistered": "ثبت درخواست",
+    "stepReviewReservation": "بررسی رزرو",
+    "stepShowResult": "نمایش نتیجه",
+    "estimatedTime": "زمان تقریبی تا اعلام نتیجه: {time}",
+    "continueOnWhatsapp": "ادامه پیگیری در واتساپ",
+    "takingLongerThanUsual": "بررسی کمی بیشتر از حد معمول طول کشیده است",
+    "reservationSummary": "خلاصه رزرو شما",
+    "finalPrice": "هزینه نهایی",
+    "priceLabelWithCarAndDays": "هزینه نهایی برای {days} روز اجاره {car}",
+    "priceLabelWithDays": "هزینه نهایی برای {days} روز",
+    "rentDescriptionLine1WithCarAndDate": "اجاره یک دستگاه {car} از {fromDate}",
+    "rentDescriptionLine1WithCar": "اجاره یک دستگاه {car}",
+    "rentDescriptionLine1WithDate": "از {fromDate}",
+    "rentDescriptionLine2WithDateAndDays": "تا {toDate} به مدت {days} روز",
+    "rentDescriptionLine2WithDate": "تا {toDate}",
+    "rentDescriptionLine2WithDays": "به مدت {days} روز",
+    "whatsappMessage": "سلام. رزرو من هنوز در مرحله بررسی است. لطفاً وضعیت را بررسی کنید. کد پیگیری: {pageUrl}"
+  },
+
+    "SearchFilterSheet": {
+    "back": "بازگشت",
+    "filters": "فیلترها",
+    "clear": "پاک کردن",
+    "showMore": "نمایش بیشتر",
+    "clearAllFilters": "حذف همه فیلترها",
+    "clearFilters": "حذف فیلترها",
+    "availableCarsCount": "نمایش {count} خودرو موجود",
+    "removeFilterAria": "حذف فیلتر {label}",
+    "sortTitle": "مرتب‌سازی",
+    "priceRangeTitle": "بازه قیمتی",
+    "brandNameTitle": "نام برند خودرو",
+    "carClassTitle": "کلاس خودرو",
+    "gearboxTitle": "گیربکس",
+    "fuelTypeTitle": "نوع سوخت",
+    "seatCountTitle": "تعداد نفرات",
+    "luggageCapacityTitle": "ظرفیت چمدان",
+    "amenitiesTitle": "امکانات و شرایط رزرو",
+    "priceMin": "حداقل",
+    "priceMax": "حداکثر",
+    "brandSearchPlaceholder": "جستجوی نام برند",
+    "noBrandFound": "برندی پیدا نشد",
+    "showLess": "نمایش کمتر",
+    "showMoreWithCount": "{count, plural, =0 {نمایش بیشتر} other {نمایش بیشتر ({count} انتخاب شده)}}",
+    "seatCountBadge": "{count} نفر",
+    "luggageCountBadge": "{count} چمدان",
+    "viewResults": "مشاهده {count} نتیجه",
+    "palmrent_suggest": "پیشنهاد پالم رنت",
+    "price_min": "ارزان‌ترین قیمت",
+    "price_max": "گران‌ترین قیمت",
+    "sort1": "جدیدترین",
+    "economicCar": "اقتصادی",
+    "luxCar": "لوکس",
+    "businessCar": "بیزینسی",
+    "sevenplus": "۷+ نفره",
+    "suv": "شاسی‌بلند / SUV",
+    "crook": "کوپه / کانورتیبل",
+    "sedan": "سدان",
+    "automatic": "اتوماتیک",
+    "geared": "دستی",
+    "hybrid": "هیبرید",
+    "petrol": "بنزینی",
+    "diesel": "گازوئیلی",
+    "hybrid_fuel": "هیبریدی",
+    "electric": "برقی",
+    "noDeposite": "بدون ودیعه",
+    "specialOffer": "پیشنهاد ویژه",
+    "hotelDelivery": "تحویل درب هتل",
+    "airportDelivery": "تحویل در فرودگاه"
+  },
+
+    "SearchSection": {
+    "carSearch": "جستجوی برند یا مدل خودرو",
+    "filters": "فیلترها",
+    "clear": "پاک کردن",
+    "model": "مدل",
+    "selectDate": "انتخاب تاریخ",
+    "sortTitle": "مرتب‌سازی",
+    "sortDescription": "ترتیب نمایش خودروها را انتخاب کنید.",
+    "sortPalmRent": "پیشنهاد پالم رنت",
+    "price_min": "کمترین قیمت",
+    "price_max": "بیشترین قیمت",
+    "sort1": "جدیدترین",
+    "noDeposite": "بدون دیپوزیت",
+    "economicCar": "اقتصادی",
+    "luxCar": "لوکس",
+    "sevenplus": "۷ نفره",
+    "sport": "اسپرت",
+    "business": "بیزینس",
+    "crook": "کروک",
+    "standard": "استاندارد",
+    "suv": "شاسی‌بلند",
+    "coupe": "کوپه"
+  },
 
 
   "branchLanding": {
@@ -827,6 +1222,7 @@
     "loadingMore": "در حال دریافت…",
     "viewMore": "مشاهده بیشتر",
     "noCarsFound": "خودرویی یافت نشد",
+        "carsListTitle": "لیست خودرو های <Branch></Branch>",
     "noMoreResults": "مورد بیشتری وجود ندارد",
     "fetchError": "خطا در دریافت اطلاعات"
   },

@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "@/i18n/navigation";
 
-import { ArrowRight, Loader2, RefreshCcw } from "lucide-react";
+import { ArrowRight, ArrowLeft, Loader2, RefreshCcw } from "lucide-react";
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -23,8 +23,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "../ui/button";
 import Image from "next/image";
 import { useWebOTP } from "@/hooks/useWebOTP";
-
-
+import useDIR from "@/hooks/use-rtl";
 
 // ── shake keyframes ────────────────────────────────────────────────────────
 const SHAKE_STYLE = `
@@ -69,7 +68,9 @@ const saveOTPSession = (mobile: string, durationSeconds: number) => {
 };
 
 const clearOTPSession = () => {
-  try { localStorage.removeItem(OTP_STORAGE_KEY); } catch {}
+  try {
+    localStorage.removeItem(OTP_STORAGE_KEY);
+  } catch {}
 };
 
 const loadOTPSession = (): OTPSession | null => {
@@ -77,9 +78,14 @@ const loadOTPSession = (): OTPSession | null => {
     const raw = localStorage.getItem(OTP_STORAGE_KEY);
     if (!raw) return null;
     const session: OTPSession = JSON.parse(raw);
-    if (Date.now() >= session.expiresAt) { clearOTPSession(); return null; }
+    if (Date.now() >= session.expiresAt) {
+      clearOTPSession();
+      return null;
+    }
     return session;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 };
 
 const getRemainingSeconds = (session: OTPSession | null): number => {
@@ -96,14 +102,17 @@ function onlyDigits(input: string) {
 function getIranMobileLocal(input: string): string {
   const raw = (input ?? "").trim();
   if (!raw) return "";
+
   if (raw.startsWith("+")) {
     const n = "+" + raw.slice(1).replace(/\D/g, "");
     return /^\+989\d{9}$/.test(n) ? `0${n.slice(3)}` : "";
   }
+
   let d = onlyDigits(raw);
   if (d.startsWith("0098")) d = d.slice(4);
   if (d.startsWith("98")) d = d.slice(2);
   if (/^9\d{9}$/.test(d) || /^09\d{9}$/.test(d)) return d;
+
   return d;
 }
 
@@ -117,7 +126,9 @@ function normalizeMobileE164(input: string): string {
 function isValidIranianMobile(input: string): boolean {
   const raw = (input ?? "").trim();
   if (!raw) return false;
-  if (raw.startsWith("+")) return /^\+989\d{9}$/.test("+" + raw.slice(1).replace(/\D/g, ""));
+  if (raw.startsWith("+"))
+    return /^\+989\d{9}$/.test("+" + raw.slice(1).replace(/\D/g, ""));
+
   let d = onlyDigits(raw);
   if (d.startsWith("0098")) d = d.slice(4);
   if (d.startsWith("98")) d = d.slice(2);
@@ -128,14 +139,50 @@ function isValidIranianMobile(input: string): boolean {
 // ── error i18n mapping ─────────────────────────────────────────────────────
 function mapBackendErrorToI18nKey(message: string): string | null {
   const m = (message ?? "").toLowerCase();
-  if (m.includes("please wait") || m.includes("too many request") || m.includes("429")) return "tooManyRequests";
-  if (m.includes("sms failed") || m.includes("sms service") || m.includes("502")) return "smsFailed";
-  if (m.includes("network") || m.includes("connection") || m.includes("اتصال")) return "networkError";
+
+  if (
+    m.includes("please wait") ||
+    m.includes("too many request") ||
+    m.includes("429")
+  ) {
+    return "tooManyRequests";
+  }
+
+  if (
+    m.includes("sms failed") ||
+    m.includes("sms service") ||
+    m.includes("502")
+  ) {
+    return "smsFailed";
+  }
+
+  if (
+    m.includes("network") ||
+    m.includes("connection") ||
+    m.includes("اتصال")
+  ) {
+    return "networkError";
+  }
+
   if (m.includes("blocked") || m.includes("مسدود")) return "userBlocked";
   if (m.includes("expired") || m.includes("not requested")) return "otpExpired";
-  if (m.includes("too many attempt") || m.includes("max attempt")) return "tooManyAttempts";
-  if (m.includes("server") || m.includes("500") || m.includes("503")) return "serverError";
-  if (m.includes("invalid otp") || m.includes("wrong") || m.includes("incorrect")) return "wrongOtp";
+
+  if (m.includes("too many attempt") || m.includes("max attempt")) {
+    return "tooManyAttempts";
+  }
+
+  if (m.includes("server") || m.includes("500") || m.includes("503")) {
+    return "serverError";
+  }
+
+  if (
+    m.includes("invalid otp") ||
+    m.includes("wrong") ||
+    m.includes("incorrect")
+  ) {
+    return "wrongOtp";
+  }
+
   return null;
 }
 
@@ -162,6 +209,7 @@ export default function LoginDialog({
 }: LoginDialogProps) {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const { isRtl } = useDIR();
   const t = useTranslations("Auth.LoginDialog");
 
   const isControlled = typeof controlledOpen === "boolean";
@@ -186,6 +234,7 @@ export default function LoginDialog({
   const triggerShake = () => {
     setOtpError(true);
     setOtpShake(false);
+
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         setOtpShake(true);
@@ -194,19 +243,34 @@ export default function LoginDialog({
     });
   };
 
-  const resolveErrorMessage = (rawMessage: string, fallbackKey: string): string => {
+  const resolveErrorMessage = (
+    rawMessage: string,
+    fallbackKey: string
+  ): string => {
     const i18nKey = mapBackendErrorToI18nKey(rawMessage);
+
     if (i18nKey) {
-      try { return t(`toast.${i18nKey}`); } catch { return rawMessage; }
+      try {
+        return t(`toast.${i18nKey}`);
+      } catch {
+        return rawMessage;
+      }
     }
-    try { return t(`toast.${fallbackKey}`); } catch { return rawMessage; }
+
+    try {
+      return t(`toast.${fallbackKey}`);
+    } catch {
+      return rawMessage;
+    }
   };
 
   const mobileLocal = useMemo(() => getIranMobileLocal(mobile), [mobile]);
   const mobileE164 = useMemo(() => normalizeMobileE164(mobile), [mobile]);
   const isPhoneValid = useMemo(() => isValidIranianMobile(mobile), [mobile]);
-  const isSendOtpDisabled = useMemo(() => loading || !isPhoneValid, [loading, isPhoneValid]);
-
+  const isSendOtpDisabled = useMemo(
+    () => loading || !isPhoneValid,
+    [loading, isPhoneValid]
+  );
 
   useWebOTP(
     (code) => {
@@ -218,26 +282,49 @@ export default function LoginDialog({
 
   useEffect(() => {
     if (cooldown <= 0) return;
+
     const timer = setInterval(() => {
-      setCooldown((prev) => { if (prev <= 1) { clearInterval(timer); return 0; } return prev - 1; });
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
+
     return () => clearInterval(timer);
   }, [cooldown]);
 
   useEffect(() => {
     if (!open) {
-      setOtp(""); setLoading(false); setShowMobileError(false);
-      setSmsError(null); setOtpError(false); setOtpShake(false);
+      setOtp("");
+      setLoading(false);
+      setShowMobileError(false);
+      setSmsError(null);
+      setOtpError(false);
+      setOtpShake(false);
       return;
     }
+
     const session = loadOTPSession();
     if (session) {
       const remaining = getRemainingSeconds(session);
-      if (remaining > 0) { setMobile(session.mobile); setStep("otp"); setCooldown(remaining); }
-      else clearOTPSession();
+      if (remaining > 0) {
+        setMobile(session.mobile);
+        setStep("otp");
+        setCooldown(remaining);
+      } else {
+        clearOTPSession();
+      }
     }
-    setOtp(""); setLoading(false); setShowMobileError(false);
-    setSmsError(null); setOtpError(false); setOtpShake(false);
+
+    setOtp("");
+    setLoading(false);
+    setShowMobileError(false);
+    setSmsError(null);
+    setOtpError(false);
+    setOtpShake(false);
   }, [open]);
 
   if (isAuthenticated) {
@@ -246,22 +333,39 @@ export default function LoginDialog({
   }
 
   const resetAll = () => {
-    setStep("mobile"); setMobile(""); setOtp(""); setCooldown(0);
-    setLoading(false); setShowMobileError(false); setSmsError(null);
-    setOtpError(false); setOtpShake(false); clearOTPSession();
+    setStep("mobile");
+    setMobile("");
+    setOtp("");
+    setCooldown(0);
+    setLoading(false);
+    setShowMobileError(false);
+    setSmsError(null);
+    setOtpError(false);
+    setOtpShake(false);
+    clearOTPSession();
   };
 
   const closeDialog = () => {
     setOpen(false);
     setTimeout(() => {
-      setOtp(""); setLoading(false); setShowMobileError(false);
-      setSmsError(null); setOtpError(false); setOtpShake(false);
+      setOtp("");
+      setLoading(false);
+      setShowMobileError(false);
+      setSmsError(null);
+      setOtpError(false);
+      setOtpShake(false);
     }, 200);
   };
 
   const handleBackButton = () => {
-    if (step === "otp") { setStep("mobile"); setOtp(""); setOtpError(false); setSmsError(null); }
-    else closeDialog();
+    if (step === "otp") {
+      setStep("mobile");
+      setOtp("");
+      setOtpError(false);
+      setSmsError(null);
+    } else {
+      closeDialog();
+    }
   };
 
   const sendOtp = async () => {
@@ -271,11 +375,17 @@ export default function LoginDialog({
     const session = loadOTPSession();
     if (session && session.mobile === mobile) {
       const remaining = getRemainingSeconds(session);
-      if (remaining > 0) { setStep("otp"); setCooldown(remaining); setShowMobileError(false); return; }
+      if (remaining > 0) {
+        setStep("otp");
+        setCooldown(remaining);
+        setShowMobileError(false);
+        return;
+      }
     }
 
     setLoading(true);
     setSmsError(null);
+
     try {
       await otpRequest(mobileE164);
       saveOTPSession(mobile, 75);
@@ -291,8 +401,10 @@ export default function LoginDialog({
 
   const resendOtp = async () => {
     if (!mobileE164) return;
+
     setLoading(true);
     setSmsError(null);
+
     try {
       await otpRequest(mobileE164);
       saveOTPSession(mobile, 75);
@@ -308,10 +420,22 @@ export default function LoginDialog({
 
   const verifyOtp = async (code: string) => {
     if (code.length !== 5 || !mobileE164) return;
+
     setLoading(true);
+
     try {
-      const res = await signIn("otp", { redirect: false, mobile: mobileE164, code });
-      if (!res?.ok) { setOtp(""); triggerShake(); return; }
+      const res = await signIn("otp", {
+        redirect: false,
+        mobile: mobileE164,
+        code,
+      });
+
+      if (!res?.ok) {
+        setOtp("");
+        triggerShake();
+        return;
+      }
+
       await getSession();
       clearOTPSession();
       setOpen(false);
@@ -344,21 +468,26 @@ export default function LoginDialog({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
           showCloseButton={false}
-          onPointerDownOutside={(e) => { if (!closeOnOutsideClick) e.preventDefault(); }}
-          onInteractOutside={(e) => { if (!closeOnOutsideClick) e.preventDefault(); }}
+          onPointerDownOutside={(e) => {
+            if (!closeOnOutsideClick) e.preventDefault();
+          }}
+          onInteractOutside={(e) => {
+            if (!closeOnOutsideClick) e.preventDefault();
+          }}
           className={cn(
             "fixed inset-0 left-0 top-0 translate-x-0 translate-y-0",
             "h-dvh w-screen max-w-none rounded-none border-0 shadow-none",
             "p-0 gap-0 overflow-hidden bg-white",
             "sm:inset-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2",
-            "sm:h-auto sm:w-full sm:max-w-4xl sm:rounded-2xl sm:border sm:border-gray-200 sm:shadow-xl"
+            "sm:h-auto sm:w-full ",
+            "sm:rounded-2xl sm:border sm:border-gray-200 sm:shadow-xl"
           )}
         >
           <DialogTitle className="sr-only">{t("srTitle")}</DialogTitle>
 
           <div className="flex h-dvh flex-col sm:h-auto">
             {/* header */}
-            <div className="flex items-center px-5 pt-5">
+            <div className={cn("flex items-center px-5 pt-5", isRtl ? "justify-start" : "justify-start")}>
               {showCloseButton && (
                 <button
                   type="button"
@@ -366,16 +495,25 @@ export default function LoginDialog({
                   aria-label={step === "otp" ? t("button.back") : t("button.close")}
                   className="flex h-9 w-9 items-center justify-center text-gray-500 transition-colors hover:text-gray-800"
                 >
-                  <ArrowRight className="h-5 w-5" />
+                  {isRtl ? (
+                    <ArrowRight className="h-5 w-5" />
+                  ) : (
+                    <ArrowLeft className="h-5 w-5" />
+                  )}
                 </button>
               )}
             </div>
 
             {/* body */}
-            <div className="flex-1 overflow-y-auto px-6 sm:px-15">
+            <div className="flex-1 overflow-y-auto px-6 sm:px-10 md:px-12">
               <div className="mb-4 flex justify-center">
-                <Image src="/images/logo.png" width={100} height={100} alt="LOGO"
-                  className="filter-[invert(1)] dark:filter-none" />
+                <Image
+                  src="/images/logo.png"
+                  width={100}
+                  height={100}
+                  alt={t("image.logoAlt")}
+                  className="filter-[invert(1)] dark:filter-none"
+                />
               </div>
 
               {/* ── step: mobile ── */}
@@ -384,6 +522,7 @@ export default function LoginDialog({
                   <h2 className="mb-8 text-center text-[20px] font-bold text-gray-900">
                     {t("header.titleMobile")}
                   </h2>
+
                   <p className="mb-5 text-center text-sm text-gray-500">
                     {t("hint.mobile")}
                   </p>
@@ -405,7 +544,7 @@ export default function LoginDialog({
                         "text-gray-900 placeholder:text-gray-400",
                         "focus-within:border-[#3AA4F5] focus-within:ring-1 focus-within:ring-[#3AA4F5]/30",
                         "transition-all duration-150",
-                        (showMobileError && !isPhoneValid) && "border-red-400",
+                        showMobileError && !isPhoneValid && "border-red-400",
                         smsError && "border-red-400"
                       )}
                     />
@@ -426,7 +565,8 @@ export default function LoginDialog({
                   <p className="mt-4 text-center text-xs leading-5 text-gray-400">
                     {t("terms.suffix-text")}
                     <span className="cursor-pointer text-[#3AA4F5] hover:underline">
-                      {" "}{t("terms.link")}{" "}
+                      {" "}
+                      {t("terms.link")}{" "}
                     </span>
                     {t("terms.prefix-text")}
                   </p>
@@ -442,23 +582,31 @@ export default function LoginDialog({
 
                   <div className="mb-4 flex items-center justify-between gap-0.5">
                     <p className="text-xs text-gray-600" dir="ltr">
-                      <span dir="rtl"> ارسال شد.</span>
+                      <span dir="rtl">{t("otp.sentDone")}</span>
                       <span className="tabular-nums font-medium text-gray-800">
                         {mobileLocal.startsWith("0") ? mobileLocal : `0${mobileLocal}`}
                       </span>
-                      <span dir="rtl"> کد ۵ رقمی به شماره </span>
+                      <span dir="rtl">{t("otp.sentPrefix")}</span>
                     </p>
+
                     <button
                       type="button"
-                      onClick={() => { setStep("mobile"); setOtp(""); setOtpError(false); setSmsError(null); }}
+                      onClick={() => {
+                        setStep("mobile");
+                        setOtp("");
+                        setOtpError(false);
+                        setSmsError(null);
+                      }}
                       className="text-sm font-medium text-[#3AA4F5] hover:underline"
                     >
                       {t("button.editMobile")}
                     </button>
                   </div>
 
-                  {/* ✅ autocomplete="one-time-code" برای iOS Safari */}
-                  <div className={cn("mb-6 flex justify-center", otpShake && "otp-shake")} dir="ltr">
+                  <div
+                    className={cn("mb-6 flex justify-center", otpShake && "otp-shake")}
+                    dir="ltr"
+                  >
                     <InputOTP
                       maxLength={5}
                       value={otp}
@@ -478,8 +626,11 @@ export default function LoginDialog({
                             index={i}
                             className={cn(
                               "h-12 w-14 rounded-lg border text-2xl font-bold text-gray-900 transition-all duration-150",
-                              otpError ? "border-red-400 bg-red-50 text-red-600" : "border-gray-200 bg-white",
-                              !otpError && "data-[active=true]:border-[#3AA4F5] data-[active=true]:shadow-sm"
+                              otpError
+                                ? "border-red-400 bg-red-50 text-red-600"
+                                : "border-gray-200 bg-white",
+                              !otpError &&
+                                "data-[active=true]:border-[#3AA4F5] data-[active=true]:shadow-sm"
                             )}
                           />
                         ))}
@@ -496,7 +647,9 @@ export default function LoginDialog({
                   <div className="mb-2 flex justify-center">
                     {cooldown > 0 ? (
                       <span className="tabular-nums text-sm text-gray-400" dir="rtl">
-                        {formatCooldown(cooldown)} تا درخواست مجدد کد
+                        {t("otp.resendCountdown", {
+                          time: formatCooldown(cooldown),
+                        })}
                       </span>
                     ) : (
                       <button
@@ -505,7 +658,9 @@ export default function LoginDialog({
                         onClick={resendOtp}
                         className="flex items-center gap-1.5 text-sm text-[#3AA4F5] hover:underline disabled:opacity-50"
                       >
-                        <RefreshCcw className="h-3.5 w-3.5" />
+                        <RefreshCcw
+                          className={cn("h-3.5 w-3.5", !isRtl && "scale-x-[-1]")}
+                        />
                         {t("button.resend")}
                       </button>
                     )}
@@ -521,7 +676,7 @@ export default function LoginDialog({
             </div>
 
             {/* footer */}
-            <div className="px-5 pb-8 pt-4 sm:px-16">
+            <div className="px-5 pb-8 pt-4 sm:px-10 md:px-12">
               {step === "mobile" ? (
                 <button
                   type="button"

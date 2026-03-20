@@ -51,7 +51,7 @@ export default function SummaryRow({
   return (
     <div className="py-2">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex-1 text-right">
+        <div className="flex-1">
           <div className="text-sm text-gray-800 leading-5">
             {loading ? (
               <div className="h-4 w-28 rounded bg-gray-200 animate-pulse" />
@@ -81,7 +81,7 @@ export default function SummaryRow({
           ) : null}
         </div>
 
-        <div className="text-left">
+        <div className="">
           <div className="flex items-center gap-2 whitespace-nowrap">
             {loading ? (
               <div className="h-4 w-24 rounded bg-gray-200 animate-pulse" />

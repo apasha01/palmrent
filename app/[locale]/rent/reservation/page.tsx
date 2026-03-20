@@ -2,6 +2,7 @@
 "use client";
 
 import React, {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -9,7 +10,7 @@ import React, {
   useState,
 } from "react";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 
 import { getRentStatus } from "@/services/reservation/reservation-status";
@@ -24,40 +25,40 @@ function buildTitle({
   fullname,
   isLocked,
   isPaid,
+  t,
 }: {
   status: string | null;
   fullname: string | null | undefined;
   isLocked: boolean;
   isPaid: boolean;
+  t: (key: string) => string;
 }): string {
   const name = fullname?.trim() || null;
 
-  const loginTitle = name
-    ? `ادامه رزرو ، ورود به حساب - ${name}`
-    : "ادامه رزرو ، ورود به حساب";
+  const withName = (label: string) => (name ? `${label} - ${name}` : label);
 
-  const uploadTitle = name
-    ? `آپلود و بررسی مدارک - ${name}`
-    : "آپلود و بررسی مدارک";
+  const loginTitle = withName(t("continueReservationLogin"));
+  const uploadTitle = withName(t("uploadAndReviewDocuments"));
+  const reviewTitle = withName(t("reservationReview"));
+  const waitingPaymentTitle = withName(t("waitingForPayment"));
 
   if (status === "initialize") {
-    return name ? `بررسی رزرو - ${name}` : "بررسی رزرو";
+    return reviewTitle;
   }
 
   if (status === "payment") {
-    // اگر پرداخت انجام شده، دیگر نباید "در انتظار پرداخت" باشد
     if (isPaid) {
       return isLocked ? loginTitle : uploadTitle;
     }
 
-    return name ? `در انتظار پرداخت - ${name}` : "در انتظار پرداخت";
+    return waitingPaymentTitle;
   }
 
   if (status === "upload" || status === "documents") {
     return isLocked ? loginTitle : uploadTitle;
   }
 
-  return "بررسی رزرو";
+  return reviewTitle;
 }
 
 function SkeletonBlock({
@@ -203,11 +204,12 @@ function PaymentSuccessSkeleton() {
   );
 }
 
-export default function ReservationPage(): any {
+export default function ReservationPage(): React.JSX.Element {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const locale: any = useLocale();
+  const locale = useLocale();
+  const t = useTranslations("ReservationPage");
 
   const statusParam = searchParams.get("status");
   const codeParam = searchParams.get("code");
@@ -220,7 +222,7 @@ export default function ReservationPage(): any {
   const paidFromUrl = paidParam === "1";
   const payFailed = paidParam === "0";
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [rentData, setRentData] = useState<any>(null);
 
@@ -260,39 +262,44 @@ export default function ReservationPage(): any {
       fullname: enrichedRentData?.auth?.fullname,
       isLocked: isAuthLocked,
       isPaid: isPaidResolved,
+      t,
     });
   }, [
     statusParam,
     enrichedRentData?.auth?.fullname,
     isAuthLocked,
     isPaidResolved,
+    t,
   ]);
 
   useLayoutEffect(() => {
-    const t = pageTitle.trim();
-    if (!t) return;
-    if (document.title === t) return;
-    document.title = t;
+    const title = pageTitle.trim();
+    if (!title) return;
+    if (document.title === title) return;
+    document.title = title;
   }, [pageTitle]);
 
-  const buildUrlWithStatus = (nextStatus: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("status", nextStatus);
+  const buildUrlWithStatus = useCallback(
+    (nextStatus: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("status", nextStatus);
 
-    if (rentCode) {
-      params.set("code", String(rentCode));
-    }
+      if (rentCode) {
+        params.set("code", String(rentCode));
+      }
 
-    params.delete("rentid");
+      params.delete("rentid");
 
-    return `${pathname}?${params.toString()}`;
-  };
+      return `${pathname}?${params.toString()}`;
+    },
+    [pathname, rentCode, searchParams],
+  );
 
-  const goUpload = () => {
+  const goUpload = useCallback(() => {
     router.replace(buildUrlWithStatus("upload"));
-  };
+  }, [router, buildUrlWithStatus]);
 
-  const fetchStatus = async (): Promise<any> => {
+  const fetchStatus = useCallback(async (): Promise<any> => {
     if (!rentCode) return null;
 
     try {
@@ -305,13 +312,13 @@ export default function ReservationPage(): any {
       return normalized;
     } catch (e: any) {
       setError(
-        e?.response?.data?.message || e?.message || "خطا در ارتباط با سرور",
+        e?.response?.data?.message || e?.message || t("serverConnectionError"),
       );
       return null;
     } finally {
       setLoading(false);
     }
-  };
+  }, [rentCode, locale, t]);
 
   useEffect(() => {
     if (!rentCode) {
@@ -363,8 +370,7 @@ export default function ReservationPage(): any {
         intervalRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rentCode, statusParam, locale]);
+  }, [rentCode, statusParam, locale, fetchStatus]);
 
   useEffect(() => {
     if (statusParam !== "initialize") return;
@@ -377,8 +383,7 @@ export default function ReservationPage(): any {
     if (isApproved) {
       router.replace(buildUrlWithStatus("payment"));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rentData, statusParam]);
+  }, [rentData, statusParam, router, buildUrlWithStatus]);
 
   if (!rentCode) return <FailedCard />;
   if (error) return <FailedCard />;
@@ -396,17 +401,19 @@ export default function ReservationPage(): any {
     return <PaymentSuccessSkeleton />;
   }
 
+  const normalizedRentStatus = String(enrichedRentData?.rent_status || "");
+
   const isRejected = ["rejected", "cancelled", "failed"].includes(
-    String(enrichedRentData?.rent_status),
+    normalizedRentStatus,
   );
 
   const isPending =
-    String(enrichedRentData?.rent_status) === "pending" &&
+    normalizedRentStatus === "pending" &&
     enrichedRentData?.is_approved === false;
 
   const isApproved =
     enrichedRentData?.is_approved === true ||
-    String(enrichedRentData?.rent_status) === "active";
+    normalizedRentStatus === "active";
 
   if (statusParam === "initialize") {
     if (isPending) return <ProcessingCard rentData={enrichedRentData} />;

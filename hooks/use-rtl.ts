@@ -4,13 +4,12 @@ import { useLocale } from "next-intl";
 
 export default function useDIR() {
   const locale = useLocale();
-  const languages = ["fa","ar"]
+  const languages = ["fa", "ar"];
 
-  const isRtl = languages.includes(locale)
-  
-  const language = isRtl? "rtl" : "ltr";
-  const direction = language === 'rtl';
+  const isRtl = languages.includes(locale);
 
-  // console.log(direction, language)
-  return {language, direction};
+  const language = isRtl ? "rtl" : "ltr";
+  const direction = language === "rtl";
+
+  return { language, direction, isRtl };
 }

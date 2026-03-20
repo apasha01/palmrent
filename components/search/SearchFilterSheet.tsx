@@ -111,22 +111,22 @@ const FUEL_ITEMS: TranslatedItem[] = [
 ]
 
 const SEAT_COUNT_ITEMS = [
-  { id: 701, label: "۱" },
-  { id: 702, label: "۲" },
-  { id: 703, label: "۳" },
-  { id: 704, label: "۴" },
-  { id: 705, label: "۵" },
-  { id: 706, label: "۶" },
-  { id: 707, label: "۷" },
-  { id: 708, label: "۸+" },
+  { id: 701, value: "1" },
+  { id: 702, value: "2" },
+  { id: 703, value: "3" },
+  { id: 704, value: "4" },
+  { id: 705, value: "5" },
+  { id: 706, value: "6" },
+  { id: 707, value: "7" },
+  { id: 708, value: "8+" },
 ]
 
 const LUGGAGE_ITEMS = [
-  { id: 601, label: "۱" },
-  { id: 602, label: "۲" },
-  { id: 603, label: "۳" },
-  { id: 604, label: "۴" },
-  { id: 605, label: "۵+" },
+  { id: 601, value: "1" },
+  { id: 602, value: "2" },
+  { id: 603, value: "3" },
+  { id: 604, value: "4" },
+  { id: 605, value: "5+" },
 ]
 
 const AMENITY_ITEMS: TranslatedItem[] = [
@@ -137,7 +137,7 @@ const AMENITY_ITEMS: TranslatedItem[] = [
 ]
 
 function Divider() {
-  return <div className="h-px bg-gray-100 mx-0" />
+  return <div className="mx-0 h-px bg-gray-100" />
 }
 
 function getTranslatedLabel(
@@ -149,6 +149,13 @@ function getTranslatedLabel(
   } catch {
     return item.defaultLabel
   }
+}
+
+function formatNumberByLocale(value: number, locale: string) {
+  if (locale === "fa") return value.toLocaleString("fa-IR")
+  if (locale === "ar") return value.toLocaleString("ar-IQ")
+  if (locale === "tr") return value.toLocaleString("tr-TR")
+  return value.toLocaleString("en-US")
 }
 
 function SectionHeader({
@@ -166,11 +173,11 @@ function SectionHeader({
     <button
       type="button"
       onClick={onToggle}
-      className="flex items-center justify-between w-full py-1"
+      className="flex w-full items-center justify-between py-1"
     >
       <div className="flex items-center gap-2">
         {icon && <span className="text-blue-500">{icon}</span>}
-        <span className="font-bold text-sm text-gray-800">{title}</span>
+        <span className="text-sm font-bold text-gray-800">{title}</span>
       </div>
 
       <ChevronUp
@@ -196,12 +203,12 @@ function CheckboxRow({
     <button
       type="button"
       onClick={onChange}
-      className="flex items-center justify-between w-full py-2 px-1 hover:bg-gray-50 rounded transition-colors"
+      className="flex w-full items-center justify-between rounded px-1 py-2 transition-colors hover:bg-gray-50"
     >
       <div
         className={cn(
-          "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors",
-          checked ? "bg-blue-500 border-blue-500" : "border-gray-300 bg-white"
+          "flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-colors",
+          checked ? "border-blue-500 bg-blue-500" : "border-gray-300 bg-white"
         )}
       >
         {checked && (
@@ -217,7 +224,7 @@ function CheckboxRow({
         )}
       </div>
 
-      <span className="text-sm text-gray-700 text-right flex-1 pr-3">{label}</span>
+      <span className="flex-1 pr-3 text-right text-sm text-gray-700">{label}</span>
     </button>
   )
 }
@@ -236,10 +243,10 @@ function PillButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all duration-150",
+        "flex-1 rounded-xl border py-2.5 text-sm font-medium transition-all duration-150",
         selected
-          ? "bg-gray-800 border-gray-800 text-white"
-          : "bg-white border-gray-200 text-gray-700 hover:border-gray-300"
+          ? "border-gray-800 bg-gray-800 text-white"
+          : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
       )}
     >
       {label}
@@ -247,7 +254,15 @@ function PillButton({
   )
 }
 
-function PriceRange({ isRtl }: { isRtl: boolean }) {
+function PriceRange({
+  isRtl,
+  t,
+  locale,
+}: {
+  isRtl: boolean
+  t: ReturnType<typeof useTranslations>
+  locale: string
+}) {
   const priceRange = useSearchPageStore((s) => s.priceRange)
   const selectedPriceRange = useSearchPageStore((s) => s.selectedPriceRange)
   const setSelectedPriceRange = useSearchPageStore((s) => s.setSelectedPriceRange)
@@ -261,10 +276,7 @@ function PriceRange({ isRtl }: { isRtl: boolean }) {
 
   const controlledValues = useMemo<[number, number]>(() => {
     if (selectedPriceRange && selectedPriceRange.length === 2) {
-      return [
-        Math.min(...selectedPriceRange),
-        Math.max(...selectedPriceRange),
-      ]
+      return [Math.min(...selectedPriceRange), Math.max(...selectedPriceRange)]
     }
 
     return [MIN_LIMIT, MAX_LIMIT]
@@ -288,27 +300,27 @@ function PriceRange({ isRtl }: { isRtl: boolean }) {
 
   return (
     <div className="w-full" dir={isRtl ? "rtl" : "ltr"}>
-      <div className="flex items-center gap-3 mb-5">
-        <div className="flex-1 relative border border-gray-200 rounded-xl bg-gray-50 px-3 pt-5 pb-1.5">
+      <div className="mb-5 flex items-center gap-3">
+        <div className="relative flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 pb-1.5 pt-5">
           <span className="absolute right-3 top-1.5 text-[10px] text-gray-400">
-            حداکثر
+            {t("priceMax")}
           </span>
-          <span className="font-bold text-sm text-gray-900" dir="ltr">
-            {values[1].toLocaleString()}
+          <span className="text-sm font-bold text-gray-900" dir="ltr">
+            {formatNumberByLocale(values[1], locale)}
           </span>
-          <span className="absolute left-3 bottom-1.5 text-[10px] text-gray-400">
+          <span className="absolute bottom-1.5 left-3 text-[10px] text-gray-400">
             {currency}
           </span>
         </div>
 
-        <div className="flex-1 relative border border-gray-200 rounded-xl bg-gray-50 px-3 pt-5 pb-1.5">
+        <div className="relative flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 pb-1.5 pt-5">
           <span className="absolute right-3 top-1.5 text-[10px] text-gray-400">
-            حداقل
+            {t("priceMin")}
           </span>
-          <span className="font-bold text-sm text-gray-900" dir="ltr">
-            {values[0].toLocaleString()}
+          <span className="text-sm font-bold text-gray-900" dir="ltr">
+            {formatNumberByLocale(values[0], locale)}
           </span>
-          <span className="absolute left-3 bottom-1.5 text-[10px] text-gray-400">
+          <span className="absolute bottom-1.5 left-3 text-[10px] text-gray-400">
             {currency}
           </span>
         </div>
@@ -327,7 +339,13 @@ function PriceRange({ isRtl }: { isRtl: boolean }) {
   )
 }
 
-function BrandSection() {
+function BrandSection({
+  t,
+  locale,
+}: {
+  t: ReturnType<typeof useTranslations>
+  locale: string
+}) {
   const [query, setQuery] = useState("")
   const [expanded, setExpanded] = useState(false)
 
@@ -345,31 +363,30 @@ function BrandSection() {
     return expanded ? ALL_BRANDS : TOP_BRANDS
   }, [query, expanded, isSearching])
 
-  const selectedExtraCount = EXTRA_BRANDS.filter((b) =>
-    selectedBrands.includes(b)
-  ).length
+  const selectedExtraCount = EXTRA_BRANDS.filter((b) => selectedBrands.includes(b)).length
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-3 py-2.5 bg-gray-50 focus-within:border-blue-400 focus-within:bg-white transition-all mb-2">
+      <div className="mb-2 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 transition-all focus-within:border-blue-400 focus-within:bg-white">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="جستجوی نام برند"
-          className="w-full text-sm outline-none bg-transparent placeholder:text-gray-400 text-gray-800 text-right"
-          dir="rtl"
+          placeholder={t("brandSearchPlaceholder")}
+          className="w-full bg-transparent text-sm text-gray-800 outline-none placeholder:text-gray-400"
+          dir={locale === "fa" || locale === "ar" ? "rtl" : "ltr"}
         />
 
         {query ? (
           <button
             type="button"
             onClick={() => setQuery("")}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 transition-colors hover:text-gray-600"
+            aria-label={t("clear")}
           >
             <X className="size-3.5" />
           </button>
         ) : (
-          <Search className="size-4 text-gray-400 shrink-0" />
+          <Search className="size-4 shrink-0 text-gray-400" />
         )}
       </div>
 
@@ -384,7 +401,7 @@ function BrandSection() {
             />
           ))
         ) : (
-          <p className="text-sm text-gray-400 py-2 text-right">برندی پیدا نشد</p>
+          <p className="py-2 text-right text-sm text-gray-400">{t("noBrandFound")}</p>
         )}
       </div>
 
@@ -392,7 +409,7 @@ function BrandSection() {
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="flex items-center gap-1.5 text-sm text-blue-500 font-medium pt-1 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-1.5 pt-1 text-sm font-medium text-blue-500 transition-colors hover:text-blue-600"
         >
           <ChevronUp
             className={cn(
@@ -401,10 +418,12 @@ function BrandSection() {
             )}
           />
           {expanded
-            ? "نمایش کمتر"
-            : `نمایش بیشتر${
-                selectedExtraCount > 0 ? ` (${selectedExtraCount} انتخاب شده)` : ""
-              }`}
+            ? t("showLess")
+            : selectedExtraCount > 0
+              ? t("showMoreSelected", {
+                  count: formatNumberByLocale(selectedExtraCount, locale),
+                })
+              : t("showMore")}
         </button>
       )}
     </div>
@@ -415,10 +434,12 @@ function CarClassSection({
   selectedCategories,
   toggleSelectedCategory,
   t,
+  locale,
 }: {
   selectedCategories: number[]
   toggleSelectedCategory: (id: number) => void
   t: ReturnType<typeof useTranslations>
+  locale: string
 }) {
   const [expanded, setExpanded] = useState(false)
   const VISIBLE_COUNT = 5
@@ -450,7 +471,7 @@ function CarClassSection({
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="flex items-center gap-1.5 text-sm text-blue-500 font-medium pt-1 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-1.5 pt-1 text-sm font-medium text-blue-500 transition-colors hover:text-blue-600"
         >
           <ChevronUp
             className={cn(
@@ -459,8 +480,12 @@ function CarClassSection({
             )}
           />
           {expanded
-            ? "نمایش کمتر"
-            : `نمایش بیشتر${hiddenSelected > 0 ? ` (${hiddenSelected} انتخاب شده)` : ""}`}
+            ? t("showLess")
+            : hiddenSelected > 0
+              ? t("showMoreSelected", {
+                  count: formatNumberByLocale(hiddenSelected, locale),
+                })
+              : t("showMore")}
         </button>
       )}
     </div>
@@ -471,7 +496,7 @@ export default function SearchFilterSheet({
   closePopup,
   carListLength = 0,
 }: Props) {
-  const t = useTranslations()
+  const t = useTranslations("SearchFilterSheet")
   const locale = useLocale()
   const isRtl = locale === "fa" || locale === "ar"
 
@@ -557,7 +582,7 @@ export default function SearchFilterSheet({
       if (seatItem) {
         badges.push({
           key: `seat-${id}`,
-          label: `${seatItem.label} نفر`,
+          label: seatItem.value,
           onRemove: () => useSearchPageStore.getState().toggleSelectedCategory(id),
         })
         return
@@ -567,7 +592,7 @@ export default function SearchFilterSheet({
       if (lugItem) {
         badges.push({
           key: `lug-${id}`,
-          label: `چمدان ${lugItem.label}`,
+          label: lugItem.value,
           onRemove: () => useSearchPageStore.getState().toggleSelectedCategory(id),
         })
         return
@@ -597,13 +622,16 @@ export default function SearchFilterSheet({
     if (selectedPriceRange?.length === 2) {
       badges.push({
         key: "price-range",
-        label: `${selectedPriceRange[0].toLocaleString()} - ${selectedPriceRange[1].toLocaleString()}`,
+        label: `${formatNumberByLocale(selectedPriceRange[0], locale)} - ${formatNumberByLocale(
+          selectedPriceRange[1],
+          locale
+        )}`,
         onRemove: () => useSearchPageStore.getState().setSelectedPriceRange(null),
       })
     }
 
     return badges
-  }, [selectedBrands, selectedCategories, sort, selectedPriceRange, t])
+  }, [selectedBrands, selectedCategories, sort, selectedPriceRange, t, locale])
 
   const getSortLabel = (id: string | null): string => {
     const opt = SORT_OPTIONS.find((s) => s.id === id)
@@ -620,51 +648,53 @@ export default function SearchFilterSheet({
   return (
     <div
       className={cn(
-        "flex flex-col h-full bg-white overflow-hidden",
+        "flex h-full flex-col overflow-hidden bg-white",
         isRtl ? "text-right" : "text-left"
       )}
       dir={isRtl ? "rtl" : "ltr"}
     >
-      <div className="flex-shrink-0 flex items-center justify-between px-4 py-3.5 border-b border-gray-100 bg-white">
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 bg-white px-4 py-3.5">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={closePopup}
-            className="text-gray-400 hover:text-gray-600 flex gap-2 items-center transition-colors"
-            aria-label="بازگشت"
+            className="flex items-center gap-2 text-gray-400 transition-colors hover:text-gray-600"
+            aria-label={t("back")}
           >
             <ArrowRight className="size-5" />
-            <span className="text-base font-bold text-gray-900">فیلترها</span>
+            <span className="text-base font-bold text-gray-900">{t("filters")}</span>
           </button>
         </div>
 
         <button
           type="button"
           onClick={handleReset}
-          className="text-sm font-medium text-blue-500 hover:text-blue-600 transition-colors"
+          className="text-sm font-medium text-blue-500 transition-colors hover:text-blue-600"
         >
-          حذف همه فیلترها
+          {t("clearAllFilters")}
         </button>
       </div>
 
-      <div className="flex-shrink-0 px-4 py-2 bg-gray-50 border-b border-gray-100">
-        <p className="text-xs text-gray-500 text-right">
-          نمایش {carListLength.toLocaleString()} خودرو موجود
+      <div className="flex-shrink-0 border-b border-gray-100 bg-gray-50 px-4 py-2">
+        <p className="text-right text-xs text-gray-500">
+          {t("availableCarsCount", {
+            count: formatNumberByLocale(carListLength, locale),
+          })}
         </p>
       </div>
 
       {activeBadges.length > 0 && (
-        <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2 overflow-x-auto border-b border-gray-100 bg-white">
+        <div className="flex flex-shrink-0 items-center gap-2 overflow-x-auto border-b border-gray-100 bg-white px-4 py-2">
           {activeBadges.map((badge) => (
             <span
               key={badge.key}
-              className="flex items-center gap-1.5 bg-gray-100 text-gray-700 text-xs rounded-full px-3 py-1.5 whitespace-nowrap flex-shrink-0"
+              className="flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-gray-100 px-3 py-1.5 text-xs text-gray-700"
             >
               <button
                 type="button"
                 onClick={badge.onRemove}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
-                aria-label={`حذف فیلتر ${badge.label}`}
+                className="text-gray-500 transition-colors hover:text-gray-700"
+                aria-label={t("removeFilterAria", { label: badge.label })}
               >
                 <X className="size-3" />
               </button>
@@ -678,7 +708,7 @@ export default function SearchFilterSheet({
         <div className="px-4">
           <div className="py-3">
             <SectionHeader
-              title="مرتب‌سازی"
+              title={t("sortTitle")}
               icon={<SlidersHorizontal className="size-4" />}
               open={openSections.sort}
               onToggle={() => toggleSection("sort")}
@@ -702,7 +732,7 @@ export default function SearchFilterSheet({
 
           <div className="py-3">
             <SectionHeader
-              title="بازه قیمتی"
+              title={t("priceRangeTitle")}
               icon={<DollarSign className="size-4" />}
               open={openSections.price}
               onToggle={() => toggleSection("price")}
@@ -710,7 +740,7 @@ export default function SearchFilterSheet({
 
             {openSections.price && (
               <div className="mt-3">
-                <PriceRange isRtl={isRtl} />
+                <PriceRange isRtl={isRtl} t={t} locale={locale} />
               </div>
             )}
           </div>
@@ -719,7 +749,7 @@ export default function SearchFilterSheet({
 
           <div className="py-3">
             <SectionHeader
-              title="نام برند خودرو"
+              title={t("brandNameTitle")}
               icon={<Building2 className="size-4" />}
               open={openSections.brand}
               onToggle={() => toggleSection("brand")}
@@ -727,7 +757,7 @@ export default function SearchFilterSheet({
 
             {openSections.brand && (
               <div className="mt-3">
-                <BrandSection />
+                <BrandSection t={t} locale={locale} />
               </div>
             )}
           </div>
@@ -736,7 +766,7 @@ export default function SearchFilterSheet({
 
           <div className="py-3">
             <SectionHeader
-              title="کلاس خودرو"
+              title={t("carClassTitle")}
               icon={<Car className="size-4" />}
               open={openSections.carClass}
               onToggle={() => toggleSection("carClass")}
@@ -748,6 +778,7 @@ export default function SearchFilterSheet({
                   selectedCategories={selectedCategories}
                   toggleSelectedCategory={toggleSelectedCategory}
                   t={t}
+                  locale={locale}
                 />
               </div>
             )}
@@ -757,7 +788,7 @@ export default function SearchFilterSheet({
 
           <div className="py-3">
             <SectionHeader
-              title="گیربکس"
+              title={t("gearboxTitle")}
               icon={<Settings2 className="size-4" />}
               open={openSections.gearbox}
               onToggle={() => toggleSection("gearbox")}
@@ -781,7 +812,7 @@ export default function SearchFilterSheet({
 
           <div className="py-3">
             <SectionHeader
-              title="نوع سوخت"
+              title={t("fuelTypeTitle")}
               icon={<Fuel className="size-4" />}
               open={openSections.fuel}
               onToggle={() => toggleSection("fuel")}
@@ -805,7 +836,7 @@ export default function SearchFilterSheet({
 
           <div className="py-3">
             <SectionHeader
-              title="تعداد نفرات"
+              title={t("seatCountTitle")}
               icon={<Users className="size-4" />}
               open={openSections.seats}
               onToggle={() => toggleSection("seats")}
@@ -816,7 +847,7 @@ export default function SearchFilterSheet({
                 {SEAT_COUNT_ITEMS.map((item) => (
                   <CheckboxRow
                     key={item.id}
-                    label={`${item.label} نفر`}
+                    label={item.value}
                     checked={selectedCategories.includes(item.id)}
                     onChange={() => toggleSelectedCategory(item.id)}
                   />
@@ -829,7 +860,7 @@ export default function SearchFilterSheet({
 
           <div className="py-3">
             <SectionHeader
-              title="ظرفیت چمدان"
+              title={t("luggageCapacityTitle")}
               icon={<Luggage className="size-4" />}
               open={openSections.luggage}
               onToggle={() => toggleSection("luggage")}
@@ -840,7 +871,7 @@ export default function SearchFilterSheet({
                 {LUGGAGE_ITEMS.map((item) => (
                   <CheckboxRow
                     key={item.id}
-                    label={`${item.label} چمدان`}
+                    label={item.value}
                     checked={selectedCategories.includes(item.id)}
                     onChange={() => toggleSelectedCategory(item.id)}
                   />
@@ -853,7 +884,7 @@ export default function SearchFilterSheet({
 
           <div className="py-3">
             <SectionHeader
-              title="امکانات و شرایط رزرو"
+              title={t("amenitiesTitle")}
               icon={<SlidersHorizontal className="size-4" />}
               open={openSections.amenities}
               onToggle={() => toggleSection("amenities")}
@@ -877,21 +908,23 @@ export default function SearchFilterSheet({
         </div>
       </div>
 
-      <div className="shrink-0 flex gap-3 px-4 py-3 border-t border-gray-100 bg-white">
+      <div className="flex shrink-0 gap-3 border-t border-gray-100 bg-white px-4 py-3">
         <button
           type="button"
           onClick={handleReset}
-          className="flex-1 py-3.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+          className="flex-1 rounded-xl border border-gray-200 py-3.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50"
         >
-          حذف فیلترها
+          {t("clearFilters")}
         </button>
 
         <button
           type="button"
           onClick={closePopup}
-          className="flex-[2] py-3.5 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold transition-colors"
+          className="flex-[2] rounded-xl bg-blue-500 py-3.5 text-sm font-bold text-white transition-colors hover:bg-blue-600"
         >
-          مشاهده {carListLength.toLocaleString()} نتیجه
+          {t("viewResults", {
+            count: formatNumberByLocale(carListLength, locale),
+          })}
         </button>
       </div>
     </div>

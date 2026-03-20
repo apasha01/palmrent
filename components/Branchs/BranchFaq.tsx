@@ -2,6 +2,8 @@
 "use client";
 
 import { HelpCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import {
   Accordion,
@@ -9,6 +11,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../ui/accordion";
+import useDIR from "@/hooks/use-rtl";
 
 interface QuestionItem {
   id: number;
@@ -33,21 +36,24 @@ interface Props {
 }
 
 const BranchFaq = ({ categories = [], loading = false }: Props) => {
+  const t = useTranslations("BranchFaq");
+  const { language } = useDIR();
+
   if (loading) {
     return (
       <div>
         <p className="mt-1 mb-4 px-4 font-bold text-gray-900 dark:text-gray-100 md:block">
-          پرسش‌های شما
+          {t("yourQuestions")}
         </p>
 
         <div className="rounded-3xl border bg-white shadow dark:bg-gray-900">
           <div className="p-4">
             <p className="hidden text-center text-lg font-bold text-gray-900 dark:text-gray-100 md:block">
-              پرسش‌های متداول
+              {t("commonQuestions")}
             </p>
 
             <div className="mt-4 rounded-2xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
-              در حال دریافت اطلاعات...
+              {t("loading")}
             </div>
           </div>
         </div>
@@ -59,24 +65,24 @@ const BranchFaq = ({ categories = [], loading = false }: Props) => {
     (category) =>
       category &&
       Array.isArray(category.questions) &&
-      category.questions.length > 0
+      category.questions.length > 0,
   );
 
   if (!validCategories.length) {
     return (
       <div>
         <p className="mt-1 mb-4 px-4 font-bold text-gray-900 dark:text-gray-100 md:block">
-          پرسش‌های شما
+          {t("yourQuestions")}
         </p>
 
         <div className="rounded-3xl border bg-white shadow dark:bg-gray-900">
           <div className="p-4">
             <p className="hidden text-center text-lg font-bold text-gray-900 dark:text-gray-100 md:block">
-              پرسش‌های متداول
+              {t("commonQuestions")}
             </p>
 
             <div className="mt-4 rounded-2xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
-              سوالی برای این شعبه ثبت نشده است.
+              {t("empty")}
             </div>
           </div>
         </div>
@@ -89,17 +95,17 @@ const BranchFaq = ({ categories = [], loading = false }: Props) => {
   return (
     <div>
       <p className="mt-1 mb-4 px-4 font-bold text-gray-900 dark:text-gray-100 md:block">
-        پرسش‌های شما
+        {t("yourQuestions")}
       </p>
 
       <div className="rounded-3xl border bg-white shadow dark:bg-gray-900">
         <div className="p-2">
           {/* <p className="hidden text-center text-lg font-bold text-gray-900 dark:text-gray-100 md:block">
-            پرسش‌های متداول
+            {t("commonQuestions")}
           </p> */}
 
           <div className="mt-2 px-2">
-            <Tabs defaultValue={defaultTab} dir="rtl">
+            <Tabs defaultValue={defaultTab}>
               <div className="flex justify-start overflow-x-auto pb-2 md:justify-center">
                 <TabsList className="min-w-max gap-2 bg-transparent p-0">
                   {validCategories.map((category) => (
@@ -125,11 +131,7 @@ const BranchFaq = ({ categories = [], loading = false }: Props) => {
               </div>
 
               {validCategories.map((category) => (
-                <TabsContent
-                  key={category.id}
-                  value={String(category.id)}
-            
-                >
+                <TabsContent key={category.id} value={String(category.id)}>
                   <Accordion type="single" collapsible className="w-full">
                     {category.questions.map((q) => (
                       <AccordionItem
@@ -137,7 +139,10 @@ const BranchFaq = ({ categories = [], loading = false }: Props) => {
                         value={`question-${category.id}-${q.id}`}
                         className="border-b border-gray-200 dark:border-gray-800"
                       >
-                        <AccordionTrigger className="text-right text-gray-900 hover:no-underline dark:text-gray-100">
+                        <AccordionTrigger
+                          className=" text-gray-900 hover:no-underline dark:text-gray-100"
+                          aria-label={t("openQuestion", { question: q.question })}
+                        >
                           <div className="flex w-full items-center gap-2 text-right">
                             <HelpCircle className="h-5 w-5 shrink-0 text-blue-500 dark:text-blue-400" />
                             <span className="leading-7">{q.question}</span>
@@ -147,7 +152,7 @@ const BranchFaq = ({ categories = [], loading = false }: Props) => {
                         <AccordionContent className="text-gray-600 dark:text-gray-300">
                           <div
                             className="
-                              prose prose-sm max-w-none text-right leading-7
+                              prose prose-sm max-w-none leading-7
                               dark:prose-invert
                               prose-p:my-2
                               prose-ul:my-2

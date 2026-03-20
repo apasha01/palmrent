@@ -25,7 +25,7 @@ import CouponDialog from "@/components/reserve/CouponDialog";
 import SelectedCarCard from "./SelectedCarCard";
 import SummaryCard from "./SummaryCard";
 import NoDepositBanner from "./NoDepositeBanner";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Switch } from "../ui/switch";
 import RulesSheet from "./RulesDrawer";
 import PhoneInputCustom from "./PhoneInputCustom";
@@ -33,6 +33,7 @@ import PhoneInputCustom from "./PhoneInputCustom";
 import LoginDialog from "../auth/login-dialog";
 import { AppDrawer } from "../common/AppDrawer";
 import { useToast } from "@/hooks/useToast";
+import { useRouter } from "@/i18n/navigation";
 
 /* ---------------- types ---------------- */
 type ApiCalcResponse = any;

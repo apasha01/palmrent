@@ -16,7 +16,6 @@ import { useBranchCars } from "@/services/branch-cars/branch-cars.queries";
 import type { BranchCarsParams } from "@/services/branch-cars/branch-cars.api";
 import SkeletonCarCard from "@/components/Loadings/SkeletonCarCard";
 import SkeletonSearchBar from "@/components/Loadings/SkeletonSearchBar";
-import { RainbowButton } from "@/components/ui/rainbow-button";
 import { ArrowLeftIcon } from "@/components/ui/arrow-left";
 import type { ArrowLeftIconHandle } from "@/components/ui/arrow-left";
 import BranchName from "@/helpers/BranchNameHelper";
@@ -722,14 +721,12 @@ export default function HomePage() {
             <TinyInformation />
           </div>
 
-
-                <div className="mt-6">
+          <div className="mt-6">
             <BranchFaq
               loading={supportQuery.isLoading || supportQuery.isFetching}
               categories={branchSupportCategories}
             />
           </div>
-
 
           <div className="mt-6">
             <ImportantQuestions
@@ -743,7 +740,7 @@ export default function HomePage() {
           <div id={SEARCH_SECTION_SCROLL_ID} className="h-px w-full" />
 
           <p className="mt-4 px-2 text-center font-bold md:text-start">
-            لیست خودرو های <BranchName />
+            {t.rich("carsListTitle", { Branch: () => <BranchName /> })}
           </p>
 
           <div
@@ -798,7 +795,7 @@ export default function HomePage() {
                         className="flex items-center gap-2 rounded-xl border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
                       >
                         <SlidersHorizontal className="size-4" />
-                        حذف همه فیلترها
+                        {t("clearAllFilters")}
                       </Button>
                     )}
                   </div>
@@ -832,32 +829,32 @@ export default function HomePage() {
 
                     <div ref={infiniteSentinelRef} className="h-6 w-full" />
 
-                 <div className="mt-4 flex justify-center px-4 sm:px-0 md:px-0">
-  {hasMore ? (
-    showLoadMoreButton ? (
-      <Button
-        type="button"
-        variant="outline"
-        onClick={onManualLoadOnce}
-        disabled={query.isFetching}
-        onMouseEnter={handleBtnEnter}
-        onMouseLeave={handleBtnLeave}
-        onFocus={handleBtnEnter}
-        onBlur={handleBtnLeave}
-        className="w-full border border-[#0077db] bg-transparent text-base font-medium text-[#0077db] shadow-none hover:bg-[#0077db]/10 hover:text-[#0077db] md:w-auto md:px-12 md:py-3 md:text-lg"
-      >
-        {buttonText}
-        <ArrowLeftIcon ref={arrowRef} />
-      </Button>
-    ) : (
-      <div className="h-10" />
-    )
-  ) : (
-    <div className="text-sm text-gray-500 dark:text-gray-400">
-      {t("noMoreResults")}
-    </div>
-  )}
-</div>
+                    <div className="mt-4 flex justify-center px-4 sm:px-0 md:px-0">
+                      {hasMore ? (
+                        showLoadMoreButton ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onManualLoadOnce}
+                            disabled={query.isFetching}
+                            onMouseEnter={handleBtnEnter}
+                            onMouseLeave={handleBtnLeave}
+                            onFocus={handleBtnEnter}
+                            onBlur={handleBtnLeave}
+                            className="w-full border border-[#0077db] bg-transparent text-base font-medium text-[#0077db] shadow-none hover:bg-[#0077db]/10 hover:text-[#0077db] md:w-auto md:px-12 md:py-3 md:text-lg"
+                          >
+                            {buttonText}
+                            <ArrowLeftIcon ref={arrowRef} />
+                          </Button>
+                        ) : (
+                          <div className="h-10" />
+                        )
+                      ) : (
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {t("noMoreResults")}
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
               </>
@@ -872,7 +869,6 @@ export default function HomePage() {
             <QRApplication />
           </div>
 
-    
           <div className="mt-6">
             <DescriptionLanding
               title={branchSupportTitle}

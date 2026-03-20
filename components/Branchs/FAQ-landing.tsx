@@ -3,6 +3,8 @@
 
 import React from "react";
 import { HelpCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import {
   Accordion,
@@ -10,6 +12,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../ui/accordion";
+import useDIR from "@/hooks/use-rtl";
+
 
 interface QuestionItem {
   id: number;
@@ -34,6 +38,9 @@ interface Props {
 }
 
 const FAQlanding = ({ data = [], loading = false }: Props) => {
+  const t = useTranslations("FAQlanding");
+
+
   if (loading) return null;
 
   const categories = data.filter(
@@ -47,13 +54,13 @@ const FAQlanding = ({ data = [], loading = false }: Props) => {
   return (
     <div>
       <p className="md:block px-4 font-bold mb-4 mt-1 text-gray-900 dark:text-gray-100">
-        پرسش‌های شما
+        {t("yourQuestions")}
       </p>
 
       <div className="bg-white dark:bg-gray-900 border shadow rounded-3xl">
         <div className="p-4">
           <p className="font-bold hidden md:block text-lg text-center text-gray-900 dark:text-gray-100">
-            پرسش‌های متداول
+            {t("commonQuestions")}
           </p>
 
           <div className="mt-2">
@@ -65,7 +72,7 @@ const FAQlanding = ({ data = [], loading = false }: Props) => {
                       key={category.id}
                       value={String(category.id)}
                       className="
-                        px-4 
+                        px-4
                         data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-blue-950/40
                         data-[state=active]:border-blue-500
                         data-[state=active]:shadow-none
@@ -95,7 +102,10 @@ const FAQlanding = ({ data = [], loading = false }: Props) => {
                         value={`question-${q.id}`}
                         className="border-b border-gray-200 dark:border-gray-800"
                       >
-                        <AccordionTrigger className="text-gray-900 dark:text-gray-100 text-right hover:no-underline">
+                        <AccordionTrigger
+                          className="text-gray-900 dark:text-gray-100 text-right hover:no-underline"
+                          aria-label={t("openQuestion", { question: q.question })}
+                        >
                           <div className="flex items-center gap-2 text-right">
                             <HelpCircle className="w-5 h-5 text-blue-500 dark:text-blue-400 shrink-0" />
                             <span className="leading-7">{q.question}</span>

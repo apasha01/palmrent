@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 
-import { Link } from "@/i18n/navigation"; 
+import { Link } from "@/i18n/navigation";
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import useDIR from "@/hooks/use-rtl";
 
 type City = {
   id: number | string;
@@ -53,34 +54,36 @@ function CityItem({
   ariaLabel,
   isPrimary = false,
   disabled = false,
+  direction = false,
 }: {
   href?: string;
   label: string;
   ariaLabel: string;
   isPrimary?: boolean;
   disabled?: boolean;
+  direction?: boolean;
 }) {
   const className = `cursor-pointer ${baseBtnClass} ${isPrimary ? outlinePrimary : outlineNeutral} ${
     disabled ? "opacity-50 pointer-events-none" : ""
   }`;
 
-  // ✅ اگر href داشت => لینک
+  const Icon = direction ? ChevronLeft  : ChevronRight;
+
   if (href && !disabled) {
     return (
       <Link href={href} className="w-full cursor-pointer">
         <Button type="button" variant="ghost" className={className}>
           <span className="truncate">{label}</span>
-          <ChevronLeft className="size-5 shrink-0" />
+          <Icon className="size-5 shrink-0" />
         </Button>
       </Link>
     );
   }
 
-  // ✅ در غیر اینصورت => دکمه غیرفعال
   return (
     <Button type="button" disabled variant="ghost" className={className} aria-label={ariaLabel}>
       <span className="truncate">{label}</span>
-      <ChevronLeft className="size-5 shrink-0" />
+      <Icon className="size-5 shrink-0" />
     </Button>
   );
 }
@@ -88,6 +91,7 @@ function CityItem({
 /* ---------------- Component ---------------- */
 const ActiveRentCities = ({ cities, isLoading }: ActiveRentCitiesProps) => {
   const t = useTranslations("ActiveRentCities");
+  const { direction } = useDIR();
 
   const loading = Boolean(isLoading || !cities);
   const visibleCities = useMemo(() => (cities ?? []).slice(0, 3), [cities]);
@@ -107,13 +111,11 @@ const ActiveRentCities = ({ cities, isLoading }: ActiveRentCitiesProps) => {
           <CitiesSkeleton />
         ) : (
           <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-3">
-            {/* 3 Cities */}
             {visibleCities.map((city) => {
               const href = city.slug ? `${carsRentBase}/${city.slug}` : undefined;
 
               return (
                 <CityItem
-                
                   key={city.id}
                   href={href}
                   label={city.title}
@@ -123,16 +125,17 @@ const ActiveRentCities = ({ cities, isLoading }: ActiveRentCitiesProps) => {
                       : t("cityButtonDisabledAria", { city: city.title })
                   }
                   disabled={!href}
+                  direction={direction}
                 />
               );
             })}
 
-            {/* View All (same style, only blue border/text) */}
             <CityItem
               href={carsRentBase}
               label={t("viewAll")}
               ariaLabel={t("viewAllAria")}
               isPrimary
+              direction={direction}
             />
           </div>
         )}

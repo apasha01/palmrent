@@ -11,7 +11,7 @@ import React, {
 } from "react";
 import { useSelector } from "react-redux";
 import { Button } from "../ui/button";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useHubCarsOnly } from "@/services/hub-cars/hub-cars.queries";
 import { Link } from "@/i18n/navigation";
 import BranchCarCard from "../card/CardCardBranch";
@@ -19,6 +19,8 @@ import type { Range } from "@/components/custom/calender/date-range-picker";
 import { SITE_HEADER_HEIGHT } from "@/components/layouts/Header";
 import { useQueryClient } from "@tanstack/react-query";
 import { getHubCarsOnly } from "@/services/hub-cars/hub-cars.api";
+import useDIR from "@/hooks/use-rtl";
+
 
 type BranchItem = {
   id: number;
@@ -87,6 +89,8 @@ function BranchCarCardSkeleton() {
 
 const BranchCars = ({ branches }: BranchCarsProps) => {
   const locale = useLocale();
+  const t = useTranslations("HubBranchCars");
+  const { direction } = useDIR();
 
   const sliderRef = useRef<HTMLDivElement>(null);
   const tabsScrollRef = useRef<HTMLDivElement>(null);
@@ -292,6 +296,7 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
                     ? "text-sky-500"
                     : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 }`}
+                aria-label={t("selectCity", { city: city.title })}
               >
                 {city.title}
 
@@ -304,12 +309,20 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
         </div>
 
         <div className="hidden gap-2 md:flex">
-          <Button variant="outline" size="icon" onClick={scrollRight}>
-            <ChevronRight className="h-5 w-5" />
+          <Button variant="outline" size="icon" onClick={scrollRight} aria-label={t("scrollNext")}>
+            {direction ? (
+              <ChevronLeft className="h-5 w-5" />
+            ) : (
+              <ChevronRight className="h-5 w-5" />
+            )}
           </Button>
 
-          <Button variant="outline" size="icon" onClick={scrollLeft}>
-            <ChevronLeft className="h-5 w-5" />
+          <Button variant="outline" size="icon" onClick={scrollLeft} aria-label={t("scrollPrev")}>
+            {direction ? (
+              <ChevronRight className="h-5 w-5" />
+            ) : (
+              <ChevronLeft className="h-5 w-5" />
+            )}
           </Button>
         </div>
       </div>
@@ -335,11 +348,11 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
 
       <section className="w-full">
         <p className="px-4 text-xl font-bold sm:px-0 md:text-3xl">
-          آغاز سفر با پالم رنت از همین جاست
+          {t("title")}
         </p>
 
         <p className="mt-2 px-4 text-xs sm:px-0 md:text-sm">
-          اجاره خودرو بدون ودیعه و پرداخت در محل برای یک تجربه راحت و مطمئن
+          {t("subtitle")}
         </p>
 
         <div className="relative mt-6">
@@ -374,8 +387,8 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
             </div>
           </div>
         </div>
- 
-         <div
+
+        <div
           ref={sliderRef}
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
           className="mb-2 mt-4 flex w-screen snap-x snap-mandatory gap-3 overflow-x-scroll overflow-y-hidden pb-2 pl-4 sm:w-full sm:pl-0 [&::-webkit-scrollbar]:hidden"
@@ -391,7 +404,7 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
             ))
           ) : cars.length === 0 ? (
             <div className="flex w-full justify-center">
-              <p className="text-sm text-gray-500">خودرویی نیست</p>
+              <p className="text-sm text-gray-500">{t("empty")}</p>
             </div>
           ) : (
             cars.map((car: any) => (
@@ -406,7 +419,6 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
                   branchId={Number(activeBranchId) || null}
                   sharedCalendar={sharedCalendar}
                   onSharedCalendarChange={onSharedCalendarChange}
-  
                   calendarHydrated={true}
                 />
               </div>
@@ -421,7 +433,7 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
               size="lg"
               className="w-full border border-[#0077db] bg-transparent text-base font-medium text-[#0077db] shadow-none hover:bg-[#0077db]/10 hover:text-[#0077db] md:w-auto md:px-12 md:py-3 md:text-lg"
             >
-              مشاهده همه خودروهای {activeCityName}
+              {t("viewAllCars", { city: activeCityName })}
             </Button>
           </Link>
         </div>

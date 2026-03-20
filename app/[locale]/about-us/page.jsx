@@ -1,5 +1,5 @@
 // app/page.tsx
-import AboutUsComponent from "@/components/AboutPage"
+// import AboutUsComponent from "@/components/AboutPage"
 import { BASE_URL } from "../../../lib/apiClient"
 
 async function getAboutData(locale) {
@@ -62,5 +62,6 @@ export default async function AboutUsPage({ params }) {
   const response = await getAboutData(locale)
   const initialData = response.data
 
-  return <AboutUsComponent data={initialData} />
+  // return <AboutUsComponent data={initialData} />
+  return "salam"
 }

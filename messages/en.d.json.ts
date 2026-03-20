@@ -488,49 +488,43 @@ declare const messages: {
     }
   },
 
-  "Auth": {
-    "LoginDialog": {
-      "srTitle": "Login or Sign Up",
-      "button": {
-        "open": "Login / Sign Up",
-        "close": "Close",
-        "back": "Back",
-        "sendOtp": "Confirm & Get Code",
-        "verify": "Confirm & Continue",
-        "resend": "Resend Code",
-        "resendWithCountdown": "Resend in {seconds}s",
-        "editMobile": "Edit Number"
+
+  
+  "QRApplication": {
+    "qrAlt": "QR code image",
+    "scanText": "Scan to download!",
+    "title": "Palm Rent App",
+    "subtitle": "Faster and more reliable online car rental",
+    "downloadLinks": "View download links",
+    "androidAlt": "Android",
+    "iosAlt": "iOS",
+    "platforms": "Available for Android and IOS",
+    "appImageAlt": "Application image"
+  },
+
+
+    "HubSupportSection": {
+    "items": {
+      "payment": {
+        "title": "Flexible and diverse payment options",
+        "description": {
+          "line1": "Pay in local currency or use other payment methods,",
+          "line2": "depending on the city and vehicle."
+        }
       },
-      "header": {
-        "titleMobile": "Login or Sign Up",
-        "titleOtp": "Enter Verification Code"
+      "support": {
+        "title": "24/7 customer support",
+        "description": {
+          "line1": "From selection to delivery and return,",
+          "line2": "we support you throughout the booking journey."
+        }
       },
-      "hint": {
-        "mobile": "Please enter your mobile number to continue.",
-        "otp": "A 5-digit code was sent to {mobile}."
-      },
-      "placeholders": {
-        "phone": "phone number"
-      },
-      "terms": {
-        "link": "Terms & Conditions",
-        "suffix-text": "By using Palm Rent you agree to our",
-        "prefix-text": ""
-      },
-      "toast": {
-        "invalidMobile": "Please enter a valid mobile number",
-        "otpSent": "Verification code sent",
-        "sendError": "Failed to send code. Please try again",
-        "wrongOtp": "The code you entered is incorrect",
-        "loginSuccess": "Logged in successfully",
-        "verifyError": "Failed to verify code. Please try again",
-        "smsFailed": "Failed to send SMS. Please try again",
-        "networkError": "Could not connect to server. Check your internet connection",
-        "tooManyRequests": "Too many requests. Please wait a moment",
-        "userBlocked": "Your account has been blocked",
-        "serverError": "Server error. Please try again",
-        "otpExpired": "Code has expired. Please request a new one",
-        "tooManyAttempts": "Too many attempts. Please request a new code"
+      "tracking": {
+        "title": "Transparent and trackable booking",
+        "description": {
+          "line1": "Before final confirmation, booking details",
+          "line2": "and terms are shown clearly."
+        }
       }
     }
   },
@@ -690,10 +684,18 @@ declare const messages: {
     "cityButtonAria": "View rental cars in {city}"
   },
   "GuidesSection": {
-    "title": "Guides & Articles",
+    "title": "Guides and articles",
     "prev": "Previous",
     "next": "Next",
-    "openArticleAria": "Open article {title}"
+    "openArticle": "View article {title}"
+  },
+
+    "BranchFaq": {
+    "yourQuestions": "Your questions",
+    "commonQuestions": "Frequently asked questions",
+    "loading": "Loading information...",
+    "empty": "No questions have been registered for this branch.",
+    "openQuestion": "View question {question}"
   },
 
   "ImportantQuestions": {
@@ -768,16 +770,363 @@ declare const messages: {
     "reserveWithDate": "Hello\nI am interested in reserving the ({car}) in ({city}) from {from} ({dt}) to {to} ({rt}).\nPlease share the rental terms and availability.\n{url}"
  },
 
+ 
+  "FAQlanding": {
+    "yourQuestions": "Your questions",
+    "commonQuestions": "Frequently asked questions",
+    "openQuestion": "View question {question}"
+  },
+
+    "SearchFilterSheet": {
+    "back": "Back",
+    "filters": "Filters",
+    "clear": "Clear",
+    "clearAllFilters": "Clear all filters",
+    "clearFilters": "Clear filters",
+    "availableCarsCount": "Showing {count} available cars",
+    "removeFilterAria": "Remove filter {label}",
+    "sortTitle": "Sort",
+    "priceRangeTitle": "Price range",
+    "brandNameTitle": "Car brand",
+    "carClassTitle": "Car class",
+    "gearboxTitle": "Gearbox",
+    "fuelTypeTitle": "Fuel type",
+    "seatCountTitle": "Passenger count",
+    "luggageCapacityTitle": "Luggage capacity",
+    "amenitiesTitle": "Amenities & booking conditions",
+    "priceMin": "Min",
+    "priceMax": "Max",
+    "brandSearchPlaceholder": "Search brand name",
+    "noBrandFound": "No brand found",
+    "showLess": "Show less",
+    "showMoreWithCount": "{count, plural, =0 {Show more} other {Show more ({count} selected)}}",
+    "seatCountBadge": "{count} passengers",
+    "luggageCountBadge": "{count} luggage",
+    "viewResults": "View {count} results",
+    "palmrent_suggest": "Palm Rent suggestion",
+    "price_min": "Lowest price",
+    "price_max": "Highest price",
+    "showMore": "Show more",
+    "sort1": "Newest",
+    "economicCar": "Economy",
+    "luxCar": "Luxury",
+    "businessCar": "Business",
+    "sevenplus": "7+ seats",
+    "suv": "SUV",
+    "crook": "Coupe / Convertible",
+    "sedan": "Sedan",
+    "automatic": "Automatic",
+    "geared": "Manual",
+    "hybrid": "Hybrid",
+    "petrol": "Petrol",
+    "diesel": "Diesel",
+    "hybrid_fuel": "Hybrid",
+    "electric": "Electric",
+    "noDeposite": "No deposit",
+    "specialOffer": "Special offer",
+    "hotelDelivery": "Hotel delivery",
+    "airportDelivery": "Airport delivery"
+  },
+
+  
+  "AppDrawer": {
+    "prices": {
+      "title": "Price groups",
+      "desc": "Prices are calculated per day and may change depending on the rental duration.",
+      "empty": "Prices are not available.",
+      "subOff": "Base price and discounted price",
+      "subNormal": "Daily price"
+    },
+    "noDeposit": {
+      "title": "No deposit",
+      "desc": "For this car, no security deposit/traffic fine deposit is required based on the current information.\n\n• No deposit amount will be collected at the time of delivery.\n• However, fines, damages, or costs outside the contract remain the renter’s responsibility according to company rules.\n• For exact contract details, you can coordinate with support before finalizing the booking."
+    },
+    "deposit": {
+      "title": "Traffic fine deposit",
+      "desc": "The traffic fine deposit is an amount collected to cover potential fines or violations during the rental period.\n\n• Amount: {amountText} {currency}\n• It is usually refunded after fines are settled and the case is reviewed.\n• The refund timing and settlement process may vary depending on the company/branch policy."
+    },
+    "delivery": {
+      "title": "Car delivery",
+      "freeDesc": "Delivery for this car is free.\n\n• Delivery and return are handled in coordination with the branch.\n• In some specific locations or unusual hours, separate coordination may be required.\n• Before finalizing the booking, you can ask support for the exact delivery place and time details.",
+      "paidDesc": "Delivery for this car is not free.\n\n• Delivery and return costs may vary depending on location, time, and branch conditions.\n• Before finalizing the booking, you can check the exact delivery fee with support."
+    },
+    "insurance": {
+      "title": "Car insurance",
+      "hasDesc": "A free basic insurance plan is included for this car.\n\n• Basic insurance includes the minimum standard coverage.\n• In some cases, additional coverage may be available for an extra fee.\n• To know the coverage limits and exclusions, it is better to review the details before booking.",
+      "noDesc": "According to the current information, no free insurance is listed for this car.\n\n• Basic or additional insurance may still be offered separately.\n• To know the exact insurance conditions, please coordinate with support before booking."
+    },
+    "km": {
+      "title": "Mileage terms",
+      "unlimitedDesc": "This car has unlimited mileage.\n\n• No daily mileage limit applies to this car.\n• Normal use and compliance with company rules are still required.\n• If there are special conditions for certain routes or usage types, they will be announced during booking.",
+      "limitedDesc": "This car has limited mileage.\n\n• Usually, a daily or total mileage cap is defined for the rental period.\n• Extra mileage charges will be calculated according to company rules.\n• To know the exact mileage limit, please ask support."
+    },
+    "optionById": {
+      "2": "Child seat\n• Suitable for young children\n• Installation and handover are done when receiving the car\n• Choosing the correct size and model is the customer’s responsibility\n• If needed, please coordinate with support before booking",
+      "10": "Additional driver\n• This option allows another person to be registered as a driver as well\n• Valid ID and driving license are required for the additional driver\n• Vehicle usage remains subject to contract terms and responsibilities"
+    },
+    "extraOption": {
+      "titleFallback": "Option details",
+      "descFallback": "No description has been registered for this option. For more information, you can contact support before booking."
+    },
+    "insuranceComplete": {
+      "title": "Comprehensive damage package",
+      "desc": "By selecting this option, broader coverage for damages and potential risks during the rental period will be activated."
+    }
+  },
+
+  
+  "PaymentSuccessCard": {
+    "common": {
+      "free": "Free"
+    },
+    "otp": {
+      "back": "Back",
+      "title": "To complete the process, please sign in first",
+      "banner1": "Your phone number is already registered in the system.",
+      "banner2": "Please sign in to your account to continue the reservation process.",
+      "registeredMobile": "Mobile number (registered)",
+      "checkingLogin": "Checking sign-in status...",
+      "sendCodeHint": "By clicking the button, a verification code will be sent to you.",
+      "enterCode": "Enter the verification code",
+      "codeSentPrefix": "A 5-digit code was sent to",
+      "codeSentSuffix": "",
+      "edit": "Edit",
+      "wrongCode": "The entered code is incorrect",
+      "resendCooldown": "until you can request the code again",
+      "resendCode": "Resend code",
+      "confirmAndSend": "Confirm and receive code",
+      "confirmAndContinue": "Confirm and continue",
+      "sendCodeError": "Error sending code",
+      "resendError": "Resend failed",
+      "verifyErrorToast": "Verification error"
+    },
+    "thanksDialog": {
+      "title": "Documents submitted",
+      "description": "Thank you 🙏 Your documents have been received and are under review.\nYou will be redirected to the home page in a few moments…",
+      "supportTitle": "Support",
+      "supportText": "If the photos are unclear or have issues like lighting, cropping, or blur, please contact support so the review can be completed faster.",
+      "goHomeNow": "Go to home page now",
+      "seconds": "seconds"
+    },
+    "upload": {
+      "remove": "Remove",
+      "required": "This field is required"
+    },
+    "success": {
+      "title": "Payment was successful",
+      "description": "Your reservation is now confirmed. You can manage the voucher and documents from this page."
+    },
+    "reservationInfo": "Reservation information",
+    "downloadingVoucher": "Downloading...",
+    "downloadVoucher": "Download voucher",
+    "toggleInfo": "Show or hide information",
+    "days": "days",
+    "fromTo": "From {from} to {to}",
+    "remainAtDelivery": "Remaining on delivery",
+    "uploadPrompt": "To save time at delivery, upload photos of your documents",
+    "sections": {
+      "idCard": "Passport/ID card",
+      "driverLicense": "Driver's license",
+      "internationalDriverLicense": "International driver's license",
+      "visa": "Visa"
+    },
+    "labels": {
+      "photo": "Photo",
+      "front": "Front",
+      "back": "Back"
+    },
+    "noIntl": "I do not have an international driver's license",
+    "noVisa": "I do not have a visa",
+    "sending": "Sending...",
+    "submitDocuments": "Submit documents",
+    "invoice": {
+      "title": "Reservation invoice details",
+      "rentPriceForDays": "Rental price for {days} days",
+      "daily": "per day",
+      "discount": "discount",
+      "option": "Option",
+      "optionsTotal": "Options total",
+      "tax": "Tax ({percent}%)",
+      "prepay": "Prepayment",
+      "remaining": "Remaining balance",
+      "paidValue": "{value} (paid)",
+      "finalCostForDays": "Final cost for {days} days"
+    },
+    "toasts": {
+      "loginRequired": "You need to sign in to continue",
+      "loginRequiredForUpload": "You need to sign in to upload documents",
+      "completeRequiredDocuments": "Please complete the required documents",
+      "uploadDone": "Upload completed",
+      "preparingVoucher": "Preparing voucher...",
+      "voucherDownloaded": "Voucher downloaded"
+    },
+    "errors": {
+      "uploadFailed": "Error uploading documents",
+      "uploadNotDone": "Upload was not completed",
+      "rentIdNotFound": "rent_id was not found",
+      "voucherDownloadFailed": "Voucher download failed"
+    }
+  },
+  "Auth": {
+    "LoginDialog": {
+      "srTitle": "Login with mobile number",
+      "image": {
+        "logoAlt": "Logo"
+      },
+      "header": {
+        "titleMobile": "Login / Sign up",
+        "titleOtp": "Verify code"
+      },
+      "hint": {
+        "mobile": "Enter your phone number to receive a verification code."
+      },
+      "placeholders": {
+        "phone": "Phone number"
+      },
+      "button": {
+        "open": "Login / Sign up",
+        "back": "Back",
+        "close": "Close",
+        "sendOtp": "Send verification code",
+        "verify": "Verify and continue",
+        "resend": "Resend",
+        "editMobile": "Edit"
+      },
+      "terms": {
+        "suffix-text": "By continuing,",
+        "link": "terms and conditions",
+        "prefix-text": "you accept the"
+      },
+      "otp": {
+        "sentPrefix": "A 5-digit code was sent to ",
+        "sentDone": ".",
+        "resendCountdown": "{time} until you can request a new code"
+      },
+      "toast": {
+        "invalidMobile": "The entered phone number is invalid.",
+        "wrongOtp": "The entered code is incorrect.",
+        "tooManyRequests": "Too many requests. Please try again later.",
+        "smsFailed": "Failed to send SMS. Please try again.",
+        "networkError": "Network error. Please try again.",
+        "userBlocked": "This user is temporarily blocked.",
+        "otpExpired": "The verification code has expired or was not requested.",
+        "tooManyAttempts": "Too many attempts. Please try again later.",
+        "serverError": "Server error. Please try again later."
+      }
+    }
+  },
+
+    "PaymentCard": {
+    "reservationConfirmed": "Your reservation has been confirmed",
+    "payNotice": "To finalize your reservation, please pay the prepayment amount on this page",
+    "paymentFailed": "Payment failed",
+    "paymentFailedWithReason": "Payment failed: {reason}",
+    "stepRequestRegistered": "Request Submitted",
+    "stepReservationConfirmed": "Reservation Confirmed",
+    "stepPrepayment": "Prepayment",
+    "accountDetails": "Account Details",
+    "rentDescription": "{carTitle} rental\nFrom {fromText}\nTo {toText}\nFor {days} days",
+    "totalCost": "Total cost:",
+    "payNow": "Prepayment (pay now):",
+    "remainingAmount": "Remaining amount (pay on vehicle delivery):",
+    "aedAndTomanValue": "{aed} AED ( {toman} Toman )",
+    "aedOnlyValue": "{aed} AED",
+    "redirectingToGateway": "Redirecting to payment gateway...",
+    "payAndConfirm": "Pay the prepayment and finalize reservation",
+    "securePayment": "Secure payment via Zarinpal gateway",
+    "paymentLinkNotReceived": "Payment link was not received",
+    "serverConnectionError": "Server connection error"
+  },
+
+  "ReservationPage": {
+    "continueReservationLogin": "Continue Reservation, Sign In",
+    "uploadAndReviewDocuments": "Upload and Review Documents",
+    "reservationReview": "Reservation Review",
+    "waitingForPayment": "Waiting for Payment",
+    "serverConnectionError": "Server connection error"
+  },
+
+    "ProcessingCard": {
+    "requestRegistered": "Your reservation request has been submitted",
+    "doNotLeavePage": "Please do not leave this page, your reservation is being reviewed",
+    "reviewingMessage1": "The Palm Rent team is reviewing and finalizing your reservation.",
+    "reviewingMessage2": "Reservation review usually takes less than 2 minutes.",
+    "reviewingMessage3": "Please do not close this page; the result will be shown here.",
+    "stepRequestRegistered": "Request Submitted",
+    "stepReviewReservation": "Reservation Review",
+    "stepShowResult": "Show Result",
+    "estimatedTime": "Estimated time until result: {time}",
+    "continueOnWhatsapp": "Continue on WhatsApp",
+    "takingLongerThanUsual": "The review is taking a little longer than usual",
+    "reservationSummary": "Your Reservation Summary",
+    "finalPrice": "Final price",
+    "priceLabelWithCarAndDays": "Final price for {days} days of {car} rental",
+    "priceLabelWithDays": "Final price for {days} days",
+    "rentDescriptionLine1WithCarAndDate": "Rental of a {car} starting from {fromDate}",
+    "rentDescriptionLine1WithCar": "Rental of a {car}",
+    "rentDescriptionLine1WithDate": "Starting from {fromDate}",
+    "rentDescriptionLine2WithDateAndDays": "Until {toDate} for {days} days",
+    "rentDescriptionLine2WithDate": "Until {toDate}",
+    "rentDescriptionLine2WithDays": "For {days} days",
+    "whatsappMessage": "Hello. My reservation is still under review. Please check the status. Tracking link: {pageUrl}"
+  },
+
+    "SearchSection": {
+    "carSearch": "Search by car brand or model",
+    "filters": "Filters",
+    "clear": "Clear",
+    "model": "Model",
+    "selectDate": "Select date",
+    "sortTitle": "Sort",
+    "sortDescription": "Choose how cars should be displayed.",
+    "sortPalmRent": "Palm Rent suggestion",
+    "price_min": "Lowest price",
+    "price_max": "Highest price",
+    "sort1": "Newest",
+    "noDeposite": "No deposit",
+    "economicCar": "Economy",
+    "luxCar": "Luxury",
+    "sevenplus": "7+ seats",
+    "sport": "Sport",
+    "business": "Business",
+    "crook": "Convertible",
+    "standard": "Standard",
+    "suv": "SUV",
+    "coupe": "Coupe"
+  },
+
+
+  "HubLandingPage": {
+    "heroTitle": "Car rental in Palm Rent active cities",
+    "heroSubtitle1": "Select the city and date",
+    "heroSubtitle2": "to view available cars and the final price."
+  },
+  "HubBranchList": {
+    "title": "Car rental cities",
+    "subtitle": "The best cities for car rental and a comfortable, fast, and deposit-free travel experience",
+    "imageUnavailable": "Image unavailable",
+    "openBranch": "View cars in {city}"
+  },
+  "HubBranchCars": {
+    "title": "Your journey with Palm Rent starts here",
+    "subtitle": "Car rental with no deposit and pay-on-delivery for a comfortable and reliable experience",
+    "empty": "No cars available",
+    "viewAllCars": "View all cars in {city}",
+    "selectCity": "Select city {city}",
+    "scrollNext": "Scroll next",
+    "scrollPrev": "Scroll previous"
+  },
 
   "branchLanding": {
     "heroTitle": "Car rental in <Branch></Branch> with no deposit",
     "heroSubtitle1": "Fast delivery at the airport or hotel, plus free insurance",
     "heroSubtitle2": "Quick online booking, pay on delivery, 24/7 support",
-
+   "carsListTitle": "Car list in <Branch></Branch>",
+    "noCarsFound": "No cars found",
     "loadingMore": "Loading…",
     "viewMore": "View more",
 
-    "noCarsFound": "No cars found",
+
     "noMoreResults": "No more results",
     "fetchError": "Failed to fetch information"
   },

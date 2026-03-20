@@ -645,11 +645,13 @@
     "cityButtonAria": "عرض سيارات التأجير في {city}"
   },
   "GuidesSection": {
-    "title": "أدلة ومقالات",
+    "title": "الأدلة والمقالات",
     "prev": "السابق",
     "next": "التالي",
-    "openArticleAria": "فتح المقال {title}"
-    },
+    "openArticle": "عرض المقال {title}"
+  },
+
+
 
   "ImportantQuestions": {
     "faqTitle": "الأسئلة الشائعة",
@@ -765,18 +767,406 @@
     }
   },
 
+    "QRApplication": {
+    "qrAlt": "صورة رمز QR",
+    "scanText": "امسح للتنزيل!",
+    "title": "تطبيق بالم رينت",
+    "subtitle": "تأجير سيارات أونلاين بشكل أسرع وأكثر موثوقية",
+    "downloadLinks": "عرض روابط التحميل",
+    "androidAlt": "أندرويد",
+    "iosAlt": "iOS",
+    "platforms": "قابل للتثبيت على Android و IOS",
+    "appImageAlt": "صورة التطبيق"
+  },
+
+
+
+    "HubSupportSection": {
+    "items": {
+      "payment": {
+        "title": "دفع متنوع ومرن",
+        "description": {
+          "line1": "إمكانية الدفع بالعملة المحلية وطرق دفع أخرى،",
+          "line2": "بحسب المدينة والسيارة."
+        }
+      },
+      "support": {
+        "title": "دعم على مدار 24 ساعة، 7 أيام في الأسبوع",
+        "description": {
+          "line1": "من الاختيار حتى التسليم والاسترجاع، نحن هنا",
+          "line2": "لمرافقتك خلال رحلة الحجز."
+        }
+      },
+      "tracking": {
+        "title": "حجز واضح وقابل للمتابعة",
+        "description": {
+          "line1": "قبل التأكيد النهائي، يتم عرض تفاصيل الحجز",
+          "line2": "والشروط بشكل واضح."
+        }
+      }
+    }
+  },
+
 
   "whatsappMessage": {
     "reserve": "مرحباً\nأنا مهتم بحجز السيارة ({car}) في ({city}) وأود طلب مزيد من المعلومات وشروط الإيجار.\n{url}",
     "reserveWithDate": "مرحباً\nأنا مهتم بحجز السيارة ({car}) في ({city}) من تاريخ {from} ({dt}) إلى {to} ({rt}).\nيرجى تزويدي بالتوفر وشروط الإيجار.\n{url}"
   },
 
+  
+  "FAQlanding": {
+    "yourQuestions": "أسئلتكم",
+    "commonQuestions": "الأسئلة الشائعة",
+    "openQuestion": "عرض السؤال {question}"
+  },
+
+    "SearchFilterSheet": {
+    "back": "رجوع",
+    "filters": "الفلاتر",
+    "clear": "مسح",
+    "clearAllFilters": "حذف كل الفلاتر",
+    "clearFilters": "حذف الفلاتر",
+    "availableCarsCount": "عرض {count} سيارة متاحة",
+    "removeFilterAria": "إزالة فلتر {label}",
+    "sortTitle": "الترتيب",
+    "priceRangeTitle": "نطاق السعر",
+    "brandNameTitle": "اسم ماركة السيارة",
+    "carClassTitle": "فئة السيارة",
+    "gearboxTitle": "ناقل الحركة",
+    "fuelTypeTitle": "نوع الوقود",
+    "seatCountTitle": "عدد الركاب",
+    "luggageCapacityTitle": "سعة الأمتعة",
+    "amenitiesTitle": "المزايا وشروط الحجز",
+    "priceMin": "الحد الأدنى",
+    "priceMax": "الحد الأعلى",
+    "brandSearchPlaceholder": "ابحث عن اسم الماركة",
+    "noBrandFound": "لم يتم العثور على ماركة",
+    "showLess": "عرض أقل",
+    "showMoreWithCount": "{count, plural, =0 {عرض المزيد} other {عرض المزيد ({count} محدد)}}",
+    "seatCountBadge": "{count} أشخاص",
+    "luggageCountBadge": "{count} حقائب",
+    "viewResults": "عرض {count} نتيجة",
+    "palmrent_suggest": "اقتراح بالم رنت",
+    "showMore": "عرض المزيد",
+    "price_min": "الأرخص سعراً",
+    "price_max": "الأغلى سعراً",
+    "sort1": "الأحدث",
+    "economicCar": "اقتصادية",
+    "luxCar": "فاخرة",
+    "businessCar": "أعمال",
+    "sevenplus": "7+ مقاعد",
+    "suv": "دفع رباعي / SUV",
+    "crook": "كوبيه / مكشوفة",
+    "sedan": "سيدان",
+    "automatic": "أوتوماتيك",
+    "geared": "يدوي",
+    "hybrid": "هجين",
+    "petrol": "بنزين",
+    "diesel": "ديزل",
+    "hybrid_fuel": "هجين",
+    "electric": "كهربائية",
+    "noDeposite": "بدون وديعة",
+    "specialOffer": "عرض خاص",
+    "hotelDelivery": "تسليم إلى الفندق",
+    "airportDelivery": "تسليم في المطار"
+  },
+
+  
+  "AppDrawer": {
+    "prices": {
+      "title": "فئات الأسعار",
+      "desc": "يتم احتساب الأسعار لكل يوم وقد تتغير حسب عدد أيام الإيجار.",
+      "empty": "الأسعار غير متوفرة.",
+      "subOff": "السعر الأساسي والسعر بعد الخصم",
+      "subNormal": "السعر اليومي"
+    },
+    "noDeposit": {
+      "title": "بدون وديعة",
+      "desc": "لهذه السيارة، لا يتم أخذ وديعة ضمان/مخالفات حسب المعلومات الحالية.\n\n• لن يتم استلام أي مبلغ كوديعة عند التسليم.\n• مع ذلك، تبقى الغرامات أو الأضرار أو الرسوم خارج العقد على عاتق المستأجر وفقاً للقوانين.\n• للتفاصيل الدقيقة لشروط العقد، يمكنك التنسيق مع الدعم قبل تأكيد الحجز."
+    },
+    "deposit": {
+      "title": "وديعة المخالفات",
+      "desc": "وديعة المخالفات هي مبلغ يُؤخذ لتغطية المخالفات أو الغرامات المحتملة أثناء فترة الإيجار.\n\n• المبلغ: {amountText} {currency}\n• عادةً يتم إرجاعه بعد تسوية المخالفات ومراجعة الحالة.\n• وقت الإرجاع وآلية التسوية قد تختلف حسب قوانين الشركة/الفرع."
+    },
+    "delivery": {
+      "title": "تسليم السيارة",
+      "freeDesc": "التسليم لهذه السيارة مجاني.\n\n• يتم التسليم والاستلام حسب التنسيق مع الفرع.\n• في بعض المواقع الخاصة أو الأوقات غير المعتادة قد يلزم تنسيق إضافي.\n• قبل تأكيد الحجز، يمكنك الاستفسار من الدعم عن تفاصيل المكان والوقت.",
+      "paidDesc": "التسليم لهذه السيارة ليس مجانياً.\n\n• تكلفة التسليم والاستلام قد تختلف حسب المكان والوقت وظروف الفرع.\n• قبل تأكيد الحجز، يمكنك الاستعلام عن المبلغ الدقيق من الدعم."
+    },
+    "insurance": {
+      "title": "تأمين السيارة",
+      "hasDesc": "تم توفير تأمين أساسي مجاني لهذه السيارة.\n\n• التأمين الأساسي يشمل الحد الأدنى من التغطيات المعتادة.\n• في بعض الحالات، يمكن تقديم تغطيات إضافية برسوم منفصلة.\n• لمعرفة حدود التغطية والاستثناءات، يفضّل مراجعة التفاصيل قبل الحجز.",
+      "noDesc": "حسب المعلومات الحالية، لا يوجد تأمين مجاني مسجل لهذه السيارة.\n\n• قد يتم تقديم التأمين الأساسي أو التكميلي بشكل منفصل.\n• لمعرفة الشروط الدقيقة، يرجى التنسيق مع الدعم قبل الحجز."
+    },
+    "km": {
+      "title": "شروط الكيلومترات",
+      "unlimitedDesc": "هذه السيارة بكيلومترات غير محدودة.\n\n• لا يتم تطبيق حد يومي للكيلومترات.\n• يبقى الاستخدام المعتاد ووفق قوانين الشركة مطلوباً.\n• إذا كانت هناك شروط خاصة لبعض المسارات أو الاستخدامات، فسيتم توضيحها عند الحجز.",
+      "limitedDesc": "هذه السيارة بكيلومترات محدودة.\n\n• عادةً يوجد حد يومي أو إجمالي لفترة الإيجار.\n• سيتم احتساب تكلفة الكيلومترات الإضافية وفقاً لقوانين الشركة.\n• لمعرفة الحد الدقيق، يرجى التواصل مع الدعم."
+    },
+    "optionById": {
+      "2": "مقعد طفل\n• مناسب للأطفال الصغار\n• يتم التركيب والتسليم عند استلام السيارة\n• مسؤولية اختيار المقاس أو النوع المناسب تقع على العميل\n• عند الحاجة، يرجى التنسيق مع الدعم قبل الحجز",
+      "10": "سائق إضافي\n• يتيح هذا الخيار تسجيل شخص آخر أيضاً كسائق للسيارة\n• يجب تقديم هوية ورخصة قيادة سارية للسائق الإضافي\n• تبقى مسؤولية استخدام السيارة وفقاً لشروط العقد"
+    },
+    "extraOption": {
+      "titleFallback": "تفاصيل الخيار",
+      "descFallback": "لا يوجد وصف مسجل لهذا الخيار حالياً. لمزيد من المعلومات يمكنك التنسيق مع الدعم قبل الحجز."
+    },
+    "insuranceComplete": {
+      "title": "باقة التغطية الشاملة للأضرار",
+      "desc": "عند اختيار هذا الخيار، يتم تفعيل تغطية أشمل للأضرار والمخاطر المحتملة خلال فترة الإيجار."
+    }
+  },
+    "ReservationPage": {
+    "continueReservationLogin": "متابعة الحجز ، تسجيل الدخول إلى الحساب",
+    "uploadAndReviewDocuments": "رفع المستندات ومراجعتها",
+    "reservationReview": "مراجعة الحجز",
+    "waitingForPayment": "بانتظار الدفع",
+    "serverConnectionError": "خطأ في الاتصال بالخادم"
+  },
+
+  
+  "PaymentCard": {
+    "reservationConfirmed": "تم تأكيد الحجز الخاص بك",
+    "payNotice": "لإتمام الحجز نهائيًا، يرجى دفع مبلغ العربون في هذه الصفحة",
+    "paymentFailed": "فشلت عملية الدفع",
+    "paymentFailedWithReason": "فشلت عملية الدفع: {reason}",
+    "stepRequestRegistered": "تسجيل الطلب",
+    "stepReservationConfirmed": "تأكيد الحجز",
+    "stepPrepayment": "دفع العربون",
+    "accountDetails": "تفاصيل الحساب",
+    "rentDescription": "استئجار {carTitle} من {fromText}\nحتى {toText} لمدة {days} أيام",
+    "totalCost": "إجمالي التكلفة:",
+    "payNow": "العربون (الدفع الآن):",
+    "remainingAmount": "المبلغ المتبقي (يُدفع عند استلام السيارة):",
+    "aedAndTomanValue": "{aed} درهم ( {toman} تومان )",
+    "aedOnlyValue": "{aed} درهم",
+    "redirectingToGateway": "جارٍ التحويل إلى بوابة الدفع...",
+    "payAndConfirm": "دفع العربون وتأكيد الحجز",
+    "securePayment": "دفع آمن عبر بوابة زرين بال",
+    "paymentLinkNotReceived": "لم يتم استلام رابط الدفع",
+    "serverConnectionError": "حدث خطأ في الاتصال بالخادم"
+  },
+
+    "Auth": {
+    "LoginDialog": {
+      "srTitle": "تسجيل الدخول برقم الهاتف",
+      "image": {
+        "logoAlt": "الشعار"
+      },
+      "header": {
+        "titleMobile": "تسجيل الدخول / إنشاء حساب",
+        "titleOtp": "تأكيد الرمز"
+      },
+      "hint": {
+        "mobile": "أدخل رقم هاتفك لإرسال رمز التحقق."
+      },
+      "placeholders": {
+        "phone": "رقم الهاتف"
+      },
+      "button": {
+        "open": "تسجيل الدخول",
+        "back": "رجوع",
+        "close": "إغلاق",
+        "sendOtp": "إرسال رمز التحقق",
+        "verify": "تأكيد ومتابعة",
+        "resend": "إعادة الإرسال",
+        "editMobile": "تعديل"
+      },
+      "terms": {
+        "suffix-text": "بالمتابعة،",
+        "link": "الشروط والأحكام",
+        "prefix-text": "أنت توافق على"
+      },
+      "otp": {
+        "sentPrefix": " تم إرسال رمز مكوّن من 5 أرقام إلى الرقم ",
+        "sentDone": ".",
+        "resendCountdown": "{time} حتى إعادة طلب الرمز"
+      },
+      "toast": {
+        "invalidMobile": "رقم الهاتف غير صالح.",
+        "wrongOtp": "الرمز الذي أدخلته غير صحيح.",
+        "tooManyRequests": "عدد الطلبات كبير جداً. حاول مرة أخرى لاحقاً.",
+        "smsFailed": "فشل إرسال الرسالة النصية. حاول مرة أخرى.",
+        "networkError": "خطأ في الاتصال بالإنترنت. حاول مرة أخرى.",
+        "userBlocked": "تم تقييد هذا المستخدم مؤقتاً.",
+        "otpExpired": "انتهت صلاحية رمز التحقق أو لم يتم طلبه.",
+        "tooManyAttempts": "تم تجاوز عدد المحاولات المسموح بها.",
+        "serverError": "خطأ في الخادم. حاول مرة أخرى لاحقاً."
+      }
+    }
+  },
+
+  
+  "PaymentSuccessCard": {
+    "common": {
+      "free": "مجاني"
+    },
+    "otp": {
+      "back": "رجوع",
+      "title": "لإكمال العملية، يرجى تسجيل الدخول أولاً",
+      "banner1": "رقم هاتفك مسجل مسبقًا في النظام.",
+      "banner2": "يرجى تسجيل الدخول إلى حسابك لمتابعة عملية الحجز.",
+      "registeredMobile": "رقم الجوال (المسجل)",
+      "checkingLogin": "جارٍ التحقق من حالة تسجيل الدخول...",
+      "sendCodeHint": "بالضغط على الزر، سيتم إرسال رمز التحقق إليك.",
+      "enterCode": "أدخل رمز التحقق",
+      "codeSentPrefix": "تم إرسال الرمز المكون من 5 أرقام إلى الرقم",
+      "codeSentSuffix": "",
+      "edit": "تعديل",
+      "wrongCode": "الرمز الذي تم إدخاله غير صحيح",
+      "resendCooldown": "حتى إعادة طلب الرمز",
+      "resendCode": "إعادة إرسال الرمز",
+      "confirmAndSend": "تأكيد واستلام الرمز",
+      "confirmAndContinue": "تأكيد ومتابعة",
+      "sendCodeError": "خطأ في إرسال الرمز",
+      "resendError": "فشلت إعادة الإرسال",
+      "verifyErrorToast": "خطأ في التحقق من الرمز"
+    },
+    "thanksDialog": {
+      "title": "تم تسجيل المستندات",
+      "description": "شكرًا 🙏 تم استلام مستنداتك وهي الآن قيد المراجعة.\nسيتم تحويلك إلى الصفحة الرئيسية خلال لحظات…",
+      "supportTitle": "الدعم",
+      "supportText": "إذا كانت الصور غير واضحة أو بها مشكلة مثل الإضاءة أو القص أو الضبابية، يرجى التواصل مع الدعم لتسريع المراجعة.",
+      "goHomeNow": "اذهب الآن إلى الصفحة الرئيسية",
+      "seconds": "ثانية"
+    },
+    "upload": {
+      "remove": "حذف",
+      "required": "هذا الحقل مطلوب"
+    },
+    "success": {
+      "title": "تم الدفع بنجاح",
+      "description": "تم تأكيد حجزك. يمكنك إدارة القسيمة والمستندات من هذه الصفحة."
+    },
+    "reservationInfo": "معلومات الحجز",
+    "downloadingVoucher": "جارٍ التنزيل...",
+    "downloadVoucher": "تنزيل القسيمة",
+    "toggleInfo": "إظهار أو إخفاء المعلومات",
+    "days": "أيام",
+    "fromTo": "من {from} إلى {to}",
+    "remainAtDelivery": "المبلغ المتبقي عند التسليم",
+    "uploadPrompt": "لتوفير الوقت عند الاستلام، قم برفع صور مستنداتك",
+    "sections": {
+      "idCard": "جواز السفر/بطاقة الهوية",
+      "driverLicense": "رخصة القيادة",
+      "internationalDriverLicense": "رخصة القيادة الدولية",
+      "visa": "التأشيرة"
+    },
+    "labels": {
+      "photo": "صورة",
+      "front": "الواجهة",
+      "back": "الخلف"
+    },
+    "noIntl": "ليس لدي رخصة قيادة دولية",
+    "noVisa": "ليس لدي تأشيرة",
+    "sending": "جارٍ الإرسال...",
+    "submitDocuments": "إرسال المستندات",
+    "invoice": {
+      "title": "تفاصيل فاتورة الحجز",
+      "rentPriceForDays": "سعر الإيجار لمدة {days} أيام",
+      "daily": "يوميًا",
+      "discount": "خصم",
+      "option": "خيار",
+      "optionsTotal": "إجمالي الخيارات",
+      "tax": "الضريبة ({percent}٪)",
+      "prepay": "الدفعة المقدمة",
+      "remaining": "المبلغ المتبقي",
+      "paidValue": "{value} (مدفوع)",
+      "finalCostForDays": "التكلفة النهائية لمدة {days} أيام"
+    },
+    "toasts": {
+      "loginRequired": "يجب عليك تسجيل الدخول للمتابعة",
+      "loginRequiredForUpload": "يجب عليك تسجيل الدخول لرفع المستندات",
+      "completeRequiredDocuments": "يرجى إكمال المستندات المطلوبة",
+      "uploadDone": "تم الرفع بنجاح",
+      "preparingVoucher": "جارٍ تجهيز القسيمة...",
+      "voucherDownloaded": "تم تنزيل القسيمة"
+    },
+    "errors": {
+      "uploadFailed": "حدث خطأ أثناء رفع المستندات",
+      "uploadNotDone": "لم يتم الرفع",
+      "rentIdNotFound": "لم يتم العثور على rent_id",
+      "voucherDownloadFailed": "فشل تنزيل القسيمة"
+    }
+  },
+
+
+    "ProcessingCard": {
+    "requestRegistered": "تم تسجيل طلب الحجز الخاص بك",
+    "doNotLeavePage": "يرجى عدم مغادرة الصفحة، حجزك قيد المراجعة",
+    "reviewingMessage1": "يقوم فريق بالم رنت الآن بمراجعة الحجز الخاص بك واعتماده نهائيًا",
+    "reviewingMessage2": "عادةً ما يتم فحص الحجز خلال أقل من دقيقتين.",
+    "reviewingMessage3": "يرجى عدم إغلاق هذه الصفحة؛ ستظهر نتيجة المراجعة هنا.",
+    "stepRequestRegistered": "تسجيل الطلب",
+    "stepReviewReservation": "مراجعة الحجز",
+    "stepShowResult": "عرض النتيجة",
+    "estimatedTime": "الوقت التقريبي حتى ظهور النتيجة: {time}",
+    "continueOnWhatsapp": "متابعة الحالة عبر واتساب",
+    "takingLongerThanUsual": "استغرقت المراجعة وقتًا أطول قليلًا من المعتاد",
+    "reservationSummary": "ملخص الحجز",
+    "finalPrice": "السعر النهائي",
+    "priceLabelWithCarAndDays": "السعر النهائي لـ {days} أيام من استئجار {car}",
+    "priceLabelWithDays": "السعر النهائي لـ {days} أيام",
+    "rentDescriptionLine1WithCarAndDate": "استئجار سيارة {car} ابتداءً من {fromDate}",
+    "rentDescriptionLine1WithCar": "استئجار سيارة {car}",
+    "rentDescriptionLine1WithDate": "ابتداءً من {fromDate}",
+    "rentDescriptionLine2WithDateAndDays": "حتى {toDate} لمدة {days} أيام",
+    "rentDescriptionLine2WithDate": "حتى {toDate}",
+    "rentDescriptionLine2WithDays": "لمدة {days} أيام",
+    "whatsappMessage": "مرحبًا. لا يزال حجزي في مرحلة المراجعة. يرجى التحقق من الحالة. رابط المتابعة: {pageUrl}"
+  },
+
+
+    "SearchSection": {
+    "carSearch": "ابحث عن ماركة أو موديل السيارة",
+    "filters": "الفلاتر",
+    "clear": "مسح",
+    "model": "موديل",
+    "selectDate": "اختر التاريخ",
+    "sortTitle": "الترتيب",
+    "sortDescription": "اختر طريقة عرض السيارات.",
+    "sortPalmRent": "اقتراح بالم رنت",
+    "price_min": "الأقل سعراً",
+    "price_max": "الأعلى سعراً",
+    "sort1": "الأحدث",
+    "noDeposite": "بدون تأمين",
+    "economicCar": "اقتصادية",
+    "luxCar": "فاخرة",
+    "sevenplus": "7+ مقاعد",
+    "sport": "رياضية",
+    "business": "أعمال",
+    "crook": "مكشوفة",
+    "standard": "قياسية",
+    "suv": "دفع رباعي",
+    "coupe": "كوبيه"
+  },
+
+  "HubLandingPage": {
+    "heroTitle": "تأجير السيارات في مدن بالم رينت النشطة",
+    "heroSubtitle1": "اختر المدينة والتاريخ",
+    "heroSubtitle2": "لعرض السيارات المتاحة والسعر النهائي."
+  },
+  "HubBranchList": {
+    "title": "مدن تأجير السيارات",
+    "subtitle": "أفضل المدن لتأجير السيارات وتجربة سفر مريحة وسريعة وبدون وديعة",
+    "imageUnavailable": "الصورة غير متوفرة",
+    "openBranch": "عرض سيارات مدينة {city}"
+  },
+  "HubBranchCars": {
+    "title": "بداية رحلتك مع بالم رينت من هنا",
+    "subtitle": "تأجير سيارات بدون وديعة والدفع في الموقع لتجربة مريحة وموثوقة",
+    "empty": "لا توجد سيارات",
+    "viewAllCars": "عرض جميع سيارات {city}",
+    "selectCity": "اختيار مدينة {city}",
+    "scrollNext": "التمرير إلى التالي",
+    "scrollPrev": "التمرير إلى السابق"
+  },
 
   "branchLanding": {
     "heroTitle": "تأجير سيارات في <Branch></Branch> بدون وديعة",
     "heroSubtitle1": "تسليم سريع في المطار أو الفندق مع تأمين مجاني",
     "heroSubtitle2": "حجز سريع عبر الإنترنت، الدفع عند التسليم، دعم 24/7",
-
+ "carsListTitle": "قائمة السيارات في <Branch></Branch>",
     "loadingMore": "جارٍ التحميل…",
     "viewMore": "عرض المزيد",
 

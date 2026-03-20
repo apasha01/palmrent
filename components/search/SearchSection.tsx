@@ -178,7 +178,7 @@ function uniqBrands(arr: string[]) {
 }
 
 function normalizeJalaliString(s: string) {
-  return (s).replace(/-/g, "/").trim()
+  return s.replace(/-/g, "/").trim()
 }
 
 function pad2(n: number) {
@@ -188,7 +188,7 @@ function pad2(n: number) {
 function normalizeJalaliParam(input?: string | null) {
   if (!input) return null
 
-  const clean = (String(input)).replace(/-/g, "/").trim()
+  const clean = String(input).replace(/-/g, "/").trim()
   const [y, m, d] = clean.split("/").map((x) => parseInt(x, 10))
 
   if (!y || !m || !d) return null
@@ -215,15 +215,14 @@ function safeTime(input: any, fallback: string) {
   return n
 }
 
-function formatShortDate(dateString?: string | null, locale?: string) {
+function formatShortDate(dateString?: string | null) {
   const norm = normalizeJalaliParam(dateString)
   if (!norm) return ""
-  return locale === "fa" ? (norm) : norm
+  return norm
 }
 
 function formatNumberByLocale(value: number, locale?: string) {
-  const text = value.toLocaleString()
-  return locale === "fa" ? (text) : text
+  return value.toLocaleString(locale === "fa" ? "fa-IR" : locale === "ar" ? "ar-IQ" : "en-US")
 }
 
 function buildSearchPageUrl({
@@ -269,10 +268,10 @@ function SortDrawer({
   currentSort: string | null
   onSelect: (val: string | null) => void
 }) {
-  const t = useTranslations()
+  const t = useTranslations("SearchSection")
 
   const sortItems: { id: string | null; label: string }[] = [
-    { id: null, label: "پیشنهاد پالم رنت" },
+    { id: null, label: t("sortPalmRent") },
     { id: "price_min", label: t("price_min") },
     { id: "price_max", label: t("price_max") },
     { id: "new", label: t("sort1") },
@@ -296,16 +295,14 @@ function SortDrawer({
                   <IconSort size="18" className={undefined} />
                 </span>
                 <DrawerTitle className="truncate text-right text-base font-extrabold text-gray-900 dark:text-gray-100">
-                  مرتب‌سازی
+                  {t("sortTitle")}
                 </DrawerTitle>
               </div>
             </div>
           </DrawerHeader>
 
           <div className="px-5 pb-4">
-            <p className="mb-3 text-right text-xs leading-6 text-gray-500">
-              ترتیب نمایش خودروها را انتخاب کنید.
-            </p>
+            <p className="mb-3 text-right text-xs leading-6 text-gray-500">{t("sortDescription")}</p>
 
             <div className="space-y-2">
               {sortItems.map((item) => {
@@ -375,7 +372,7 @@ export function SerarchSection({
   scrollTargetId?: string
   scrollOffset?: number
 }) {
-  const t = useTranslations()
+  const t = useTranslations("SearchSection")
   const locale = useLocale()
   const isRtl = locale === "fa" || locale === "ar"
 
@@ -468,24 +465,14 @@ export function SerarchSection({
     [scrollTargetId, scrollOffset]
   )
 
-  const deliveryDateText = useMemo(
-    () => formatShortDate(carDates?.[0] ?? null, locale),
-    [carDates?.[0], locale]
-  )
+  const deliveryDateText = useMemo(() => formatShortDate(carDates?.[0] ?? null), [carDates?.[0]])
 
-  const returnDateText = useMemo(
-    () => formatShortDate(carDates?.[1] ?? null, locale),
-    [carDates?.[1], locale]
-  )
+  const returnDateText = useMemo(() => formatShortDate(carDates?.[1] ?? null), [carDates?.[1]])
 
   const dateChipLabel = useMemo(() => {
     if (!hasDates) return ""
-
-    const dtText = locale === "fa" ? (dtFallback) : dtFallback
-    const rtText = locale === "fa" ? (rtFallback) : rtFallback
-
-    return `${deliveryDateText} (${dtText}) - ${returnDateText} (${rtText})`
-  }, [hasDates, locale, dtFallback, rtFallback, deliveryDateText, returnDateText])
+    return `${deliveryDateText} (${dtFallback}) - ${returnDateText} (${rtFallback})`
+  }, [hasDates, dtFallback, rtFallback, deliveryDateText, returnDateText])
 
   const popoverKey = useMemo(() => {
     const f = normalizeJalaliParam(carDates?.[0] ?? "") ?? ""
@@ -904,23 +891,22 @@ export function SerarchSection({
   const hasSearchChip = !!(search_title && String(search_title).trim())
   const hasSortChip = !!sort
   const hasPriceChip = !!selectedPriceRange
-
-  // تاریخ اصلاً نباید توی چیپ‌ها بیاد
   const hasDateChip = false
 
   const hasChips =
     hasSearchChip ||
     hasSortChip ||
     hasPriceChip ||
+    hasDateChip ||
     storeBrands.length > 0 ||
     selectedCategoryItems.length > 0
 
   const sortLabel = useMemo(() => {
-    if (!sort) return "پیشنهاد پالم رنت"
+    if (!sort) return t("sortPalmRent")
     if (sort === "price_min") return t("price_min")
     if (sort === "price_max") return t("price_max")
     if (sort === "new") return t("sort1")
-    return "پیشنهاد پالم رنت"
+    return t("sortPalmRent")
   }, [sort, t])
 
   const dateTrigger = shouldShowDateFilter ? (
@@ -941,7 +927,7 @@ export function SerarchSection({
           )}
         >
           <CalendarDays className="size-4" />
-          <span>{hasDates ? dateChipLabel : "انتخاب تاریخ"}</span>
+          <span>{hasDates ? dateChipLabel : t("selectDate")}</span>
         </button>
       }
     />
@@ -1003,7 +989,7 @@ export function SerarchSection({
                     inputRef.current?.focus()
                   }}
                   className="shrink-0 rounded-md p-1 text-gray-400 hover:bg-gray-100"
-                  aria-label="clear"
+                  aria-label={t("clear")}
                 >
                   <X className="size-4" />
                 </button>
@@ -1043,7 +1029,7 @@ export function SerarchSection({
                   </span>
 
                   <span className="max-sm:hidden text-sm text-[#4b5259]">
-                    {sort ? sortLabel : "مرتب‌سازی"}
+                    {sort ? sortLabel : t("sortTitle")}
                   </span>
 
                   {sort && (
@@ -1089,7 +1075,9 @@ export function SerarchSection({
                           >
                             <span>{item.display}</span>
                             {item.isModel && (
-                              <span className="shrink-0 text-[10px] text-[#A0A0A0]">مدل</span>
+                              <span className="shrink-0 text-[10px] text-[#A0A0A0]">
+                                {t("model")}
+                              </span>
                             )}
                           </motion.button>
                         )

@@ -5,32 +5,71 @@ import React, { useMemo, useState } from "react";
 import Lottie from "lottie-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, ChevronLeft, CreditCard } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  CreditCard,
+} from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import sucess from "@/public/lottie/Success.json";
 import { requestZarinpalPayment } from "@/services/Zarinpal/Zarinpal";
 import Image from "next/image";
+import useDIR from "@/hooks/use-rtl";
 
-function toFaNumber(n: number | string) {
-  const num = typeof n === "string" ? Number(n) : n;
-  if (Number.isNaN(num)) return String(n);
-  return new Intl.NumberFormat("fa-IR").format(num);
+
+type PaymentCardProps = {
+  rentData?: any;
+  payFailed?: boolean;
+  reason?: string | null;
+};
+
+function mapLocaleForIntl(locale: string) {
+  if (locale === "fa") return "fa-IR";
+  if (locale === "ar") return "ar";
+  if (locale === "tr") return "tr-TR";
+  return "en-US";
 }
 
-function formatDateTimeFa(input?: string) {
+function formatNumber(value: number | string, locale: string) {
+  const num = typeof value === "string" ? Number(value) : value;
+  if (Number.isNaN(num)) return String(value);
+
+  return new Intl.NumberFormat(mapLocaleForIntl(locale), {
+    maximumFractionDigits: 0,
+  }).format(num);
+}
+
+function formatDateTime(input: string | undefined, locale: string) {
   if (!input) return "—";
+
   const iso = input.replace(" ", "T");
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return input.replace(" 00:00:00", "");
-  return new Intl.DateTimeFormat("fa-IR", {
+  const date = new Date(iso);
+
+  if (isNaN(date.getTime())) {
+    return input.replace(" 00:00:00", "");
+  }
+
+  return new Intl.DateTimeFormat(mapLocaleForIntl(locale), {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(d);
+  }).format(date);
 }
 
-export function PaymentCard({ rentData, payFailed, reason }: any) {
+export function PaymentCard({
+  rentData,
+  payFailed = false,
+  reason = null,
+}: PaymentCardProps) {
+  const locale = useLocale();
+  const t = useTranslations("PaymentCard");
+  const { isRtl } = useDIR();
+
+  const ChevronIcon = isRtl ? ChevronLeft : ChevronRight;
+
   const [loadingPay, setLoadingPay] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
@@ -57,29 +96,71 @@ export function PaymentCard({ rentData, payFailed, reason }: any) {
     totalAed > 0 && tomanRate > 0 ? Math.round(totalAed * tomanRate) : 0;
   const remainingAed = Math.max(totalAed - payNowAed, 0);
 
-  // ✅ اسم فارسی از summary.car_name
   const carTitle = summary?.car_name || "—";
 
-  const fromText = formatDateTimeFa(info?.from_date);
-  const toText = formatDateTimeFa(info?.to_date);
+  const fromText = formatDateTime(info?.from_date, locale);
+  const toText = formatDateTime(info?.to_date, locale);
   const dayRent = info?.day_rent;
+
+  const formattedTotalAed = useMemo(
+    () => formatNumber(totalAed, locale),
+    [totalAed, locale],
+  );
+
+  const formattedTotalToman = useMemo(
+    () => formatNumber(totalToman, locale),
+    [totalToman, locale],
+  );
+
+  const formattedPayNowAed = useMemo(
+    () => formatNumber(payNowAed, locale),
+    [payNowAed, locale],
+  );
+
+  const formattedPayNowToman = useMemo(
+    () => formatNumber(payNowToman, locale),
+    [payNowToman, locale],
+  );
+
+  const formattedRemainingAed = useMemo(
+    () => formatNumber(remainingAed, locale),
+    [remainingAed, locale],
+  );
+
+  const formattedDayRent = useMemo(() => {
+    if (typeof dayRent === "undefined" || dayRent === null) return "—";
+    return formatNumber(dayRent, locale);
+  }, [dayRent, locale]);
+
+  const rentDescription = useMemo(() => {
+    return t("rentDescription", {
+      carTitle,
+      fromText,
+      toText,
+      days: formattedDayRent,
+    });
+  }, [t, carTitle, fromText, toText, formattedDayRent]);
 
   const onPay = async () => {
     if (!canPay || !rentId || rentId <= 0) return;
+
     try {
       setPayError(null);
       setLoadingPay(true);
+
       const res = await requestZarinpalPayment({ rent_id: rentId });
+
       if (!res?.ok || !res?.payment_url) {
         const msg =
-          res?.message || res?.errors?.message || "لینک پرداخت دریافت نشد";
+          res?.message || res?.errors?.message || t("paymentLinkNotReceived");
         setPayError(String(msg));
         return;
       }
+
       window.location.href = res.payment_url;
     } catch (e: any) {
       setPayError(
-        e?.response?.data?.message || e?.message || "خطا در ارتباط با سرور",
+        e?.response?.data?.message || e?.message || t("serverConnectionError"),
       );
     } finally {
       setLoadingPay(false);
@@ -91,8 +172,6 @@ export function PaymentCard({ rentData, payFailed, reason }: any) {
   return (
     <div className="min-h-screen w-full bg-white dark:bg-gray-900 p-0 m-0">
       <Card className="w-full p-0! m-0! relative overflow-hidden shadow-none bg-white dark:bg-gray-900 border-none">
-
-        {/* ===== LOTTIE ===== */}
         <div className="w-full py-0">
           <div className="max-w-7xl mx-auto w-full">
             <div className="w-full h-40">
@@ -105,31 +184,28 @@ export function PaymentCard({ rentData, payFailed, reason }: any) {
           </div>
         </div>
 
-        {/* ===== CONTENT ===== */}
         <div className="max-w-5xl md:max-w-6xl w-full mx-auto px-2 py-0! sm:px-4">
-
-          {/* ===== HEADER ===== */}
           <CardHeader className="p-0 mb-3">
             <div className="w-full flex justify-center">
               <div className="text-center w-full max-w-3xl mx-auto">
-
                 <CardTitle className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white p-0 m-0">
                   <span className="inline-flex items-center gap-2 justify-center">
                     <CheckCircle2 className="h-6 w-6 text-emerald-500 shrink-0" />
-                    <span>رزرو شما تایید شد</span>
+                    <span>{t("reservationConfirmed")}</span>
                   </span>
                 </CardTitle>
 
-                {/* notice box */}
                 <div className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50 dark:bg-cyan-950 dark:border-cyan-800 px-4 py-3 text-center">
                   <p className="text-cyan-700 dark:text-cyan-300 font-semibold text-xs leading-6">
-                    برای قطعی شدن رزرو لطفا مبلغ پیش پرداخت را در این صفحه پرداخت کنید
+                    {t("payNotice")}
                   </p>
                 </div>
 
                 {payFailed ? (
                   <div className="mt-2 text-sm font-bold text-red-600">
-                    پرداخت ناموفق بود{reason ? `: ${String(reason)}` : ""}
+                    {reason
+                      ? t("paymentFailedWithReason", { reason: String(reason) })
+                      : t("paymentFailed")}
                   </div>
                 ) : null}
               </div>
@@ -137,73 +213,78 @@ export function PaymentCard({ rentData, payFailed, reason }: any) {
           </CardHeader>
 
           <CardContent className="space-y-2 p-0 m-0">
-
-            {/* ===== STEPPER ===== */}
             <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 md:p-4">
               <div className="flex justify-evenly items-center font-bold text-[11px] sm:text-xs md:text-sm">
                 <div className="flex items-center gap-1 md:gap-2 text-emerald-600">
                   <CheckCircle2 className="h-5 w-5 shrink-0" />
-                  <span className="whitespace-nowrap">ثبت درخواست</span>
+                  <span className="whitespace-nowrap">
+                    {t("stepRequestRegistered")}
+                  </span>
                 </div>
-                <ChevronLeft className="h-7 w-7 md:h-8 md:w-8 text-emerald-500 shrink-0" />
+
+                <ChevronIcon className="h-7 w-7 md:h-8 md:w-8 text-emerald-500 shrink-0" />
+
                 <div className="flex items-center gap-1 md:gap-2 text-emerald-600">
                   <CheckCircle2 className="h-5 w-5 shrink-0" />
-                  <span className="whitespace-nowrap">تایید رزرو</span>
+                  <span className="whitespace-nowrap">
+                    {t("stepReservationConfirmed")}
+                  </span>
                 </div>
-                <ChevronLeft className="h-7 w-7 md:h-8 md:w-8 text-gray-300 dark:text-gray-600 shrink-0" />
+
+                <ChevronIcon className="h-7 w-7 md:h-8 md:w-8 text-gray-300 dark:text-gray-600 shrink-0" />
+
                 <div className="flex items-center gap-1 md:gap-2 text-emerald-600">
                   <CreditCard className="h-5 w-5 shrink-0" />
-                  <span className="whitespace-nowrap">پرداخت پیش‌پرداخت</span>
+                  <span className="whitespace-nowrap">
+                    {t("stepPrepayment")}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* ===== PAYMENT DETAILS ===== */}
             <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
               <div className="py-3 px-4">
-
                 <span className="font-black text-lg text-gray-900 dark:text-white">
-                  جزئیات حساب
+                  {t("accountDetails")}
                 </span>
 
-                {/* توضیح یه‌پارچه فارسی */}
                 <p className="mt-2 text-sm text-gray-700 dark:text-gray-300 leading-8 font-medium">
-                  اجاره {carTitle} از {fromText}
-                  <br />
-                  تا {toText} به مدت{" "}
-                  {typeof dayRent !== "undefined" ? toFaNumber(dayRent) : "—"}{" "}
-                  روز
+                  {rentDescription}
                 </p>
 
                 <div className="mt-3 space-y-2 text-xs border-t border-gray-200 dark:border-gray-700 pt-2">
-
-                  {/* total */}
                   <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2">
                     <span className="text-gray-700 dark:text-gray-200 font-bold whitespace-nowrap">
-                      جمع کل هزینه :
+                      {t("totalCost")}
                     </span>
                     <span className="font-black text-gray-900 dark:text-white">
-                      {toFaNumber(totalAed)} درهم ( {toFaNumber(totalToman)} تومان )
+                      {t("aedAndTomanValue", {
+                        aed: formattedTotalAed,
+                        toman: formattedTotalToman,
+                      })}
                     </span>
                   </div>
 
-                  {/* pay now */}
                   <div className="flex items-center justify-between bg-blue-100 dark:bg-blue-900 rounded-lg px-3 py-2">
                     <span className="font-black whitespace-nowrap text-gray-900 dark:text-white">
-                      پیش پرداخت (پرداخت الان) :
+                      {t("payNow")}
                     </span>
                     <span className="font-black text-gray-900 dark:text-white">
-                      {toFaNumber(payNowAed)} درهم ( {toFaNumber(payNowToman)} تومان )
+                      {t("aedAndTomanValue", {
+                        aed: formattedPayNowAed,
+                        toman: formattedPayNowToman,
+                      })}
                     </span>
                   </div>
 
-                  {/* remaining */}
                   <div className="flex items-center justify-between bg-green-100 dark:bg-green-900 rounded-lg px-3 py-2">
                     <span className="text-gray-700 dark:text-gray-300 font-bold whitespace-nowrap">
-                      مانده حساب (پرداخت هنگام تحویل خودرو) :
+                      {t("remainingAmount")}
                     </span>
                     <span className="font-black text-gray-900 dark:text-white">
-                      {toFaNumber(remainingAed)} درهم
+                      {t("aedOnlyValue", {
+                        aed: formattedRemainingAed,
+                      })}
                     </span>
                   </div>
 
@@ -216,44 +297,64 @@ export function PaymentCard({ rentData, payFailed, reason }: any) {
               </div>
             </div>
 
-            {/* ===== PAY BUTTON ===== */}
             <div className="flex justify-center">
               <Button
                 onClick={onPay}
                 disabled={disabled}
                 className="w-full max-w-xl h-14 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-lg disabled:opacity-50"
               >
-                {loadingPay
-                  ? "در حال انتقال به درگاه..."
-                  : "پرداخت پیش‌پرداخت و قطعی کردن رزرو"}
+                {loadingPay ? t("redirectingToGateway") : t("payAndConfirm")}
               </Button>
             </div>
 
             <p className="text-center text-muted-foreground text-sm">
-              پرداخت امن از طریق درگاه زرین پال
+              {t("securePayment")}
             </p>
 
-            {/* ===== TRUST BADGES ===== */}
             <div className="w-full overflow-x-auto pb-8">
               <div className="flex flex-nowrap items-center justify-center gap-4 px-4 min-w-max">
                 <div className="relative h-12 md:h-16 lg:h-20 aspect-square shrink-0">
-                  <Image src="/images/peyment/1.webp" alt="1" fill className="object-contain" />
+                  <Image
+                    src="/images/peyment/1.webp"
+                    alt="1"
+                    fill
+                    className="object-contain"
+                  />
                 </div>
                 <div className="relative h-12 md:h-16 lg:h-20 aspect-square shrink-0">
-                  <Image src="/images/peyment/2.webp" alt="2" fill className="object-contain" />
+                  <Image
+                    src="/images/peyment/2.webp"
+                    alt="2"
+                    fill
+                    className="object-contain"
+                  />
                 </div>
                 <div className="relative h-12 md:h-16 lg:h-20 aspect-5/3 shrink-0">
-                  <Image src="/images/peyment/5.webp" alt="5" fill className="object-contain" />
+                  <Image
+                    src="/images/peyment/5.webp"
+                    alt="5"
+                    fill
+                    className="object-contain"
+                  />
                 </div>
                 <div className="relative h-12 md:h-16 lg:h-20 aspect-square shrink-0">
-                  <Image src="/images/peyment/3.webp" alt="3" fill className="object-contain" />
+                  <Image
+                    src="/images/peyment/3.webp"
+                    alt="3"
+                    fill
+                    className="object-contain"
+                  />
                 </div>
                 <div className="relative h-12 md:h-16 lg:h-20 aspect-square shrink-0">
-                  <Image src="/images/peyment/4.webp" alt="4" fill className="object-contain" />
+                  <Image
+                    src="/images/peyment/4.webp"
+                    alt="4"
+                    fill
+                    className="object-contain"
+                  />
                 </div>
               </div>
             </div>
-
           </CardContent>
         </div>
       </Card>

@@ -4,22 +4,23 @@
 
 import Image from "next/image";
 import { useMemo, useCallback, useEffect, useState } from "react";
-
+import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
+import { useParams } from "next/navigation";
 
 import { useBlogs } from "@/services/blog/blogs.queries";
 import { STORAGE_URL } from "@/lib/apiClient";
-
-import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
+import useDIR from "@/hooks/use-rtl";
 
 export default function GuidesSection() {
+  const t = useTranslations("GuidesSection");
   const router = useRouter();
   const routeParams = useParams() as { locale?: string };
   const lang = String(routeParams?.locale || "fa");
+  const { direction } = useDIR();
 
-  // ✅ TS-safe: STORAGE_URL ممکنه undefined باشه
   const storageBase = useMemo(() => {
     const raw = STORAGE_URL ?? "";
     return raw.endsWith("/") ? raw.slice(0, -1) : raw;
@@ -42,11 +43,12 @@ export default function GuidesSection() {
     [router],
   );
 
-  // ---------------- Desktop Embla ----------------
+  const emblaDirection = direction ? "rtl" : "ltr";
+
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "start",
     containScroll: "trimSnaps",
-    direction: "rtl",
+    direction: emblaDirection,
   });
 
   const [canPrev, setCanPrev] = useState(false);
@@ -63,6 +65,7 @@ export default function GuidesSection() {
     updateButtons();
     emblaApi.on("select", updateButtons);
     emblaApi.on("reInit", updateButtons);
+
     return () => {
       emblaApi.off("select", updateButtons);
       emblaApi.off("reInit", updateButtons);
@@ -76,11 +79,9 @@ export default function GuidesSection() {
 
   return (
     <section className="w-full">
-      {/* Header: title + arrows (Desktop only) */}
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-foreground">راهنماها و مقالات</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
 
-        {/* ✅ فقط دسکتاپ */}
         <div className="hidden md:flex items-center gap-2">
           <button
             type="button"
@@ -93,9 +94,13 @@ export default function GuidesSection() {
               disabled:opacity-40 disabled:cursor-not-allowed
               hover:bg-muted transition
             "
-            aria-label="قبلی"
+            aria-label={t("prev")}
           >
-            <ChevronRight className="w-5 h-5" />
+            {direction ? (
+              <ChevronRight className="w-5 h-5" />
+            ) : (
+              <ChevronLeft className="w-5 h-5" />
+            )}
           </button>
 
           <button
@@ -109,9 +114,13 @@ export default function GuidesSection() {
               disabled:opacity-40 disabled:cursor-not-allowed
               hover:bg-muted transition
             "
-            aria-label="بعدی"
+            aria-label={t("next")}
           >
-            <ChevronLeft className="w-5 h-5" />
+            {direction ? (
+              <ChevronLeft className="w-5 h-5" />
+            ) : (
+              <ChevronRight className="w-5 h-5" />
+            )}
           </button>
         </div>
       </div>
@@ -151,6 +160,7 @@ export default function GuidesSection() {
                   onClick={() => goToBlog(item.id)}
                   role="link"
                   tabIndex={0}
+                  aria-label={t("openArticle", { title: item.title })}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") goToBlog(item.id);
                   }}
@@ -158,7 +168,6 @@ export default function GuidesSection() {
                     flex flex-col cursor-pointer group border rounded-lg
                     shrink-0 w-[260px]
                     hover:shadow-sm transition
-                   
                   "
                 >
                   <div className="rounded-lg overflow-hidden">
@@ -218,6 +227,7 @@ export default function GuidesSection() {
                       onClick={() => goToBlog(item.id)}
                       role="link"
                       tabIndex={0}
+                      aria-label={t("openArticle", { title: item.title })}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") goToBlog(item.id);
                       }}
@@ -225,7 +235,6 @@ export default function GuidesSection() {
                         flex flex-col cursor-pointer group border rounded-lg
                         shrink-0 w-[320px]
                         hover:shadow-sm transition
-                      
                       "
                     >
                       <div className="rounded-lg overflow-hidden">

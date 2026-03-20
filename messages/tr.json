@@ -678,6 +678,59 @@
     }
   },
 
+    "GuidesSection": {
+    "title": "Rehberler ve makaleler",
+    "prev": "Önceki",
+    "next": "Sonraki",
+    "openArticle": "{title} makalesini görüntüle"
+  },
+
+    "BranchFaq": {
+    "yourQuestions": "Sorularınız",
+    "commonQuestions": "Sık sorulan sorular",
+    "loading": "Bilgiler yükleniyor...",
+    "empty": "Bu şube için kayıtlı bir soru bulunmuyor.",
+    "openQuestion": "{question} sorusunu görüntüle"
+  },
+
+    "QRApplication": {
+    "qrAlt": "QR kod görseli",
+    "scanText": "İndirmek için tarayın!",
+    "title": "Palm Rent Uygulaması",
+    "subtitle": "Daha hızlı ve daha güvenilir online araç kiralama",
+    "downloadLinks": "İndirme bağlantılarını görüntüle",
+    "androidAlt": "Android",
+    "iosAlt": "iOS",
+    "platforms": "Android ve IOS üzerinde kurulabilir",
+    "appImageAlt": "Uygulama görseli"
+  },
+
+    "HubSupportSection": {
+    "items": {
+      "payment": {
+        "title": "Çeşitli ve esnek ödeme",
+        "description": {
+          "line1": "Şehre ve araca uygun şekilde, yerel para birimiyle",
+          "line2": "ve diğer yöntemlerle ödeme imkânı."
+        }
+      },
+      "support": {
+        "title": "7/24 destek",
+        "description": {
+          "line1": "Seçimden teslim ve iade sürecine kadar",
+          "line2": "rezervasyon yolculuğunuzda yanınızdayız."
+        }
+      },
+      "tracking": {
+        "title": "Şeffaf ve takip edilebilir rezervasyon",
+        "description": {
+          "line1": "Nihai onaydan önce rezervasyon detayları",
+          "line2": "ve şartlar açık şekilde gösterilir."
+        }
+      }
+    }
+  },
+
    "dateRangePicker": {
     "clear": "Temizle",
     "switchToGregorian": "Miladi takvim",
@@ -793,7 +846,352 @@
     }
   },
 
+  
+  "FAQlanding": {
+    "yourQuestions": "Sorularınız",
+    "commonQuestions": "Sık sorulan sorular",
+    "openQuestion": "{question} sorusunu görüntüle"
+  },
 
+    "SearchSection": {
+    "carSearch": "Araç marka veya modeline göre ara",
+    "filters": "Filtreler",
+    "clear": "Temizle",
+    "model": "Model",
+    "selectDate": "Tarih seç",
+    "sortTitle": "Sıralama",
+    "sortDescription": "Araçların nasıl gösterileceğini seçin.",
+    "sortPalmRent": "Palm Rent önerisi",
+    "price_min": "En düşük fiyat",
+    "price_max": "En yüksek fiyat",
+    "sort1": "En yeni",
+    "noDeposite": "Depozitosuz",
+    "economicCar": "Ekonomik",
+    "luxCar": "Lüks",
+    "sevenplus": "7+ koltuk",
+    "sport": "Spor",
+    "business": "Business",
+    "crook": "Cabrio",
+    "standard": "Standart",
+    "suv": "SUV",
+    "coupe": "Coupe"
+  },
+
+    "SearchFilterSheet": {
+    "back": "Geri",
+    "filters": "Filtreler",
+    "clear": "Temizle",
+    "clearAllFilters": "Tüm filtreleri temizle",
+    "clearFilters": "Filtreleri temizle",
+    "availableCarsCount": "{count} uygun araç gösteriliyor",
+    "removeFilterAria": "{label} filtresini kaldır",
+    "sortTitle": "Sıralama",
+    "priceRangeTitle": "Fiyat aralığı",
+    "brandNameTitle": "Araç markası",
+    "carClassTitle": "Araç sınıfı",
+    "gearboxTitle": "Vites",
+    "fuelTypeTitle": "Yakıt türü",
+    "seatCountTitle": "Yolcu sayısı",
+    "luggageCapacityTitle": "Bagaj kapasitesi",
+    "amenitiesTitle": "Özellikler ve rezervasyon şartları",
+    "priceMin": "Minimum",
+    "priceMax": "Maksimum",
+    "brandSearchPlaceholder": "Marka adına göre ara",
+    "noBrandFound": "Marka bulunamadı",
+    "showLess": "Daha az göster",
+    "showMoreWithCount": "{count, plural, =0 {Daha fazla göster} other {Daha fazla göster ({count} seçildi)}}",
+    "seatCountBadge": "{count} kişi",
+    "luggageCountBadge": "{count} valiz",
+    "viewResults": "{count} sonucu görüntüle",
+    "palmrent_suggest": "Palm Rent önerisi",
+    "price_min": "En düşük fiyat",
+    "showMore": "Daha fazla göster",
+    "price_max": "En yüksek fiyat",
+    "sort1": "En yeni",
+    "economicCar": "Ekonomik",
+    "luxCar": "Lüks",
+    "businessCar": "Business",
+    "sevenplus": "7+ koltuk",
+    "suv": "SUV",
+    "crook": "Coupe / Cabrio",
+    "sedan": "Sedan",
+    "automatic": "Otomatik",
+    "geared": "Manuel",
+    "hybrid": "Hibrit",
+    "petrol": "Benzin",
+    "diesel": "Dizel",
+    "hybrid_fuel": "Hibrit",
+    "electric": "Elektrikli",
+    "noDeposite": "Depozitosuz",
+    "specialOffer": "Özel teklif",
+    "hotelDelivery": "Otele teslim",
+    "airportDelivery": "Havalimanında teslim"
+  },
+
+  
+  "AppDrawer": {
+    "prices": {
+      "title": "Fiyat grupları",
+      "desc": "Fiyatlar günlük hesaplanır ve kiralama gün sayısına göre değişebilir.",
+      "empty": "Fiyatlar mevcut değil.",
+      "subOff": "Temel fiyat ve indirimli fiyat",
+      "subNormal": "Günlük fiyat"
+    },
+    "noDeposit": {
+      "title": "Depozitosuz",
+      "desc": "Bu araç için mevcut bilgilere göre güvence depozitosu/trafik cezası depozitosu alınmamaktadır.\n\n• Araç tesliminde sizden depozito alınmayacaktır.\n• Ancak sözleşme dışındaki cezalar, hasarlar veya masraflar şirket kurallarına göre kiracının sorumluluğundadır.\n• Sözleşme detayları için rezervasyonu tamamlamadan önce destek ile iletişime geçebilirsiniz."
+    },
+    "deposit": {
+      "title": "Trafik cezası depozitosu",
+      "desc": "Trafik cezası depozitosu, kiralama süresince oluşabilecek olası cezaları karşılamak için alınan bir tutardır.\n\n• Tutar: {amountText} {currency}\n• Genellikle cezalar kapatılıp durum kontrol edildikten sonra iade edilir.\n• İade süresi ve işlem şekli şirket/şube kurallarına göre değişebilir."
+    },
+    "delivery": {
+      "title": "Araç teslimatı",
+      "freeDesc": "Bu araç için teslimat ücretsizdir.\n\n• Teslimat ve iade, şube ile koordineli şekilde yapılır.\n• Bazı özel lokasyonlarda veya alışılmadık saatlerde ek koordinasyon gerekebilir.\n• Rezervasyonu tamamlamadan önce tam yer ve saat detaylarını destekten öğrenebilirsiniz.",
+      "paidDesc": "Bu araç için teslimat ücretsiz değildir.\n\n• Teslimat ve iade ücreti; konum, saat ve şube koşullarına göre değişebilir.\n• Rezervasyonu tamamlamadan önce tam teslimat ücretini destekten öğrenebilirsiniz."
+    },
+    "insurance": {
+      "title": "Araç sigortası",
+      "hasDesc": "Bu araç için ücretsiz temel sigorta sunulmuştur.\n\n• Temel sigorta, standart minimum kapsamı içerir.\n• Bazı durumlarda ek ücretle ilave teminatlar sunulabilir.\n• Kapsam limitleri ve istisnaları öğrenmek için rezervasyondan önce detayları incelemek daha iyidir.",
+      "noDesc": "Mevcut bilgilere göre bu araç için ücretsiz sigorta tanımlı değildir.\n\n• Temel veya ek sigorta ayrıca sunulabilir.\n• Tam sigorta koşullarını öğrenmek için rezervasyondan önce destekle iletişime geçin."
+    },
+    "km": {
+      "title": "Kilometre koşulları",
+      "unlimitedDesc": "Bu araç sınırsız kilometreye sahiptir.\n\n• Bu araç için günlük kilometre sınırı uygulanmaz.\n• Normal kullanım ve şirket kurallarına uyum yine de gereklidir.\n• Belirli rotalar veya kullanım türleri için özel koşullar varsa rezervasyon sırasında bildirilir.",
+      "limitedDesc": "Bu araç sınırlı kilometreye sahiptir.\n\n• Genellikle günlük veya toplam kilometre sınırı belirlenir.\n• Ek kilometre ücreti şirket kurallarına göre hesaplanır.\n• Tam kilometre sınırını öğrenmek için destekten bilgi alabilirsiniz."
+    },
+    "optionById": {
+      "2": "Çocuk koltuğu\n• Küçük çocuklar için uygundur\n• Kurulum ve teslim araç tesliminde yapılır\n• Uygun boyut ve model seçimi müşterinin sorumluluğundadır\n• Gerekirse rezervasyon öncesinde destek ile iletişime geçin",
+      "10": "Ek sürücü\n• Bu seçenek başka bir kişinin de sürücü olarak kaydedilmesini sağlar\n• Ek sürücü için geçerli kimlik ve ehliyet gereklidir\n• Araç kullanımı sözleşme kurallarına tabi olmaya devam eder"
+    },
+    "extraOption": {
+      "titleFallback": "Opsiyon detayları",
+      "descFallback": "Bu opsiyon için kayıtlı bir açıklama yok. Daha fazla bilgi için rezervasyon öncesinde destek ile iletişime geçebilirsiniz."
+    },
+    "insuranceComplete": {
+      "title": "Kapsamlı hasar paketi",
+      "desc": "Bu seçenek seçildiğinde, kiralama süresi boyunca hasarlar ve olası riskler için daha kapsamlı bir güvence etkinleşir."
+    }
+  },
+  "ReservationPage": {
+    "continueReservationLogin": "Rezervasyona devam et, hesaba giriş yap",
+    "uploadAndReviewDocuments": "Belgeleri yükle ve incele",
+    "reservationReview": "Rezervasyonu incele",
+    "waitingForPayment": "Ödeme bekleniyor",
+    "serverConnectionError": "Sunucu bağlantı hatası"
+  },
+
+    "PaymentCard": {
+    "reservationConfirmed": "Rezervasyonunuz onaylandı",
+    "payNotice": "Rezervasyonun kesinleşmesi için lütfen ön ödeme tutarını bu sayfadan ödeyin",
+    "paymentFailed": "Ödeme başarısız oldu",
+    "paymentFailedWithReason": "Ödeme başarısız oldu: {reason}",
+    "stepRequestRegistered": "Talep kaydedildi",
+    "stepReservationConfirmed": "Rezervasyon onayı",
+    "stepPrepayment": "Ön ödeme",
+    "accountDetails": "Hesap detayları",
+    "rentDescription": "{carTitle} kiralama\nBaşlangıç: {fromText}\nBitiş: {toText}\nSüre: {days} gün",
+    "totalCost": "Toplam ücret:",
+    "payNow": "Ön ödeme (şimdi ödenecek):",
+    "remainingAmount": "Kalan tutar (araç tesliminde ödenecek):",
+    "aedAndTomanValue": "{aed} AED ( {toman} Toman )",
+    "aedOnlyValue": "{aed} AED",
+    "redirectingToGateway": "Ödeme sayfasına yönlendiriliyor...",
+    "payAndConfirm": "Ön ödemeyi yap ve rezervasyonu kesinleştir",
+    "securePayment": "Zarinpal ödeme geçidi ile güvenli ödeme",
+    "paymentLinkNotReceived": "Ödeme bağlantısı alınamadı",
+    "serverConnectionError": "Sunucu bağlantı hatası"
+  },
+
+
+  "PaymentSuccessCard": {
+    "common": {
+      "free": "Ücretsiz"
+    },
+    "otp": {
+      "back": "Geri",
+      "title": "İşlemi tamamlamak için önce giriş yapın",
+      "banner1": "Telefon numaranız sistemde zaten kayıtlı.",
+      "banner2": "Rezervasyon sürecine devam etmek için lütfen hesabınıza giriş yapın.",
+      "registeredMobile": "Cep telefonu numarası (kayıtlı)",
+      "checkingLogin": "Giriş durumu kontrol ediliyor...",
+      "sendCodeHint": "Butona tıklayarak doğrulama kodunu alabilirsiniz.",
+      "enterCode": "Doğrulama kodunu girin",
+      "codeSentPrefix": "5 haneli kod şu numaraya gönderildi:",
+      "codeSentSuffix": "",
+      "edit": "Düzenle",
+      "wrongCode": "Girilen kod doğru değil",
+      "resendCooldown": "yeniden kod istemeye kalan süre",
+      "resendCode": "Kodu tekrar gönder",
+      "confirmAndSend": "Onayla ve kodu al",
+      "confirmAndContinue": "Onayla ve devam et",
+      "sendCodeError": "Kod gönderilirken hata oluştu",
+      "resendError": "Yeniden gönderim başarısız oldu",
+      "verifyErrorToast": "Kod doğrulanırken hata oluştu"
+    },
+    "thanksDialog": {
+      "title": "Belgeler kaydedildi",
+      "description": "Teşekkürler 🙏 Belgeleriniz alındı ve inceleniyor.\nBirkaç saniye içinde ana sayfaya yönlendirileceksiniz…",
+      "supportTitle": "Destek",
+      "supportText": "Fotoğraflar net değilse veya ışık, kesim, bulanıklık gibi bir sorun varsa daha hızlı inceleme için destek ekibiyle iletişime geçin.",
+      "goHomeNow": "Hemen ana sayfaya git",
+      "seconds": "saniye"
+    },
+    "upload": {
+      "remove": "Kaldır",
+      "required": "Bu alan zorunludur"
+    },
+    "success": {
+      "title": "Ödeme başarıyla tamamlandı",
+      "description": "Rezervasyonunuz kesinleşti. Voucher ve belgeleri bu sayfadan yönetebilirsiniz."
+    },
+    "reservationInfo": "Rezervasyon bilgileri",
+    "downloadingVoucher": "İndiriliyor...",
+    "downloadVoucher": "Voucher indir",
+    "toggleInfo": "Bilgileri göster veya gizle",
+    "days": "gün",
+    "fromTo": "{from} tarihinden {to} tarihine kadar",
+    "remainAtDelivery": "Teslimatta kalan tutar",
+    "uploadPrompt": "Teslim sırasında zaman kazanmak için belge fotoğraflarınızı yükleyin",
+    "sections": {
+      "idCard": "Pasaport/Kimlik kartı",
+      "driverLicense": "Sürücü belgesi",
+      "internationalDriverLicense": "Uluslararası sürücü belgesi",
+      "visa": "Vize"
+    },
+    "labels": {
+      "photo": "Fotoğraf",
+      "front": "Ön yüz",
+      "back": "Arka yüz"
+    },
+    "noIntl": "Uluslararası sürücü belgem yok",
+    "noVisa": "Vizem yok",
+    "sending": "Gönderiliyor...",
+    "submitDocuments": "Belgeleri gönder",
+    "invoice": {
+      "title": "Rezervasyon fatura detayı",
+      "rentPriceForDays": "{days} günlük kira ücreti",
+      "daily": "günlük",
+      "discount": "indirim",
+      "option": "Opsiyon",
+      "optionsTotal": "Opsiyonlar toplamı",
+      "tax": "Vergi ({percent}%)",
+      "prepay": "Ön ödeme",
+      "remaining": "Kalan tutar",
+      "paidValue": "{value} (ödendi)",
+      "finalCostForDays": "{days} gün için nihai ücret"
+    },
+    "toasts": {
+      "loginRequired": "Devam etmek için giriş yapmalısınız",
+      "loginRequiredForUpload": "Belgeleri yüklemek için giriş yapmalısınız",
+      "completeRequiredDocuments": "Lütfen zorunlu belgeleri tamamlayın",
+      "uploadDone": "Yükleme tamamlandı",
+      "preparingVoucher": "Voucher hazırlanıyor...",
+      "voucherDownloaded": "Voucher indirildi"
+    },
+    "errors": {
+      "uploadFailed": "Belge yükleme sırasında hata oluştu",
+      "uploadNotDone": "Yükleme tamamlanmadı",
+      "rentIdNotFound": "rent_id bulunamadı",
+      "voucherDownloadFailed": "Voucher indirilemedi"
+    }
+  },
+  "Auth": {
+    "LoginDialog": {
+      "srTitle": "Telefon numarası ile giriş",
+      "image": {
+        "logoAlt": "Logo"
+      },
+      "header": {
+        "titleMobile": "Giriş / Kayıt",
+        "titleOtp": "Kod doğrulama"
+      },
+      "hint": {
+        "mobile": "Doğrulama kodunu almak için telefon numaranızı girin."
+      },
+      "placeholders": {
+        "phone": "Telefon numarası"
+      },
+      "button": {
+        "open": "Giriş yap",
+        "back": "Geri",
+        "close": "Kapat",
+        "sendOtp": "Doğrulama kodunu gönder",
+        "verify": "Doğrula ve devam et",
+        "resend": "Tekrar gönder",
+        "editMobile": "Düzenle"
+      },
+      "terms": {
+        "suffix-text": "Devam ederek",
+        "link": "şartlar ve koşulları",
+        "prefix-text": "kabul etmiş olursunuz."
+      },
+      "otp": {
+        "sentPrefix": " numarasına 5 haneli kod gönderildi ",
+        "sentDone": ".",
+        "resendCountdown": "Tekrar kod istemek için {time}"
+      },
+      "toast": {
+        "invalidMobile": "Girilen telefon numarası geçerli değil.",
+        "wrongOtp": "Girilen kod hatalı.",
+        "tooManyRequests": "Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin.",
+        "smsFailed": "SMS gönderilemedi. Lütfen tekrar deneyin.",
+        "networkError": "İnternet bağlantı hatası. Lütfen tekrar deneyin.",
+        "userBlocked": "Bu kullanıcının erişimi geçici olarak kısıtlanmıştır.",
+        "otpExpired": "Doğrulama kodunun süresi dolmuş veya istenmemiş.",
+        "tooManyAttempts": "İzin verilen deneme sayısı aşıldı.",
+        "serverError": "Sunucu hatası. Lütfen daha sonra tekrar deneyin."
+      }
+    }
+  },
+
+    "ProcessingCard": {
+    "requestRegistered": "Rezervasyon talebiniz kaydedildi",
+    "doNotLeavePage": "Lütfen sayfadan ayrılmayın, rezervasyonunuz inceleniyor",
+    "reviewingMessage1": "Palm Rent ekibi rezervasyonunuzu şu anda inceliyor ve son onayı veriyor",
+    "reviewingMessage2": "Rezervasyon incelemesi genellikle 2 dakikadan kısa sürer.",
+    "reviewingMessage3": "Lütfen bu sayfayı kapatmayın; inceleme sonucu burada gösterilecektir.",
+    "stepRequestRegistered": "Talep kaydedildi",
+    "stepReviewReservation": "Rezervasyon incelemesi",
+    "stepShowResult": "Sonucu göster",
+    "estimatedTime": "Sonucun açıklanmasına kalan tahmini süre: {time}",
+    "continueOnWhatsapp": "WhatsApp üzerinden devam et",
+    "takingLongerThanUsual": "İnceleme normalden biraz daha uzun sürdü",
+    "reservationSummary": "Rezervasyon özeti",
+    "finalPrice": "Nihai ücret",
+    "priceLabelWithCarAndDays": "{days} günlük {car} kiralaması için nihai ücret",
+    "priceLabelWithDays": "{days} gün için nihai ücret",
+    "rentDescriptionLine1WithCarAndDate": "{fromDate} tarihinden itibaren bir adet {car} kiralama",
+    "rentDescriptionLine1WithCar": "Bir adet {car} kiralama",
+    "rentDescriptionLine1WithDate": "{fromDate} tarihinden itibaren",
+    "rentDescriptionLine2WithDateAndDays": "{toDate} tarihine kadar, {days} gün süreyle",
+    "rentDescriptionLine2WithDate": "{toDate} tarihine kadar",
+    "rentDescriptionLine2WithDays": "{days} gün süreyle",
+    "whatsappMessage": "Merhaba. Rezervasyonum hâlâ inceleme aşamasında. Lütfen durumu kontrol edin. Takip bağlantısı: {pageUrl}"
+  }
+,
+
+
+  "HubLandingPage": {
+    "heroTitle": "Palm Rent'in aktif şehirlerinde araç kiralama",
+    "heroSubtitle1": "Şehri ve tarihi seçin",
+    "heroSubtitle2": "Mevcut araçlar ve nihai fiyat gösterilsin."
+  },
+  "HubBranchList": {
+    "title": "Araç kiralama şehirleri",
+    "subtitle": "Araç kiralamak ve rahat, hızlı ve depozitosuz bir seyahat deneyimi yaşamak için en iyi şehirler",
+    "imageUnavailable": "Görsel mevcut değil",
+    "openBranch": "{city} şehrindeki araçları görüntüle"
+  },
+  "HubBranchCars": {
+    "title": "Palm Rent ile yolculuk burada başlıyor",
+    "subtitle": "Rahat ve güvenilir bir deneyim için depozitosuz ve yerinde ödemeli araç kiralama",
+    "empty": "Araç yok",
+    "viewAllCars": "{city} için tüm araçları görüntüle",
+    "selectCity": "{city} şehrini seç",
+    "scrollNext": "Sonrakine kaydır",
+    "scrollPrev": "Öncekine kaydır"
+  },
   
   "whatsappMessage": {
     "reserve": "Merhaba\n({city}) konumunda ({car}) aracını kiralamak istiyorum. Ek bilgi ve kiralama şartlarını paylaşabilir misiniz?\n{url}",
@@ -804,6 +1202,7 @@
     "heroTitle": "<Branch></Branch> şehrinde depozitosuz araç kiralama",
     "heroSubtitle1": "Havalimanı ve otelde anında teslimat, ücretsiz sigorta",
     "heroSubtitle2": "Hızlı online rezervasyon, teslimde ödeme ve 7/24 destek",
+      "carsListTitle": "<Branch></Branch> araç listesi",
 
     "loadingMore": "Yükleniyor…",
     "viewMore": "Daha fazla göster",

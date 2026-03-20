@@ -4,6 +4,7 @@
 
 import * as React from "react";
 import { Sparkles } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Drawer,
   DrawerContent,
@@ -11,6 +12,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 // ===========================
 // ✅ SINGLE SOURCE OF TRUTH: Styles
@@ -19,11 +21,11 @@ const UI = {
   content: "max-h-[85vh]",
   wrap: "mx-auto w-full max-w-lg md:max-w-2xl lg:max-w-3xl",
   header: "px-5 pt-4 pb-2",
-  title: "truncate text-right text-base font-extrabold text-gray-900",
+  title: "truncate text-base font-extrabold text-gray-900",
   iconWrap:
     "inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600",
   body: "px-5 pb-4",
-  bodyText: "whitespace-pre-line text-right text-sm leading-7 text-gray-700",
+  bodyText: "whitespace-pre-line text-sm leading-7 text-gray-700",
   hint: "text-xs text-gray-500 leading-6",
 
   priceCard: "rounded-2xl border border-gray-200 bg-white p-3 shadow-sm",
@@ -32,82 +34,6 @@ const UI = {
   priceFinal: "text-sm font-extrabold text-gray-900",
   priceUnit: "text-xs font-normal text-gray-500",
   priceOld: "mt-1 text-xs text-gray-400 line-through",
-} as const;
-
-// ===========================
-// ✅ SINGLE SOURCE OF TRUTH: Copies
-// ===========================
-const COPY = {
-  prices: {
-    title: "گروه‌های قیمتی",
-    desc: "قیمت‌ها به‌ازای هر روز محاسبه شده‌اند و با توجه به تعداد روزهای اجاره تغییر می‌کنند.",
-    empty: "قیمت‌ها موجود نیست.",
-    subOff: "قیمت پایه و قیمت بعد از تخفیف",
-    subNormal: "قیمت روزانه",
-  },
-
-  noDeposit: {
-    title: "بدون ودیعه",
-    desc:
-      `برای این خودرو در اطلاعات فعلی، ودیعه ضمانت/ودیعه خلافی دریافت نمی‌شود.\n\n` +
-      `• در زمان تحویل خودرو مبلغی بابت ودیعه از شما دریافت نخواهد شد.\n` +
-      `• با این حال، جریمه‌ها، خسارت‌ها یا هزینه‌های خارج از قرارداد همچنان طبق قوانین مجموعه برعهده اجاره‌کننده است.\n` +
-      `• برای جزئیات دقیق شرایط قرارداد، پیش از نهایی‌کردن رزرو می‌توانید با پشتیبانی هماهنگ کنید.`,
-  },
-
-  deposit: (args: { amountText: string; currency: string }) => ({
-    title: "ودیعه خلافی",
-    desc:
-      `ودیعه خلافی مبلغی است که برای پوشش جریمه‌ها/خلافی‌های احتمالی در زمان اجاره دریافت می‌شود.\n\n` +
-      `• مبلغ: ${args.amountText} ${args.currency}\n` +
-      `• معمولاً پس از تسویه خلافی‌ها و بررسی وضعیت، برگشت داده می‌شود.\n` +
-      `• زمان برگشت و نحوه تسویه بسته به قوانین مجموعه/شعبه ممکن است متفاوت باشد.`,
-  }),
-
-  delivery: (free: boolean) => ({
-    title: "تحویل خودرو",
-    desc: free
-      ? `تحویل برای این خودرو رایگان است.\n\n• تحویل و عودت طبق هماهنگی با شعبه انجام می‌شود.\n• در برخی لوکیشن‌های خاص یا ساعات غیرمعمول ممکن است هماهنگی جداگانه لازم باشد.\n• پیش از ثبت نهایی رزرو، جزئیات دقیق محل و زمان تحویل را می‌توانید از پشتیبانی بگیرید.`
-      : `تحویل برای این خودرو رایگان نیست.\n\n• هزینه تحویل و عودت بسته به محل، زمان و شرایط شعبه ممکن است متفاوت باشد.\n• قبل از نهایی‌کردن رزرو، می‌توانید مبلغ دقیق تحویل را از پشتیبانی استعلام بگیرید.`,
-  }),
-
-  insurance: (has: boolean) => ({
-    title: "بیمه خودرو",
-    desc: has
-      ? `برای این خودرو بیمه پایه رایگان در نظر گرفته شده است.\n\n• بیمه پایه حداقل پوشش‌های معمول را شامل می‌شود.\n• در برخی شرایط، پوشش‌های تکمیلی با هزینه جداگانه قابل ارائه هستند.\n• برای اطلاع از سقف تعهدات و استثناهای بیمه، بهتر است قبل از رزرو جزئیات را بررسی کنید.`
-      : `برای این خودرو در اطلاعات فعلی بیمه رایگان ثبت نشده است.\n\n• ممکن است بیمه پایه یا بیمه تکمیلی به‌صورت جداگانه ارائه شود.\n• برای اطلاع از شرایط دقیق بیمه، قبل از رزرو با پشتیبانی هماهنگ کنید.`,
-  }),
-
-  km: (unlimited: boolean) => ({
-    title: "شرایط کیلومتر",
-    desc: unlimited
-      ? `این خودرو کیلومتر نامحدود دارد.\n\n• محدودیت روزانه کیلومتر برای این خودرو اعمال نمی‌شود.\n• استفاده متعارف و طبق قوانین مجموعه همچنان لازم است.\n• در صورت وجود شرایط خاص برای برخی مسیرها یا کاربری‌ها، جزئیات هنگام رزرو اعلام می‌شود.`
-      : `این خودرو کیلومتر محدود دارد.\n\n• معمولاً سقف کیلومتر روزانه یا کل دوره برای آن در نظر گرفته می‌شود.\n• مبلغ اضافه‌کیلومتر طبق قوانین مجموعه محاسبه خواهد شد.\n• برای اطلاع از سقف دقیق کیلومتر، از پشتیبانی استعلام بگیرید.`,
-  }),
-
-  optionById: {
-    2: `صندلی کودک
-• مناسب کودکان خردسال
-• نصب و تحویل هنگام دریافت خودرو انجام می‌شود
-• مسئولیت انتخاب سایز و مدل مناسب کودک با مشتری است
-• در صورت نیاز، قبل از رزرو با پشتیبانی هماهنگ کنید`,
-
-    10: `راننده اضافی
-• این گزینه اجازه می‌دهد فرد دیگری هم به‌عنوان راننده خودرو ثبت شود
-• برای راننده اضافی ارائه مدارک شناسایی و گواهینامه معتبر لازم است
-• مسئولیت استفاده از خودرو طبق قوانین قرارداد خواهد بود`,
-  } as Record<number, string>,
-
-  extraOption: {
-    titleFallback: "جزئیات آپشن",
-    descFallback:
-      "برای این آپشن توضیحی ثبت نشده است. برای اطلاعات بیشتر می‌توانید قبل از رزرو با پشتیبانی هماهنگ کنید.",
-  },
-
-  insuranceComplete: {
-    title: "بسته جامع خسارت",
-    desc: "با انتخاب این گزینه، پوشش کامل‌تری برای خسارت‌ها و ریسک‌های احتمالی در طول اجاره فعال می‌شود.",
-  },
 } as const;
 
 // ===========================
@@ -154,18 +80,25 @@ function isYes(v: any) {
   return s === "yes" || s === "true" || s === "1";
 }
 
+function formatNumberByLocale(value: number, locale: string) {
+  if (locale === "fa") return value.toLocaleString("fa-IR");
+  if (locale === "ar") return value.toLocaleString("ar-IQ");
+  if (locale === "tr") return value.toLocaleString("tr-TR");
+  return value.toLocaleString("en-US");
+}
 
-function moneyFa(value: any) {
+function moneyText(value: any, locale: string) {
   if (value === null || value === undefined) return "—";
+
   const str = String(value);
-  const num = Number((str));
+  const num = Number(str);
 
   if (Number.isFinite(num)) {
-    const fixed = num % 1 === 0 ? num.toFixed(0) : num.toFixed(2);
-    return (fixed);
+    if (Number.isInteger(num)) return formatNumberByLocale(num, locale);
+    return String(num);
   }
 
-  return (str);
+  return str;
 }
 
 export function AppDrawer({
@@ -179,11 +112,15 @@ export function AppDrawer({
   trigger: (args: { open: () => void }) => React.ReactNode;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const t = useTranslations("AppDrawer");
+  const locale = useLocale();
+  const isRtl = locale === "fa" || locale === "ar";
+
   const [open, setOpen] = React.useState(false);
 
   const [stickyKind, setStickyKind] = React.useState<AppDrawerKind>(kind);
   const [stickyData, setStickyData] = React.useState<AppDrawerData | undefined>(
-    data,
+    data
   );
   const closeTimerRef = React.useRef<any>(null);
 
@@ -200,30 +137,30 @@ export function AppDrawer({
 
     switch (stickyKind) {
       case "prices":
-        return COPY.prices.title;
+        return t("prices.title");
 
       case "deposit":
-        return COPY.deposit({ amountText: "—", currency: "" }).title;
+        return t("deposit.title");
 
       case "no_deposit":
-        return COPY.noDeposit.title;
+        return t("noDeposit.title");
 
       case "delivery":
-        return COPY.delivery(true).title;
+        return t("delivery.title");
 
       case "insurance":
-        return COPY.insurance(true).title;
+        return t("insurance.title");
 
       case "km":
-        return COPY.km(true).title;
+        return t("km.title");
 
       case "insurance_complete":
-        return COPY.insuranceComplete.title;
+        return t("insuranceComplete.title");
 
       case "extra_option":
-        return d?.optionTitle || COPY.extraOption.titleFallback;
+        return d?.optionTitle || t("extraOption.titleFallback");
     }
-  }, [stickyKind, stickyData]);
+  }, [stickyKind, stickyData, t]);
 
   const Body = React.useMemo(() => {
     const d = stickyData || {};
@@ -233,36 +170,38 @@ export function AppDrawer({
       const currency = d.currency || "";
 
       return (
-        <div className={UI.body + " text-right"}>
-          <div className={UI.hint}>{d.pricesSubtitle || COPY.prices.desc}</div>
+        <div className={UI.body + (isRtl ? " text-right" : " text-left")}>
+          <div className={UI.hint}>
+            {d.pricesSubtitle || t("prices.desc")}
+          </div>
 
           <Separator className="my-3" />
 
           {list.length === 0 ? (
-            <div className="py-6 text-sm text-gray-500">{COPY.prices.empty}</div>
+            <div className="py-6 text-sm text-gray-500">{t("prices.empty")}</div>
           ) : (
             <div className="space-y-2">
               {list.map((p, idx) => (
                 <div key={`${p.days}-${idx}`} className={UI.priceCard}>
                   <div className="flex items-start justify-between gap-3">
-                    <div className="text-right">
+                    <div className={isRtl ? "text-right" : "text-left"}>
                       <div className={UI.priceTitle}>{p.days}</div>
                       <div className={UI.priceSub}>
                         {p.hasOffPrice
-                          ? COPY.prices.subOff
-                          : COPY.prices.subNormal}
+                          ? t("prices.subOff")
+                          : t("prices.subNormal")}
                       </div>
                     </div>
 
                     <div className="whitespace-nowrap text-left">
                       <div className={UI.priceFinal}>
-                        {moneyFa(p.finalPrice)}{" "}
+                        {moneyText(p.finalPrice, locale)}{" "}
                         <span className={UI.priceUnit}>{currency}</span>
                       </div>
 
                       {p.hasOffPrice ? (
                         <div className={UI.priceOld}>
-                          {moneyFa(p.originalPrice)} {currency}
+                          {moneyText(p.originalPrice, locale)} {currency}
                         </div>
                       ) : null}
                     </div>
@@ -277,14 +216,14 @@ export function AppDrawer({
 
     if (stickyKind === "deposit") {
       const currency = d.currency || "";
-      const txt = COPY.deposit({
-        amountText: moneyFa(d.deposit),
+      const txt = t("deposit.desc", {
+        amountText: moneyText(d.deposit, locale),
         currency,
-      }).desc;
+      });
 
       return (
         <div className={UI.body}>
-          <p className={UI.bodyText}>{txt}</p>
+          <p className={cn(UI.bodyText, isRtl ? "text-right" : "text-left")}>{txt}</p>
         </div>
       );
     }
@@ -292,34 +231,45 @@ export function AppDrawer({
     if (stickyKind === "no_deposit") {
       return (
         <div className={UI.body}>
-          <p className={UI.bodyText}>{COPY.noDeposit.desc}</p>
+          <p className={cn(UI.bodyText, isRtl ? "text-right" : "text-left")}>
+            {t("noDeposit.desc")}
+          </p>
         </div>
       );
     }
 
     if (stickyKind === "delivery") {
-      const txt = COPY.delivery(isYes(d.free_delivery)).desc;
+      const txt = isYes(d.free_delivery)
+        ? t("delivery.freeDesc")
+        : t("delivery.paidDesc");
+
       return (
         <div className={UI.body}>
-          <p className={UI.bodyText}>{txt}</p>
+          <p className={cn(UI.bodyText, isRtl ? "text-right" : "text-left")}>{txt}</p>
         </div>
       );
     }
 
     if (stickyKind === "insurance") {
-      const txt = COPY.insurance(isYes(d.insurance)).desc;
+      const txt = isYes(d.insurance)
+        ? t("insurance.hasDesc")
+        : t("insurance.noDesc");
+
       return (
         <div className={UI.body}>
-          <p className={UI.bodyText}>{txt}</p>
+          <p className={cn(UI.bodyText, isRtl ? "text-right" : "text-left")}>{txt}</p>
         </div>
       );
     }
 
     if (stickyKind === "km") {
-      const txt = COPY.km(isYes(d.km)).desc;
+      const txt = isYes(d.km)
+        ? t("km.unlimitedDesc")
+        : t("km.limitedDesc");
+
       return (
         <div className={UI.body}>
-          <p className={UI.bodyText}>{txt}</p>
+          <p className={cn(UI.bodyText, isRtl ? "text-right" : "text-left")}>{txt}</p>
         </div>
       );
     }
@@ -327,7 +277,9 @@ export function AppDrawer({
     if (stickyKind === "insurance_complete") {
       return (
         <div className={UI.body}>
-          <p className={UI.bodyText}>{COPY.insuranceComplete.desc}</p>
+          <p className={cn(UI.bodyText, isRtl ? "text-right" : "text-left")}>
+            {t("insuranceComplete.desc")}
+          </p>
         </div>
       );
     }
@@ -336,21 +288,26 @@ export function AppDrawer({
     if (apiDesc) {
       return (
         <div className={UI.body}>
-          <p className={UI.bodyText}>{apiDesc}</p>
+          <p className={cn(UI.bodyText, isRtl ? "text-right" : "text-left")}>{apiDesc}</p>
         </div>
       );
     }
 
     const id = Number(d.optionId);
-    const dict = Number.isFinite(id) ? COPY.optionById[id] : "";
-    const desc = String(dict ?? "").trim() || COPY.extraOption.descFallback;
+
+    const optionText =
+      id === 2
+        ? t("optionById.2")
+        : id === 10
+          ? t("optionById.10")
+          : t("extraOption.descFallback");
 
     return (
       <div className={UI.body}>
-        <p className={UI.bodyText}>{desc}</p>
+        <p className={cn(UI.bodyText, isRtl ? "text-right" : "text-left")}>{optionText}</p>
       </div>
     );
-  }, [stickyKind, stickyData]);
+  }, [stickyKind, stickyData, t, locale, isRtl]);
 
   return (
     <>
@@ -377,14 +334,21 @@ export function AppDrawer({
           }, 250);
         }}
       >
-        <DrawerContent dir="rtl" className={UI.content}>
+        <DrawerContent dir={isRtl ? "rtl" : "ltr"} className={UI.content}>
           <div className={UI.wrap}>
             <DrawerHeader className={UI.header}>
               <div className="flex min-w-0 items-center gap-2">
                 <span className={UI.iconWrap}>
                   <Sparkles className="h-5 w-5" />
                 </span>
-                <DrawerTitle className={UI.title}>{title}</DrawerTitle>
+                <DrawerTitle
+                  className={cn(
+                    UI.title,
+                    isRtl ? "text-right" : "text-left"
+                  )}
+                >
+                  {title}
+                </DrawerTitle>
               </div>
             </DrawerHeader>
 

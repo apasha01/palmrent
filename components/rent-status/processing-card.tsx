@@ -3,10 +3,18 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import Lottie from "lottie-react";
-import { CheckCircle2, Clock3, Hourglass, ChevronLeft } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock3,
+  Hourglass,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import cardrive from "@/public/lottie/DriveCar.json";
 import { Separator } from "../ui/separator";
+import useDIR from "@/hooks/use-rtl";
 
 const TIMER_END_KEY = (code: string) => `palmrent_timer_end_${code}`;
 const TIMER_EXPIRED_KEY = (code: string) => `palmrent_timer_expired_${code}`;
@@ -45,17 +53,24 @@ const formatTime = (s: number) => {
   return `${m}:${sec.toString().padStart(2, "0")}`;
 };
 
-const formatMoney = (value: any) => {
+const mapLocaleForIntl = (locale: string) => {
+  if (locale === "fa") return "fa-IR";
+  if (locale === "ar") return "ar";
+  if (locale === "tr") return "tr-TR";
+  return "en-US";
+};
+
+const formatMoney = (value: any, locale: string) => {
   if (value === null || value === undefined || value === "") return "";
   const n = typeof value === "string" ? Number(value) : value;
   if (Number.isNaN(n)) return String(value);
+
   const hasDecimal = Math.abs(n % 1) > 0;
-  return new Intl.NumberFormat("fa-IR", {
+
+  return new Intl.NumberFormat(mapLocaleForIntl(locale), {
     maximumFractionDigits: hasDecimal ? 2 : 0,
   }).format(n);
 };
-
-// ─── timer helpers ────────────────────────────────────────────────────────────
 
 function isAlreadyExpired(code: string): boolean {
   try {
@@ -80,10 +95,13 @@ function getOrCreateEndTime(code: string, durationSeconds: number): number {
       if (!isNaN(end) && end > Date.now()) return end;
     }
   } catch {}
+
   const end = Date.now() + durationSeconds * 1000;
+
   try {
     localStorage.setItem(TIMER_END_KEY(code), String(end));
   } catch {}
+
   return end;
 }
 
@@ -91,25 +109,24 @@ function getRemainingSeconds(endTime: number) {
   return Math.max(0, Math.round((endTime - Date.now()) / 1000));
 }
 
-// ─── init helper — فقط یه بار موقع mount اجرا میشه ───────────────────────────
-
 function initTimerState(
   code: string,
-  durationSeconds: number
+  durationSeconds: number,
 ): { expired: boolean; endTime: number; seconds: number } {
   if (isAlreadyExpired(code)) {
     return { expired: true, endTime: 0, seconds: 0 };
   }
+
   const endTime = getOrCreateEndTime(code, durationSeconds);
   const seconds = getRemainingSeconds(endTime);
+
   if (seconds <= 0) {
     markExpired(code);
     return { expired: true, endTime: 0, seconds: 0 };
   }
+
   return { expired: false, endTime, seconds };
 }
-
-// ─── WhatsApp icon ────────────────────────────────────────────────────────────
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -124,36 +141,37 @@ function WhatsAppIcon({ className }: { className?: string }) {
   );
 }
 
-// ─── main component ───────────────────────────────────────────────────────────
-
 export function ProcessingCard({
   rentData,
   initialSeconds = DEFAULT_DURATION,
 }: ProcessingCardProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const locale = useLocale();
+  const t = useTranslations("ProcessingCard");
+  const { isRtl } = useDIR();
 
   const rentCode = rentData?.rent_code ?? "default";
+  const ChevronIcon = isRtl ? ChevronLeft : ChevronRight;
 
-  // lazy init — همه چیز یه بار محاسبه میشه، هیچ setState synchronous توی effect نداریم
   const [isExpired, setIsExpired] = useState<boolean>(
-    () => initTimerState(rentCode, initialSeconds).expired
+    () => initTimerState(rentCode, initialSeconds).expired,
   );
   const [seconds, setSeconds] = useState<number>(
-    () => initTimerState(rentCode, initialSeconds).seconds
+    () => initTimerState(rentCode, initialSeconds).seconds,
   );
   const endTimeRef = useRef<number>(
-    initTimerState(rentCode, initialSeconds).endTime
+    initTimerState(rentCode, initialSeconds).endTime,
   );
 
   useEffect(() => {
-    // اگه از اول expired بود یا endTime نداریم، interval نمیخوایم
     if (isExpired || endTimeRef.current === 0) return;
 
     const interval = setInterval(() => {
-      const r = getRemainingSeconds(endTimeRef.current);
-      setSeconds(r);
-      if (r <= 0) {
+      const remaining = getRemainingSeconds(endTimeRef.current);
+      setSeconds(remaining);
+
+      if (remaining <= 0) {
         clearInterval(interval);
         markExpired(rentCode);
         setIsExpired(true);
@@ -161,7 +179,7 @@ export function ProcessingCard({
     }, 1000);
 
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rentCode]);
 
   const pageUrl = useMemo(() => {
@@ -173,41 +191,83 @@ export function ProcessingCard({
   const whatsappUrl = useMemo(() => {
     const raw = rentData?.whatsapp ?? null;
     if (!raw) return null;
+
     const number = raw.replace(/\D/g, "");
     if (!number) return null;
-    const text = `سلام. رزرو من هنوز در مرحله بررسی است. لطفاً وضعیت را بررسی کنید. کد پیگیری: ${pageUrl}`;
+
+    const text = t("whatsappMessage", {
+      pageUrl,
+    });
+
     return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
-  }, [rentData, pageUrl]);
+  }, [rentData, pageUrl, t]);
 
   const summary = rentData?.summary;
 
   const rentDescriptionLine1 = useMemo(() => {
-    const d = summary?.delivery;
+    const delivery = summary?.delivery;
     const car = summary?.car_name || "";
-    const fromDate = d?.date_fa || "";
-    const parts: string[] = [];
-    if (car) parts.push(`اجاره یک دستگاه ${car}`);
-    if (fromDate) parts.push(`از ${fromDate}`);
-    return parts.join(" ");
-  }, [summary]);
+    const fromDate = delivery?.date_fa || "";
+
+    if (car && fromDate) {
+      return t("rentDescriptionLine1WithCarAndDate", {
+        car,
+        fromDate,
+      });
+    }
+
+    if (car) {
+      return t("rentDescriptionLine1WithCar", {
+        car,
+      });
+    }
+
+    if (fromDate) {
+      return t("rentDescriptionLine1WithDate", {
+        fromDate,
+      });
+    }
+
+    return "";
+  }, [summary, t]);
 
   const rentDescriptionLine2 = useMemo(() => {
-    const r = summary?.return;
-    const toDate = r?.date_fa || "";
-    const days = summary?.days;
-    const parts: string[] = [];
-    if (toDate) parts.push(`تا ${toDate}`);
-    if (days) parts.push(`به مدت ${days} روز`);
-    return parts.join(" ");
-  }, [summary]);
+    const ret = summary?.return;
+    const toDate = ret?.date_fa || "";
+    const totalDays = summary?.days;
+
+    if (toDate && totalDays) {
+      return t("rentDescriptionLine2WithDateAndDays", {
+        toDate,
+        days: totalDays,
+      });
+    }
+
+    if (toDate) {
+      return t("rentDescriptionLine2WithDate", {
+        toDate,
+      });
+    }
+
+    if (totalDays) {
+      return t("rentDescriptionLine2WithDays", {
+        days: totalDays,
+      });
+    }
+
+    return "";
+  }, [summary, t]);
 
   const days = summary?.days ?? null;
   const total = summary?.total ?? null;
   const originalTotal = summary?.original_total ?? null;
   const currency = summary?.currency ?? "";
 
-  const formattedTotal = useMemo(() => formatMoney(total), [total]);
-  const formattedOriginal = useMemo(() => formatMoney(originalTotal), [originalTotal]);
+  const formattedTotal = useMemo(() => formatMoney(total, locale), [total, locale]);
+  const formattedOriginal = useMemo(
+    () => formatMoney(originalTotal, locale),
+    [originalTotal, locale],
+  );
 
   const hasDiscount = useMemo(() => {
     if (!originalTotal || !total) return false;
@@ -218,15 +278,26 @@ export function ProcessingCard({
 
   const priceLabelLine = useMemo(() => {
     const car = summary?.car_name || "";
-    const d = typeof days === "number" && days > 0 ? days : null;
-    if (car && d) return `هزینه نهایی برای ${d} روز اجاره ${car}`;
-    if (d) return `هزینه نهایی برای ${d} روز`;
-    return "هزینه نهایی";
-  }, [summary, days]);
+    const validDays = typeof days === "number" && days > 0 ? days : null;
+
+    if (car && validDays) {
+      return t("priceLabelWithCarAndDays", {
+        days: validDays,
+        car,
+      });
+    }
+
+    if (validDays) {
+      return t("priceLabelWithDays", {
+        days: validDays,
+      });
+    }
+
+    return t("finalPrice");
+  }, [summary, days, t]);
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-white dark:bg-gray-900">
-      {/* LOTTIE */}
       <div className="w-full">
         <div className="mx-auto w-full">
           <div className="w-full h-[130px] sm:h-[150px] md:h-[220px]">
@@ -235,50 +306,48 @@ export function ProcessingCard({
         </div>
       </div>
 
-      {/* CONTENT */}
       <div className="flex flex-col max-w-4xl w-full mx-auto px-3 sm:px-4 pb-3 gap-2">
-
-        {/* TITLE */}
         <div className="text-center">
           <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white inline-flex items-center gap-2 justify-center">
             <CheckCircle2 className="h-7 w-7 text-emerald-500 shrink-0" />
-            <span>درخواست رزرو شما ثبت شد</span>
+            <span>{t("requestRegistered")}</span>
           </h2>
         </div>
 
-        {/* BLUE NOTICE CARD */}
         <div className="rounded-lg border border-cyan-200 bg-cyan-100/40 dark:bg-cyan-950 dark:border-cyan-800 px-4 py-3 text-center">
           <p className="text-cyan-600 dark:text-cyan-300 font-semibold text-[13px]">
-            لطفا صفحه را ترک نفرمایید ، رزرو شما در حال بررسی است
+            {t("doNotLeavePage")}
           </p>
         </div>
 
-        {/* DESCRIPTION */}
         <div className="text-center">
           <p className="text-xs font-bold text-gray-700 dark:text-gray-300 leading-8">
-            تیم پالم رنت درحال بررسی و تایید نهایی رزرو شماست
+            {t("reviewingMessage1")}
             <br />
-            معمولا بررسی رزرو در کمتر از ۲ دقیقه انجام میشود .
+            {t("reviewingMessage2")}
             <br />
-            لطفا این صفحه را نبندید؛ نتیجه بررسی همینجا نمایش داده میشود.
+            {t("reviewingMessage3")}
           </p>
         </div>
 
-        {/* STEPPER + TIMER */}
         <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 md:p-4">
           <div className="flex justify-evenly items-center font-bold text-[11px] sm:text-xs md:text-sm">
             <div className="flex items-center gap-1 md:gap-2 text-emerald-600">
               <CheckCircle2 className="h-5 w-5 shrink-0" />
-              <span className="whitespace-nowrap">ثبت درخواست</span>
+              <span className="whitespace-nowrap">{t("stepRequestRegistered")}</span>
             </div>
-            <ChevronLeft className="h-7 w-7 text-emerald-500 shrink-0" />
+
+            <ChevronIcon className="h-7 w-7 text-emerald-500 shrink-0" />
+
             <div className="flex items-center gap-1 md:gap-2 text-emerald-600">
               <Hourglass className="h-5 w-5 shrink-0" />
-              <span className="whitespace-nowrap">بررسی رزرو</span>
+              <span className="whitespace-nowrap">{t("stepReviewReservation")}</span>
             </div>
-            <ChevronLeft className="h-7 w-7 text-gray-300 dark:text-gray-600 shrink-0" />
+
+            <ChevronIcon className="h-7 w-7 text-gray-300 dark:text-gray-600 shrink-0" />
+
             <div className="text-gray-300 dark:text-gray-600">
-              <span className="whitespace-nowrap">نمایش نتیجه</span>
+              <span className="whitespace-nowrap">{t("stepShowResult")}</span>
             </div>
           </div>
 
@@ -288,7 +357,11 @@ export function ProcessingCard({
             {!isExpired ? (
               <div className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-white font-black text-sm sm:text-base whitespace-nowrap">
                 <Clock3 className="h-5 w-5 animate-spin animation-duration-[3.5s] shrink-0" />
-                <span>زمان تقریبی تا اعلام نتیجه: {formatTime(seconds)}</span>
+                <span>
+                  {t("estimatedTime", {
+                    time: formatTime(seconds),
+                  })}
+                </span>
               </div>
             ) : whatsappUrl ? (
               <a
@@ -298,7 +371,7 @@ export function ProcessingCard({
                 className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-2 text-white font-black text-sm sm:text-base whitespace-nowrap hover:bg-[#1ebe5d] transition-colors"
               >
                 <WhatsAppIcon className="h-4 w-4 shrink-0" />
-                <span>ادامه پیگیری در واتساپ</span>
+                <span>{t("continueOnWhatsapp")}</span>
               </a>
             ) : null}
           </div>
@@ -306,26 +379,25 @@ export function ProcessingCard({
           {isExpired && (
             <div className="mt-3 text-center">
               <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
-                بررسی کمی بیشتر از حد معمول طول کشیده است
+                {t("takingLongerThanUsual")}
               </p>
             </div>
           )}
         </div>
 
-        {/* SUMMARY */}
         <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col">
           <div className="flex items-center gap-3 pt-4 pb-3 border-b border-gray-100 dark:border-gray-800">
             <div className="flex items-center gap-2 px-3 md:px-4">
               <span className="font-black text-lg text-gray-900 dark:text-white whitespace-nowrap">
-                خلاصه رزرو شما
+                {t("reservationSummary")}
               </span>
             </div>
           </div>
 
           <div className="flex flex-col px-4 py-3 gap-4">
             <div className="text-sm text-gray-800 dark:text-gray-200 leading-8 font-medium">
-              <p>{rentDescriptionLine1}</p>
-              {rentDescriptionLine2 && <p>{rentDescriptionLine2}</p>}
+              {rentDescriptionLine1 ? <p>{rentDescriptionLine1}</p> : null}
+              {rentDescriptionLine2 ? <p>{rentDescriptionLine2}</p> : null}
             </div>
 
             <Separator className="border-gray-100 dark:border-gray-800" />
@@ -341,6 +413,7 @@ export function ProcessingCard({
                     {formattedTotal} {currency}
                   </span>
                 )}
+
                 {hasDiscount && formattedOriginal && (
                   <span className="text-md text-gray-400 line-through whitespace-nowrap">
                     {formattedOriginal} {currency}
@@ -350,8 +423,8 @@ export function ProcessingCard({
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );
 }
+
