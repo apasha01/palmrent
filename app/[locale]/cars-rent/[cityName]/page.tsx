@@ -443,18 +443,30 @@ export default function HomePage() {
 
   const currency = String(query.data?.currency || "");
   const rateToRial = query.data?.rate_to_rial ?? null;
-  const branchId = Number(query.data?.branch?.id || 1);
+
+  // ✅ FIX: بدون fallback روی ۱ — تا زمانی که data نیامده null باشه
+  const branchId: number | null = query.data?.branch?.id
+    ? Number(query.data.branch.id)
+    : null;
 
   /* --------------------------------------------------------
      Support Query
+     ✅ FIX: branchId واقعی پاس میشه
+          و enabled فقط وقتی branchId معتبر هست فعاله
   -------------------------------------------------------- */
-  const supportQuery = useBranchSupport(resolvedLocale, 1);
+  const supportQuery = useBranchSupport(resolvedLocale, branchId);
 
   const branchSupportTitle = String(supportQuery.data?.branch?.title || "");
   const branchSupportDescription = String(
     supportQuery.data?.branch?.description_1 || ""
   );
   const branchSupportCategories = supportQuery.data?.categories || [];
+
+  // ✅ supportLoading: اگه branchId هنوز null باشه هم loading حساب میشه
+  const supportLoading =
+    branchId === null ||
+    supportQuery.isLoading ||
+    supportQuery.isFetching;
 
   /* --------------------------------------------------------
      Append / Replace cars
@@ -722,8 +734,9 @@ export default function HomePage() {
           </div>
 
           <div className="mt-6">
+            {/* ✅ FIX: از supportLoading که شامل null بودن branchId هم هست استفاده میشه */}
             <BranchFaq
-              loading={supportQuery.isLoading || supportQuery.isFetching}
+              loading={supportLoading}
               categories={branchSupportCategories}
             />
           </div>
@@ -757,7 +770,8 @@ export default function HomePage() {
               ) : (
                 <SerarchSection
                   redirectToSearchOnDateConfirm
-                  redirectbranch_id="1"
+                  // ✅ FIX: branchId واقعی — اگه null باشه string خالی
+                  redirectbranch_id={branchId !== null ? String(branchId) : ""}
                   searchDisable={query.isFetching}
                   scrollTargetId={SEARCH_SECTION_SCROLL_ID}
                   scrollOffset={topOffset}
@@ -810,7 +824,8 @@ export default function HomePage() {
                             currency={currency}
                             rateToRial={rateToRial}
                             accordionPriceList
-                            branchId={branchId}
+                            // ✅ FIX: اگه null بود ۰ پاس میشه — BranchCarCard باید این رو handle کنه
+                            branchId={branchId ?? 0}
                             sharedCalendar={sharedCalendar}
                             onSharedCalendarChange={setSharedCalendar}
                             badgesOnImage

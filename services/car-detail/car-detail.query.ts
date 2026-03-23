@@ -10,7 +10,7 @@ export function useCarDetail(id: number | string, locale: string) {
     queryKey: CarDetailKey(id, locale),
     queryFn: () => getCarDetail(id, locale),
     enabled: Boolean(id && locale),
-    staleTime: 1000 * 30,
+    staleTime: 1000,
     refetchOnWindowFocus: false,
   });
 }

@@ -83,8 +83,9 @@ export default function CouponDrawer({ open, onOpenChange }: Props) {
           if (!v) resetState();
         }}
       >
-        <DrawerContent className="w-full rounded-t-2xl">
-          <DrawerHeader className="px-4 pt-2 pb-1">
+        <DrawerContent className="w-full  rounded-t-2xl">
+          <div className="max-w-3xl w-full mx-auto">
+          <DrawerHeader className="px-4 pt-2 pb-1" >
             <DrawerTitle className="text-right">
               {t("coupon.title")}
             </DrawerTitle>
@@ -132,6 +133,8 @@ export default function CouponDrawer({ open, onOpenChange }: Props) {
                 ? t("coupon.checking")
                 : t("coupon.apply")}
             </Button>
+          </div>
+
           </div>
         </DrawerContent>
       </Drawer>
