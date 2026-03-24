@@ -670,10 +670,143 @@ declare const messages: {
     }
   },
 
+    "carDetail": {
+    "notFound": {
+      "title": "Car not found",
+      "description": "The ID might be wrong or the car has been removed."
+    },
+    "share": "Share",
+    "favorite": "Add to favorites",
+    "persons": "{count} passengers",
+    "baggages": "{count} luggage",
+    "features": {
+      "noDeposit": "No deposit",
+      "freeDelivery": "Free delivery",
+      "unlimitedKm": "Unlimited km",
+      "insurance": "Insurance"
+    }
+  },
+  "imageGallery": {
+    "totalImages": "{count} photos",
+    "videoLabel": "Video",
+    "mediaAlt": "Media {index}",
+    "mainImageAlt": "Main image",
+    "itemAlt": "Item {index}",
+    "thumbnailAlt": "Thumbnail {index}",
+    "imageAlt": "Image {index}",
+    "close": "Close",
+    "prev": "Previous",
+    "next": "Next",
+    "counter": "{current} of {total}"
+  },
+  "pricingCard": {
+    "title": "Rental price of {car} in {branch}",
+    "titleNoBranch": "Rental price of {car}",
+    "titleDefault": "Car rental price",
+    "locationLabel": "Rent {car} in {branch}",
+    "locationNoBranch": "Rent {car}",
+    "locationDefault": "Car rental",
+    "discountBadge": "{off}% off",
+    "dailyPricesTitle": "Daily prices",
+    "details": "Details",
+    "noPrices": "No prices available.",
+    "deposit": "Security deposit:",
+    "deliveryCost": "Delivery cost:",
+    "insuranceCar": "Car insurance:",
+    "km": "Mileage:",
+    "freeDelivery": "Free delivery",
+    "paidDelivery": "Paid delivery",
+    "freeInsurance": "Basic insurance free",
+    "noInsurance": "No insurance",
+    "unlimitedKm": "Unlimited mileage",
+    "limitedKm": "Limited",
+    "onlineReserve": "Book online",
+    "whatsappReserve": "Continue booking on WhatsApp",
+    "reserveTitle": "Book online",
+    "rentOnlineLabel": "Online car rental",
+    "deliveryDateLabel": "Pickup date & time",
+    "returnDateLabel": "Return date & time",
+    "reserveButton": "Reserve this car",
+    "missingIds": "branch_id or car_id is missing (must be passed in car for reservation).",
+    "reserveSheetTitle": "Reservation"
+  },
+  "faq": {
+    "title": "Your questions"
+  },
+  "requiredDocuments": {
+    "title": "Required documents to rent {car} in {branch}",
+    "iranResidents": "For Iranian residents",
+    "uaeResidents": "For UAE residents",
+    "note": "Please carry valid documents along with your nationality and visa.",
+    "docs": {
+      "passport": "Passport",
+      "intlLicense": "International driving license",
+      "ticketPhoto": "Flight ticket photo (if delivered at airport)",
+      "validVisa": "Valid visa:",
+      "emiratesId": "Emirates ID",
+      "uaeLicense": "UAE driving license"
+    }
+  },
+  "technicalSpecs": {
+    "title": "Technical specifications",
+    "fields": {
+      "carTitle": "Title",
+      "gearbox": "Gearbox",
+      "fuel": "Fuel",
+      "persons": "Passenger capacity",
+      "baggage": "Luggage capacity",
+      "year": "Year",
+      "doors": "Doors",
+      "engineCapacity": "Engine capacity"
+    },
+    "values": {
+      "persons": "{count} passengers",
+      "baggage": "{count} luggage",
+      "doors": "{count} doors",
+      "engineCapacity": "{value} cc"
+    }
+  },
+  "similarCars": {
+    "title": "Similar cars",
+    "persons": "{count} passengers",
+    "baggages": "{count} luggage",
+    "priceStartFrom": "Starting from: ({range})",
+    "defaultRange": "1 to 6 days",
+    "contactUs": "Contact us",
+    "features": {
+      "noDeposit": "No deposit",
+      "freeDelivery": "Free delivery",
+      "unlimitedKm": "Unlimited km",
+      "insurance": "Insurance"
+    }
+  },
+  "mobilePriceBar": {
+    "priceStartFrom": "Starting from",
+    "onlineReserve": "Book online",
+    "missingIds": "branch_id or car_id is missing (must be passed in car for reservation)."
+  },
+  "whatsapp": {
+    "message": "Hello, I would like to reserve {car}{branch} from {from} ({deliveryTime}) to {to} ({returnTime}) for {days} days.",
+    "branchPart": " in {branch}"
+  },
+
+  
+  "BottomNav": {
+    "navAria": "Bottom navigation",
+    "search": "Search",
+    "searchAria": "Go to search page",
+    "rentCar": "Car rental",
+    "rentCarAria": "Go to car rental page",
+    "myReserves": "My reservations",
+    "myReservesAria": "Go to my reservations page",
+    "profile": "Profile",
+    "profileAria": "Go to profile page"
+  }
+  ,
   "Home": {
     "hero": {
-      "title": "PalmRent | Online car rental booking in selected cities",
-      "subtitle": "Online booking, coordinated delivery, 24/7 Persian support"
+      "title": "PalmRent | Online car rental booking in cities",
+      "subtitle": "Online booking, coordinated delivery, 24/7 support"
     }
   },
   "ActiveRentCities": {
@@ -724,6 +857,20 @@ declare const messages: {
       "whatsappAria": "Start a WhatsApp chat with PalmRent support",
       "phoneAria": "Call PalmRent support"
     }
+  },
+
+    "carDetail": {
+    "notFound": "Car not found",
+    "notFoundDesc": "The ID might be wrong or the car has been removed.",
+    "noDeposit": "No deposit",
+    "freeDelivery": "Free delivery",
+    "unlimitedKm": "Unlimited kilometers",
+    "insurance": "Insurance",
+    "share": "Share",
+    "addToWishlist": "Add to wishlist",
+    "persons": "persons",
+    "suitcases": "suitcases",
+    "aboutCar": "About {car} in {branch}"
   },
 
   "NavSection": {

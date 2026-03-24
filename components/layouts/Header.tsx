@@ -17,7 +17,13 @@ import LanguageSwitcher from "../LanguagesSwitcher";
 import { Spinner } from "../ui/spinner";
 
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "../ui/sheet";
 
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "next-themes";
@@ -28,6 +34,7 @@ export const SITE_HEADER_HEIGHT = 64;
 export default function Header({ shadowLess = false }: { shadowLess?: boolean }) {
   const locale = useLocale();
   const pathname = usePathname();
+  const t = useTranslations();
 
   const [menuToggle, setMenuToggle] = useState(false);
   const [disableTransition, setDisableTransition] = useState(false);
@@ -184,7 +191,11 @@ export default function Header({ shadowLess = false }: { shadowLess?: boolean })
   const headerOffsetClass = isHidden ? "-translate-y-16" : "translate-y-0";
 
   return (
-    <header style={{ height: SITE_HEADER_HEIGHT }}>
+    <header
+      style={{ height: SITE_HEADER_HEIGHT }}
+      role="banner"
+      aria-label="Site header"
+    >
       <div
         id="site-fixed-header"
         className={cn(
@@ -202,6 +213,7 @@ export default function Header({ shadowLess = false }: { shadowLess?: boolean })
               <Link
                 className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 sm:block lg:static lg:translate-x-0 lg:translate-y-0"
                 href="/"
+                aria-label={t("home")}
                 onClick={() => {
                   setIsHeaderClose(false);
                   isHeaderCloseRef.current = false;
@@ -213,7 +225,8 @@ export default function Header({ shadowLess = false }: { shadowLess?: boolean })
                   src="/images/logo.png"
                   width={85}
                   height={38}
-                  alt="palmrent logo"
+                  alt="PalmRent"
+                  priority
                 />
               </Link>
 
@@ -222,9 +235,13 @@ export default function Header({ shadowLess = false }: { shadowLess?: boolean })
                   <Button
                     variant="ghost"
                     size="icon"
+                    type="button"
+                    aria-label="Toggle navigation menu"
+                    aria-expanded={menuToggle}
+                    aria-controls="mobile-main-navigation"
                     className="z-50 h-6 w-6 p-0 hover:bg-transparent"
                   >
-                    <div className="relative flex w-6 flex-col">
+                    <div className="relative flex w-6 flex-col" aria-hidden="true">
                       <div className="mt-1 h-1 w-full origin-center scale-y-50 bg-foreground transition-all" />
                       <div className="mt-1 h-1 w-full scale-y-50 bg-foreground transition-all" />
                       <div className="mt-1 h-1 w-full origin-center scale-y-50 bg-foreground transition-all" />
@@ -234,6 +251,7 @@ export default function Header({ shadowLess = false }: { shadowLess?: boolean })
                 </SheetTrigger>
 
                 <SheetContent
+                  id="mobile-main-navigation"
                   side="right"
                   showCloseButton={false}
                   className="z-[999] w-75 overflow-y-auto p-0 sm:w-100"
@@ -242,20 +260,23 @@ export default function Header({ shadowLess = false }: { shadowLess?: boolean })
                     <SheetTitle>Navigation Menu</SheetTitle>
                   </SheetHeader>
 
-                  <HeaderMenu
-                    locale={locale}
-                    closeMenu={() => {
-                      setMenuToggle(false);
-                      setIsHeaderClose(false);
-                      isHeaderCloseRef.current = false;
-                    }}
-                  />
+                  <nav aria-label="Mobile main navigation">
+                    <HeaderMenu
+                      locale={locale}
+                      closeMenu={() => {
+                        setMenuToggle(false);
+                        setIsHeaderClose(false);
+                        isHeaderCloseRef.current = false;
+                      }}
+                    />
+                  </nav>
                 </SheetContent>
               </Sheet>
 
               <div className="w-fit sm:hidden">
                 <Link
                   href="/"
+                  aria-label={t("home")}
                   onClick={() => {
                     setIsHeaderClose(false);
                     isHeaderCloseRef.current = false;
@@ -266,24 +287,30 @@ export default function Header({ shadowLess = false }: { shadowLess?: boolean })
                     src="/images/logo.png"
                     width={100}
                     height={60}
-                    alt="palmrent logo"
+                    alt="PalmRent"
                     className="filter-[invert(1)] dark:filter-none"
+                    priority
                   />
                 </Link>
               </div>
 
               <div className="hidden lg:block">
-                <HeaderMenu
-                  locale={locale}
-                  closeMenu={() => {
-                    setIsHeaderClose(false);
-                    isHeaderCloseRef.current = false;
-                  }}
-                />
+                <nav aria-label="Main navigation">
+                  <HeaderMenu
+                    locale={locale}
+                    closeMenu={() => {
+                      setIsHeaderClose(false);
+                      isHeaderCloseRef.current = false;
+                    }}
+                  />
+                </nav>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 lg:gap-3">
+            <div
+              className="flex items-center gap-2 lg:gap-3"
+              aria-label="Header actions"
+            >
               <LanguageSwitcher />
               <LoginDialog />
             </div>
@@ -325,6 +352,7 @@ export function HeaderMenu({ closeMenu, locale }: HeaderMenuProps) {
 
   return (
     <ul
+      role="list"
       className={cn(
         "flex flex-col overflow-auto bg-white p-0 pt-8 dark:bg-background lg:static lg:h-auto lg:flex-row lg:overflow-visible lg:p-0 lg:pt-0",
         isUnderLg && "w-full"
@@ -342,17 +370,25 @@ export function HeaderMenu({ closeMenu, locale }: HeaderMenuProps) {
 
       <li className="group relative flex cursor-pointer flex-wrap items-center underline decoration-transparent decoration-o underline-offset-8 lg:gap-2 lg:border-l lg:border-border lg:p-1 lg:px-2 2xl:px-3">
         <button
+          id="branches-menu-button"
           type="button"
+          aria-expanded={dropMenuToggle[0]}
+          aria-haspopup="menu"
+          aria-controls="branches-menu-dropdown"
           onClick={() => toggleMenu(0)}
           className="flex w-full items-center justify-between border-b border-border p-4 text-foreground transition-colors hover:text-foreground/80 lg:gap-2 lg:border-0 lg:p-0"
         >
-          {t("branches")}
-          <ChevronDown className="h-4 w-4" />
+          <span>{t("branches")}</span>
+          <ChevronDown className="h-4 w-4" aria-hidden="true" />
         </button>
 
-        <DropDown isActive={dropMenuToggle[0]}>
+        <DropDown
+          id="branches-menu-dropdown"
+          labelledBy="branches-menu-button"
+          isActive={dropMenuToggle[0]}
+        >
           {isLoading && (
-            <li className="px-4 py-2 text-sm text-muted-foreground">
+            <li className="px-4 py-2 text-sm text-muted-foreground" role="status" aria-live="polite">
               <div className="flex items-center justify-center">
                 <Spinner />
               </div>
@@ -360,11 +396,15 @@ export function HeaderMenu({ closeMenu, locale }: HeaderMenuProps) {
           )}
 
           {!isLoading && isError && (
-            <li className="px-4 py-2 text-sm text-destructive">Failed to load</li>
+            <li className="px-4 py-2 text-sm text-destructive" role="alert">
+              Failed to load
+            </li>
           )}
 
           {!isLoading && !isError && sortedBranches.length === 0 && (
-            <li className="px-4 py-2 text-sm text-muted-foreground">No branches</li>
+            <li className="px-4 py-2 text-sm text-muted-foreground">
+              No branches
+            </li>
           )}
 
           {!isLoading &&
@@ -392,15 +432,23 @@ export function HeaderMenu({ closeMenu, locale }: HeaderMenuProps) {
 
       <li className="group relative flex cursor-pointer flex-wrap items-center gap-2 underline decoration-transparent decoration-o underline-offset-8 lg:border-l lg:border-border lg:p-1 lg:px-2 2xl:px-3">
         <button
+          id="contact-menu-button"
           type="button"
+          aria-expanded={dropMenuToggle[2]}
+          aria-haspopup="menu"
+          aria-controls="contact-menu-dropdown"
           onClick={() => toggleMenu(2)}
           className="flex w-full items-center justify-between border-b border-border p-4 text-foreground transition-colors hover:text-foreground/80 lg:gap-2 lg:border-0 lg:p-0"
         >
-          {t("contactUs")}
-          <ChevronDown className="h-4 w-4" />
+          <span>{t("contactUs")}</span>
+          <ChevronDown className="h-4 w-4" aria-hidden="true" />
         </button>
 
-        <DropDown isActive={dropMenuToggle[2]}>
+        <DropDown
+          id="contact-menu-dropdown"
+          labelledBy="contact-menu-button"
+          isActive={dropMenuToggle[2]}
+        >
           <DropDownItem text={t("aboutUs")} href="/about-us" closeMenu={closeMenu} />
           <DropDownItem text={t("contactUs")} href="/contact-us" closeMenu={closeMenu} />
         </DropDown>
@@ -408,15 +456,23 @@ export function HeaderMenu({ closeMenu, locale }: HeaderMenuProps) {
 
       <li className="group relative flex cursor-pointer flex-wrap items-center gap-2 underline decoration-transparent decoration-o underline-offset-8 lg:p-1 lg:px-2 2xl:px-3">
         <button
+          id="more-menu-button"
           type="button"
+          aria-expanded={dropMenuToggle[3]}
+          aria-haspopup="menu"
+          aria-controls="more-menu-dropdown"
           onClick={() => toggleMenu(3)}
           className="flex w-full items-center justify-between border-b border-border p-4 text-foreground transition-colors hover:text-foreground/80 lg:gap-2 lg:border-0 lg:p-0"
         >
-          {t("more")}
-          <ChevronDown className="h-4 w-4" />
+          <span>{t("more")}</span>
+          <ChevronDown className="h-4 w-4" aria-hidden="true" />
         </button>
 
-        <DropDown isActive={dropMenuToggle[3]}>
+        <DropDown
+          id="more-menu-dropdown"
+          labelledBy="more-menu-button"
+          isActive={dropMenuToggle[3]}
+        >
           <DropDownItem text={t("blog")} href="/blogs" closeMenu={closeMenu} />
           <DropDownItem text={t("gallery")} href="/gallery" closeMenu={closeMenu} />
           <DropDownItem text={t("commonQ")} href="/faq" closeMenu={closeMenu} />
@@ -453,6 +509,7 @@ function ThemeSwitchSheetItem() {
           checked={!!isDark}
           onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
           disabled={!mounted}
+          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
         />
       </div>
     </li>
@@ -462,15 +519,24 @@ function ThemeSwitchSheetItem() {
 export function DropDown({
   children,
   isActive,
+  id,
+  labelledBy,
 }: {
   children: React.ReactNode;
   isActive: boolean;
+  id?: string;
+  labelledBy?: string;
 }) {
   const isUnderLg = useMediaQuery("(max-width: 1023.9px)");
 
   return (
-    <div className="bottom-0 left-1/2 w-full min-w-32 animate-fade-in lg:absolute lg:hidden lg:w-auto lg:-translate-x-1/2 lg:translate-y-full lg:pt-2 lg:group-hover:flex">
+    <div
+      className="bottom-0 left-1/2 w-full min-w-32 animate-fade-in lg:absolute lg:hidden lg:w-auto lg:-translate-x-1/2 lg:translate-y-full lg:pt-2 lg:group-hover:flex"
+    >
       <ul
+        id={id}
+        aria-labelledby={labelledBy}
+        role="menu"
         className={cn(
           "flex min-w-32 flex-col overflow-hidden rounded-lg bg-popover transition-all lg:border lg:border-border lg:shadow-lg",
           isUnderLg ? (isActive ? "max-h-125 py-2" : "max-h-0") : "py-2"
@@ -492,12 +558,15 @@ export function DropDownItem({
   closeMenu: () => void;
 }) {
   return (
-    <Link
-      href={href}
-      onClick={closeMenu}
-      className="border-b p-3 px-4 text-nowrap text-popover-foreground transition-colors hover:bg-accent hover:text-accent-foreground last:border-b-0 lg:rounded-lg lg:border-b-0"
-    >
-      {text}
-    </Link>
+    <li role="none">
+      <Link
+        href={href}
+        onClick={closeMenu}
+        role="menuitem"
+        className="block border-b p-3 px-4 text-nowrap text-popover-foreground transition-colors hover:bg-accent hover:text-accent-foreground last:border-b-0 lg:rounded-lg lg:border-b-0"
+      >
+        {text}
+      </Link>
+    </li>
   );
 }

@@ -629,11 +629,161 @@
       "deliveryPrefix": "مكان الاستلام: {place}",
       "returnPrefix": "مكان الإرجاع: {place}"
     }
+
+  },
+
+
+  "carDetail": {
+    "notFound": {
+      "title": "السيارة غير موجودة",
+      "description": "ربما المعرّف خاطئ أو تم حذف السيارة."
+    },
+    "share": "مشاركة",
+    "favorite": "إضافة إلى المفضلة",
+    "persons": "{count} راكب",
+    "baggages": "{count} حقيبة",
+    "features": {
+      "noDeposit": "بدون وديعة",
+      "freeDelivery": "توصيل مجاني",
+      "unlimitedKm": "كيلومترات غير محدودة",
+      "insurance": "تأمين"
+    }
+  },
+  "imageGallery": {
+    "totalImages": "{count} صور",
+    "videoLabel": "فيديو",
+    "mediaAlt": "وسائط {index}",
+    "mainImageAlt": "الصورة الرئيسية",
+    "itemAlt": "عنصر {index}",
+    "thumbnailAlt": "صورة مصغرة {index}",
+    "imageAlt": "صورة {index}",
+    "close": "إغلاق",
+    "prev": "السابق",
+    "next": "التالي",
+    "counter": "{current} من {total}"
+  },
+  "pricingCard": {
+    "title": "سعر إيجار {car} في {branch}",
+    "titleNoBranch": "سعر إيجار {car}",
+    "titleDefault": "سعر تأجير السيارة",
+    "locationLabel": "استئجار {car} في {branch}",
+    "locationNoBranch": "استئجار {car}",
+    "locationDefault": "تأجير سيارة",
+    "discountBadge": "خصم {off}٪",
+    "dailyPricesTitle": "الأسعار اليومية",
+    "details": "التفاصيل",
+    "noPrices": "لا تتوفر أسعار.",
+    "deposit": "وديعة المخالفات:",
+    "deliveryCost": "تكلفة التوصيل:",
+    "insuranceCar": "تأمين السيارة:",
+    "km": "الكيلومترات:",
+    "freeDelivery": "توصيل مجاني",
+    "paidDelivery": "توصيل مدفوع",
+    "freeInsurance": "تأمين أساسي مجاني",
+    "noInsurance": "بدون تأمين",
+    "unlimitedKm": "كيلومترات غير محدودة",
+    "limitedKm": "محدود",
+    "onlineReserve": "الحجز الإلكتروني",
+    "whatsappReserve": "متابعة الحجز عبر واتساب",
+    "reserveTitle": "الحجز الإلكتروني",
+    "rentOnlineLabel": "تأجير السيارة إلكترونياً",
+    "deliveryDateLabel": "تاريخ ووقت الاستلام",
+    "returnDateLabel": "تاريخ ووقت الإعادة",
+    "reserveButton": "احجز هذه السيارة",
+    "missingIds": "branch_id أو car_id غير موجود (يجب تمريره في كائن السيارة للحجز).",
+    "reserveSheetTitle": "حجز"
+  },
+  "faq": {
+    "title": "أسئلتكم"
+  },
+  "requiredDocuments": {
+    "title": "المستندات المطلوبة لاستئجار {car} في {branch}",
+    "iranResidents": "للمقيمين في إيران",
+    "uaeResidents": "للمقيمين في الإمارات",
+    "note": "يُرجى حمل المستندات الصالحة مع الجنسية والتأشيرة.",
+    "docs": {
+      "passport": "جواز السفر",
+      "intlLicense": "رخصة القيادة الدولية",
+      "ticketPhoto": "صورة تذكرة الطيران (عند التسليم في المطار)",
+      "validVisa": "تأشيرة سارية:",
+      "emiratesId": "الهوية الإماراتية",
+      "uaeLicense": "رخصة القيادة الإماراتية"
+    }
+  },
+  "technicalSpecs": {
+    "title": "المواصفات التقنية",
+    "fields": {
+      "carTitle": "العنوان",
+      "gearbox": "ناقل الحركة",
+      "fuel": "الوقود",
+      "persons": "سعة الركاب",
+      "baggage": "سعة الأمتعة",
+      "year": "السنة",
+      "doors": "عدد الأبواب",
+      "engineCapacity": "سعة المحرك"
+    },
+    "values": {
+      "persons": "{count} راكب",
+      "baggage": "{count} حقيبة",
+      "doors": "{count} أبواب",
+      "engineCapacity": "{value} سي سي"
+    }
+  },
+
+    "carDetail": {
+    "notFound": "لم يتم العثور على السيارة",
+    "notFoundDesc": "ربما المعرف خاطئ أو تم حذف السيارة.",
+    "noDeposit": "بدون وديعة",
+    "freeDelivery": "توصيل مجاني",
+    "unlimitedKm": "كيلومترات غير محدودة",
+    "insurance": "تأمين",
+    "share": "مشاركة",
+    "addToWishlist": "إضافة إلى المفضلة",
+    "persons": "أشخاص",
+    "suitcases": "حقيبة",
+    "aboutCar": "حول {car} في {branch}"
+  },
+
+  "similarCars": {
+    "title": "سيارات مماثلة",
+    "persons": "{count} راكب",
+    "baggages": "{count} حقيبة",
+    "priceStartFrom": "يبدأ السعر من: ({range})",
+    "defaultRange": "١ إلى ٦ أيام",
+    "contactUs": "تواصل معنا",
+    "features": {
+      "noDeposit": "بدون وديعة",
+      "freeDelivery": "توصيل مجاني",
+      "unlimitedKm": "كيلومترات غير محدودة",
+      "insurance": "تأمين"
+    }
+  },
+  "mobilePriceBar": {
+    "priceStartFrom": "يبدأ السعر من",
+    "onlineReserve": "الحجز الإلكتروني",
+    "missingIds": "branch_id أو car_id غير موجود (يجب تمريره في كائن السيارة للحجز)."
+  },
+  "whatsapp": {
+    "message": "مرحباً، أرغب في حجز {car}{branch} من تاريخ {from} ({deliveryTime}) حتى {to} ({returnTime}) لمدة {days} أيام.",
+    "branchPart": " في {branch}"
+  },
+
+
+    "BottomNav": {
+    "navAria": "القائمة السفلية",
+    "search": "البحث",
+    "searchAria": "الانتقال إلى صفحة البحث",
+    "rentCar": "تأجير السيارات",
+    "rentCarAria": "الانتقال إلى صفحة تأجير السيارات",
+    "myReserves": "حجوزاتي",
+    "myReservesAria": "الانتقال إلى صفحة حجوزاتي",
+    "profile": "الملف الشخصي",
+    "profileAria": "الانتقال إلى صفحة الملف الشخصي"
   },
 
   "Home": {
     "hero": {
-      "title": "PalmRent | حجز تأجير السيارات عبر الإنترنت في مدن مختارة",
+      "title": "PalmRent | حجز تأجير السيارات أونلاين",
       "subtitle": "حجز عبر الإنترنت، تسليم منسّق، دعم 24/7"
     }
   },

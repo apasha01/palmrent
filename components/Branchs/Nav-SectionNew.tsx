@@ -25,14 +25,25 @@ import { formatJalaliDate } from "@/lib/date-utils";
 import { Spinner } from "../ui/spinner";
 import { useRouter } from "@/i18n/navigation";
 import { useParams } from "next/navigation";
-// ✅ اضافه شد
 import { useTopLoader } from "nextjs-toploader";
 
 /* ---------------- utils ---------------- */
 
-function formatJalaliYMD(date: Date | null) {
+/** Format date based on locale — Jalali for fa/ar, Gregorian for everything else */
+function formatLocalizedDate(date: Date | null, locale: string): string {
   if (!date) return "---";
-  return formatJalaliDate(date);
+
+  const isJalali = locale === "fa" || locale === "ar";
+
+  if (isJalali) {
+    return formatJalaliDate(date);
+  }
+
+  // Gregorian — e.g. "2026/03/24"
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}/${month}/${day}`;
 }
 
 /** ✅ Trigger UI */
@@ -41,33 +52,41 @@ function DateTimeTrigger({
   time,
   datePlaceholder,
   timePlaceholder,
+  locale,
   variant = "default",
 }: {
   date?: Date | null;
   time?: string;
   datePlaceholder: string;
   timePlaceholder: string;
+  locale: string;
   variant?: "default" | "mobilePill" | "mobileDashTime" | "mobileDashTimeNoIcon";
 }) {
   const hasDate = date instanceof Date && !isNaN(date.getTime());
+  const formattedDate = hasDate ? formatLocalizedDate(date!, locale) : null;
+
+  // Gregorian dates (e.g. "2026/03/25") are longer than Jalali — use smaller font
+  const isJalali = locale === "fa" || locale === "ar";
+  const dateTextSize = isJalali ? "text-[15px]" : "text-[12px]";
+  const placeholderTextSize = isJalali ? "text-[15px]" : "text-[12px]";
 
   if (variant === "mobileDashTime") {
     return (
       <div className="flex items-center h-12 w-full overflow-hidden bg-transparent">
-        <div className="flex items-center gap-2 px-2 w-full min-w-0">
-          <CalendarRange className="shrink-0" size={18} />
-          <div className="min-w-0">
+        <div className="flex items-center gap-1.5 px-2 w-full min-w-0">
+          <CalendarRange className="shrink-0" size={isJalali ? 18 : 15} aria-hidden="true" />
+          <div className="min-w-0 flex-1 overflow-hidden">
             {hasDate ? (
-              <p className="truncate text-[15px] text-gray-900 dark:text-gray-100 font-medium">
-                {formatJalaliYMD(date)}{" "}
-                <span className="text-gray-900 dark:text-gray-100 font-medium">
+              <p className={`truncate ${dateTextSize} text-gray-900 dark:text-gray-100 font-medium`}>
+                {formattedDate}
+                <span className={`${dateTextSize} text-gray-900 dark:text-gray-100 font-medium`}>
                   {" - "}
                   {hasDate && time ? time : timePlaceholder}
                 </span>
               </p>
             ) : (
-              <p className="truncate text-[15px] text-gray-500">
-                {datePlaceholder}{" "}
+              <p className={`truncate ${placeholderTextSize} text-gray-500`}>
+                {datePlaceholder}
                 <span className="text-gray-500 font-normal">
                   {" - "}
                   {timePlaceholder}
@@ -83,18 +102,18 @@ function DateTimeTrigger({
   if (variant === "mobileDashTimeNoIcon") {
     return (
       <div className="flex items-center h-12 w-full overflow-hidden bg-transparent">
-        <div className="px-2 w-full min-w-0">
+        <div className="px-2 w-full min-w-0 overflow-hidden">
           {hasDate ? (
-            <p className="truncate text-[15px] text-gray-900 dark:text-gray-100 font-medium">
-              {formatJalaliYMD(date)}{" "}
-              <span className="text-gray-900 dark:text-gray-100 font-medium">
+            <p className={`truncate ${dateTextSize} text-gray-900 dark:text-gray-100 font-medium`}>
+              {formattedDate}
+              <span className={`${dateTextSize} text-gray-900 dark:text-gray-100 font-medium`}>
                 {" - "}
                 {hasDate && time ? time : timePlaceholder}
               </span>
             </p>
           ) : (
-            <p className="truncate text-[15px] text-gray-500">
-              {datePlaceholder}{" "}
+            <p className={`truncate ${placeholderTextSize} text-gray-500`}>
+              {datePlaceholder}
               <span className="text-gray-500 font-normal">
                 {" - "}
                 {timePlaceholder}
@@ -112,7 +131,7 @@ function DateTimeTrigger({
         <div className="flex items-center px-2 gap-2 w-full">
           {hasDate ? (
             <p className="truncate text-base text-gray-900 dark:text-gray-100 font-medium">
-              {formatJalaliYMD(date)}
+              {formattedDate}
             </p>
           ) : (
             <p className="truncate text-base text-gray-500">{datePlaceholder}</p>
@@ -125,10 +144,10 @@ function DateTimeTrigger({
   return (
     <div className="flex items-center border h-10 rounded-md w-full overflow-hidden bg-transparent">
       <div className="flex items-center px-2 gap-1.5 w-1/2">
-        <CalendarRange className="shrink-0" size={18} />
+        <CalendarRange className="shrink-0" size={18} aria-hidden="true" />
         {hasDate ? (
           <p className="truncate text-sm text-gray-900 dark:text-gray-100 font-medium">
-            {formatJalaliYMD(date)}
+            {formattedDate}
           </p>
         ) : (
           <p className="truncate text-sm text-gray-500">{datePlaceholder}</p>
@@ -138,7 +157,11 @@ function DateTimeTrigger({
       <Separator orientation="vertical" />
 
       <div className="flex items-center px-2 gap-1 w-1/2">
-        <Clock className="text-gray-500 shrink-0" size={18} />
+        <Clock
+          className="text-gray-500 shrink-0"
+          size={18}
+          aria-hidden="true"
+        />
         {hasDate && time ? (
           <p className="truncate text-sm text-gray-900 dark:text-gray-100 font-medium">
             {time}
@@ -224,7 +247,6 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
   const router = useRouter();
   const locale = useLocale();
   const params = useParams() as any;
-  // ✅ اضافه شد
   const loader = useTopLoader();
 
   const isDesktop = useIsDesktop(768);
@@ -323,7 +345,9 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
 
   const isNavigating = isPending || clickedOnce;
 
-  const handleSearch = () => {
+  const handleSearch = (e?: React.FormEvent<HTMLFormElement>) => {
+    e?.preventDefault();
+
     if (!selectedCity) {
       setCityError(true);
 
@@ -355,7 +379,6 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
       to,
     )}&dt=${encodeURIComponent(dt)}&rt=${encodeURIComponent(rt)}`;
 
-    // ✅ لودر شروع میشه قبل از navigation
     loader.start();
 
     startTransition(() => {
@@ -382,7 +405,7 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
   const headerTopClass = hasSubtitle2 ? "top-4 md:top-5" : "top-8 md:top-10";
 
   return (
-    <section className="w-full">
+    <section className="w-full" aria-labelledby="home-hero-title">
       <div className="relative w-full h-72 md:h-40">
         <div className="absolute inset-0 flex items-start justify-center pt-10 md:bg-[#12416b] md:pt-0 md:items-center">
           <div
@@ -392,9 +415,12 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
             ].join(" ")}
           >
             <div className="flex flex-col gap-2">
-              <p className="text-md md:text-2xl md:text-white font-bold">
+              <h1
+                id="home-hero-title"
+                className="text-md md:text-2xl md:text-white font-bold"
+              >
                 {title ?? t("noDate.title")}
-              </p>
+              </h1>
 
               <p className="text-muted-foreground md:text-white font-light text-sm">
                 {subtitle1 ?? t("noDate.subtitle")}
@@ -411,239 +437,285 @@ const NavSection = ({ title, subtitle1, subtitle2 }: NavSectionProps) => {
 
         {/* MOBILE */}
         <div className="absolute inset-x-0 bottom-3 px-4 z-10 md:hidden">
-          <div className="grid grid-cols-1 gap-3">
-            <div className="relative">
-              <Select
-                open={cityOpenMobile}
-                onOpenChange={(v) => setCityOpenMobile(v)}
-                value={selectedCity}
-                onValueChange={(value) => {
-                  if (cityLocked) return;
-                  setSelectedCity(value);
-                  setCityError(false);
-                  setCityOpenMobile(false);
-                }}
-                disabled={cityLoading || cityLocked || isNavigating}
-              >
-                <SelectTrigger
-                  className={[
-                    "w-full h-12!",
-                    "md:border-input relative pr-9 text-base",
-                    cityError
-                      ? "border-red-500 text-red-500 [&>span]:text-red-500 [&_svg]:!text-red-500"
-                      : "border-gray-400",
-                  ].join(" ")}
+          <form
+            role="search"
+            aria-label="Car rental search mobile"
+            onSubmit={handleSearch}
+          >
+            <div className="grid grid-cols-1 gap-3">
+              <div className="relative">
+                <label htmlFor="city-select-mobile" className="sr-only">
+                  {t("city.label")}
+                </label>
+
+                <Select
+                  open={cityOpenMobile}
+                  onOpenChange={(v) => setCityOpenMobile(v)}
+                  value={selectedCity}
+                  onValueChange={(value) => {
+                    if (cityLocked) return;
+                    setSelectedCity(value);
+                    setCityError(false);
+                    setCityOpenMobile(false);
+                  }}
+                  disabled={cityLoading || cityLocked || isNavigating}
                 >
-                  <MapPin
+                  <SelectTrigger
+                    id="city-select-mobile"
+                    aria-label={t("city.label")}
                     className={[
-                      "w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none",
-                      cityError ? "text-red-500" : "text-muted-foreground",
+                      "w-full h-12!",
+                      "md:border-input relative pr-9 text-base",
+                      cityError
+                        ? "border-red-500 text-red-500 [&>span]:text-red-500 [&_svg]:!text-red-500"
+                        : "border-gray-400",
                     ].join(" ")}
-                  />
-                  <SelectValue placeholder={cityPlaceholder} />
-                </SelectTrigger>
+                  >
+                    <MapPin
+                      aria-hidden="true"
+                      className={[
+                        "w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none",
+                        cityError ? "text-red-500" : "text-muted-foreground",
+                      ].join(" ")}
+                    />
+                    <SelectValue placeholder={cityPlaceholder} />
+                  </SelectTrigger>
 
-                <SelectContent position="popper" className="z-20">
-                  {cityLoading ? (
-                    <div className="py-1 px-3 flex items-center justify-center">
-                      <Spinner />
+                  <SelectContent position="popper" className="z-20">
+                    {cityLoading ? (
+                      <div className="py-1 px-3 flex items-center justify-center">
+                        <Spinner />
+                      </div>
+                    ) : (
+                      data?.map((item: any, key: number) => (
+                        <SelectItem
+                          key={key}
+                          value={String(item?.id ?? "")}
+                          disabled={cityLocked}
+                          className="text-base py-1.5"
+                        >
+                          {String(item?.title ?? "")}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="relative w-full pt-2">
+                <span className="pointer-events-none absolute right-4 top-2 -translate-y-1/2 z-20 bg-white dark:bg-gray-900 px-2 text-xs text-gray-500">
+                  {t("desktop.deliveryTitle")}
+                </span>
+
+                <span className="pointer-events-none absolute left-14 top-2 -translate-y-1/2 z-20 bg-white dark:bg-gray-900 px-2 text-xs text-gray-500">
+                  {t("desktop.returnTitle")}
+                </span>
+
+                <div className="w-full rounded-md border border-gray-400 bg-white dark:bg-gray-900">
+                  <div className="grid grid-cols-2 w-full overflow-hidden rounded-md">
+                    <div className="flex items-center">
+                      <DateRangePickerPopover
+                        initialRange={selectedRange}
+                        initialTimes={{ deliveryTime, returnTime }}
+                        onConfirm={handleConfirm}
+                        onClear={handleClear}
+                        trigger={
+                          <div
+                            className="cursor-pointer w-full"
+                            aria-label={`${t("desktop.deliveryTitle")} - ${t("placeholders.deliveryDate")} / ${t("placeholders.deliveryTime")}`}
+                          >
+                            <DateTimeTrigger
+                              date={selectedRange.start}
+                              time={selectedRange.start ? deliveryTime : undefined}
+                              datePlaceholder={t("placeholders.deliveryDate")}
+                              timePlaceholder={t("placeholders.deliveryTime")}
+                              locale={locale}
+                              variant="mobileDashTime"
+                            />
+                          </div>
+                        }
+                      />
                     </div>
-                  ) : (
-                    data?.map((item: any, key: number) => (
-                      <SelectItem
-                        key={key}
-                        value={String(item?.id ?? "")}
-                        disabled={cityLocked}
-                        className="text-base py-1.5"
-                      >
-                        {String(item?.title ?? "")}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
 
-            <div className="relative w-full pt-2">
-              <span className="pointer-events-none absolute right-4 top-2 -translate-y-1/2 z-20 bg-white dark:bg-gray-900 px-2 text-xs text-gray-500">
-                {t("desktop.deliveryTitle")}
-              </span>
-
-              <span className="pointer-events-none absolute left-14 top-2 -translate-y-1/2 z-20 bg-white dark:bg-gray-900 px-2 text-xs text-gray-500">
-                {t("desktop.returnTitle")}
-              </span>
-
-              <div className="w-full rounded-md border border-gray-400 bg-white dark:bg-gray-900">
-                <div className="grid grid-cols-2 w-full overflow-hidden rounded-md">
-                  <div className="flex items-center">
-                    <DateRangePickerPopover
-                      initialRange={selectedRange}
-                      initialTimes={{ deliveryTime, returnTime }}
-                      onConfirm={handleConfirm}
-                      onClear={handleClear}
-                      trigger={
-                        <div className="cursor-pointer w-full">
-                          <DateTimeTrigger
-                            date={selectedRange.start}
-                            time={selectedRange.start ? deliveryTime : undefined}
-                            datePlaceholder={t("placeholders.deliveryDate")}
-                            timePlaceholder={t("placeholders.deliveryTime")}
-                            variant="mobileDashTime"
-                          />
-                        </div>
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center border-r border-gray-400">
-                    <DateRangePickerPopover
-                      initialRange={selectedRange}
-                      initialTimes={{ deliveryTime, returnTime }}
-                      onConfirm={handleConfirm}
-                      onClear={handleClear}
-                      trigger={
-                        <div className="cursor-pointer w-full">
-                          <DateTimeTrigger
-                            date={selectedRange.end}
-                            time={selectedRange.end ? returnTime : undefined}
-                            datePlaceholder={t("placeholders.returnDate")}
-                            timePlaceholder={t("placeholders.returnTime")}
-                            variant="mobileDashTimeNoIcon"
-                          />
-                        </div>
-                      }
-                    />
+                    <div className="flex items-center border-r border-gray-400">
+                      <DateRangePickerPopover
+                        initialRange={selectedRange}
+                        initialTimes={{ deliveryTime, returnTime }}
+                        onConfirm={handleConfirm}
+                        onClear={handleClear}
+                        trigger={
+                          <div
+                            className="cursor-pointer w-full"
+                            aria-label={`${t("desktop.returnTitle")} - ${t("placeholders.returnDate")} / ${t("placeholders.returnTime")}`}
+                          >
+                            <DateTimeTrigger
+                              date={selectedRange.end}
+                              time={selectedRange.end ? returnTime : undefined}
+                              datePlaceholder={t("placeholders.returnDate")}
+                              timePlaceholder={t("placeholders.returnTime")}
+                              locale={locale}
+                              variant="mobileDashTimeNoIcon"
+                            />
+                          </div>
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <Button
-              className="w-full h-12 text-base"
-              onClick={handleSearch}
-              disabled={searchDisabled || isNavigating}
-            >
-              <div className="flex items-center justify-center gap-2 px-3">
-                {isNavigating ? <Spinner /> : <Search className="size-5" />}
-                {t("actions.search")}
-              </div>
-            </Button>
-          </div>
+              <Button
+                type="submit"
+                className="w-full h-12 text-base"
+                disabled={searchDisabled || isNavigating}
+              >
+                <div className="flex items-center justify-center gap-2 px-3">
+                  {isNavigating ? (
+                    <Spinner />
+                  ) : (
+                    <Search className="size-5" aria-hidden="true" />
+                  )}
+                  {t("actions.search")}
+                </div>
+              </Button>
+            </div>
+          </form>
         </div>
 
         {/* DESKTOP */}
         <div className="hidden md:block absolute w-full left-0 -bottom-14 z-10">
           <div className="flex justify-center px-2">
             <div className="bg-white dark:bg-gray-900 shadow rounded-md p-4 max-w-6xl w-full">
-              <div className="grid grid-cols-4 gap-3 items-end">
-                <div className="space-y-2">
-                  <Label>{t("city.label")}</Label>
+              <form
+                role="search"
+                aria-label="Car rental search desktop"
+                onSubmit={handleSearch}
+              >
+                <div className="grid grid-cols-4 gap-3 items-start">
+                  <div className="space-y-2">
+                    <Label htmlFor="city-select-desktop">{t("city.label")}</Label>
 
-                  <Select
-                    open={cityOpenDesktop}
-                    onOpenChange={(v) => setCityOpenDesktop(v)}
-                    value={selectedCity}
-                    onValueChange={(value) => {
-                      if (cityLocked) return;
-                      setSelectedCity(value);
-                      setCityError(false);
-                      setCityOpenDesktop(false);
-                    }}
-                    disabled={cityLoading || cityLocked || isNavigating}
-                  >
-                    <SelectTrigger
-                      className={[
-                        "w-full h-10 relative",
-                        cityError
-                          ? "border-red-500 text-red-500 [&>span]:text-red-500 [&_svg]:!text-red-500"
-                          : "",
-                      ].join(" ")}
-                    >
-                      <SelectValue placeholder={cityPlaceholder} />
-                    </SelectTrigger>
+                    <Select
 
-                    <SelectContent
-                      position="popper"
-                      side="bottom"
-                      align="start"
-                      sideOffset={4}
-                      className="z-[60] w-(--radix-select-trigger-width)"
+                      open={cityOpenDesktop}
+                      onOpenChange={(v) => setCityOpenDesktop(v)}
+                      value={selectedCity}
+                      onValueChange={(value) => {
+                        if (cityLocked) return;
+                        setSelectedCity(value);
+                        setCityError(false);
+                        setCityOpenDesktop(false);
+                      }}
+                      disabled={cityLoading || cityLocked || isNavigating}
                     >
-                      {cityLoading ? (
-                        <div className="py-3 px-3 flex items-center justify-center">
-                          <Spinner />
+                      <SelectTrigger
+                        id="city-select-desktop"
+                        aria-label={t("city.label")}
+                        className={[
+                          "w-full h-10! relative",
+                          cityError
+                            ? "border-red-500 text-red-500 [&>span]:text-red-500 [&_svg]:!text-red-500"
+                            : "",
+                        ].join(" ")}
+                      >
+                        <SelectValue placeholder={cityPlaceholder} />
+                      </SelectTrigger>
+
+                      <SelectContent
+                        position="popper"
+                        side="bottom"
+                        align="start"
+                        sideOffset={4}
+                        className="z-[60] w-(--radix-select-trigger-width)"
+                      >
+                        {cityLoading ? (
+                          <div className="py-3 px-3 flex items-center justify-center">
+                            <Spinner />
+                          </div>
+                        ) : (
+                          data?.map((item: any, key: number) => (
+                            <SelectItem
+                              key={key}
+                              value={String(item?.id ?? "")}
+                              disabled={cityLocked}
+                            >
+                              {String(item?.title ?? "")}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{t("desktop.deliveryTitle")}</Label>
+                    <DateRangePickerPopover
+                      initialRange={selectedRange}
+                      initialTimes={{ deliveryTime, returnTime }}
+                      onConfirm={handleConfirm}
+                      onClear={handleClear}
+                      trigger={
+                        <div
+                          className="cursor-pointer"
+                          aria-label={`${t("desktop.deliveryTitle")} - ${t("placeholders.deliveryDate")} / ${t("placeholders.deliveryTime")}`}
+                        >
+                          <DateTimeTrigger
+                            date={selectedRange.start}
+                            time={selectedRange.start ? deliveryTime : undefined}
+                            datePlaceholder={t("placeholders.deliveryDate")}
+                            timePlaceholder={t("placeholders.deliveryTime")}
+                            locale={locale}
+                          />
                         </div>
-                      ) : (
-                        data?.map((item: any, key: number) => (
-                          <SelectItem
-                            key={key}
-                            value={String(item?.id ?? "")}
-                            disabled={cityLocked}
-                          >
-                            {String(item?.title ?? "")}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+                      }
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>{t("desktop.deliveryTitle")}</Label>
-                  <DateRangePickerPopover
-                    initialRange={selectedRange}
-                    initialTimes={{ deliveryTime, returnTime }}
-                    onConfirm={handleConfirm}
-                    onClear={handleClear}
-                    trigger={
-                      <div className="cursor-pointer">
-                        <DateTimeTrigger
-                          date={selectedRange.start}
-                          time={selectedRange.start ? deliveryTime : undefined}
-                          datePlaceholder={t("placeholders.deliveryDate")}
-                          timePlaceholder={t("placeholders.deliveryTime")}
-                        />
-                      </div>
-                    }
-                  />
-                </div>
+                  <div className="space-y-2">
+                    <Label>{t("desktop.returnTitle")}</Label>
+                    <DateRangePickerPopover
+                      initialRange={selectedRange}
+                      initialTimes={{ deliveryTime, returnTime }}
+                      onConfirm={handleConfirm}
+                      onClear={handleClear}
+                      trigger={
+                        <div
+                          className="cursor-pointer"
+                          aria-label={`${t("desktop.returnTitle")} - ${t("placeholders.returnDate")} / ${t("placeholders.returnTime")}`}
+                        >
+                          <DateTimeTrigger
+                            date={selectedRange.end}
+                            time={selectedRange.end ? returnTime : undefined}
+                            datePlaceholder={t("placeholders.returnDate")}
+                            timePlaceholder={t("placeholders.returnTime")}
+                            locale={locale}
+                          />
+                        </div>
+                      }
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>{t("desktop.returnTitle")}</Label>
-                  <DateRangePickerPopover
-                    initialRange={selectedRange}
-                    initialTimes={{ deliveryTime, returnTime }}
-                    onConfirm={handleConfirm}
-                    onClear={handleClear}
-                    trigger={
-                      <div className="cursor-pointer">
-                        <DateTimeTrigger
-                          date={selectedRange.end}
-                          time={selectedRange.end ? returnTime : undefined}
-                          datePlaceholder={t("placeholders.returnDate")}
-                          timePlaceholder={t("placeholders.returnTime")}
-                        />
-                      </div>
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="opacity-0 select-none">
-                    {t("actions.search")}
-                  </Label>
-                  <Button
-                    className="w-full h-10"
-                    onClick={handleSearch}
-                    disabled={searchDisabled || isNavigating}
-                  >
-                    <div className="flex items-center justify-center gap-2 px-3">
-                      {isNavigating ? <Spinner /> : <Search className="size-4.5" />}
+                  <div className="space-y-2">
+                    <Label className="opacity-0 select-none">
                       {t("actions.search")}
-                    </div>
-                  </Button>
+                    </Label>
+                    <Button
+                      type="submit"
+                      className="w-full h-10"
+                      disabled={searchDisabled || isNavigating}
+                    >
+                      <div className="flex items-center justify-center gap-2 px-3">
+                        {isNavigating ? (
+                          <Spinner />
+                        ) : (
+                          <Search className="size-4.5" aria-hidden="true" />
+                        )}
+                        {t("actions.search")}
+                      </div>
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              </form>
             </div>
           </div>
         </div>

@@ -1,76 +1,71 @@
-"use client"
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import Image from "next/image"
-import {Link} from "@/i18n/navigation"
-import { Car, Fuel, Users, Briefcase, Info } from "lucide-react"
-import { STORAGE_URL } from "@/lib/apiClient"
+"use client";
+
+import Image from "next/image";
+import { Link } from "@/i18n/navigation";
+import { Car, Fuel, Users, Briefcase, Info } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { STORAGE_URL } from "@/lib/apiClient";
 
 type Props = {
-  items: any[]
-  currency?: string
-}
+  items: any[];
+  currency?: string;
+};
 
 export function SimilarCars({ items = [], currency = "درهم" }: Props) {
-  const safeItems = Array.isArray(items) ? items : []
-  if (safeItems.length === 0) return null
+  const t = useTranslations("similarCars");
 
-
+  const safeItems = Array.isArray(items) ? items : [];
+  if (safeItems.length === 0) return null;
 
   const toNum = (v: any): number | null => {
-    if (v === null || v === undefined || v === "") return null
-    if (typeof v === "number") return Number.isFinite(v) ? v : null
-    const raw = (String(v).replaceAll(",", ""))
-    const n = Number(raw)
-    return Number.isFinite(n) ? n : null
-  }
+    if (v === null || v === undefined || v === "") return null;
+    if (typeof v === "number") return Number.isFinite(v) ? v : null;
+    const raw = String(v).replaceAll(",", "");
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  };
 
   const formatNumFa = (n: number | null) => {
-    if (n === null) return null
-    return new Intl.NumberFormat("fa-IR").format(Math.round(n))
-  }
+    if (n === null) return null;
+    return new Intl.NumberFormat("fa-IR").format(Math.round(n));
+  };
 
-  // ✅ فقط گروه اول: نمایش "(۱ تا ۶ روز)" یا اگر بک range داد همونو
   const firstRangeLabel = (prices: any): string => {
     if (Array.isArray(prices) && prices.length > 0) {
-      const p0 = prices[0]
-      if (typeof p0?.range === "string" && p0.range.trim()) return p0.range.trim()
-      if (String(p0?.type) === "price_1") return "۱ تا ۶ روز"
+      const p0 = prices[0];
+      if (typeof p0?.range === "string" && p0.range.trim()) return p0.range.trim();
+      if (String(p0?.type) === "price_1") return t("defaultRange");
     }
-    return "۱ تا ۶ روز"
-  }
+    return t("defaultRange");
+  };
 
   const mapped = safeItems.map((c: any) => {
-    const seats = toNum(c?.person) ?? toNum(c?.passengers) ?? toNum(c?.seats) ?? 0
-    const luggage = toNum(c?.baggage) ?? toNum(c?.luggage) ?? toNum(c?.suitcase) ?? 0
+    const seats = toNum(c?.person) ?? toNum(c?.passengers) ?? toNum(c?.seats) ?? 0;
+    const luggage = toNum(c?.baggage) ?? toNum(c?.luggage) ?? toNum(c?.suitcase) ?? 0;
 
     const finalPrice =
-      toNum(c?.final_price) ??
-      toNum(c?.price_off) ??
-      toNum(c?.price) ??
-      null
+      toNum(c?.final_price) ?? toNum(c?.price_off) ?? toNum(c?.price) ?? null;
 
     const originalPrice =
-      toNum(c?.rent_price) ??
-      toNum(c?.base_price) ??
-      toNum(c?.originalPrice) ??
-      null
+      toNum(c?.rent_price) ?? toNum(c?.base_price) ?? toNum(c?.originalPrice) ?? null;
 
     const imgPath =
       Array.isArray(c?.photo) && c.photo.length > 0
         ? c.photo[0]
         : typeof c?.image === "string"
           ? c.image
-          : null
+          : null;
 
-    const image = imgPath ? STORAGE_URL + imgPath : "/images/placeholder.png"
+    const image = imgPath ? STORAGE_URL + imgPath : "/images/placeholder.png";
 
-    const features: string[] = []
-    if (String(c?.deposit) === "no") features.push("بدون ودیعه")
-    if (String(c?.free_delivery) === "yes") features.push("تحویل رایگان")
-    if (String(c?.km) === "yes") features.push("کیلومتر نامحدود")
-    if (String(c?.insurance) === "yes") features.push("بیمه")
+    const features: string[] = [];
+    if (String(c?.deposit) === "no") features.push(t("features.noDeposit"));
+    if (String(c?.free_delivery) === "yes") features.push(t("features.freeDelivery"));
+    if (String(c?.km) === "yes") features.push(t("features.unlimitedKm"));
+    if (String(c?.insurance) === "yes") features.push(t("features.insurance"));
 
-    const range = firstRangeLabel(c?.prices)
+    const range = firstRangeLabel(c?.prices);
 
     return {
       id: c?.id,
@@ -84,15 +79,14 @@ export function SimilarCars({ items = [], currency = "درهم" }: Props) {
       price: finalPrice,
       originalPrice,
       off: toNum(c?.off) ?? 0,
-      period: `شروع قیمت از: (${range})`,
-    }
-  })
+      period: t("priceStartFrom", { range }),
+    };
+  });
 
   return (
     <div className="rounded-xl p-2">
-      <h2 className="text-lg font-bold text-gray-900 mb-4">خودروهای مشابه</h2>
+      <h2 className="text-lg font-bold text-gray-900 mb-4">{t("title")}</h2>
 
-      {/* ✅ اسکرول افقی، ولی اسکرول‌بار مخفی */}
       <div
         className="
           flex gap-4 overflow-x-auto pb-2
@@ -102,7 +96,7 @@ export function SimilarCars({ items = [], currency = "درهم" }: Props) {
         "
       >
         {mapped.map((car, index) => {
-          const href = car?.id ? `/cars/${car.id}` : "#"
+          const href = car?.id ? `/cars/${car.id}` : "#";
 
           return (
             <Link
@@ -116,9 +110,8 @@ export function SimilarCars({ items = [], currency = "درهم" }: Props) {
                 md:w-[calc((100%-1rem)/2)]
                 block
               "
-              // اگر id نبود، کلیک نشه
               onClick={(e) => {
-                if (!car?.id) e.preventDefault()
+                if (!car?.id) e.preventDefault();
               }}
             >
               <div className="relative h-48">
@@ -141,12 +134,12 @@ export function SimilarCars({ items = [], currency = "درهم" }: Props) {
 
                   <div className="flex items-center gap-1">
                     <Users className="w-3.5 h-3.5" />
-                    <span>{formatNumFa(car.seats) ?? "۰"} نفر</span>
+                    <span>{formatNumFa(car.seats) ?? "۰"} {t("persons", { count: "" }).replace("{count} ", "")}</span>
                   </div>
 
                   <div className="flex items-center gap-1">
                     <Briefcase className="w-3.5 h-3.5" />
-                    <span>{formatNumFa(car.luggage) ?? "۰"} چمدان</span>
+                    <span>{formatNumFa(car.luggage) ?? "۰"} {t("baggages", { count: "" }).replace("{count} ", "")}</span>
                   </div>
                 </div>
 
@@ -181,15 +174,15 @@ export function SimilarCars({ items = [], currency = "درهم" }: Props) {
                         {formatNumFa(car.price)} {currency}
                       </span>
                     ) : (
-                      <span className="text-gray-400 font-bold">تماس بگیرید</span>
+                      <span className="text-gray-400 font-bold">{t("contactUs")}</span>
                     )}
                   </div>
                 </div>
               </div>
             </Link>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }

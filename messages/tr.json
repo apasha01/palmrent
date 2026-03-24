@@ -1145,6 +1145,14 @@
     }
   },
 
+  "ActiveRentCities": {
+  "title": "PalmRent araç kiralama için aktif şehirler",
+  "subtitle": "O şehirdeki mevcut araçları ve rezervasyon koşullarını görmek için bir şehir seçin.",
+  "viewAll": "Tüm şehirleri gör",
+  "viewAllAria": "Tüm aktif araç kiralama şehirlerini görüntüle",
+  "cityButtonAria": "{city} şehrindeki kiralık araçları görüntüle"
+},
+
     "ProcessingCard": {
     "requestRegistered": "Rezervasyon talebiniz kaydedildi",
     "doNotLeavePage": "Lütfen sayfadan ayrılmayın, rezervasyonunuz inceleniyor",
@@ -1198,6 +1206,156 @@
     "reserveWithDate": "Merhaba\n({city}) konumunda ({car}) aracını {from} ({dt}) - {to} ({rt}) tarihleri arasında kiralamak istiyorum.\nUygunluk durumu ve kiralama şartlarını paylaşabilir misiniz?\n{url}"
   },
 
+  
+
+    "BottomNav": {
+    "navAria": "Alt menü",
+    "search": "Ara",
+    "searchAria": "Arama sayfasına git",
+    "rentCar": "Araç kiralama",
+    "rentCarAria": "Araç kiralama sayfasına git",
+    "myReserves": "Rezervasyonlarım",
+    "myReservesAria": "Rezervasyonlarım sayfasına git",
+    "profile": "Profil",
+    "profileAria": "Profil sayfasına git"
+  },
+
+  
+  "carDetail": {
+    "notFound": {
+      "title": "Araç bulunamadı",
+      "description": "ID yanlış olabilir veya araç silinmiş olabilir."
+    },
+    "share": "Paylaş",
+    "favorite": "Favorilere ekle",
+    "persons": "{count} kişilik",
+    "baggages": "{count} bagaj",
+    "features": {
+      "noDeposit": "Depozito yok",
+      "freeDelivery": "Ücretsiz teslimat",
+      "unlimitedKm": "Sınırsız km",
+      "insurance": "Sigorta"
+    }
+  },
+  "imageGallery": {
+    "totalImages": "{count} fotoğraf",
+    "videoLabel": "Video",
+    "mediaAlt": "Medya {index}",
+    "mainImageAlt": "Ana görsel",
+    "itemAlt": "Öğe {index}",
+    "thumbnailAlt": "Küçük resim {index}",
+    "imageAlt": "Görsel {index}",
+    "close": "Kapat",
+    "prev": "Önceki",
+    "next": "Sonraki",
+    "counter": "{current} / {total}"
+  },
+  "pricingCard": {
+    "title": "{branch} konumunda {car} kiralama fiyatı",
+    "titleNoBranch": "{car} kiralama fiyatı",
+    "titleDefault": "Araç kiralama fiyatı",
+    "locationLabel": "{branch} konumunda {car} kiralama",
+    "locationNoBranch": "{car} kiralama",
+    "locationDefault": "Araç kiralama",
+    "discountBadge": "%{off} indirim",
+    "dailyPricesTitle": "Günlük fiyatlar",
+    "details": "Detaylar",
+    "noPrices": "Fiyat bilgisi mevcut değil.",
+    "deposit": "Güvenlik depozitosu:",
+    "deliveryCost": "Teslimat ücreti:",
+    "insuranceCar": "Araç sigortası:",
+    "km": "Kilometre:",
+    "freeDelivery": "Ücretsiz teslimat",
+    "paidDelivery": "Ücretli teslimat",
+    "freeInsurance": "Temel sigorta ücretsiz",
+    "noInsurance": "Sigorta yok",
+    "unlimitedKm": "Sınırsız kilometre",
+    "limitedKm": "Sınırlı",
+    "onlineReserve": "Online rezervasyon",
+    "whatsappReserve": "WhatsApp üzerinden rezervasyona devam et",
+    "reserveTitle": "Online rezervasyon",
+    "rentOnlineLabel": "Online araç kiralama",
+    "deliveryDateLabel": "Teslim alma tarihi ve saati",
+    "returnDateLabel": "İade tarihi ve saati",
+    "reserveButton": "Bu aracı rezerve et",
+    "missingIds": "branch_id veya car_id eksik (rezervasyon için car nesnesinde bulunmalıdır).",
+    "reserveSheetTitle": "Rezervasyon"
+  },
+  "faq": {
+    "title": "Sorularınız"
+  },
+  "requiredDocuments": {
+    "title": "{branch} konumunda {car} kiralamak için gerekli belgeler",
+    "iranResidents": "İran'da ikamet edenler için",
+    "uaeResidents": "BAE'de ikamet edenler için",
+    "note": "Lütfen uyruk ve vize belgelerinizle birlikte geçerli kimliğinizi yanınızda bulundurun.",
+    "docs": {
+      "passport": "Pasaport",
+      "intlLicense": "Uluslararası sürücü belgesi",
+      "ticketPhoto": "Uçuş bileti fotoğrafı (havalimanında teslimatta)",
+      "validVisa": "Geçerli vize:",
+      "emiratesId": "BAE Kimlik Kartı",
+      "uaeLicense": "BAE sürücü belgesi"
+    }
+  },
+  "technicalSpecs": {
+    "title": "Teknik özellikler",
+    "fields": {
+      "carTitle": "Başlık",
+      "gearbox": "Şanzıman",
+      "fuel": "Yakıt",
+      "persons": "Yolcu kapasitesi",
+      "baggage": "Bagaj kapasitesi",
+      "year": "Yıl",
+      "doors": "Kapı sayısı",
+      "engineCapacity": "Motor hacmi"
+    },
+    "values": {
+      "persons": "{count} kişi",
+      "baggage": "{count} bagaj",
+      "doors": "{count} kapı",
+      "engineCapacity": "{value} cc"
+    }
+  },
+  "similarCars": {
+    "title": "Benzer araçlar",
+    "persons": "{count} kişi",
+    "baggages": "{count} bagaj",
+    "priceStartFrom": "Başlangıç fiyatı: ({range})",
+    "defaultRange": "1 ila 6 gün",
+    "contactUs": "İletişime geçin",
+    "features": {
+      "noDeposit": "Depozito yok",
+      "freeDelivery": "Ücretsiz teslimat",
+      "unlimitedKm": "Sınırsız km",
+      "insurance": "Sigorta"
+    }
+  },
+  "mobilePriceBar": {
+    "priceStartFrom": "Başlangıç fiyatı",
+    "onlineReserve": "Online rezervasyon",
+    "missingIds": "branch_id veya car_id eksik (rezervasyon için car nesnesinde bulunmalıdır)."
+  },
+  "whatsapp": {
+    "message": "Merhaba, {from} ({deliveryTime}) tarihinden {to} ({returnTime}) tarihine kadar {days} günlüğüne {car}{branch} kiralamak istiyorum.",
+    "branchPart": " {branch} konumunda"
+  },
+
+    "carDetail": {
+    "notFound": "Araç bulunamadı",
+    "notFoundDesc": "ID yanlış olabilir veya araç silinmiş olabilir.",
+    "noDeposit": "Depozito yok",
+    "freeDelivery": "Ücretsiz teslimat",
+    "unlimitedKm": "Sınırsız kilometre",
+    "insurance": "Sigorta",
+    "share": "Paylaş",
+    "addToWishlist": "Favorilere ekle",
+    "persons": "kişilik",
+    "suitcases": "bavul",
+    "aboutCar": "{branch} şubesinde {car} hakkında"
+  },
+
+
   "branchLanding": {
     "heroTitle": "<Branch></Branch> şehrinde depozitosuz araç kiralama",
     "heroSubtitle1": "Havalimanı ve otelde anında teslimat, ücretsiz sigorta",
@@ -1210,6 +1368,13 @@
     "noCarsFound": "Araç bulunamadı",
     "noMoreResults": "Başka sonuç yok",
     "fetchError": "Veri alınırken hata oluştu"
+  },
+
+  "Home" : {
+    "hero": {
+  "title": "PalmRent | Şehirlerde online araç kiralama",
+  "subtitle": "Online rezervasyon, koordineli teslim, 7/24 destek"
+}
   },
 
     "RentCommon": {

@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+
 import React from "react";
 import { HelpCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   Accordion,
   AccordionContent,
@@ -29,6 +32,8 @@ function isValidFaq(x: any): x is FaqItem {
 }
 
 export default function FAQcardetail({ faqs }: { faqs?: any[] }) {
+  const t = useTranslations("faq");
+
   const items: FaqItem[] = Array.isArray(faqs) ? faqs.filter(isValidFaq) : [];
   if (items.length === 0) return null;
 
@@ -37,7 +42,7 @@ export default function FAQcardetail({ faqs }: { faqs?: any[] }) {
   return (
     <div>
       <p className="font-bold px-4 md:px-2 lg:px-0 text-gray-900 dark:text-gray-100">
-        پرسش‌های شما
+        {t("title")}
       </p>
 
       <div className="w-full mt-4 px-4 md:px-0">

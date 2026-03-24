@@ -7,11 +7,11 @@ const HubSupportSection = () => {
   const t = useTranslations("HubSupportSection");
 
   return (
-    <div className="w-full px-2 md:px-0 mt-8">
+    <section className="w-full px-2 md:px-0 mt-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 items-start">
         {/* Item 1 */}
-        <div className="flex flex-row md:flex-row items-center  gap-4 ">
-          <div className="">
+        <article className="flex flex-row md:flex-row items-center gap-4">
+          <div>
             <div className="w-16 h-16 rounded-full flex items-center justify-center bg-white">
               <Image
                 src="/images/flexiblepayment.webp"
@@ -23,18 +23,18 @@ const HubSupportSection = () => {
           </div>
 
           <div className="flex flex-col">
-            <p className="font-bold text-sm">{t("items.payment.title")}</p>
+            <h3 className="font-bold text-sm">{t("items.payment.title")}</h3>
             <p className="text-xs text-muted-foreground mt-1 leading-6">
               {t("items.payment.description.line1")}
               <br className="hidden md:block" />
               {t("items.payment.description.line2")}
             </p>
           </div>
-        </div>
+        </article>
 
         {/* Item 2 */}
-        <div className="flex flex-row md:flex-row items-center  gap-4 ">
-          <div className="">
+        <article className="flex flex-row md:flex-row items-center gap-4">
+          <div>
             <div className="w-16 h-16 rounded-full flex items-center justify-center bg-white">
               <Image
                 src="/images/fullsupport.webp"
@@ -46,18 +46,18 @@ const HubSupportSection = () => {
           </div>
 
           <div className="flex flex-col">
-            <p className="font-bold text-sm">{t("items.support.title")}</p>
+            <h3 className="font-bold text-sm">{t("items.support.title")}</h3>
             <p className="text-xs text-muted-foreground mt-1 leading-6">
               {t("items.support.description.line1")}
               <br className="hidden md:block" />
               {t("items.support.description.line2")}
             </p>
           </div>
-        </div>
+        </article>
 
         {/* Item 3 */}
-        <div className="flex flex-row md:flex-row items-center  gap-4 ">
-          <div className="">
+        <article className="flex flex-row md:flex-row items-center gap-4">
+          <div>
             <div className="w-16 h-16 rounded-full flex items-center justify-center bg-white">
               <Image
                 src="/images/clearandtracking.webp"
@@ -69,16 +69,16 @@ const HubSupportSection = () => {
           </div>
 
           <div className="flex flex-col">
-            <p className="font-bold text-sm">{t("items.tracking.title")}</p>
+            <h3 className="font-bold text-sm">{t("items.tracking.title")}</h3>
             <p className="text-xs text-muted-foreground mt-1 leading-6">
               {t("items.tracking.description.line1")}
               <br className="hidden md:block" />
               {t("items.tracking.description.line2")}
             </p>
           </div>
-        </div>
+        </article>
       </div>
-    </div>
+    </section>
   );
 };
 

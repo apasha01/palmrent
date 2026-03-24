@@ -18,7 +18,6 @@ import Header from "@/components/layouts/Header";
 import SearchHeader from "@/components/search/search-header";
 import Footer from "@/components/Footer";
 import SearchFilterSheet from "@/components/search/SearchFilterSheet";
-import SearchPopup from "@/components/SearchPopup";
 import StepRent from "@/components/search/StepsRent";
 import DescriptionPopup from "@/components/DescriptionPopup";
 import ReserveInformation from "@/components/reserve/ReserveInformation";
@@ -110,9 +109,7 @@ function SearchResultPageContent() {
   const [urlSyncReady, setUrlSyncReady] = useState(false);
 
   const {
-    isSearchOpen,
     isFilterOpen,
-
     carDates,
     setCarDates,
 
@@ -1142,7 +1139,7 @@ function SearchResultPageContent() {
         )}
       </div>
 
-      {isSearchOpen && <SearchPopup />}
+
       {isFilterOpen && <SearchFilterSheet />}
       {descriptionPopup?.description && <DescriptionPopup />}
       <Footer />

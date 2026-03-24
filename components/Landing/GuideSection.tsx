@@ -11,12 +11,11 @@ import { useParams } from "next/navigation";
 
 import { useBlogs } from "@/services/blog/blogs.queries";
 import { STORAGE_URL } from "@/lib/apiClient";
-import { useRouter } from "@/i18n/navigation";
 import useDIR from "@/hooks/use-rtl";
+import { Link } from "@/i18n/navigation";
 
 export default function GuidesSection() {
   const t = useTranslations("GuidesSection");
-  const router = useRouter();
   const routeParams = useParams() as { locale?: string };
   const lang = String(routeParams?.locale || "fa");
   const { direction } = useDIR();
@@ -35,13 +34,6 @@ export default function GuidesSection() {
 
   const { data, isLoading, isError } = useBlogs(lang, { page: 1, per_page: 12 });
   const items = useMemo(() => data?.items ?? [], [data]);
-
-  const goToBlog = useCallback(
-    (id: number | string) => {
-      router.push(`/blogs/${id}`);
-    },
-    [router],
-  );
 
   const emblaDirection = direction ? "rtl" : "ltr";
 
@@ -80,7 +72,7 @@ export default function GuidesSection() {
   return (
     <section className="w-full">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
+        <h2 className="text-2xl font-bold text-foreground">{t("title")}</h2>
 
         <div className="hidden md:flex items-center gap-2">
           <button
@@ -157,37 +149,36 @@ export default function GuidesSection() {
               return (
                 <article
                   key={`m-${item.id}`}
-                  onClick={() => goToBlog(item.id)}
-                  role="link"
-                  tabIndex={0}
-                  aria-label={t("openArticle", { title: item.title })}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") goToBlog(item.id);
-                  }}
                   className="
-                    flex flex-col cursor-pointer group border rounded-lg
+                    border rounded-lg
                     shrink-0 w-[260px]
                     hover:shadow-sm transition
                   "
                 >
-                  <div className="rounded-lg overflow-hidden">
-                    <Image
-                      src={imgSrc}
-                      alt={item.title}
-                      width={260}
-                      height={220}
-                      className="w-full h-44 object-cover"
-                    />
-                  </div>
+                  <Link
+                    href={`/blogs/${item.id}`}
+                    aria-label={t("openArticle", { title: item.title })}
+                    className="flex flex-col cursor-pointer group"
+                  >
+                    <div className="rounded-lg overflow-hidden">
+                      <Image
+                        src={imgSrc}
+                        alt={item.title}
+                        width={260}
+                        height={220}
+                        className="w-full h-44 object-cover"
+                      />
+                    </div>
 
-                  <div className="pt-4 p-2">
-                    <h3 className="text-foreground font-bold text-base mb-3 leading-relaxed line-clamp-2">
-                      {item.title}
-                    </h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed line-clamp-4">
-                      {item.text}
-                    </p>
-                  </div>
+                    <div className="pt-4 p-2">
+                      <h3 className="text-foreground font-bold text-base mb-3 leading-relaxed line-clamp-2">
+                        {item.title}
+                      </h3>
+                      <p className="text-muted-foreground text-sm leading-relaxed line-clamp-4">
+                        {item.text}
+                      </p>
+                    </div>
+                  </Link>
                 </article>
               );
             })}
@@ -224,37 +215,36 @@ export default function GuidesSection() {
                   return (
                     <article
                       key={`d-${item.id}`}
-                      onClick={() => goToBlog(item.id)}
-                      role="link"
-                      tabIndex={0}
-                      aria-label={t("openArticle", { title: item.title })}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") goToBlog(item.id);
-                      }}
                       className="
-                        flex flex-col cursor-pointer group border rounded-lg
+                        border rounded-lg
                         shrink-0 w-[320px]
                         hover:shadow-sm transition
                       "
                     >
-                      <div className="rounded-lg overflow-hidden">
-                        <Image
-                          src={imgSrc}
-                          alt={item.title}
-                          width={400}
-                          height={240}
-                          className="w-full h-48 object-cover"
-                        />
-                      </div>
+                      <Link
+                        href={`/blogs/${item.id}`}
+                        aria-label={t("openArticle", { title: item.title })}
+                        className="flex flex-col cursor-pointer group"
+                      >
+                        <div className="rounded-lg overflow-hidden">
+                          <Image
+                            src={imgSrc}
+                            alt={item.title}
+                            width={400}
+                            height={240}
+                            className="w-full h-48 object-cover"
+                          />
+                        </div>
 
-                      <div className="pt-4 p-2">
-                        <h3 className="text-foreground font-bold text-base mb-3 leading-relaxed line-clamp-2">
-                          {item.title}
-                        </h3>
-                        <p className="text-muted-foreground text-sm leading-relaxed line-clamp-4">
-                          {item.text}
-                        </p>
-                      </div>
+                        <div className="pt-4 p-2">
+                          <h3 className="text-foreground font-bold text-base mb-3 leading-relaxed line-clamp-2">
+                            {item.title}
+                          </h3>
+                          <p className="text-muted-foreground text-sm leading-relaxed line-clamp-4">
+                            {item.text}
+                          </p>
+                        </div>
+                      </Link>
                     </article>
                   );
                 })}

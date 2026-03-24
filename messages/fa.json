@@ -426,6 +426,21 @@
       "fetchInfoError": "خطا در دریافت اطلاعات.",
       "invalidServerResponse": "پاسخ سرور نامعتبر است."
     },
+
+      "carDetail": {
+    "notFound": "خودرو پیدا نشد",
+    "notFoundDesc": "ممکنه آیدی اشتباه باشه یا خودرو حذف شده باشه.",
+    "noDeposit": "بدون ودیعه",
+    "freeDelivery": "تحویل رایگان",
+    "unlimitedKm": "کیلومتر نامحدود",
+    "insurance": "بیمه",
+    "share": "اشتراک‌گذاری",
+    "addToWishlist": "افزودن به علاقه‌مندی‌ها",
+    "persons": "نفره",
+    "suitcases": "چمدان",
+    "aboutCar": "درباره {car} در {branch}"
+  },
+
     "selectedCar": {
       "title": "خودرو انتخابی شما",
       "dailyPriceFor": "قیمت روزانه برای",
@@ -658,6 +673,138 @@
       "title": "پالم رنت | رزرو آنلاین اجاره خودرو در شهرهای منتخب",
       "subtitle": "رزرو آنلاین, تحویل هماهنگ شده, پشتیبانی فارسی ۷/۲۴"
     }
+  },
+
+   "carDetail": {
+    "notFound": {
+      "title": "خودرو پیدا نشد",
+      "description": "ممکنه آیدی اشتباه باشه یا خودرو حذف شده باشه."
+    },
+    "share": "اشتراک‌گذاری",
+    "favorite": "افزودن به علاقه‌مندی‌ها",
+    "persons": "{count} نفره",
+    "baggages": "{count} چمدان",
+    "features": {
+      "noDeposit": "بدون ودیعه",
+      "freeDelivery": "تحویل رایگان",
+      "unlimitedKm": "کیلومتر نامحدود",
+      "insurance": "بیمه"
+    }
+  },
+  "imageGallery": {
+    "totalImages": "{count} تصاویر",
+    "videoLabel": "ویدیو",
+    "mediaAlt": "رسانه {index}",
+    "mainImageAlt": "تصویر اصلی",
+    "itemAlt": "آیتم {index}",
+    "thumbnailAlt": "تصویر کوچک {index}",
+    "imageAlt": "تصویر {index}",
+    "close": "بستن",
+    "prev": "قبلی",
+    "next": "بعدی",
+    "counter": "{current} از {total}"
+  },
+  "pricingCard": {
+    "title": "قیمت اجاره {car} در {branch}",
+    "titleNoBranch": "قیمت اجاره {car}",
+    "titleDefault": "قیمت اجاره خودرو",
+    "locationLabel": "اجاره {car} در {branch}",
+    "locationNoBranch": "اجاره {car}",
+    "locationDefault": "اجاره خودرو",
+    "discountBadge": "{off}٪ تخفیف",
+    "dailyPricesTitle": "قیمت‌های روزانه",
+    "details": "جزئیات",
+    "noPrices": "قیمت‌ها موجود نیست.",
+    "deposit": "ودیعه خلافی :",
+    "deliveryCost": "هزینه تحویل :",
+    "insuranceCar": "بیمه خودرو :",
+    "km": "کیلومتر :",
+    "freeDelivery": "تحویل رایگان",
+    "paidDelivery": "تحویل غیر رایگان",
+    "freeInsurance": "بیمه پایه رایگان",
+    "noInsurance": "بدون بیمه",
+    "unlimitedKm": "کیلومتر نامحدود",
+    "limitedKm": "محدود",
+    "onlineReserve": "رزرو آنلاین",
+    "whatsappReserve": "ادامه رزرو در واتساپ",
+    "reserveTitle": "رزرو آنلاین",
+    "rentOnlineLabel": "اجاره آنلاین خودرو",
+    "deliveryDateLabel": "تاریخ و ساعت تحویل",
+    "returnDateLabel": "تاریخ و ساعت عودت",
+    "reserveButton": "رزرو این خودرو",
+    "missingIds": "branch_id یا car_id موجود نیست (برای رزرو باید در car پاس داده شود).",
+    "reserveSheetTitle": "رزرو"
+  },
+  "faq": {
+    "title": "پرسش‌های شما"
+  },
+  "requiredDocuments": {
+    "title": "مدارک مورد نیاز برای اجاره {car} در {branch}",
+    "iranResidents": "برای افراد مقیم ایران",
+    "uaeResidents": "برای افراد مقیم امارات",
+    "note": "مدارک معتبر است، با ملیت‌ها و ویزا همراه داشته باشید.",
+    "docs": {
+      "passport": "پاسپورت",
+      "intlLicense": "گواهینامه رانندگی بین‌المللی",
+      "ticketPhoto": "عکس بلیت (در صورت تحویل در فرودگاه)",
+      "validVisa": "ویزا قابل:",
+      "emiratesId": "امارات آیدی",
+      "uaeLicense": "گواهینامه امارات"
+    }
+  },
+  "technicalSpecs": {
+    "title": "مشخصات فنی",
+    "fields": {
+      "carTitle": "عنوان",
+      "gearbox": "گیربکس",
+      "fuel": "سوخت",
+      "persons": "ظرفیت نفرات",
+      "baggage": "ظرفیت چمدان",
+      "year": "سال",
+      "doors": "تعداد درب",
+      "engineCapacity": "حجم موتور"
+    },
+    "values": {
+      "persons": "{count} نفر",
+      "baggage": "{count} چمدان",
+      "doors": "{count} درب",
+      "engineCapacity": "{value} سی‌سی"
+    }
+  },
+  "similarCars": {
+    "title": "خودروهای مشابه",
+    "persons": "{count} نفر",
+    "baggages": "{count} چمدان",
+    "priceStartFrom": "شروع قیمت از: ({range})",
+    "defaultRange": "۱ تا ۶ روز",
+    "contactUs": "تماس بگیرید",
+    "features": {
+      "noDeposit": "بدون ودیعه",
+      "freeDelivery": "تحویل رایگان",
+      "unlimitedKm": "کیلومتر نامحدود",
+      "insurance": "بیمه"
+    }
+  },
+  "mobilePriceBar": {
+    "priceStartFrom": "شروع قیمت از",
+    "onlineReserve": "رزرو آنلاین",
+    "missingIds": "branch_id یا car_id موجود نیست (برای رزرو باید در car پاس داده شود)."
+  },
+  "whatsapp": {
+    "message": "سلام، مایل هستم خودروی {car}{branch} را از تاریخ {from} ({deliveryTime}) تا {to} ({returnTime}) به مدت {days} روز رزرو کنم.",
+    "branchPart": " در {branch}"
+  },
+
+    "BottomNav": {
+    "navAria": "منوی پایین",
+    "search": "جستجو",
+    "searchAria": "رفتن به صفحه جستجو",
+    "rentCar": "اجاره خودرو",
+    "rentCarAria": "رفتن به صفحه اجاره خودرو",
+    "myReserves": "رزروهای من",
+    "myReservesAria": "رفتن به صفحه رزروهای من",
+    "profile": "پروفایل",
+    "profileAria": "رفتن به صفحه پروفایل"
   },
 
   "ActiveRentCities": {

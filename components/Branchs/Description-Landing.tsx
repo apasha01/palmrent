@@ -28,8 +28,8 @@ export default function DescriptionLanding({
   }
 
   return (
-    <div className="w-full bg-transparent px-4 md:px-2 lg:px-0">
-      {title ? <p className="mb-2 text-right font-bold">{title}</p> : null}
+    <section className="w-full bg-transparent px-4 md:px-2 lg:px-0">
+      {title ? <h2 className="mb-2 text-right font-bold">{title}</h2> : null}
 
       <div
         id={contentId}
@@ -52,6 +52,6 @@ export default function DescriptionLanding({
       >
         {open ? "مشاهده کمتر" : "مشاهده بیشتر"}
       </Button>
-    </div>
+    </section>
   );
 }

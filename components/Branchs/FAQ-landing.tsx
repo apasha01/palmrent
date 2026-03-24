@@ -12,8 +12,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../ui/accordion";
-import useDIR from "@/hooks/use-rtl";
-
 
 interface QuestionItem {
   id: number;
@@ -40,7 +38,6 @@ interface Props {
 const FAQlanding = ({ data = [], loading = false }: Props) => {
   const t = useTranslations("FAQlanding");
 
-
   if (loading) return null;
 
   const categories = data.filter(
@@ -52,16 +49,16 @@ const FAQlanding = ({ data = [], loading = false }: Props) => {
   const defaultTab = String(categories[0].id);
 
   return (
-    <div>
-      <p className="md:block px-4 font-bold mb-4 mt-1 text-gray-900 dark:text-gray-100">
+    <section>
+      <h2 className="md:block px-4 font-bold mb-4 mt-1 text-gray-900 dark:text-gray-100">
         {t("yourQuestions")}
-      </p>
+      </h2>
 
       <div className="bg-white dark:bg-gray-900 border shadow rounded-3xl">
         <div className="p-4">
-          <p className="font-bold hidden md:block text-lg text-center text-gray-900 dark:text-gray-100">
+          <h3 className="font-bold hidden md:block text-lg text-center text-gray-900 dark:text-gray-100">
             {t("commonQuestions")}
-          </p>
+          </h3>
 
           <div className="mt-2">
             <Tabs defaultValue={defaultTab}>
@@ -108,7 +105,7 @@ const FAQlanding = ({ data = [], loading = false }: Props) => {
                         >
                           <div className="flex items-center gap-2 text-right">
                             <HelpCircle className="w-5 h-5 text-blue-500 dark:text-blue-400 shrink-0" />
-                            <span className="leading-7">{q.question}</span>
+                            <h4 className="leading-7">{q.question}</h4>
                           </div>
                         </AccordionTrigger>
 
@@ -138,7 +135,7 @@ const FAQlanding = ({ data = [], loading = false }: Props) => {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

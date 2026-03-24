@@ -1,7 +1,6 @@
 'use client'
 
 import { useTranslations } from "next-intl";
-import { Trans } from "react-i18next";
 
 export default function CommonQuestionSection({newVersion = false,rules,setRules,gotTanslation=false}){
     const t = useTranslations();

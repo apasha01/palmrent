@@ -3,7 +3,7 @@
 
 import React, { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useSelector } from "react-redux";
@@ -19,7 +19,6 @@ import {
   IconPerson,
   IconWhatsapp,
 } from "../Icons";
-
 
 import { STORAGE_URL } from "@/lib/apiClient";
 import { adaptCarData } from "@/lib/adapters";
@@ -39,8 +38,6 @@ import {
 } from "@/components/common/AppDrawer";
 
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store";
-import { useRouter } from "next/navigation";
-// ✅ اضافه شد
 import { useTopLoader } from "nextjs-toploader";
 
 /* ---------------- helpers ---------------- */
@@ -353,35 +350,37 @@ function BranchCarBadges({
     const isNoDeposit = badge.key === "noDeposit";
 
     return (
-      <AppDrawer
-        key={badge.key}
-        kind={drawerConfig.kind}
-        data={drawerConfig.data}
-        trigger={({ open }) => (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              open();
-            }}
-            className={getBadgeClass(isNoDeposit)}
-            aria-label={String(t(badge.label))}
-          >
-            <span className={contentClass}>
-              <span
-                className={`inline-flex shrink-0 items-center justify-center ${sizeClass.icon}`}
-              >
-                <IconInfoCircle />
-              </span>
+      <li key={badge.key} className="list-none">
+        <AppDrawer
+          kind={drawerConfig.kind}
+          data={drawerConfig.data}
+          trigger={({ open }) => (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                open();
+              }}
+              className={getBadgeClass(isNoDeposit)}
+              aria-label={String(t(badge.label))}
+            >
+              <span className={contentClass}>
+                <span
+                  className={`inline-flex shrink-0 items-center justify-center ${sizeClass.icon}`}
+                  aria-hidden="true"
+                >
+                  <IconInfoCircle />
+                </span>
 
-              <span className="whitespace-nowrap leading-none">
-                {t(badge.label)}
+                <span className="whitespace-nowrap leading-none">
+                  {t(badge.label)}
+                </span>
               </span>
-            </span>
-          </button>
-        )}
-      />
+            </button>
+          )}
+        />
+      </li>
     );
   };
 
@@ -395,41 +394,43 @@ function BranchCarBadges({
     const isNoDeposit = optionTitle === "noDeposite";
 
     return (
-      <AppDrawer
-        key={`${item}-${index}`}
-        kind="extra_option"
-        data={{
-          optionId,
-          optionTitle: t(optionTitle),
-          optionDescriptionFromApi: optionDescription
-            ? t(optionDescription)
-            : "",
-        }}
-        trigger={({ open }) => (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              open();
-            }}
-            className={getBadgeClass(isNoDeposit)}
-            aria-label={String(t(optionTitle))}
-          >
-            <span className={contentClass}>
-              <span
-                className={`inline-flex shrink-0 items-center justify-center ${sizeClass.icon}`}
-              >
-                <IconInfoCircle />
-              </span>
+      <li key={`${item}-${index}`} className="list-none">
+        <AppDrawer
+          kind="extra_option"
+          data={{
+            optionId,
+            optionTitle: t(optionTitle),
+            optionDescriptionFromApi: optionDescription
+              ? t(optionDescription)
+              : "",
+          }}
+          trigger={({ open }) => (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                open();
+              }}
+              className={getBadgeClass(isNoDeposit)}
+              aria-label={String(t(optionTitle))}
+            >
+              <span className={contentClass}>
+                <span
+                  className={`inline-flex shrink-0 items-center justify-center ${sizeClass.icon}`}
+                  aria-hidden="true"
+                >
+                  <IconInfoCircle />
+                </span>
 
-              <span className="whitespace-nowrap leading-none">
-                {t(optionTitle)}
+                <span className="whitespace-nowrap leading-none">
+                  {t(optionTitle)}
+                </span>
               </span>
-            </span>
-          </button>
-        )}
-      />
+            </button>
+          )}
+        />
+      </li>
     );
   };
 
@@ -439,22 +440,23 @@ function BranchCarBadges({
         className="absolute top-2 start-2 z-20 w-[calc(100%-16px)]"
         style={{ transform: "translateZ(0)", willChange: "transform" }}
       >
-        <div className={`${wrapperClass} pointer-events-auto`}>
+        <ul className={`${wrapperClass} pointer-events-auto`} aria-label="Car badges">
           {hasRawBadges
             ? rawBadges.map(renderRawBadge)
             : rawOptions.map(renderOptionBadge)}
-        </div>
+        </ul>
       </div>
     );
   }
+
   return (
-    <div className="mb-3 min-h-6.5 w-full">
-      <div className={wrapperClass}>
+    <section className="mb-3 min-h-6.5 w-full" aria-label="Car badges">
+      <ul className={wrapperClass}>
         {hasRawBadges
           ? rawBadges.map(renderRawBadge)
           : rawOptions.map(renderOptionBadge)}
-      </div>
-    </div>
+      </ul>
+    </section>
   );
 }
 
@@ -497,7 +499,6 @@ export default function BranchCarCard({
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
-  // ✅ اضافه شد
   const loader = useTopLoader();
 
   const { openSheet } = useMobileSheet();
@@ -543,9 +544,9 @@ export default function BranchCarCard({
 
   const carHref = useMemo(() => {
     const carId = Number((car as any)?.id);
-    if (!Number.isFinite(carId) || carId <= 0) return `/${locale}/cars`;
+    if (!Number.isFinite(carId) || carId <= 0) return `/cars`;
     return `/cars/${carId}`;
-  }, [car, locale]);
+  }, [car]);
 
   const images = useMemo(() => {
     const arr = normalizeImages((car as any)?.images || (car as any)?.photo);
@@ -701,13 +702,11 @@ export default function BranchCarCard({
         typeof window !== "undefined" && window.innerWidth < 768;
 
       if (isMobile) {
-        // موبایل: sheet باز میشه، لودر نمیخواد
         router.replace(searchUrl, { scroll: false });
         openReserveSheetMobile(hydrateKey);
         return;
       }
 
-      // ✅ دسکتاپ: لودر شروع میشه قبل از push
       loader.start();
       router.push(reserveUrl, { scroll: true });
     },
@@ -731,13 +730,17 @@ export default function BranchCarCard({
   if (!car) return null;
   if (!calendarHydrated) return null;
 
+  const carTitle = String((car as any)?.title || "");
+  const articleLabel = carTitle || "Car card";
+
   return (
-    <div
+    <article
       className={`${isHovering ? "z-10" : ""} flex w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-[#0000001f] bg-white p-2.5 shadow-[0_2px_5px_-1px_rgba(0,0,0,.08)] transition-all max-md:pl-0 md:text-sm text-xs`}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
+      aria-label={articleLabel}
     >
-      <SingleCarGallery imageList={images} carHref={carHref}>
+      <SingleCarGallery imageList={images} carHref={carHref} carTitle={carTitle}>
         {badgesOnImage && (
           <BranchCarBadges
             rawBadges={rawBadges}
@@ -755,8 +758,13 @@ export default function BranchCarCard({
             className="absolute bottom-2 end-2 z-20 pointer-events-auto"
             style={{ transform: "translateZ(0)", willChange: "transform" }}
           >
-            <div className="flex items-center gap-1 rounded-lg bg-[#e1ff00] px-2.5 py-1.5 text-[#3b3d40] opacity-85">
-              <IconDiscount size="20" />
+            <div
+              className="flex items-center gap-1 rounded-lg bg-[#e1ff00] px-2.5 py-1.5 text-[#3b3d40] opacity-85"
+              aria-label={`${discountPercent} percent ${t("discount")}`}
+            >
+              <span aria-hidden="true">
+                <IconDiscount size="20" />
+              </span>
               {discountPercent}% {t("discount")}
             </div>
           </div>
@@ -764,17 +772,19 @@ export default function BranchCarCard({
       </SingleCarGallery>
 
       <div className="flex flex-col pl-2.5">
-        <div className="flex items-center justify-between">
-          <span className="size-6 text-[#333333]" role="button" tabIndex={0}>
+        <header className="flex items-center justify-between">
+          <button
+            type="button"
+            className="size-6 text-[#333333]"
+            aria-label={t("wishlist") || "Wishlist"}
+          >
             <IconHeart active={undefined} />
-          </span>
+          </button>
 
-          <div className="my-2 text-left text-lg font-bold">
-            {locale === "fa"
-              ? (car as any).title
-              : (car as any).title}
-          </div>
-        </div>
+          <h3 className="my-2 text-left text-lg font-bold">
+            {locale === "fa" ? (car as any).title : (car as any).title}
+          </h3>
+        </header>
 
         <SingleCarOptions car={car} />
 
@@ -806,7 +816,7 @@ export default function BranchCarCard({
         />
 
         {!noBtn && (
-          <div
+          <footer
             className="mt-auto flex w-full gap-2"
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
@@ -878,14 +888,17 @@ export default function BranchCarCard({
               target="_blank"
               onClick={(e) => e.stopPropagation()}
               className="flex w-fit cursor-pointer items-center justify-center gap-2 text-nowrap rounded-xl border border-[#10B98180] bg-[#10B9811A] px-2 py-1 text-[#10B981]"
+              aria-label={t("whatsapp")}
             >
-              <IconWhatsapp className="size-5" />
+              <span aria-hidden="true">
+                <IconWhatsapp className="size-5" />
+              </span>
               {t("whatsapp")}
             </Link>
-          </div>
+          </footer>
         )}
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -895,10 +908,12 @@ export function SingleCarGallery({
   children,
   imageList,
   carHref,
+  carTitle,
 }: {
   children?: React.ReactNode;
   imageList?: any[];
   carHref?: string;
+  carTitle?: string;
 }) {
   const t = useTranslations();
 
@@ -911,7 +926,7 @@ export function SingleCarGallery({
       : ["/images/placeholder.png"];
 
   return (
-    <div className="relative z-10 flex w-full rounded-lg lg:h-55 h-55">
+    <figure className="relative z-10 flex w-full rounded-lg lg:h-55 h-55">
       {!firstImageLoaded && (
         <>
           <style>{`
@@ -940,6 +955,7 @@ export function SingleCarGallery({
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 strokeWidth={1.2}
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -957,6 +973,7 @@ export function SingleCarGallery({
       <Link
         href={carHref || "#"}
         className="absolute inset-0 z-10 cursor-pointer max-md:overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        aria-label={carTitle ? `${t("moredetail")} ${carTitle}` : t("moredetail")}
       >
         <div className="md:absolute max-md:flex w-full h-full top-0 right-0 rounded-lg max-md:gap-2">
           {safeImageList.map((src: any, index: number) => (
@@ -973,7 +990,7 @@ export function SingleCarGallery({
               src={toStorageUrl(src)}
               width={395}
               height={253}
-              alt={`Car image ${index + 1}`}
+              alt={carTitle ? `${carTitle} - image ${index + 1}` : `Car image ${index + 1}`}
               loading="eager"
               onLoad={index === 0 ? () => setFirstImageLoaded(true) : undefined}
               onError={index === 0 ? () => setFirstImageLoaded(true) : undefined}
@@ -982,7 +999,10 @@ export function SingleCarGallery({
 
           {safeImageList.length > 1 && (
             <div className="relative z-20 flex md:hidden flex-col items-center justify-center gap-2 px-4 font-bold text-black text-nowrap">
-              <span className="flex size-8 items-center justify-center rounded-full bg-[#F1F1F1]">
+              <span
+                className="flex size-8 items-center justify-center rounded-full bg-[#F1F1F1]"
+                aria-hidden="true"
+              >
                 <ChevronLeft className="size-4" />
               </span>
               {t("moredetail")}
@@ -999,7 +1019,10 @@ export function SingleCarGallery({
                 activeImageIndex === safeImageList.length - 1 ? "z-20" : ""
               } bg-[#000000aa] text-white flex flex-col items-center justify-center md:transition-opacity md:duration-200 md:ease-out`}
             >
-              <span className="flex items-center justify-center border-2 border-white rounded-full size-16">
+              <span
+                className="flex items-center justify-center border-2 border-white rounded-full size-16"
+                aria-hidden="true"
+              >
                 <ArrowRight className="size-6" />
               </span>
               {t("moredetail")}
@@ -1012,7 +1035,11 @@ export function SingleCarGallery({
               src={toStorageUrl(safeImageList[safeImageList.length - 1])}
               width={395}
               height={253}
-              alt="Car image last"
+              alt={
+                carTitle
+                  ? `${carTitle} - image ${safeImageList.length}`
+                  : "Car image last"
+              }
             />
           </div>
         </div>
@@ -1021,6 +1048,7 @@ export function SingleCarGallery({
           className="absolute w-full h-full md:flex items-end flex-row-reverse p-2 cursor-pointer transition-all opacity-0 hover:opacity-100 hidden z-20"
           onMouseLeave={() => setActiveImageIndex(0)}
           onClick={(e) => e.stopPropagation()}
+          aria-hidden="true"
         >
           {safeImageList.map((_: any, index: number) => (
             <div
@@ -1037,7 +1065,7 @@ export function SingleCarGallery({
       <div className="absolute inset-0 z-20 pointer-events-none">
         {children}
       </div>
-    </div>
+    </figure>
   );
 }
 
@@ -1066,45 +1094,57 @@ export function SingleCarOptions({
       : "geared";
 
   return (
-    <div
-      className={`mt-1 mb-2 grid grid-cols-4 gap-1 border-y p-2 text-[#787878] text-nowrap ${textSize}`}
-    >
-      <div className="flex items-center justify-center gap-1">
-        <span className={bigFont ? "xl:size-5 size-4" : "size-4"}>
-          <IconGas />
-        </span>
-        <span className="text-xs">
-          {t(String(fuel === "بنزین" ? "petrol" : fuel).toLowerCase())}
-        </span>
-      </div>
+    <section aria-label="Car specifications">
+      <ul
+        className={`mt-1 mb-2 grid grid-cols-4 gap-1 border-y p-2 text-[#787878] text-nowrap ${textSize}`}
+      >
+        <li className="flex items-center justify-center gap-1 list-none">
+          <span
+            className={bigFont ? "xl:size-5 size-4" : "size-4"}
+            aria-hidden="true"
+          >
+            <IconGas />
+          </span>
+          <span className="text-xs">
+            {t(String(fuel === "بنزین" ? "petrol" : fuel).toLowerCase())}
+          </span>
+        </li>
 
-      <div className="flex items-center justify-center gap-1">
-        <span className={bigFont ? "xl:size-5 size-4" : "size-4"}>
-          <IconGearBox />
-        </span>
-        <span className="text-xs">{t(gearbox)}</span>
-      </div>
+        <li className="flex items-center justify-center gap-1 list-none">
+          <span
+            className={bigFont ? "xl:size-5 size-4" : "size-4"}
+            aria-hidden="true"
+          >
+            <IconGearBox />
+          </span>
+          <span className="text-xs">{t(gearbox)}</span>
+        </li>
 
-      <div className="flex items-center justify-center gap-1">
-        <span className={bigFont ? "xl:size-5 size-4" : "size-4"}>
-          <IconBag />
-        </span>
-        <span className="text-xs">
-          {(car.baggage ?? car.suitcase ?? 0) || 0}{" "}
-          {t("suitCase")}
-        </span>
-      </div>
+        <li className="flex items-center justify-center gap-1 list-none">
+          <span
+            className={bigFont ? "xl:size-5 size-4" : "size-4"}
+            aria-hidden="true"
+          >
+            <IconBag />
+          </span>
+          <span className="text-xs">
+            {(car.baggage ?? car.suitcase ?? 0) || 0} {t("suitCase")}
+          </span>
+        </li>
 
-      <div className="flex items-center justify-center gap-1">
-        <span className={bigFont ? "xl:size-5 size-4" : "size-4"}>
-          <IconPerson />
-        </span>
-        <span className="text-xs">
-          {(car.passengers ?? car.person ?? 0) || 0}{" "}
-          {t("people")}
-        </span>
-      </div>
-    </div>
+        <li className="flex items-center justify-center gap-1 list-none">
+          <span
+            className={bigFont ? "xl:size-5 size-4" : "size-4"}
+            aria-hidden="true"
+          >
+            <IconPerson />
+          </span>
+          <span className="text-xs">
+            {(car.passengers ?? car.person ?? 0) || 0} {t("people")}
+          </span>
+        </li>
+      </ul>
+    </section>
   );
 }
 
@@ -1227,8 +1267,8 @@ export function SingleCarPriceList({
         key={`${rangeRaw || "range"}-${idx}`}
         className="flex items-center justify-between text-sm font-bold"
       >
-        <span className="text-[#4b5259]">{rangeText} :</span>
-        <div className="flex gap-2">
+        <dt className="text-[#4b5259]">{rangeText} :</dt>
+        <dd className="flex gap-2">
           {dailyOld > daily && (
             <span className="text-[#A7A7A7] line-through">
               {formatNum(dailyOld)}
@@ -1236,16 +1276,18 @@ export function SingleCarPriceList({
           )}
           <span className="font-bold text-[#3B82F6]">{formatNum(daily)}</span>
           {!!currencyLabel && <span>{currencyLabel}</span>}
-        </div>
+        </dd>
       </div>
     );
   };
 
   if (!accordionPriceList) {
     return (
-      <div className="mb-4 flex flex-col gap-2 border-[#0000001f]">
-        {pricesArray.map((row, idx) => renderRow(row, idx))}
-      </div>
+      <section className="mb-4 flex flex-col gap-2 border-[#0000001f]" aria-label="Car prices">
+        <dl className="flex flex-col gap-2">
+          {pricesArray.map((row, idx) => renderRow(row, idx))}
+        </dl>
+      </section>
     );
   }
 
@@ -1255,23 +1297,26 @@ export function SingleCarPriceList({
   const hasMore = hiddenRows.length > 0;
 
   return (
-    <div className="mb-4 flex flex-col gap-2 border-[#0000001f]">
-      {visibleRows.map((row, idx) => renderRow(row, idx))}
+    <section className="mb-4 flex flex-col gap-2 border-[#0000001f]" aria-label="Car prices">
+      <dl className="flex flex-col gap-2">
+        {visibleRows.map((row, idx) => renderRow(row, idx))}
+      </dl>
 
       {hasMore && (
         <>
           <div
+            id="car-price-list-more"
             className={`
               grid transition-[grid-template-rows] duration-300 ease-in-out
               ${expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}
             `}
           >
             <div className="overflow-hidden">
-              <div className="flex flex-col gap-2 pt-1">
+              <dl className="flex flex-col gap-2 pt-1">
                 {hiddenRows.map((row, idx) =>
                   renderRow(row, ALWAYS_VISIBLE + idx),
                 )}
-              </div>
+              </dl>
             </div>
           </div>
 
@@ -1282,6 +1327,8 @@ export function SingleCarPriceList({
               e.stopPropagation();
               setExpanded((prev) => !prev);
             }}
+            aria-expanded={expanded}
+            aria-controls="car-price-list-more"
             className="
               mx-auto border p-1 w-full rounded-md justify-center flex items-center gap-1.5
               text-xs font-medium text-[#757678]
@@ -1309,10 +1356,11 @@ export function SingleCarPriceList({
               className={`size-3.5 transition-transform duration-300 ${
                 expanded ? "rotate-180" : "rotate-0"
               }`}
+              aria-hidden="true"
             />
           </button>
         </>
       )}
-    </div>
+    </section>
   );
 }

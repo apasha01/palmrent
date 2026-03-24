@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -20,7 +21,6 @@ import { SITE_HEADER_HEIGHT } from "@/components/layouts/Header";
 import { useQueryClient } from "@tanstack/react-query";
 import { getHubCarsOnly } from "@/services/hub-cars/hub-cars.api";
 import useDIR from "@/hooks/use-rtl";
-
 
 type BranchItem = {
   id: number;
@@ -347,9 +347,9 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
       `}</style>
 
       <section className="w-full">
-        <p className="px-4 text-xl font-bold sm:px-0 md:text-3xl">
+        <h2 className="px-4 text-xl font-bold sm:px-0 md:text-3xl">
           {t("title")}
-        </p>
+        </h2>
 
         <p className="mt-2 px-4 text-xs sm:px-0 md:text-sm">
           {t("subtitle")}

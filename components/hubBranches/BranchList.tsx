@@ -80,9 +80,9 @@ const BranchCard = ({ item }: BranchCardProps) => {
           )}
         </div>
 
-        <p className="mt-2 text-center text-sm text-gray-900 dark:text-gray-100">
+        <h3 className="mt-2 text-center text-sm text-gray-900 dark:text-gray-100">
           {item.title}
-        </p>
+        </h3>
       </Link>
     </div>
   );
@@ -102,10 +102,10 @@ const BranchList = ({ branches, isLoading }: BranchListProps) => {
   }, [branches]);
 
   return (
-    <div className="mt-6 w-full px-2 md:mt-2 md:px-0">
-      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+    <section className="mt-6 w-full px-2 md:mt-2 md:px-0">
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
         {t("title")}
-      </p>
+      </h2>
 
       <p className="mt-2 text-xs text-gray-600 dark:text-gray-300">
         {t("subtitle")}
@@ -125,7 +125,7 @@ const BranchList = ({ branches, isLoading }: BranchListProps) => {
               <BranchCard key={item.id} item={item} />
             ))}
       </div>
-    </div>
+    </section>
   );
 };
 

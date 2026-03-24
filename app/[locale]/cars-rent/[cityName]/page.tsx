@@ -1,5 +1,5 @@
-"use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
@@ -444,15 +444,12 @@ export default function HomePage() {
   const currency = String(query.data?.currency || "");
   const rateToRial = query.data?.rate_to_rial ?? null;
 
-  // ✅ FIX: بدون fallback روی ۱ — تا زمانی که data نیامده null باشه
   const branchId: number | null = query.data?.branch?.id
     ? Number(query.data.branch.id)
     : null;
 
   /* --------------------------------------------------------
      Support Query
-     ✅ FIX: branchId واقعی پاس میشه
-          و enabled فقط وقتی branchId معتبر هست فعاله
   -------------------------------------------------------- */
   const supportQuery = useBranchSupport(resolvedLocale, branchId);
 
@@ -462,7 +459,6 @@ export default function HomePage() {
   );
   const branchSupportCategories = supportQuery.data?.categories || [];
 
-  // ✅ supportLoading: اگه branchId هنوز null باشه هم loading حساب میشه
   const supportLoading =
     branchId === null ||
     supportQuery.isLoading ||
@@ -734,7 +730,6 @@ export default function HomePage() {
           </div>
 
           <div className="mt-6">
-            {/* ✅ FIX: از supportLoading که شامل null بودن branchId هم هست استفاده میشه */}
             <BranchFaq
               loading={supportLoading}
               categories={branchSupportCategories}
@@ -752,9 +747,9 @@ export default function HomePage() {
           <div ref={sentinelRef} className="mt-2 h-px w-full" />
           <div id={SEARCH_SECTION_SCROLL_ID} className="h-px w-full" />
 
-          <p className="mt-4 px-2 text-center font-bold md:text-start">
+          <h2 className="mt-4 px-2 text-center font-bold md:text-start">
             {t.rich("carsListTitle", { Branch: () => <BranchName /> })}
-          </p>
+          </h2>
 
           <div
             className={`
@@ -770,7 +765,6 @@ export default function HomePage() {
               ) : (
                 <SerarchSection
                   redirectToSearchOnDateConfirm
-                  // ✅ FIX: branchId واقعی — اگه null باشه string خالی
                   redirectbranch_id={branchId !== null ? String(branchId) : ""}
                   searchDisable={query.isFetching}
                   scrollTargetId={SEARCH_SECTION_SCROLL_ID}
@@ -824,7 +818,6 @@ export default function HomePage() {
                             currency={currency}
                             rateToRial={rateToRial}
                             accordionPriceList
-                            // ✅ FIX: اگه null بود ۰ پاس میشه — BranchCarCard باید این رو handle کنه
                             branchId={branchId ?? 0}
                             sharedCalendar={sharedCalendar}
                             onSharedCalendarChange={setSharedCalendar}

@@ -33,7 +33,11 @@ const outlinePrimary =
 /* ---------------- Skeletons ---------------- */
 function CitiesSkeleton() {
   return (
-    <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-3">
+    <div
+      className="w-full grid grid-cols-1 md:grid-cols-4 gap-3"
+      aria-label="Loading cities"
+      aria-busy="true"
+    >
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
@@ -63,27 +67,33 @@ function CityItem({
   disabled?: boolean;
   direction?: boolean;
 }) {
-  const className = `cursor-pointer ${baseBtnClass} ${isPrimary ? outlinePrimary : outlineNeutral} ${
-    disabled ? "opacity-50 pointer-events-none" : ""
-  }`;
+  const className = `cursor-pointer ${baseBtnClass} ${
+    isPrimary ? outlinePrimary : outlineNeutral
+  } ${disabled ? "opacity-50 pointer-events-none" : ""}`;
 
-  const Icon = direction ? ChevronLeft  : ChevronRight;
+  const Icon = direction ? ChevronLeft : ChevronRight;
 
   if (href && !disabled) {
     return (
-      <Link href={href} className="w-full cursor-pointer">
+      <Link href={href} className="w-full cursor-pointer" aria-label={ariaLabel}>
         <Button type="button" variant="ghost" className={className}>
           <span className="truncate">{label}</span>
-          <Icon className="size-5 shrink-0" />
+          <Icon className="size-5 shrink-0" aria-hidden="true" />
         </Button>
       </Link>
     );
   }
 
   return (
-    <Button type="button" disabled variant="ghost" className={className} aria-label={ariaLabel}>
+    <Button
+      type="button"
+      disabled
+      variant="ghost"
+      className={className}
+      aria-label={ariaLabel}
+    >
       <span className="truncate">{label}</span>
-      <Icon className="size-5 shrink-0" />
+      <Icon className="size-5 shrink-0" aria-hidden="true" />
     </Button>
   );
 }
@@ -99,10 +109,12 @@ const ActiveRentCities = ({ cities, isLoading }: ActiveRentCitiesProps) => {
   const carsRentBase = `/cars-rent`;
 
   return (
-    <div className="w-full ">
+    <section className="w-full" aria-labelledby="active-rent-cities-title">
       {/* Header */}
       <div className="flex flex-col">
-        <p className="font-bold md:text-2xl text-xl">{t("title")}</p>
+        <h2 id="active-rent-cities-title" className="font-bold md:text-2xl text-xl">
+          {t("title")}
+        </h2>
         <p className="text-xs mt-2 text-muted-foreground">{t("subtitle")}</p>
       </div>
 
@@ -110,37 +122,40 @@ const ActiveRentCities = ({ cities, isLoading }: ActiveRentCitiesProps) => {
         {loading ? (
           <CitiesSkeleton />
         ) : (
-          <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-3">
+          <ul className="w-full grid grid-cols-1 md:grid-cols-4 gap-3" role="list">
             {visibleCities.map((city) => {
               const href = city.slug ? `${carsRentBase}/${city.slug}` : undefined;
 
               return (
-                <CityItem
-                  key={city.id}
-                  href={href}
-                  label={city.title}
-                  ariaLabel={
-                    href
-                      ? t("cityButtonAria", { city: city.title })
-                      : t("cityButtonDisabledAria", { city: city.title })
-                  }
-                  disabled={!href}
-                  direction={direction}
-                />
+                <li key={city.id}>
+                  <CityItem
+                    href={href}
+                    label={city.title}
+                    ariaLabel={
+                      href
+                        ? t("cityButtonAria", { city: city.title })
+                        : t("cityButtonDisabledAria", { city: city.title })
+                    }
+                    disabled={!href}
+                    direction={direction}
+                  />
+                </li>
               );
             })}
 
-            <CityItem
-              href={carsRentBase}
-              label={t("viewAll")}
-              ariaLabel={t("viewAllAria")}
-              isPrimary
-              direction={direction}
-            />
-          </div>
+            <li>
+              <CityItem
+                href={carsRentBase}
+                label={t("viewAll")}
+                ariaLabel={t("viewAllAria")}
+                isPrimary
+                direction={direction}
+              />
+            </li>
+          </ul>
         )}
       </div>
-    </div>
+    </section>
   );
 };
 
