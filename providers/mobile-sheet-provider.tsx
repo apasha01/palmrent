@@ -64,25 +64,24 @@ export function MobileSheetProvider({ children }: { children: ReactNode }) {
   const reopenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const openSheet = useCallback((opts: MobileSheetOptions) => {
-    console.log("[v0] openSheet called, isOpen:", isOpen, "isClosing:", isClosingRef.current);
+
 
     if (isClosingRef.current) {
       // شیت در حال بستن است — بعد از انیمیشن باز می‌کنیم
       pendingOptsRef.current = opts;
-      console.log("[v0] Sheet is closing, queued as pending");
+
       return;
     }
 
     if (isOpen) {
-      // شیت الان باز است — باید ببندیم و دوباره باز کنیم
-      console.log("[v0] Sheet already open — closing then reopening");
+
       pendingOptsRef.current = opts;
       isClosingRef.current = true;
       setIsOpen(false);
       // fallback: اگر onAnimationEnd trigger نشد (برخی مرورگرها)
       if (reopenTimerRef.current) clearTimeout(reopenTimerRef.current);
       reopenTimerRef.current = setTimeout(() => {
-        console.log("[v0] Fallback timer fired — reopening");
+
         if (pendingOptsRef.current) {
           const pending = pendingOptsRef.current;
           pendingOptsRef.current = null;
@@ -95,8 +94,7 @@ export function MobileSheetProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // شیت بسته است — مستقیم باز کن
-    console.log("[v0] Opening sheet with new content");
+
     setOptions(opts);
     setContentKey((k) => k + 1);
     setIsOpen(true);
@@ -111,7 +109,7 @@ export function MobileSheetProvider({ children }: { children: ReactNode }) {
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
-        console.log("[v0] Sheet onOpenChange => closing");
+
         isClosingRef.current = true;
         setIsOpen(false);
         options?.onClose?.();
@@ -125,7 +123,6 @@ export function MobileSheetProvider({ children }: { children: ReactNode }) {
   // ✅ بعد از پایان انیمیشن بستن
   const handleAnimationEnd = useCallback(() => {
     if (!isOpen) {
-      console.log("[v0] Animation ended (closed). Pending:", !!pendingOptsRef.current);
 
       if (reopenTimerRef.current) {
         clearTimeout(reopenTimerRef.current);
@@ -137,7 +134,6 @@ export function MobileSheetProvider({ children }: { children: ReactNode }) {
       if (pendingOptsRef.current) {
         const pending = pendingOptsRef.current;
         pendingOptsRef.current = null;
-        console.log("[v0] Opening pending sheet after animation");
         setOptions(pending);
         setContentKey((k) => k + 1);
         setIsOpen(true);

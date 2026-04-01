@@ -480,13 +480,7 @@ export function PricingCard({
               reserveWith({ start: v.start, end: v.end, deliveryTime: v.deliveryTime, returnTime: v.returnTime });
             }
           }}
-          onClear={() => {
-            const d = buildDefault();
-            setRange(d.range);
-            setDeliveryTime(d.deliveryTime);
-            setReturnTime(d.returnTime);
-            reserveActionRef.current = "online";
-          }}
+  
           trigger={
             <button
               ref={calendarTriggerRef}

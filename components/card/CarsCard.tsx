@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/preserve-manual-memoization */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -370,7 +369,6 @@ export default function SingleCar({
   calendarHydrated?: boolean;
 }) {
   const t = useTranslations();
-  const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { openSheet } = useMobileSheet();
@@ -723,7 +721,8 @@ export default function SingleCar({
             type="button"
             className="size-6 text-[#333333]"
             onClick={(e) => e.stopPropagation()}
-            aria-label={t("wishlist") || "Wishlist"}
+            // aria-label={t("wishlist") || "Wishlist"}
+            aria-label={t("wishlist")}
           >
             <IconHeart active={undefined} />
           </button>
@@ -1321,7 +1320,7 @@ export function SingleCarButtons({
   localDeliveryTime,
   localReturnTime,
   onNoDateReserveConfirm,
-  onNoDateClear,
+
   hasSavedLocal = false,
 }: {
   car: any;
@@ -1426,7 +1425,7 @@ export function SingleCarButtons({
           }}
           noDefaultSelectionOnFirstOpen={!hasSavedLocal}
           onConfirm={(v) => onNoDateReserveConfirm?.(v)}
-          onClear={onNoDateClear}
+
           trigger={
             <button
               type="button"
@@ -1442,12 +1441,12 @@ export function SingleCarButtons({
           target="_blank"
           onClick={(e) => e.stopPropagation()}
           className="flex w-fit cursor-pointer items-center justify-center gap-2 text-nowrap rounded-xl border border-[#10B98180] bg-[#10B9811A] px-2 py-1 text-[#10B981]"
-          aria-label={t("whatsapp")}
+          aria-label={t("carWhatsapp")}
         >
           <span aria-hidden="true">
             <IconWhatsapp className={undefined} />
           </span>
-          {t("whatsapp")}
+{t("carWhatsapp")}
         </Link>
       </footer>
     );
@@ -1471,12 +1470,12 @@ export function SingleCarButtons({
         target="_blank"
         onClick={(e) => e.stopPropagation()}
         className="flex w-fit cursor-pointer items-center justify-center gap-2 text-nowrap rounded-xl border border-[#10B98180] bg-[#10B9811A] px-2 py-1 text-[#10B981]"
-        aria-label={t("whatsapp")}
+        aria-label={t("carWhatsapp")}
       >
         <span aria-hidden="true">
           <IconWhatsapp className={undefined} />
         </span>
-        {t("whatsapp")}
+        {t("carWhatsapp")}
       </Link>
     </footer>
   );

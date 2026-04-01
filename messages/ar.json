@@ -27,7 +27,8 @@
     "delivery": "التسليم",
     "return": "الإرجاع",
     "pick": "اختر",
-    "confirmAndSearch": "تأكيد والبحث"
+    "confirmAndSearch": "تأكيد والبحث",
+    "days" : "الیوم"
   },
 
 
@@ -662,6 +663,155 @@
     "next": "التالي",
     "counter": "{current} من {total}"
   },
+
+
+    "profile": {
+    "pageTitle": "الملف الشخصي",
+    "common": {
+      "user": "مستخدم"
+    },
+    "auth": {
+      "required": "يرجى تسجيل الدخول لعرض الملف الشخصي."
+    },
+    "sidebar": {
+      "phone": "الرقم: {value}",
+      "email": "البريد الإلكتروني: {value}"
+    },
+    "actions": {
+      "logout": "تسجيل الخروج"
+    },
+    "menu": {
+      "me": "بياناتي",
+      "documents": "الوثائق المرفوعة",
+      "cars": "سجل سياراتي",
+      "transactions": "معاملاتي"
+    },
+    "cars": {
+      "title": "سجل سياراتي",
+      "empty": "—"
+    },
+    "transactions": {
+      "title": "معاملاتي",
+      "empty": "—"
+    },
+    "meta": {
+      "title": "الملف الشخصي | بالم رنت",
+      "description": "عرض معلومات الحساب، والوثائق المرفوعة، وسجل السيارات، والمعاملات في بالم رنت",
+      "keywords": {
+        "profile": "الملف الشخصي",
+        "account": "الحساب",
+        "documents": "الوثائق",
+        "transactions": "المعاملات",
+        "cars": "سجل السيارات",
+        "brand": "بالم رنت",
+        "rental": "تأجير السيارات"
+      }
+    },
+    "documents": {
+      "title": "الوثائق المرفوعة",
+      "subtitle": "اختر الملف؛ سيتم الرفع فقط بعد المعاينة والتأكيد.",
+      "loading": "جارِ تحميل الوثائق...",
+      "previewAlt": "معاينة الوثيقة",
+      "rejectionReason": "سبب الرفض: {reason}",
+      "labels": {
+        "status": "الحالة: {value}"
+      },
+      "fileState": {
+        "uploaded": "تم الرفع",
+        "notUploaded": "غير مرفوع"
+      },
+      "status": {
+        "approved": "تمت الموافقة",
+        "rejected": "مرفوض",
+        "pending": "قيد المراجعة"
+      },
+      "actions": {
+        "refresh": "تحديث",
+        "view": "عرض",
+        "upload": "رفع",
+        "replace": "تعديل / استبدال",
+        "uploading": "جارِ الرفع...",
+        "cancel": "إلغاء",
+        "confirmAndUpdate": "تأكيد وتحديث",
+        "close": "إغلاق"
+      },
+      "confirm": {
+        "title": "تأكيد تحديث الوثيقة",
+        "description": "هل أنت متأكد أنك تريد تحديث {title}؟\nلن يتم الرفع إلا بعد التأكيد.",
+        "currentDocument": "الوثيقة الحالية",
+        "newDocument": "الوثيقة الجديدة",
+        "currentAlt": "الوثيقة الحالية",
+        "newAlt": "الوثيقة الجديدة",
+        "noPreviousDocument": "لا توجد وثيقة سابقة",
+        "note": "ملاحظة: بعد التحديث قد تعود حالة المراجعة إلى «قيد المراجعة»."
+      },
+      "toasts": {
+        "fetchError": "حدث خطأ أثناء تحميل الوثائق",
+        "invalidFormat": "يجب أن يكون تنسيق الملف jpg/png/webp",
+        "maxSize": "الحد الأقصى لحجم الملف هو 10MB",
+        "uploadSuccess": "تم تحديث الوثيقة بنجاح",
+        "uploadError": "حدث خطأ أثناء رفع الوثيقة"
+      },
+      "items": {
+        "identity": {
+          "title": "البطاقة الوطنية",
+          "hint": "صورة واضحة للبطاقة الوطنية"
+        },
+        "driverLicenseFront": {
+          "title": "رخصة القيادة (الوجه الأمامي)",
+          "hint": "الوجه الأمامي لرخصة القيادة"
+        },
+        "driverLicenseBack": {
+          "title": "رخصة القيادة (الوجه الخلفي)",
+          "hint": "الوجه الخلفي لرخصة القيادة"
+        },
+        "internationalDriverLicenseFront": {
+          "title": "رخصة القيادة الدولية (الوجه الأمامي)",
+          "hint": "الوجه الأمامي لرخصة القيادة الدولية"
+        },
+        "internationalDriverLicenseBack": {
+          "title": "رخصة القيادة الدولية (الوجه الخلفي)",
+          "hint": "الوجه الخلفي لرخصة القيادة الدولية"
+        },
+        "visa": {
+          "title": "التأشيرة",
+          "hint": "صورة واضحة للتأشيرة"
+        }
+      }
+    },
+    "me": {
+      "title": "بيانات الحساب",
+      "avatarAlt": "صورة المستخدم",
+      "fields": {
+        "fullName": "الاسم الكامل",
+        "phone": "الرقم"
+      },
+      "actions": {
+        "save": "تحديث الملف الشخصي"
+      },
+      "toasts": {
+        "imageOnly": "يجب أن يكون الملف صورة",
+        "maxAvatarSize": "يجب أن يكون حجم الصورة أقل من 4 ميغابايت",
+        "nameRequired": "يرجى إدخال الاسم الكامل",
+        "invalidServerResponse": "استجابة الخادم غير صالحة",
+        "success": "تم تحديث الملف الشخصي بنجاح",
+        "updateError": "حدث خطأ أثناء تحديث الملف الشخصي"
+      }
+    }
+  },
+
+      "userAvatarPopover": {
+    "openUserMenu": "فتح قائمة المستخدم",
+    "userAlt": "المستخدم",
+    "profile": "الملف الشخصي",
+    "darkMode": "الوضع الليلي",
+    "lightMode": "الوضع النهاري",
+    "themeSwitch": "تبديل المظهر",
+    "logout": "تسجيل الخروج"
+  },
+
+
+
   "pricingCard": {
     "title": "سعر إيجار {car} في {branch}",
     "titleNoBranch": "سعر إيجار {car}",
@@ -730,18 +880,77 @@
     }
   },
 
-    "carDetail": {
-    "notFound": "لم يتم العثور على السيارة",
-    "notFoundDesc": "ربما المعرف خاطئ أو تم حذف السيارة.",
-    "noDeposit": "بدون وديعة",
-    "freeDelivery": "توصيل مجاني",
-    "unlimitedKm": "كيلومترات غير محدودة",
-    "insurance": "تأمين",
-    "share": "مشاركة",
-    "addToWishlist": "إضافة إلى المفضلة",
-    "persons": "أشخاص",
-    "suitcases": "حقيبة",
-    "aboutCar": "حول {car} في {branch}"
+   "downloadApp": {
+    "appName": "Palm Rent",
+    "subtitle": "قم بتثبيت التطبيق، واحجز بشكل أسرع، وتابع حالة طلبك لحظة بلحظة.",
+    "badges": {
+      "newVersion": "الإصدار الجديد",
+      "fasterExperience": "تجربة أسرع وأكثر حيوية ✨"
+    },
+    "hero": {
+      "application": "التطبيق",
+      "downloadTitle": "حمّل {appName}"
+    },
+    "info": {
+      "fastReservation": "حجز أسرع",
+      "orderStatusNotification": "إشعارات حالة الطلب",
+      "support247": "دعم 24/7"
+    },
+    "features": {
+      "easyInstall": {
+        "title": "تثبيت سهل",
+        "description": "تحميل مباشر أو من المتاجر، بدون أي تعقيد."
+      },
+      "secureReliable": {
+        "title": "آمن وموثوق",
+        "description": "روابط رسمية + دليل تثبيت ودعم."
+      },
+      "betterExperience": {
+        "title": "تجربة أفضل",
+        "description": "حجز أسرع، إدارة الطلبات، وعروض خاصة."
+      }
+    },
+    "actions": {
+      "enterWeb": "الدخول إلى نسخة الويب",
+      "downloadAndroid": "تحميل أندرويد",
+      "downloadIOS": "تحميل iOS",
+      "webVersion": "نسخة الويب"
+    },
+    "support": {
+      "installProblem": "هل تواجه مشكلة في التثبيت؟",
+      "installationGuide": "دليل التثبيت / الدعم"
+    },
+
+    "floating": {
+      "quickBooking": "حجز سريع",
+      "lessThanOneMinute": "أقل من دقيقة",
+      "support247": "دعم 24/7",
+      "whatsappAndCall": "واتساب واتصال"
+    },
+    "bottom": {
+      "title": "ثلاث طرق سريعة للاستخدام",
+      "description": "ثبّت التطبيق أو استخدم نسخة الويب بدون تثبيت، مع جميع الميزات الكاملة.",
+      "android": "أندرويد",
+      "ios": "iOS",
+      "web": "نسخة الويب",
+      "footerNote": "بتثبيت التطبيق، ستحصل على عروض مميزة وحجز أسرع."
+    }
+  },
+
+      "blogPage": {
+  "relatedPosts": "مقالات ذات صلة"
+
+  },
+
+    "wishlist": "المفضلة",
+  "carWhatsapp": "واتساب",
+
+    "NotFoundPage": {
+    "title": "الصفحة غير موجودة",
+    "description": "الصفحة التي تبحث عنها غير موجودة، أو تم حذفها، أو أن الرابط الذي أدخلته غير صحيح.",
+    "goHome": "العودة إلى الصفحة الرئيسية",
+    "goBack": "رجوع",
+    "hint": "تحقق من رابط الصفحة أو تابع من الصفحة الرئيسية."
   },
 
   "similarCars": {
@@ -1312,19 +1521,28 @@
     "scrollPrev": "التمرير إلى السابق"
   },
 
-  "branchLanding": {
-    "heroTitle": "تأجير سيارات في <Branch></Branch> بدون وديعة",
-    "heroSubtitle1": "تسليم سريع في المطار أو الفندق مع تأمين مجاني",
-    "heroSubtitle2": "حجز سريع عبر الإنترنت، الدفع عند التسليم، دعم 24/7",
- "carsListTitle": "قائمة السيارات في <Branch></Branch>",
-    "loadingMore": "جارٍ التحميل…",
-    "viewMore": "عرض المزيد",
-
-    "noCarsFound": "لم يتم العثور على سيارات",
-    "noMoreResults": "لا توجد نتائج أخرى",
-    "fetchError": "فشل في جلب المعلومات"
+    "carDetailNotFoundPage": {
+    "meta": {
+      "title": "السيارة غير موجودة | بالم رنت",
+      "description": "تعذر العثور على السيارة المطلوبة. تصفح سيارات الإيجار الأخرى في بالم رنت."
+    },
+    "title": "السيارة غير موجودة",
+    "description": "السيارة التي تبحث عنها غير موجودة أو تمت إزالتها أو أن الرابط غير صحيح.",
+    "goHome": "العودة إلى الصفحة الرئيسية"
   },
 
+"branchLanding": {
+  "heroTitle": "تأجير سيارات في <Branch></Branch> بدون تأمين",
+  "heroSubtitle1": "استأجر سيارة في <Branch></Branch> مع أسعار واضحة، حجز أونلاين، وتسليم مجاني في المطار.",
+  "heroSubtitle2": "تعرّف على السيارات المتاحة لدى Palm Rent واحجز بدون تأمين، بدون ضمان، وبدون وديعة مخالفات.",
+  "loadingMore": "جارٍ التحميل…",
+  "viewMore": "عرض المزيد",
+  "noCarsFound": "لم يتم العثور على سيارات",
+  "carsListTitle": "قائمة السيارات في <Branch></Branch>",
+  "noMoreResults": "لا توجد نتائج أخرى",
+  "fetchError": "حدث خطأ أثناء جلب البيانات",
+  "clearAllFilters": "مسح جميع الفلاتر"
+},
     "RentCommon": {
     "free": "مجاني",
     "daily": "يوميًا",

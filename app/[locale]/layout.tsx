@@ -1,18 +1,9 @@
-import type { Metadata } from "next";
-import { headers } from "next/headers";
-import { cache } from "react";
 import { routing } from "@/i18n/routing";
 import { hasLocale } from "next-intl";
 import "../globals.css";
 import localFont from "next/font/local";
 
 import Providers from "./providers";
-
-import { getMetaServer } from "@/services/seo/meta.api";
-import { stripLocale } from "@/services/seo/strip-locale";
-import { resolveMetadata } from "@/services/seo/resolve-metadata";
-import { findMetaRule } from "@/services/seo/meta-rules";
-import MetaSyncClient from "@/services/seo/MetaSyncClient";
 import { notFound } from "next/navigation";
 
 // ✅ messages (next-intl)
@@ -20,12 +11,16 @@ async function getMessages(locale: string) {
   return (await import(`../../messages/${locale}.json`)).default;
 }
 
-// فونت فارسی
-const dana = localFont({
+//////////////////////////////////////////////////////////
+// 🔥 FONTS
+//////////////////////////////////////////////////////////
+
+// 🇮🇷 فارسی → IranYekan
+const iranYekan = localFont({
   src: [
     {
       path: "../../fonts/iranyekanwebregularfanum.ttf",
-      weight: "500",
+      weight: "400",
       style: "normal",
     },
     {
@@ -34,12 +29,40 @@ const dana = localFont({
       style: "normal",
     },
   ],
-  variable: "--font-dana",
+  variable: "--font-fa",
   display: "swap",
 });
 
-// فونت انگلیسی
-const englishFont = localFont({
+// 🇸🇦 عربی → Vazir
+const vazir = localFont({
+  src: [
+    {
+      path: "../../fonts/Vazir-Thin.woff2",
+      weight: "100",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/Vazir.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/Vazir-Medium.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../../fonts/Vazir-Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-ar",
+  display: "swap",
+});
+
+// 🇬🇧 🇹🇷 انگلیسی + ترکی → Inter
+const inter = localFont({
   src: [
     {
       path: "../../fonts/Inter-Regular.ttf",
@@ -57,34 +80,19 @@ const englishFont = localFont({
       style: "normal",
     },
   ],
-  variable: "--font-english",
+  variable: "--font-en",
   display: "swap",
 });
 
-const getMetaCached = cache(async (locale: string, path: string) => {
-  return getMetaServer(locale, path);
-});
-
-async function getPathFromHeaders(locale: string) {
-  const h = await headers();
-  const headerPath = h.get("x-pathname");
-  const nextUrl = h.get("next-url");
-  const raw = headerPath || nextUrl || "/";
-  return stripLocale(raw, locale);
-}
-
 const RTL_LOCALES = new Set(["fa", "ar"]);
-const EN_LOCALES = new Set(["en"]);
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
-  const { locale } = await params;
-  const path = await getPathFromHeaders(locale);
-  return resolveMetadata(locale, path);
+// 🎯 انتخاب فونت بر اساس زبان
+function getFont(locale: string) {
+  if (locale === "fa") return iranYekan.className;
+  if (locale === "ar") return vazir.className;
+  return inter.className;
 }
+
 
 export default async function RootLayout({
   children,
@@ -99,34 +107,15 @@ export default async function RootLayout({
 
   const dir: "rtl" | "ltr" = RTL_LOCALES.has(locale) ? "rtl" : "ltr";
   const messages = await getMessages(locale);
-  const path = await getPathFromHeaders(locale);
-  const rule = findMetaRule(path);
-  const disableClientMetaSync = Boolean(rule?.skipServerMeta);
-  const skipServerMeta = Boolean(rule?.skipServerMeta);
-  const meta = !skipServerMeta ? await getMetaCached(locale, path) : null;
 
-  const schemaJson =
-    meta?.schemaSeo == null
-      ? null
-      : typeof meta.schemaSeo === "string"
-      ? meta.schemaSeo
-      : JSON.stringify(meta.schemaSeo);
 
-  // انتخاب فونت بر اساس زبان
-  const fontClass = EN_LOCALES.has(locale) ? englishFont.className : dana.className;
+
+  // ✅ فونت بر اساس زبان
+  const fontClass = getFont(locale);
 
   return (
     <html lang={locale} dir={dir} suppressHydrationWarning>
       <body className={fontClass}>
-        {!disableClientMetaSync ? <MetaSyncClient locale={locale} /> : null}
-
-        {schemaJson ? (
-          <script
-            id="ld-json"
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: schemaJson }}
-          />
-        ) : null}
 
         <Providers locale={locale} messages={messages}>
           {children}

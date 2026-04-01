@@ -6,7 +6,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import jalaali from "jalaali-js";
 
-import SearchMetaClient from "@/services/seo/SearchMetaClient";
 import { getBranchNameById } from "@/helpers/BranchNameHelper";
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store";
 import { calcRentDaysWithGrace, normalizeTime } from "@/lib/rent-days";
@@ -67,32 +66,42 @@ const EMPTY_LOCATION: LocationState = {
 
 /* ---------------- utils ---------------- */
 function oneLine(s: any) {
-  return String(s ?? "").replace(/\s+/g, " ").trim();
+  return String(s ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
+
 function shortAddr(s: any, max = 50) {
   const x = oneLine(s);
   if (!x) return "";
-  return x.length > max ? x.slice(0, max) + "…" : x;
+  return x.length > max ? `${x.slice(0, max)}…` : x;
 }
+
 function safeNum(v: any, fallback = 0): number {
   const n = typeof v === "number" ? v : parseFloat(String(v ?? ""));
   return Number.isFinite(n) ? n : fallback;
 }
+
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
 }
+
 function normalizePhone(p: any) {
-  const s = String(p ?? "").replace(/[^\d+]/g, "").trim();
+  const s = String(p ?? "")
+    .replace(/[^\d+]/g, "")
+    .trim();
   if (!s) return "";
-  if (s.startsWith("0098")) return "+98" + s.slice(4);
-  if (s.startsWith("098")) return "+98" + s.slice(3);
-  if (s.startsWith("98") && !s.startsWith("+98")) return "+98" + s.slice(2);
-  if (s.startsWith("0") && s.length === 11) return "+98" + s.slice(1);
+  if (s.startsWith("0098")) return `+98${s.slice(4)}`;
+  if (s.startsWith("098")) return `+98${s.slice(3)}`;
+  if (s.startsWith("98") && !s.startsWith("+98")) return `+98${s.slice(2)}`;
+  if (s.startsWith("0") && s.length === 11) return `+98${s.slice(1)}`;
   return s;
 }
+
 function pad2(n: number) {
   return String(n).padStart(2, "0");
 }
+
 function normalizeJalaliParam(input?: string | null) {
   if (!input) return null;
   const clean = String(input).replace(/-/g, "/").trim();
@@ -156,6 +165,20 @@ function scrollToFirstErrorAnchor(anchorNames: string[], offset = 110) {
   }
 }
 
+function extractCarTitle(payload: any): string {
+  return String(
+    payload?.item?.title ??
+      payload?.item?.name ??
+      payload?.data?.item?.title ??
+      payload?.data?.item?.name ??
+      payload?.car?.title ??
+      payload?.car?.name ??
+      payload?.title ??
+      payload?.name ??
+      "",
+  ).trim();
+}
+
 /* ---------------- DeliveryCard types ---------------- */
 type DeliveryCardProps = {
   activePlaces: any[];
@@ -176,10 +199,20 @@ type DeliveryCardProps = {
 
 /* ---------------- DeliveryCard ---------------- */
 const DeliveryCard = React.memo(function DeliveryCard({
-  activePlaces, currencyLabel, deliveryLocation, setDeliveryLocation,
-  returnDifferent, setReturnDifferent, returnLocation, setReturnLocation,
-  triggerSummarySkeleton, t, deliveryError, returnError,
-  onDeliveryChange, onReturnChange,
+  activePlaces,
+  currencyLabel,
+  deliveryLocation,
+  setDeliveryLocation,
+  returnDifferent,
+  setReturnDifferent,
+  returnLocation,
+  setReturnLocation,
+  triggerSummarySkeleton,
+  t,
+  deliveryError,
+  returnError,
+  onDeliveryChange,
+  onReturnChange,
 }: DeliveryCardProps) {
   const handleDeliveryChange = useCallback(
     (val: LocationState) => {
@@ -189,6 +222,7 @@ const DeliveryCard = React.memo(function DeliveryCard({
     },
     [triggerSummarySkeleton, setDeliveryLocation, onDeliveryChange],
   );
+
   const handleReturnChange = useCallback(
     (val: LocationState) => {
       triggerSummarySkeleton(0);
@@ -197,6 +231,7 @@ const DeliveryCard = React.memo(function DeliveryCard({
     },
     [triggerSummarySkeleton, setReturnLocation, onReturnChange],
   );
+
   const handleSwitchChange = useCallback(
     (v: boolean) => {
       const next = Boolean(v);
@@ -210,10 +245,11 @@ const DeliveryCard = React.memo(function DeliveryCard({
   return (
     <Card>
       <CardHeader className="m-0 px-4">
-        <CardTitle className="text-base text-gray-900 flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-base text-gray-900">
           {t("deliveryCard.title")}
         </CardTitle>
       </CardHeader>
+
       <CardContent className="space-y-2 px-4">
         <div className="space-y-1">
           <ResponsiveLocationPicker
@@ -224,22 +260,30 @@ const DeliveryCard = React.memo(function DeliveryCard({
             onChange={handleDeliveryChange}
             placeholder={t("deliveryCard.deliveryPickerPlaceholder")}
             placeholderClassName={deliveryError ? "text-red-500" : undefined}
-            triggerClassName={deliveryError ? "border-red-500 ring-red-200 ring-1" : undefined}
+            triggerClassName={
+              deliveryError ? "border-red-500 ring-1 ring-red-200" : undefined
+            }
           />
           {deliveryError && (
-            <p className="text-xs px-1 text-red-500">
+            <p className="px-1 text-xs text-red-500">
               {t("deliveryCard.deliveryRequiredPlaceholder")}
             </p>
           )}
         </div>
-        <div className="flex items-center justify-between p-0 py-2 m-0">
-          <Label className="flex items-center gap-3 cursor-pointer select-none">
-            <Switch dir="ltr" checked={returnDifferent} onCheckedChange={handleSwitchChange} />
-            <span className="text-gray-800 font-semibold">
+
+        <div className="m-0 flex items-center justify-between p-0 py-2">
+          <Label className="flex cursor-pointer select-none items-center gap-3">
+            <Switch
+              dir="ltr"
+              checked={returnDifferent}
+              onCheckedChange={handleSwitchChange}
+            />
+            <span className="font-semibold text-gray-800">
               {t("deliveryCard.returnDifferentLabel")}
             </span>
           </Label>
         </div>
+
         {returnDifferent && (
           <div className="space-y-1">
             <ResponsiveLocationPicker
@@ -250,10 +294,12 @@ const DeliveryCard = React.memo(function DeliveryCard({
               onChange={handleReturnChange}
               placeholder={t("deliveryCard.returnPickerPlaceholder")}
               placeholderClassName={returnError ? "text-red-500" : undefined}
-              triggerClassName={returnError ? "border-red-500 ring-red-200 ring-1" : undefined}
+              triggerClassName={
+                returnError ? "border-red-500 ring-1 ring-red-200" : undefined
+              }
             />
             {returnError && (
-              <p className="text-xs px-1 text-red-500">
+              <p className="px-1 text-xs text-red-500">
                 {t("deliveryCard.returnRequiredPlaceholder")}
               </p>
             )}
@@ -269,39 +315,51 @@ function useRentPricing(apiData: ApiCalcResponse | null, rentDays: number) {
   return useMemo(() => {
     const item: any = apiData?.item || {};
     const offPercent = clamp(safeNum(item.off, 0), 0, 100);
+
     const dailyAfter =
       safeNum(item.rent_price_day_after_discount, 0) ||
       safeNum(item.rent_price_day, 0) ||
-      safeNum(item.final_price, 0) || 0;
+      safeNum(item.final_price, 0) ||
+      0;
+
     const dailyBefore =
       safeNum(item.rent_price_day_before_discount, 0) ||
       safeNum(item.rent_price, 0) ||
-      (offPercent > 0 && dailyAfter > 0 ? dailyAfter / (1 - offPercent / 100) : dailyAfter);
+      (offPercent > 0 && dailyAfter > 0
+        ? dailyAfter / (1 - offPercent / 100)
+        : dailyAfter);
+
     const totalAfter =
       safeNum(item.rent_total_after_discount, 0) ||
       safeNum(item.pay_price, 0) ||
       dailyAfter * (rentDays || 1);
+
     const totalBefore =
-      safeNum(item.rent_total_before_discount, 0) || dailyBefore * (rentDays || 1);
+      safeNum(item.rent_total_before_discount, 0) ||
+      dailyBefore * (rentDays || 1);
+
     return { offPercent, dailyBefore, dailyAfter, totalBefore, totalAfter };
   }, [apiData, rentDays]);
 }
 
 /* ================================================================== */
-/*  Main component                                                      */
+/*  Main component                                                    */
 /* ================================================================== */
 
 type ReserveInformationProps = {
   onReserveSuccess?: () => void;
+  initialApiData?: any;
 };
 
-export default function ReserveInformation({ onReserveSuccess }: ReserveInformationProps) {
+export default function ReserveInformation({
+  onReserveSuccess,
+  initialApiData = null,
+}: ReserveInformationProps) {
   const t = useTranslations("InformationStep");
   const locale = useLocale();
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  /* ── useToast ─────────────────────────────────────────────────── */
   const { ToastNode, toast } = useToast();
 
   const storeCarDates = useSearchPageStore((s) => s.carDates);
@@ -322,8 +380,15 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
     return null;
   }, [storeCarDates, urlFrom, urlTo]);
 
-  const dt = useMemo(() => normalizeTime(storeDt || urlDt || "10:00"), [storeDt, urlDt]);
-  const rt = useMemo(() => normalizeTime(storeRt || urlRt || "10:00"), [storeRt, urlRt]);
+  const dt = useMemo(
+    () => normalizeTime(storeDt || urlDt || "10:00"),
+    [storeDt, urlDt],
+  );
+
+  const rt = useMemo(
+    () => normalizeTime(storeRt || urlRt || "10:00"),
+    [storeRt, urlRt],
+  );
 
   const branchIdFromUrl = useMemo(() => {
     const raw = searchParams.get("branch_id");
@@ -346,21 +411,31 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
     return getBranchNameById(tBranches, id, "");
   }, [searchParams, tBranches]);
 
-  const [deliveryLocation, setDeliveryLocation] = useState<LocationState>(EMPTY_LOCATION);
-  const [returnLocation, setReturnLocation] = useState<LocationState>(EMPTY_LOCATION);
+  const [deliveryLocation, setDeliveryLocation] =
+    useState<LocationState>(EMPTY_LOCATION);
+  const [returnLocation, setReturnLocation] =
+    useState<LocationState>(EMPTY_LOCATION);
   const [returnDifferent, setReturnDifferent] = useState<boolean>(false);
 
-  const [apiData, setApiData] = useState<ApiCalcResponse | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [apiData, setApiData] = useState<ApiCalcResponse | null>(initialApiData);
+  const [isLoading, setIsLoading] = useState<boolean>(!initialApiData);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const [insuranceComplete, setInsuranceComplete] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [userInfo, setUserInfo] = useState<UserInfo>({ name: "", email: "", phone: "" });
+  const [userInfo, setUserInfo] = useState<UserInfo>({
+    name: "",
+    email: "",
+    phone: "",
+  });
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [isSummaryPending, setIsSummaryPending] = useState(false);
+
   const summaryPendingTimerRef = useRef<any>(null);
-  const [pendingSummaryIds, setPendingSummaryIds] = useState<Record<number, boolean>>({});
+  const [pendingSummaryIds, setPendingSummaryIds] = useState<
+    Record<number, boolean>
+  >({});
   const pendingTimersRef = useRef<Record<number, any>>({});
+  const lastFetchKeyRef = useRef<string>("");
 
   const [deliveryError, setDeliveryError] = useState(false);
   const [returnError, setReturnError] = useState(false);
@@ -370,14 +445,24 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
   const triggerSummarySkeleton = useCallback((optionId: number, ms = 800) => {
     const id = Number(optionId);
     if (!Number.isFinite(id)) return;
+
     setIsSummaryPending(true);
-    if (summaryPendingTimerRef.current) clearTimeout(summaryPendingTimerRef.current);
+
+    if (summaryPendingTimerRef.current) {
+      clearTimeout(summaryPendingTimerRef.current);
+    }
+
     summaryPendingTimerRef.current = setTimeout(() => {
       setIsSummaryPending(false);
       summaryPendingTimerRef.current = null;
     }, ms);
-    if (pendingTimersRef.current[id]) clearTimeout(pendingTimersRef.current[id]);
+
+    if (pendingTimersRef.current[id]) {
+      clearTimeout(pendingTimersRef.current[id]);
+    }
+
     setPendingSummaryIds((prev) => ({ ...prev, [id]: true }));
+
     pendingTimersRef.current[id] = setTimeout(() => {
       setPendingSummaryIds((prev) => {
         const next = { ...prev };
@@ -390,9 +475,13 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
 
   useEffect(() => {
     return () => {
-      Object.values(pendingTimersRef.current).forEach((tt) => tt && clearTimeout(tt));
+      Object.values(pendingTimersRef.current).forEach(
+        (tt) => tt && clearTimeout(tt),
+      );
       pendingTimersRef.current = {};
-      if (summaryPendingTimerRef.current) clearTimeout(summaryPendingTimerRef.current);
+      if (summaryPendingTimerRef.current) {
+        clearTimeout(summaryPendingTimerRef.current);
+      }
     };
   }, []);
 
@@ -409,7 +498,8 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
     const u: any = (session as any)?.user ?? {};
     const fullName =
       (u?.name && String(u.name).trim()) ||
-      [u?.first_name, u?.last_name].filter(Boolean).join(" ").trim() || "";
+      [u?.first_name, u?.last_name].filter(Boolean).join(" ").trim() ||
+      "";
     const phoneRaw = u?.phone ?? u?.username ?? u?.mobile ?? "";
     const phone = normalizePhone(phoneRaw);
     const email = (u?.email && String(u.email).trim()) || "";
@@ -422,8 +512,12 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
 
   const prevCarRef = useRef<string | null>(null);
   useEffect(() => {
-    const cur = selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : null;
-    if (prevCarRef.current === null) { prevCarRef.current = cur; return; }
+    const cur =
+      selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : null;
+    if (prevCarRef.current === null) {
+      prevCarRef.current = cur;
+      return;
+    }
     if (prevCarRef.current !== cur) {
       prevCarRef.current = cur;
       setSelectedOptions([]);
@@ -445,18 +539,24 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
     if (!carDates?.[0] || !carDates?.[1]) return 0;
     try {
       return calcRentDaysWithGrace({
-        fromDateJalali: carDates[0], toDateJalali: carDates[1],
-        deliveryTime: dt, returnTime: rt, graceMinutes: 90,
+        fromDateJalali: carDates[0],
+        toDateJalali: carDates[1],
+        deliveryTime: dt,
+        returnTime: rt,
+        graceMinutes: 90,
         jalaliToDate: (jy, jm, jd) => {
           const g = jalaali.toGregorian(jy, jm + 1, jd);
           return new Date(g.gy, g.gm - 1, g.gd);
         },
       });
-    } catch { return 0; }
+    } catch {
+      return 0;
+    }
   }, [carDates, dt, rt]);
 
   const fetchKey = useMemo(() => {
-    const carId = selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : "";
+    const carId =
+      selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : "";
     const branchId = branchIdFromUrl ? String(branchIdFromUrl) : "";
     const from = carDates?.[0] || "";
     const to = carDates?.[1] || "";
@@ -464,11 +564,11 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
     return `${carId}|${branchId}|${from}|${to}|${loc}|${dt}|${rt}`;
   }, [selectedCarId, branchIdFromUrl, carDates, locale, dt, rt]);
 
-  const lastFetchKeyRef = useRef<string>("");
-
   useEffect(() => {
-    const carIdRaw = selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : null;
-    const branchIdRaw = branchIdFromUrl != null ? String(branchIdFromUrl) : null;
+    const carIdRaw =
+      selectedCarId && selectedCarId !== "null" ? String(selectedCarId) : null;
+    const branchIdRaw =
+      branchIdFromUrl != null ? String(branchIdFromUrl) : null;
     const from = carDates?.[0];
     const to = carDates?.[1];
 
@@ -479,26 +579,34 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
       return;
     }
 
-    if (lastFetchKeyRef.current === fetchKey && apiData !== null) {
+    if (!lastFetchKeyRef.current && initialApiData?.item) {
+      lastFetchKeyRef.current = fetchKey;
+      calcCache.set(fetchKey, initialApiData);
+      setApiData(initialApiData);
+      setIsLoading(false);
+      return;
+    }
+
+    const cached = calcCache.get(fetchKey);
+    if (cached) {
+      lastFetchKeyRef.current = fetchKey;
+      setApiData(cached);
+      setIsLoading(false);
+      return;
+    }
+
+    if (lastFetchKeyRef.current === fetchKey) {
       setIsLoading(false);
       return;
     }
 
     lastFetchKeyRef.current = fetchKey;
     setIsLoading(true);
-    setApiData(null);
 
     let alive = true;
 
     async function run() {
       try {
-        const cached = calcCache.get(fetchKey);
-        if (cached) {
-          if (!alive) return;
-          setApiData(cached);
-          setIsLoading(false);
-          return;
-        }
         const inflight = calcInflight.get(fetchKey);
         if (inflight) {
           const data = await inflight;
@@ -507,26 +615,46 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
           setIsLoading(false);
           return;
         }
+
         const params = new URLSearchParams();
         params.append("branch_id", String(branchIdRaw));
         params.append("from", String(from));
         params.append("to", String(to));
         params.append("dt", dt);
         params.append("rt", rt);
+
         const url = `/car/rent/${carIdRaw}/${locale}?${params.toString()}`;
+
         const promise = (async () => {
           const res: any = await api.get(url);
           const payload = (res?.data ?? res) as ApiCalcResponse;
           const status = res?.status ?? (payload as any)?.status;
-          if (status && Number(status) !== 200)
-            throw new Error((payload as any)?.message || t("toast.fetchInfoError"));
-          if (!payload?.item) throw new Error(t("toast.invalidServerResponse"));
-          return payload;
+
+          const normalizedPayload =
+            payload?.item
+              ? payload
+              : payload?.data?.item
+                ? payload.data
+                : payload;
+
+          if (status && Number(status) !== 200) {
+            throw new Error(
+              (payload as any)?.message || t("toast.fetchInfoError"),
+            );
+          }
+
+          if (!normalizedPayload?.item) {
+            throw new Error(t("toast.invalidServerResponse"));
+          }
+
+          return normalizedPayload;
         })();
+
         calcInflight.set(fetchKey, promise);
         const data = await promise;
         calcInflight.delete(fetchKey);
         calcCache.set(fetchKey, data);
+
         if (!alive) return;
         setApiData(data);
       } catch (error: any) {
@@ -541,31 +669,51 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
     }
 
     run();
-    return () => { alive = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchKey, selectedCarId, branchIdFromUrl, carDates, locale, dt, rt, t]);
+
+    return () => {
+      alive = false;
+    };
+  }, [
+    fetchKey,
+    selectedCarId,
+    branchIdFromUrl,
+    carDates,
+    locale,
+    dt,
+    rt,
+    t,
+    toast,
+    initialApiData,
+  ]);
 
   const activePlaces = useMemo(
-    () => Array.isArray(apiData?.places) ? apiData!.places!.filter(Boolean) : [],
+    () =>
+      Array.isArray(apiData?.places) ? apiData.places.filter(Boolean) : [],
     [apiData],
   );
 
   const currencyLabel = useMemo(() => {
-    const cur = String((apiData as any)?.currency || "").trim().toUpperCase();
+    const cur = String((apiData as any)?.currency || "")
+      .trim()
+      .toUpperCase();
     if (!cur) return "";
     return (t as any).has?.(`currency.${cur}`) ? t(`currency.${cur}`) : cur;
   }, [apiData, t]);
 
   const payableOptions = useMemo(() => {
     const opts = Array.isArray((apiData as any)?.options)
-      ? (apiData as any).options.filter(Boolean) : [];
+      ? (apiData as any).options.filter(Boolean)
+      : [];
     return opts.filter(
       (o: any) => safeNum(o?.price, 0) > 0 || safeNum(o?.price_pay, 0) > 0,
     );
   }, [apiData]);
 
   const canSelectInsuranceComplete = useMemo(
-    () => String((apiData?.item as any)?.insurance_complete_status || "no").toLowerCase() === "yes",
+    () =>
+      String(
+        (apiData?.item as any)?.insurance_complete_status || "no",
+      ).toLowerCase() === "yes",
     [apiData],
   );
 
@@ -581,38 +729,58 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
 
   const totals: Totals = useMemo(() => {
     const safeTotals: Totals = {
-      total: 0, prePay: 0, debt: 0, tax: 0, rentDays: 0, dailyPrice: 0, extraItems: [],
+      total: 0,
+      prePay: 0,
+      debt: 0,
+      tax: 0,
+      rentDays: 0,
+      dailyPrice: 0,
+      extraItems: [],
     };
+
     if (!apiData?.item) return safeTotals;
 
     let totalPrice = safeNum((apiData.item as any).pay_price, 0);
     let prePayPrice = safeNum((apiData.item as any).pre_pay_price, 0);
     let rentDays = 1;
+
     try {
       if (carDates?.length === 2) {
         rentDays = calcRentDaysWithGrace({
-          fromDateJalali: carDates[0], toDateJalali: carDates[1],
-          deliveryTime: dt, returnTime: rt, graceMinutes: 90,
+          fromDateJalali: carDates[0],
+          toDateJalali: carDates[1],
+          deliveryTime: dt,
+          returnTime: rt,
+          graceMinutes: 90,
           jalaliToDate: (jy, jm, jd) => {
             const g = jalaali.toGregorian(jy, jm + 1, jd);
             return new Date(g.gy, g.gm - 1, g.gd);
           },
         });
       }
-    } catch { rentDays = safeNum((apiData.item as any).rent_days, 1); }
+    } catch {
+      rentDays = safeNum((apiData.item as any).rent_days, 1);
+    }
+
     rentDays = rentDays > 0 ? rentDays : 1;
 
     const extraItems: Totals["extraItems"] = [];
     const deliveryReturnItems: Totals["extraItems"] = [];
 
     selectedOptions.forEach((optId) => {
-      const opt = (payableOptions as any[]).find((o) => Number(o?.id) === Number(optId));
+      const opt = (payableOptions as any[]).find(
+        (o) => Number(o?.id) === Number(optId),
+      );
       if (!opt) return;
+
       const optPrice = safeNum((opt as any).price_pay, 0);
       const preOpt = safeNum((opt as any).pre_price_pay, 0);
+
       totalPrice += optPrice;
       prePayPrice += preOpt;
+
       const perDay = rentDays > 0 ? Math.round(optPrice / rentDays) : optPrice;
+
       extraItems.push({
         optionId: Number(optId),
         title: (opt as any).title,
@@ -620,27 +788,40 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
         subLabel: (
           <span className="inline-flex items-center gap-1">
             <span className="text-gray-500">{t("common.dailyPrice")}:</span>
-            <span className="text-gray-500">{formatNum(perDay)} {currencyLabel}</span>
+            <span className="text-gray-500">
+              {formatNum(perDay)} {currencyLabel}
+            </span>
           </span>
         ),
       });
     });
 
     if (insuranceComplete) {
-      const insPrice = safeNum((apiData.item as any).insurance_complete_price_pay, 0);
-      const insPre = safeNum((apiData.item as any).pre_price_insurance_complete_price_pay, 0);
+      const insPrice = safeNum(
+        (apiData.item as any).insurance_complete_price_pay,
+        0,
+      );
+      const insPre = safeNum(
+        (apiData.item as any).pre_price_insurance_complete_price_pay,
+        0,
+      );
+
       totalPrice += insPrice;
       prePayPrice += insPre;
+
       const perDay =
         safeNum((apiData.item as any).insurance_complete_price, 0) ||
         (rentDays > 0 ? Math.round(insPrice / rentDays) : insPrice);
+
       extraItems.push({
         optionId: -999,
         title: t("extras.insuranceCompleteTitle"),
         price: insPrice,
         subLabel: (
           <span className="inline-flex items-center gap-1">
-            <span className="text-gray-500">{formatNum(perDay)} {currencyLabel}</span>
+            <span className="text-gray-500">
+              {formatNum(perDay)} {currencyLabel}
+            </span>
             <span className="text-gray-500">{t("common.daily")}</span>
           </span>
         ),
@@ -651,10 +832,12 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
       const places = apiData.places.filter(Boolean);
       const getPlaceById = (id: any) =>
         places.find((p) => p && String((p as any).id) === String(id));
+
       const isHotelField = (addressTitle: any) => {
         const s = String(addressTitle ?? "").toLowerCase();
         return s.includes("هتل") || s.includes("hotel");
       };
+
       const hotelSuffix = (placeObj: any, addr: any) => {
         const a = oneLine(addr);
         if (!a) return "";
@@ -667,28 +850,49 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
         const del = getPlaceById((deliveryLocation as any).location);
         const delPrice = safeNum((del as any)?.price_pay, 0);
         const delPre = safeNum((del as any)?.pre_price_pay, 0);
+
         totalPrice += delPrice;
         prePayPrice += delPre;
-        const delNeedAddr = String((del as any)?.need_address || "no") === "yes";
-        const delHotel = delNeedAddr ? hotelSuffix(del, (deliveryLocation as any)?.address) : "";
+
+        const delNeedAddr =
+          String((del as any)?.need_address || "no") === "yes";
+        const delHotel = delNeedAddr
+          ? hotelSuffix(del, (deliveryLocation as any)?.address)
+          : "";
+
         deliveryReturnItems.push({
-          title: `${t("places.deliveryPrefix")}: ${(del as any)?.title || t("common.unknown")}${delHotel}`,
+          title: `${t("places.deliveryPrefix")}: ${
+            (del as any)?.title || t("common.unknown")
+          }${delHotel}`,
           price: delPrice,
         });
       }
 
-      const effectiveReturn = returnDifferent ? returnLocation : deliveryLocation;
+      const effectiveReturn = returnDifferent
+        ? returnLocation
+        : deliveryLocation;
+
       if ((effectiveReturn as any)?.location) {
         const ret = getPlaceById((effectiveReturn as any).location);
         const retPrice = safeNum((ret as any)?.price_pay, 0);
         const retPre = safeNum((ret as any)?.pre_price_pay, 0);
-        if (returnDifferent) { totalPrice += retPrice; prePayPrice += retPre; }
-        const retNeedAddr = String((ret as any)?.need_address || "no") === "yes";
+
+        if (returnDifferent) {
+          totalPrice += retPrice;
+          prePayPrice += retPre;
+        }
+
+        const retNeedAddr =
+          String((ret as any)?.need_address || "no") === "yes";
         const retAddrValue = returnDifferent
-          ? (returnLocation as any)?.address : (deliveryLocation as any)?.address;
+          ? (returnLocation as any)?.address
+          : (deliveryLocation as any)?.address;
         const retHotel = retNeedAddr ? hotelSuffix(ret, retAddrValue) : "";
+
         deliveryReturnItems.push({
-          title: `${t("places.returnPrefix")}: ${(ret as any)?.title || t("common.unknown")}${retHotel}`,
+          title: `${t("places.returnPrefix")}: ${
+            (ret as any)?.title || t("common.unknown")
+          }${retHotel}`,
           price: retPrice,
         });
       }
@@ -696,6 +900,7 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
 
     let tax = 0;
     const taxPercent = safeNum((apiData.item as any).tax_percent, 0);
+
     if (taxPercent > 0) {
       tax = totalPrice * (taxPercent / 100);
       totalPrice += tax;
@@ -703,13 +908,27 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
     }
 
     return {
-      total: totalPrice, prePay: prePayPrice,
-      debt: totalPrice - prePayPrice, tax, rentDays, dailyPrice: 0,
+      total: totalPrice,
+      prePay: prePayPrice,
+      debt: totalPrice - prePayPrice,
+      tax,
+      rentDays,
+      dailyPrice: 0,
       extraItems: [...deliveryReturnItems, ...extraItems],
     };
   }, [
-    apiData, payableOptions, selectedOptions, insuranceComplete,
-    deliveryLocation, returnLocation, returnDifferent, carDates, dt, rt, currencyLabel, t,
+    apiData,
+    payableOptions,
+    selectedOptions,
+    insuranceComplete,
+    deliveryLocation,
+    returnLocation,
+    returnDifferent,
+    carDates,
+    dt,
+    rt,
+    currencyLabel,
+    t,
   ]);
 
   const pricing = useRentPricing(apiData, totals.rentDays);
@@ -725,27 +944,50 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
     return totals.total + rentDiff;
   }, [offPercent, pricing.totalBefore, pricing.totalAfter, totals.total]);
 
-  const dynamicTitle = useMemo(() => {
-    const b = branchName ? ` - ${branchName}` : "";
-    const d = rentDaysForTitle > 0 ? ` - ${t("common.days", { count: rentDaysForTitle })}` : "";
-    const car = (apiData as any)?.item?.title
-      ? ` - ${String((apiData as any).item.title).trim()}` : "";
-    return t("meta.title", { branch: b, car, days: d });
-  }, [branchName, rentDaysForTitle, apiData, t]);
+  // ───── dynamic document.title using i18n keys ─────
+  useEffect(() => {
+    if (typeof document === "undefined") return;
 
-  const dynamicDesc = useMemo(() => {
-    const branchPart = branchName ? t("meta.branchIn", { branch: branchName }) : "";
-    const daysPart = rentDaysForTitle > 0 ? t("meta.forDays", { days: rentDaysForTitle }) : "";
-    const carPart = (apiData as any)?.item?.title
-      ? t("meta.carInParens", { car: String((apiData as any).item.title).trim() }) : "";
-    return t("meta.desc", { branchPart, daysPart, carPart });
-  }, [branchName, rentDaysForTitle, apiData, t]);
+    const carTitle = extractCarTitle(apiData);
 
-  const handleDeliveryLocationChange = useCallback((val: LocationState) => setDeliveryLocation(val), []);
-  const handleReturnLocationChange = useCallback((val: LocationState) => setReturnLocation(val), []);
+    const branchPart = branchName
+      ? t("meta.branchIn", { branch: branchName })   // " در {branch}"
+      : "";
+
+    const daysPart =
+      rentDaysForTitle > 0
+        ? t("meta.forDays", { days: rentDaysForTitle }) // " برای {days} روز"
+        : "";
+
+    const carPart = carTitle
+      ? t("meta.carInParens", { car: carTitle })       // " ({car})"
+      : "";
+
+    const finalTitle = t("meta.title", {
+      branch: branchPart,
+      car: carPart,
+      days: daysPart,
+    });
+
+    if (document.title !== finalTitle) {
+      document.title = finalTitle;
+    }
+  }, [apiData, branchName, rentDaysForTitle, t]);
+
+  const handleDeliveryLocationChange = useCallback(
+    (val: LocationState) => setDeliveryLocation(val),
+    [],
+  );
+
+  const handleReturnLocationChange = useCallback(
+    (val: LocationState) => setReturnLocation(val),
+    [],
+  );
+
   const handleDeliveryErrorClear = useCallback((val: LocationState) => {
     if (val?.location) setDeliveryError(false);
   }, []);
+
   const handleReturnErrorClear = useCallback((val: LocationState) => {
     if (val?.location) setReturnError(false);
   }, []);
@@ -754,7 +996,9 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
     if (isSubmitting) return;
 
     const nextDeliveryError = !deliveryLocation?.location;
-    const nextReturnError = Boolean(returnDifferent && !returnLocation?.location);
+    const nextReturnError = Boolean(
+      returnDifferent && !returnLocation?.location,
+    );
     const nextNameError = !userInfo.name?.trim();
     const nextPhoneError = !userInfo.phone?.trim();
 
@@ -763,10 +1007,11 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
     setNameError(nextNameError);
     setPhoneError(nextPhoneError);
 
-    const hasError = nextDeliveryError || nextReturnError || nextNameError || nextPhoneError;
+    const hasError =
+      nextDeliveryError || nextReturnError || nextNameError || nextPhoneError;
 
     if (hasError) {
-      toast.info("لطفاً اطلاعات الزامی را تکمیل کنید");
+      toast.info(t("toast.fillRequired"));
 
       const errorAnchors: string[] = [];
       if (nextDeliveryError || nextReturnError) errorAnchors.push("delivery");
@@ -774,7 +1019,9 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
       if (nextPhoneError) errorAnchors.push("phone");
 
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => scrollToFirstErrorAnchor(errorAnchors, 110));
+        requestAnimationFrame(() =>
+          scrollToFirstErrorAnchor(errorAnchors, 110),
+        );
       });
 
       return;
@@ -786,15 +1033,21 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
     const sessionPhone = wasLoggedIn
       ? normalizePhone(
           (session as any)?.user?.mobile ??
-          (session as any)?.user?.username ??
-          (session as any)?.user?.phone ?? "",
-        ) : "";
+            (session as any)?.user?.username ??
+            (session as any)?.user?.phone ??
+            "",
+        )
+      : "";
     const formPhone = normalizePhone(userInfo.phone);
+
     const shouldLogoutBeforeSubmit = Boolean(
       wasLoggedIn && sessionPhone && formPhone && sessionPhone !== formPhone,
     );
+
     if (shouldLogoutBeforeSubmit) {
-      try { await signOut({ redirect: false }); } catch {}
+      try {
+        await signOut({ redirect: false });
+      } catch {}
     }
 
     try {
@@ -802,30 +1055,42 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
         toast.error(t("toast.invalidReservationInfo"));
         return;
       }
+
       if (!selectedCarId) {
         toast.error(t("toast.carNotSelected"));
         return;
       }
 
-      const places = Array.isArray(apiData?.places) ? apiData!.places!.filter(Boolean) : [];
-      const findPlace = (id: any) => places.find((p: any) => String(p?.id) === String(id));
+      const places = Array.isArray(apiData?.places)
+        ? apiData.places.filter(Boolean)
+        : [];
+      const findPlace = (id: any) =>
+        places.find((p: any) => String(p?.id) === String(id));
 
       const delObj = findPlace((deliveryLocation as any).location);
       const delNeed = delObj?.need_address === "yes";
+
       const retId = returnDifferent
-        ? (returnLocation as any).location || (deliveryLocation as any).location
+        ? (returnLocation as any).location ||
+          (deliveryLocation as any).location
         : (deliveryLocation as any).location;
+
       const retObj = findPlace(retId);
       const retNeed = retObj?.need_address === "yes";
 
       const payload = {
         branch_id: branchIdFromUrl || 1,
-        from: carDates[0], to: carDates[1],
-        dt: normalizeTime(dt), rt: normalizeTime(rt),
+        from: carDates[0],
+        to: carDates[1],
+        dt: normalizeTime(dt),
+        rt: normalizeTime(rt),
         place_delivery: (deliveryLocation as any).location,
-        address_delivery: delNeed ? (deliveryLocation as any).address || "" : "",
+        address_delivery: delNeed
+          ? (deliveryLocation as any).address || ""
+          : "",
         place_return: returnDifferent
-          ? (returnLocation as any).location || (deliveryLocation as any).location
+          ? (returnLocation as any).location ||
+            (deliveryLocation as any).location
           : (deliveryLocation as any).location,
         address_return: retNeed
           ? returnDifferent
@@ -833,23 +1098,33 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
             : (deliveryLocation as any).address || ""
           : "",
         place_r_custom: returnDifferent ? "yes" : "no",
-        first_name: userInfo.name, last_name: "",
-        phone: userInfo.phone, email: userInfo.email,
+        first_name: userInfo.name,
+        last_name: "",
+        phone: userInfo.phone,
+        email: userInfo.email,
         option_check: selectedOptions,
         insurance_complete: insuranceComplete ? "yes" : "no",
       };
 
-      const res: any = await api.post(`/car/rent/${selectedCarId}/${locale}/registration`, payload);
+      const res: any = await api.post(
+        `/car/rent/${selectedCarId}/${locale}/registration`,
+        payload,
+      );
+
       const raw: any = res?.data ?? res;
       const status = res?.status ?? raw?.status;
+
       if (status && Number(status) !== 200) {
         throw new Error(raw?.message || t("toast.reserveSubmitError"));
       }
 
       const payloadData: any = raw?.data ?? raw;
       const rentCode =
-        payloadData?.item?.rent_code ?? payloadData?.rent_code ??
-        payloadData?.data?.item?.rent_code ?? payloadData?.data?.rent_code ?? null;
+        payloadData?.item?.rent_code ??
+        payloadData?.rent_code ??
+        payloadData?.data?.item?.rent_code ??
+        payloadData?.data?.rent_code ??
+        null;
 
       if (!rentCode) {
         toast.warning(t("toast.reservedButNoRentCode"));
@@ -857,18 +1132,32 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
       }
 
       const isNewUser =
-        payloadData?.is_new_user === true || payloadData?.data?.is_new_user === true;
-      const token = payloadData?.access_token ?? payloadData?.data?.access_token ?? null;
+        payloadData?.is_new_user === true ||
+        payloadData?.data?.is_new_user === true;
+      const token =
+        payloadData?.access_token ?? payloadData?.data?.access_token ?? null;
       const userId = payloadData?.user_id ?? payloadData?.data?.user_id ?? null;
       const username =
-        payloadData?.username ?? payloadData?.data?.username ??
-        payloadData?.item?.phone ?? payloadData?.data?.item?.phone ?? "";
+        payloadData?.username ??
+        payloadData?.data?.username ??
+        payloadData?.item?.phone ??
+        payloadData?.data?.item?.phone ??
+        "";
       const nameFromApi =
-        payloadData?.item?.name ?? payloadData?.data?.item?.name ?? userInfo.name ?? "";
+        payloadData?.item?.name ??
+        payloadData?.data?.item?.name ??
+        userInfo.name ??
+        "";
       const phoneFromApi =
-        payloadData?.item?.phone ?? payloadData?.data?.item?.phone ?? userInfo.phone ?? "";
+        payloadData?.item?.phone ??
+        payloadData?.data?.item?.phone ??
+        userInfo.phone ??
+        "";
       const emailFromApi =
-        payloadData?.item?.email ?? payloadData?.data?.item?.email ?? userInfo.email ?? "";
+        payloadData?.item?.email ??
+        payloadData?.data?.item?.email ??
+        userInfo.email ??
+        "";
 
       if (isNewUser && token) {
         try {
@@ -884,22 +1173,23 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
         } catch {}
       }
 
-      const paymentUrl = payloadData?.payment_url || payloadData?.item?.payment_url;
+      const paymentUrl =
+        payloadData?.payment_url || payloadData?.item?.payment_url;
       const cb = encodeURIComponent(
         `/rent/reservation?status=initialize&code=${encodeURIComponent(rentCode)}`,
       );
 
       if (paymentUrl) {
         const joiner = String(paymentUrl).includes("?") ? "&" : "?";
-        // بستن شیت قبل از redirect به درگاه پرداخت
         onReserveSuccess?.();
         window.location.href = `${paymentUrl}${joiner}callback=${cb}`;
         return;
       }
 
-      // بستن شیت قبل از navigate به صفحه رزرو
       onReserveSuccess?.();
-      router.push(`/rent/reservation?status=initialize&code=${encodeURIComponent(rentCode)}`);
+      router.push(
+        `/rent/reservation?status=initialize&code=${encodeURIComponent(rentCode)}`,
+      );
     } catch (error: any) {
       console.error("[handleSubmit] error:", error);
       toast.error(error?.message || t("toast.reserveSubmitError"));
@@ -907,48 +1197,70 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
       setIsSubmitting(false);
     }
   }, [
-    apiData, branchIdFromUrl, carDates, deliveryLocation, dt,
-    insuranceComplete, isSubmitting, locale, returnDifferent, returnLocation,
-    router, rt, selectedCarId, selectedOptions, session, sessionStatus, t, userInfo, toast,
+    apiData,
+    branchIdFromUrl,
+    carDates,
+    deliveryLocation,
+    dt,
+    insuranceComplete,
+    isSubmitting,
+    locale,
+    returnDifferent,
+    returnLocation,
+    router,
+    rt,
+    selectedCarId,
+    selectedOptions,
+    session,
+    sessionStatus,
+    t,
+    userInfo,
+    toast,
     onReserveSuccess,
   ]);
 
-  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setUserInfo((p) => ({ ...p, name: e.target.value }));
-    if (e.target.value.trim()) setNameError(false);
-  }, []);
+  const handleNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setUserInfo((p) => ({ ...p, name: e.target.value }));
+      if (e.target.value.trim()) setNameError(false);
+    },
+    [],
+  );
+
   const handlePhoneChange = useCallback((phone: string) => {
     setUserInfo((p) => ({ ...p, phone }));
     if (phone?.trim()) setPhoneError(false);
   }, []);
-  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setUserInfo((p) => ({ ...p, email: e.target.value }));
-  }, []);
 
-  /* ================================================================== */
-  /*  Derived flags                                                       */
-  /* ================================================================== */
+  const handleEmailChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setUserInfo((p) => ({ ...p, email: e.target.value }));
+    },
+    [],
+  );
 
-  const showNoDeposit = String((apiData?.item as any)?.deposit || "").toLowerCase() === "no";
-  const showUnlimitedKm = String((apiData?.item as any)?.km || "").toLowerCase() === "no";
-  const showFreeDelivery = String((apiData?.item as any)?.free_delivery || "").toLowerCase() === "yes";
-  const showFreeInsurance = String((apiData?.item as any)?.insurance || "").toLowerCase() === "yes";
-  const showDeposit = String((apiData?.item as any)?.deposit || "").toLowerCase() === "yes";
+  const showNoDeposit =
+    String((apiData?.item as any)?.deposit || "").toLowerCase() === "no";
+  const showUnlimitedKm =
+    String((apiData?.item as any)?.km || "").toLowerCase() === "no";
+  const showFreeDelivery =
+    String((apiData?.item as any)?.free_delivery || "").toLowerCase() === "yes";
+  const showFreeInsurance =
+    String((apiData?.item as any)?.insurance || "").toLowerCase() === "yes";
+  const showDeposit =
+    String((apiData?.item as any)?.deposit || "").toLowerCase() === "yes";
   const depositPrice = safeNum((apiData?.item as any)?.deposit_price, 0);
 
-  /* ================================================================== */
-  /*  Sub-views                                                           */
-  /* ================================================================== */
-
   const PersonalInfoCard = (
-    <Card className="border px-2 py-4 m-0 border-gray-200 dark:border-gray-800 rounded-xl shadow-sm">
-      <CardHeader className="p-0 m-0">
-        <CardTitle className="text-sm text-gray-900 flex justify-between items-center">
+    <Card className="m-0 rounded-xl border border-gray-200 px-2 py-4 shadow-sm dark:border-gray-800">
+      <CardHeader className="m-0 p-0">
+        <CardTitle className="flex items-center justify-between text-sm text-gray-900">
           <p>{t("personalInfo.title")}</p>
           {isUnauthenticated ? (
             <Button
-              type="button" variant="link"
-              className="px-0 text-blue-600 text-xs font-bold"
+              type="button"
+              variant="link"
+              className="px-0 text-xs font-bold text-blue-600"
               onClick={() => setLoginDialogOpen(true)}
             >
               <UserSearch size={14} />
@@ -957,9 +1269,10 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
           ) : null}
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-2 m-0">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
-          <div data-error-anchor="name" className="md:col-span-4 space-y-1">
+
+      <CardContent className="m-0 px-2">
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-12">
+          <div data-error-anchor="name" className="space-y-1 md:col-span-4">
             <Input
               value={userInfo.name}
               onChange={handleNameChange}
@@ -971,13 +1284,17 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
               placeholder={t("personalInfo.placeholders.fullName")}
             />
             {nameError && (
-              <p className="text-xs px-1 text-red-500">
+              <p className="px-1 text-xs text-red-500">
                 {t("personalInfo.errors.nameRequired")}
               </p>
             )}
           </div>
-          <div data-error-anchor="phone" className="md:col-span-5 overflow-visible space-y-1">
-            <div dir="ltr" className="w-full overflow-visible relative z-20">
+
+          <div
+            data-error-anchor="phone"
+            className="overflow-visible space-y-1 md:col-span-5"
+          >
+            <div dir="ltr" className="relative z-20 w-full overflow-visible">
               <PhoneInputCustom
                 value={userInfo.phone}
                 onChange={handlePhoneChange}
@@ -986,11 +1303,12 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
               />
             </div>
             {phoneError && (
-              <p className="text-xs px-1 text-red-500">
+              <p className="px-1 text-xs text-red-500">
                 {t("personalInfo.errors.phoneRequired")}
               </p>
             )}
           </div>
+
           <div className="md:col-span-3">
             <Input
               value={userInfo.email}
@@ -1001,7 +1319,8 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
             />
           </div>
         </div>
-        <div className="text-xs text-gray-500 text-center mt-6 flex gap-1 justify-center">
+
+        <div className="mt-6 flex justify-center gap-1 text-center text-xs text-gray-500">
           {t("rules.rulesB")}
           <RulesSheet />
           {t("rules.rulesA")}
@@ -1011,13 +1330,14 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
   );
 
   const ExtrasCard = !shouldShowExtrasSection ? null : (
-    <Card className="border border-gray-200 dark:border-gray-800 rounded-xl md:mb-4 shadow-sm p-0 m-0 gap-0 bg-white dark:bg-gray-900">
+    <Card className="m-0 gap-0 rounded-xl border border-gray-200 bg-white p-0 shadow-sm dark:border-gray-800 dark:bg-gray-900 md:mb-4">
       <CardHeader className="p-0 px-4 pt-2">
-        <CardTitle className="text-base text-gray-900 flex items-center">
+        <CardTitle className="flex items-center text-base text-gray-900">
           {t("extras.title")}
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0 m-0 pb-1">
+
+      <CardContent className="m-0 p-0 pb-1">
         <ExtrasList
           options={payableOptions}
           selected={selectedOptions}
@@ -1030,7 +1350,10 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
             setInsuranceComplete(Boolean(v));
           }}
           insuranceCompleteEnabled={canSelectInsuranceComplete}
-          insuranceCompleteDailyPrice={safeNum((apiData?.item as any)?.insurance_complete_price, 0)}
+          insuranceCompleteDailyPrice={safeNum(
+            (apiData?.item as any)?.insurance_complete_price,
+            0,
+          )}
           onSelectionVisualChange={(changedOptionId: number) =>
             triggerSummarySkeleton(Number(changedOptionId))
           }
@@ -1040,123 +1363,155 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
   );
 
   const sharedCarCardProps = {
-    apiData, totals, currencyLabel, offPercent, dailyBefore, dailyAfter,
-    showUnlimitedKm, showFreeDelivery, showFreeInsurance, showNoDeposit,
+    apiData,
+    totals,
+    currencyLabel,
+    offPercent,
+    dailyBefore,
+    dailyAfter,
+    showUnlimitedKm,
+    showFreeDelivery,
+    showFreeInsurance,
+    showNoDeposit,
   };
+
   const sharedSummaryProps = {
-    apiData, totals, currencyLabel, baseRentAfter, offPercent, dailyBefore, dailyAfter,
-    totalBefore, pendingSummaryIds, isSummaryPending,
+    apiData,
+    totals,
+    currencyLabel,
+    baseRentAfter,
+    offPercent,
+    dailyBefore,
+    dailyAfter,
+    totalBefore,
+    pendingSummaryIds,
+    isSummaryPending,
     onOpenCoupon: () => setCouponOpen(true),
     onSubmit: handleSubmit,
     isSubmitting,
   };
+
   const deliveryCardProps = {
-    activePlaces, currencyLabel, deliveryLocation,
+    activePlaces,
+    currencyLabel,
+    deliveryLocation,
     setDeliveryLocation: handleDeliveryLocationChange,
-    returnDifferent, setReturnDifferent, returnLocation,
+    returnDifferent,
+    setReturnDifferent,
+    returnLocation,
     setReturnLocation: handleReturnLocationChange,
-    triggerSummarySkeleton, t,
-    deliveryError, returnError,
+    triggerSummarySkeleton,
+    t,
+    deliveryError,
+    returnError,
     onDeliveryChange: handleDeliveryErrorClear,
     onReturnChange: handleReturnErrorClear,
   };
 
-  const DepositCard = showDeposit && depositPrice > 0 ? (
-    <Card className="border rounded-xl shadow-sm px-4 py-3">
-      <div className="flex gap-3">
-        <div>
-          <AppDrawer
-            kind="no_deposit"
-            data={{}}
-            trigger={({ open }) => (
-              <button
-                type="button"
-                onClick={open}
-                className="inline-flex items-center cursor-pointer justify-center"
-              >
-                <div className="text-sm font-semibold text-gray-800 flex gap-2 items-center">
-                  {t("deposit.trafficDepositLabel")} {formatNum(depositPrice)}{" "}
-                  {currencyLabel} <Info size={18} className="text-gray-500" />
-                </div>
-              </button>
-            )}
-          />
-          <div className="text-xs text-gray-500 mt-1 leading-5">
-            {t("deposit.hint21Days")}
+  const DepositCard =
+    showDeposit && depositPrice > 0 ? (
+      <Card className="rounded-xl border px-4 py-3 shadow-sm">
+        <div className="flex gap-3">
+          <div>
+            <AppDrawer
+              kind="no_deposit"
+              data={{}}
+              trigger={({ open }) => (
+                <button
+                  type="button"
+                  onClick={open}
+                  className="inline-flex cursor-pointer items-center justify-center"
+                >
+                  <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                    {t("deposit.trafficDepositLabel")} {formatNum(depositPrice)}{" "}
+                    {currencyLabel} <Info size={18} className="text-gray-500" />
+                  </div>
+                </button>
+              )}
+            />
+            <div className="mt-1 text-xs leading-5 text-gray-500">
+              {t("deposit.hint21Days")}
+            </div>
           </div>
         </div>
-      </div>
-    </Card>
-  ) : null;
-
-  /* ================================================================== */
-  /*  Render                                                              */
-  /* ================================================================== */
+      </Card>
+    ) : null;
 
   return (
     <>
-      <SearchMetaClient title={dynamicTitle} description={dynamicDesc} />
       <CouponDialog open={couponOpen} onOpenChange={setCouponOpen} />
 
       {ToastNode}
 
-      {/* loading */}
       {(isLoading || !apiData) && <InformationStepSkeleton />}
 
-      {/* main content */}
       {!isLoading && apiData && (
         <div className="relative">
-          {/* ---- mobile ---- */}
           <div className="lg:hidden">
             <SelectedCarCard {...sharedCarCardProps} />
+
             <div className="px-2">
-              {showNoDeposit ? <div className="mt-2"><NoDepositBanner /></div> : null}
+              {showNoDeposit ? (
+                <div className="mt-2">
+                  <NoDepositBanner />
+                </div>
+              ) : null}
+
               <div data-error-anchor="delivery">
                 <DeliveryCard {...deliveryCardProps} />
               </div>
+
               <div className="mt-2">{ExtrasCard}</div>
+
               <div className="mt-2">
                 <SummaryCard showButton={false} {...sharedSummaryProps} />
               </div>
+
               {DepositCard ? <div className="mt-2">{DepositCard}</div> : null}
+
               <div className="mt-2">{PersonalInfoCard}</div>
             </div>
           </div>
 
-          {/* ---- mobile bottom bar ---- */}
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-gray-200 shadow-[0_-2px_12px_rgba(0,0,0,0.08)]">
+          <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-gray-200 bg-white shadow-[0_-2px_12px_rgba(0,0,0,0.08)] lg:hidden">
             <div className="mx-auto px-4 py-3">
-              <div className="flex items-center gap-20 justify-between mb-2">
-                <div className="text-xs text-gray-500">{t("mobileBar.payableAmount")}</div>
+              <div className="mb-2 flex items-center justify-between gap-20">
+                <div className="text-xs text-gray-500">
+                  {t("mobileBar.payableAmount")}
+                </div>
                 <div className="text-md flex items-center gap-2 font-extrabold text-blue-600">
                   {isSummaryPending ? (
-                    <div className="h-6 w-28 rounded bg-gray-200 animate-pulse" />
+                    <div className="h-6 w-28 animate-pulse rounded bg-gray-200" />
                   ) : (
                     <>
-                      {offPercent > 0 && totalBefore > 0 && totalBefore > totals.total && (
-                        <div className="text-xs text-gray-400 line-through inline-block mr-2">
-                          {formatNum(totalBefore)}
-                        </div>
-                      )}
+                      {offPercent > 0 &&
+                        totalBefore > 0 &&
+                        totalBefore > totals.total && (
+                          <div className="mr-2 inline-block text-xs text-gray-400 line-through">
+                            {formatNum(totalBefore)}
+                          </div>
+                        )}
                       {formatNum(totals.total)} {currencyLabel}
                     </>
                   )}
                 </div>
               </div>
+
               <Button
                 onClick={handleSubmit}
                 disabled={isSubmitting || isSummaryPending}
-                className="w-full h-11 rounded-lg text-base font-extrabold bg-blue-500 hover:bg-blue-700"
+                className="h-11 w-full rounded-lg bg-blue-500 text-base font-extrabold hover:bg-blue-700"
               >
-                {isSubmitting ? t("common.submitting") : t("common.finalSubmit")}
+                {isSubmitting
+                  ? t("common.submitting")
+                  : t("common.finalSubmit")}
               </Button>
             </div>
           </div>
 
-          {/* ---- desktop ---- */}
           <div className="hidden lg:block">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-              <div className="lg:col-span-8 space-y-4">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+              <div className="space-y-4 lg:col-span-8">
                 {showNoDeposit ? <NoDepositBanner /> : null}
                 <div data-error-anchor="delivery">
                   <DeliveryCard {...deliveryCardProps} />
@@ -1165,7 +1520,8 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
                 {DepositCard}
                 {PersonalInfoCard}
               </div>
-              <div className="lg:col-span-4 space-y-4">
+
+              <div className="space-y-4 lg:col-span-4">
                 <SelectedCarCard {...sharedCarCardProps} />
                 <SummaryCard showButton={true} {...sharedSummaryProps} />
               </div>
@@ -1175,7 +1531,11 @@ export default function ReserveInformation({ onReserveSuccess }: ReserveInformat
       )}
 
       {isUnauthenticated ? (
-        <LoginDialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen} hideTrigger />
+        <LoginDialog
+          open={loginDialogOpen}
+          onOpenChange={setLoginDialogOpen}
+          hideTrigger
+        />
       ) : null}
     </>
   );

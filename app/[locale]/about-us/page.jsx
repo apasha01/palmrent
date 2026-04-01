@@ -1,5 +1,3 @@
-// app/page.tsx
-// import AboutUsComponent from "@/components/AboutPage"
 import { BASE_URL } from "../../../lib/apiClient"
 
 async function getAboutData(locale) {

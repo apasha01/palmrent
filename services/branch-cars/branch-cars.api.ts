@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "@/lib/axios";
+import type { AxiosError } from "axios";
 import type { BranchCarsResponse } from "./branch-cars.types";
 
 export type BranchCarsParams = {
@@ -24,6 +25,16 @@ export type BranchCarsParams = {
   min_p?: number | null;
   max_p?: number | null;
 };
+
+export class BranchNotFoundError extends Error {
+  status: number;
+
+  constructor(message = "Branch not found", status = 404) {
+    super(message);
+    this.name = "BranchNotFoundError";
+    this.status = status;
+  }
+}
 
 const appendArray = (
   qs: URLSearchParams,
@@ -99,11 +110,35 @@ export async function getBranchCars(
     ? `/car/branch/${slug}/${locale}?${query}`
     : `/car/branch/${slug}/${locale}`;
 
-  const res = await axios.get(url);
+  try {
+    const res = await axios.get(url);
 
-  if (!res.data?.data) {
-    throw new Error(res.data?.message || "Invalid API response: missing data");
+    if (Number(res.data?.status) === 404) {
+      throw new BranchNotFoundError(res.data?.message || "Branch not found", 404);
+    }
+
+    if (!res.data?.data?.branch?.id) {
+      throw new Error(res.data?.message || "Invalid API response: missing branch");
+    }
+
+    return res.data.data as BranchCarsResponse;
+  } catch (error) {
+    const err = error as AxiosError<any>;
+
+    if (err.response?.status === 404) {
+      throw new BranchNotFoundError(
+        err.response?.data?.message || "Branch not found",
+        404
+      );
+    }
+
+    if (Number(err.response?.data?.status) === 404) {
+      throw new BranchNotFoundError(
+        err.response?.data?.message || "Branch not found",
+        404
+      );
+    }
+
+    throw error;
   }
-
-  return res.data.data as BranchCarsResponse;
 }

@@ -835,22 +835,6 @@ export function SerarchSection({
     scrollToSearchSection("smooth")
   }
 
-  const handleClearDates = () => {
-    setCarDates([null, null])
-    setDeliveryTime("10:00")
-    setReturnTime("10:00")
-
-    if (redirectToSearchOnDateConfirm) return
-
-    pushURL({
-      from: null,
-      to: null,
-      dt: null,
-      rt: null,
-    })
-
-    scrollToSearchSection("smooth")
-  }
 
   const handleSheetOpenChange = (open: boolean) => {
     setFiltersOpen(open)
@@ -916,7 +900,7 @@ export function SerarchSection({
       defaultIsJalali={true}
       initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
       onConfirm={handleDateConfirm}
-      onClear={handleClearDates}
+
       trigger={
         <button
           type="button"

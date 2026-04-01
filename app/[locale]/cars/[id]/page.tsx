@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Metadata } from "next";
 import Header from "@/components/layouts/Header";
 import Footer from "@/components/Footer";
 import { CarDescription } from "@/components/car-detail/car-description";
@@ -14,33 +15,259 @@ import { Car, Fuel, Users, Briefcase, Heart, Share2 } from "lucide-react";
 import { getCarDetail } from "@/services/car-detail/car-detail.api";
 import { MobilePriceBar } from "@/components/car-detail/mobile-price-bar";
 import Script from "next/script";
+import { notFound } from "next/navigation";
 
 type FeatureChip = { label: string; active: boolean };
 
+function joinUrl(base?: string, path?: string | null) {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path)) return path;
+  if (!base) return path.startsWith("/") ? path : `/${path}`;
+
+  const normalizedBase = base.replace(/\/+$/, "");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+
+  return `${normalizedBase}${normalizedPath}`;
+}
+
+function getSiteUrl(): string {
+  return (process.env.NEXTFRONTEND_URL || "").replace(/\/+$/, "");
+}
+
+function getStorageUrl(): string {
+  return (process.env.NEXT_PUBLIC_STORAGE_URL || "").replace(/\/+$/, "");
+}
+
+function getLocaleOg(locale: string) {
+  switch (locale) {
+    case "fa":
+      return "fa_IR";
+    case "ar":
+      return "ar_AE";
+    case "tr":
+      return "tr_TR";
+    case "en":
+    default:
+      return "en_US";
+  }
+}
+
+function normalizeKeywords(input: any): string[] {
+  if (!input) return [];
+
+  if (Array.isArray(input)) {
+    return input
+      .map((item) => String(item ?? "").trim())
+      .filter(Boolean);
+  }
+
+  if (typeof input === "string") {
+    return input
+      .split(/[،,|]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function parseRobotsValue(value?: string | null): Metadata["robots"] | undefined {
+  if (!value) return undefined;
+
+  const raw = value.toLowerCase();
+
+  const index = raw.includes("index") && !raw.includes("noindex");
+  const follow = raw.includes("follow") && !raw.includes("nofollow");
+
+  const maxSnippetMatch = raw.match(/max-snippet:([-\d]+)/);
+  const maxImagePreviewMatch = raw.match(
+    /max-image-preview:(none|standard|large)/
+  );
+  const maxVideoPreviewMatch = raw.match(/max-video-preview:([-\d]+)/);
+
+  return {
+    index,
+    follow,
+    ...(maxSnippetMatch ? { "max-snippet": Number(maxSnippetMatch[1]) } : {}),
+    ...(maxImagePreviewMatch
+      ? {
+          googleBot: {
+            index,
+            follow,
+            "max-image-preview": maxImagePreviewMatch[1] as
+              | "none"
+              | "standard"
+              | "large",
+            ...(maxSnippetMatch
+              ? { "max-snippet": Number(maxSnippetMatch[1]) }
+              : {}),
+            ...(maxVideoPreviewMatch
+              ? { "max-video-preview": Number(maxVideoPreviewMatch[1]) }
+              : {}),
+          },
+        }
+      : {
+          googleBot: {
+            index,
+            follow,
+            ...(maxSnippetMatch
+              ? { "max-snippet": Number(maxSnippetMatch[1]) }
+              : {}),
+            ...(maxVideoPreviewMatch
+              ? { "max-video-preview": Number(maxVideoPreviewMatch[1]) }
+              : {}),
+          },
+        }),
+    ...(maxVideoPreviewMatch
+      ? { "max-video-preview": Number(maxVideoPreviewMatch[1]) }
+      : {}),
+  };
+}
+
 function buildFeaturesFromApi(
   car: any,
-  t: Awaited<ReturnType<typeof getTranslations>>,
+  t: Awaited<ReturnType<typeof getTranslations>>
 ): FeatureChip[] {
   const depositNum = Number(car?.deposit ?? 0);
 
   return [
     {
-      label: t("carDetail.noDeposit"),
+      label: t("carDetail.features.noDeposit"),
       active: !Number.isNaN(depositNum) && depositNum === 0,
     },
     {
-      label: t("carDetail.freeDelivery"),
+      label: t("carDetail.features.freeDelivery"),
       active: String(car?.free_delivery) === "yes",
     },
     {
-      label: t("carDetail.unlimitedKm"),
+      label: t("carDetail.features.unlimitedKm"),
       active: String(car?.km) === "yes",
     },
     {
-      label: t("carDetail.insurance"),
+      label: t("carDetail.features.insurance"),
       active: String(car?.insurance) === "yes",
     },
   ];
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const locale = await getLocale();
+  const t = await getTranslations("carDetailNotFoundPage.meta");
+
+  const result = await getCarDetail(id, locale);
+
+  if (!result.ok && result.notFound) {
+    return {
+      title: t("title"),
+      description: t("description"),
+      robots: {
+        index: false,
+        follow: false,
+        googleBot: {
+          index: false,
+          follow: false,
+          "max-image-preview": "none",
+          "max-video-preview": -1,
+          "max-snippet": -1,
+        },
+      },
+    };
+  }
+
+  if (!result.ok) {
+    throw new Error(result.message || "Failed to load car detail metadata");
+  }
+
+  const response = result.data;
+  const car = response?.data;
+  const meta = response?.meta;
+
+  if (!car) {
+    throw new Error("Car data is missing in successful response");
+  }
+
+  const siteUrl = getSiteUrl();
+  const storageUrl = getStorageUrl();
+
+  const title = meta?.titleSeo?.trim();
+  const description = meta?.descriptionSeo?.trim();
+  const normalizedMetaKeywords = normalizeKeywords((meta as any)?.keywordsSeo);
+
+  const image =
+    meta?.imgSeo
+      ? joinUrl(storageUrl, meta.imgSeo)
+      : Array.isArray(car?.photos) && car.photos.length > 0
+      ? joinUrl(storageUrl, car.photos[0])
+      : "";
+
+  const canonical =
+    meta?.canonical?.trim() ||
+    meta?.urlPage?.trim() ||
+    `${siteUrl}/${locale}/cars/${id}`;
+
+  const robots = parseRobotsValue(meta?.robots) || {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+      "max-snippet": -1,
+    },
+  };
+
+  const alternatesLanguages =
+    Array.isArray(meta?.alternate) && meta.alternate.length > 0
+      ? meta.alternate.reduce<Record<string, string>>((acc, item: any) => {
+          if (item?.hreflang && item?.href) {
+            acc[item.hreflang] = item.href;
+          }
+          return acc;
+        }, {})
+      : undefined;
+
+  return {
+    title,
+    description,
+    ...(normalizedMetaKeywords.length > 0 ? { keywords: normalizedMetaKeywords } : {}),
+    alternates: {
+      canonical,
+      languages: alternatesLanguages,
+    },
+    openGraph: {
+      type: "website",
+      url: canonical,
+      ...(title ? { title } : {}),
+      ...(description ? { description } : {}),
+      siteName: meta?.siteName || "Palm Rent",
+      locale: getLocaleOg(locale),
+      ...(image
+        ? {
+            images: [
+              {
+                url: image,
+                width: 1200,
+                height: 630,
+                alt: car?.title || "",
+              },
+            ],
+          }
+        : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      ...(title ? { title } : {}),
+      ...(description ? { description } : {}),
+      ...(image ? { images: [image] } : {}),
+    },
+    robots,
+  };
 }
 
 export default async function CarRentalPage({
@@ -52,31 +279,37 @@ export default async function CarRentalPage({
   const locale = await getLocale();
   const t = await getTranslations();
 
-  const car = await getCarDetail(id, locale);
+  const result = await getCarDetail(id, locale);
+
+  if (!result.ok && result.notFound) {
+    notFound();
+  }
+
+  if (!result.ok) {
+    throw new Error(result.message || "Failed to load car detail");
+  }
+
+  const response = result.data;
+  const car = response?.data;
+  const meta = response?.meta;
 
   if (!car) {
-    return (
-      <div>
-        <Header />
-        <main className="max-w-7xl mx-auto px-2 md:p-0 py-10 mt-4">
-          <div className="rounded-xl border p-6 text-center">
-            <h1 className="text-xl font-bold text-gray-900">
-              {t("carDetail.notFound")}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-2">
-              {t("carDetail.notFoundDesc")}
-            </p>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
+    throw new Error("Car data is missing in successful response");
   }
 
   const features = buildFeaturesFromApi(car, t).filter((f) => f.active);
 
   return (
     <div className="bg-white">
+      {meta?.schemaSeo ? (
+        <Script
+          id="car-schema-seo"
+          type="application/ld+json"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{ __html: meta.schemaSeo }}
+        />
+      ) : null}
+
       <Header shadowLess={true} />
 
       <Script id="pricing-sticky-top" strategy="afterInteractive">{`
@@ -117,14 +350,13 @@ export default async function CarRentalPage({
         })();
       `}</Script>
 
-      <main className="max-w-7xl mx-auto px-2 md:p-0 mt-2">
+      <main className="mx-auto mt-2 max-w-7xl px-2 md:px-0">
         <ImageGallery media={[car.video, ...(car.photos ?? [])]} />
 
-        <div className="md:mt-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* ================== LEFT / PRICING ================== */}
-          <div className="lg:col-span-1 order-1 lg:order-2">
+        <div className="grid grid-cols-1 gap-6 md:mt-4 lg:grid-cols-3">
+          <div className="order-1 lg:order-2 lg:col-span-1">
             <div
-              className="hidden lg:block self-start sticky z-10 transition-[top] duration-300 ease-out"
+              className="sticky z-10 hidden self-start transition-[top] duration-300 ease-out lg:block"
               style={{ top: "var(--pricing-top, 4px)" }}
             >
               <PricingCard
@@ -149,61 +381,64 @@ export default async function CarRentalPage({
             </div>
           </div>
 
-          {/* ================== RIGHT / CONTENT ================== */}
-          <div className="lg:col-span-2 space-y-2 order-2 lg:order-1">
+          <div className="order-2 space-y-2 lg:order-1 lg:col-span-2">
             <div className="rounded-xl p-4">
-              <div className="flex items-center justify-between mb-4">
+              <div className="mb-4 flex items-center justify-between">
                 <h1 className="text-xl font-bold text-gray-900">{car.title}</h1>
 
                 <div className="flex items-center gap-4">
-                  <button className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition-colors">
-                    <Share2 className="w-4 h-4 text-accent-foreground md:text-blue-600" />
+                  <button className="flex items-center gap-1 text-sm text-blue-600 transition-colors hover:text-blue-700">
+                    <Share2 className="h-4 w-4 text-accent-foreground md:text-blue-600" />
                     <span className="hidden md:block">
                       {t("carDetail.share")}
                     </span>
                   </button>
 
-                  <button className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition-colors">
-                    <Heart className="w-4 h-4 text-accent-foreground md:text-blue-600" />
+                  <button className="flex items-center gap-1 text-sm text-blue-600 transition-colors hover:text-blue-700">
+                    <Heart className="h-4 w-4 text-accent-foreground md:text-blue-600" />
                     <span className="hidden md:block">
-                      {t("carDetail.addToWishlist")}
+                      {t("carDetail.favorite")}
                     </span>
                   </button>
                 </div>
               </div>
 
-              <div className="flex gap-2 justify-between flex-col md:flex-row">
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 pb-4">
+              <div className="flex flex-col justify-between gap-2 md:flex-row">
+                <div className="flex flex-wrap items-center gap-4 pb-4 text-sm text-gray-600">
                   <div className="flex items-center gap-1">
-                    <Car className="w-4 h-4" />
+                    <Car className="h-4 w-4" />
                     <span>{car.gearbox}</span>
                   </div>
 
                   <div className="flex items-center gap-1">
-                    <Fuel className="w-4 h-4" />
+                    <Fuel className="h-4 w-4" />
                     <span>{car.fuel}</span>
                   </div>
 
                   <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
+                    <Users className="h-4 w-4" />
                     <span>
-                      {car.person} {t("carDetail.persons")}
+                      {t("carDetail.persons", {
+                        count: Number(car.person ?? 0),
+                      })}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-1">
-                    <Briefcase className="w-4 h-4" />
+                    <Briefcase className="h-4 w-4" />
                     <span>
-                      {car.baggage} {t("carDetail.suitcases")}
+                      {t("carDetail.baggages", {
+                        count: Number(car.baggage ?? 0),
+                      })}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-6">
+                <div className="mb-6 flex flex-wrap gap-2">
                   {features.map((feature, index) => (
                     <span
                       key={index}
-                      className="flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm"
+                      className="rounded-full bg-green-100 px-2 py-1 text-sm text-green-800"
                     >
                       {feature.label}
                     </span>
@@ -225,13 +460,7 @@ export default async function CarRentalPage({
 
             <SimilarCars items={car.similar_cars} currency={car.currency} />
 
-            <CarDescription
-              html={car.text}
-              title={t("carDetail.aboutCar", {
-                car: car.title,
-                branch: car.branch,
-              })}
-            />
+            <CarDescription html={car.text} title={car.title} />
           </div>
         </div>
       </main>

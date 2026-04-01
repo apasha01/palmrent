@@ -1,23 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
-
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { useLocale } from "next-intl";
+import { Suspense } from "react";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
 
 import Header from "@/components/layouts/Header";
 import Footer from "@/components/Footer";
 import SearchHeader from "@/components/search/search-header";
 import StepRent from "@/components/search/StepsRent";
-import ReserveInformation from "@/components/reserve/ReserveInformation";
+import ReservePageClient from "./ReservePageClient";
 
-import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store";
 import { normalizeTime } from "@/lib/rent-days";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "@/i18n/navigation";
-
-/* ---------------- helpers ---------------- */
-
-
+import { checkReserveOr404 } from "@/services/reservation/check-reserve.server";
+import { getReservePageDataServer } from "@/services/reservation/get-reserve-page-data.server";
 
 function pad2(n: number) {
   return String(n).padStart(2, "0");
@@ -25,7 +20,7 @@ function pad2(n: number) {
 
 function normalizeJalaliParam(input?: string | null) {
   if (!input) return null;
-  const clean = (String(input)).replace(/-/g, "/").trim();
+  const clean = String(input).replace(/-/g, "/").trim();
   const [y, m, d] = clean.split("/").map((x) => parseInt(x, 10));
   if (!y || !m || !d) return null;
   return `${y}/${pad2(m)}/${pad2(d)}`;
@@ -33,66 +28,327 @@ function normalizeJalaliParam(input?: string | null) {
 
 function safePositiveInt(raw?: string | null) {
   if (!raw) return null;
-  const n = Number((String(raw)));
+  const n = Number(String(raw));
   if (!Number.isFinite(n) || n <= 0) return null;
   return Math.floor(n);
 }
 
-/** ✅ defer: مطمئن برای hydrate قبل از render محتوا */
-const defer = (fn: () => void) => {
-  if (typeof queueMicrotask === "function") return queueMicrotask(fn);
-  Promise.resolve().then(fn);
+type PageProps = {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-function ReservePageContent() {
-  const locale = useLocale();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+function getSingle(v?: string | string[]) {
+  return Array.isArray(v) ? v[0] : v;
+}
 
-  const branchId = useMemo(() => safePositiveInt(searchParams.get("branch_id")), [searchParams]);
-  const carId = useMemo(() => safePositiveInt(searchParams.get("car_id")), [searchParams]);
-  const from = useMemo(() => normalizeJalaliParam(searchParams.get("from")), [searchParams]);
-  const to = useMemo(() => normalizeJalaliParam(searchParams.get("to")), [searchParams]);
-  const dt = useMemo(() => normalizeTime(searchParams.get("dt") || "10:00"), [searchParams]);
-  const rt = useMemo(() => normalizeTime(searchParams.get("rt") || "10:00"), [searchParams]);
+const BRANCH_KEY_BY_ID: Record<string, string> = {
+  "1": "dubai",
+  "2": "istanbul",
+  "6": "oman",
+  "7": "kisk",
+  "8": "izmir",
+  "9": "ankara",
+  "10": "antalya",
+  "11": "samsun",
+  "12": "kayseri",
+  "13": "georgia",
+};
 
-  const isValid = Boolean(branchId && carId && from && to);
+function getBranchNameByIdServer(
+  tBranchs: (key: string) => string,
+  branchId: string | null | undefined,
+  fallback = "",
+) {
+  if (!branchId) return fallback;
+  const key = BRANCH_KEY_BY_ID[String(branchId)];
+  if (!key) return fallback;
+  try {
+    return tBranchs(key);
+  } catch {
+    return fallback;
+  }
+}
 
-  const hydrateKey = useMemo(() => {
-    return [branchId ?? "", carId ?? "", from ?? "", to ?? "", dt ?? "", rt ?? ""].join("|");
-  }, [branchId, carId, from, to, dt, rt]);
+function jalaliToGregorian(jy: number, jm: number, jd: number) {
+  let gy;
+  if (jy > 979) {
+    gy = 1600;
+    jy -= 979;
+  } else {
+    gy = 621;
+  }
 
-  const [ready, setReady] = useState(false);
+  let days =
+    365 * jy +
+    Math.floor(jy / 33) * 8 +
+    Math.floor(((jy % 33) + 3) / 4) +
+    78 +
+    jd +
+    (jm < 7 ? (jm - 1) * 31 : (jm - 7) * 30 + 186);
 
-  useEffect(() => {
-    if (!isValid) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete("step");
-      params.delete("car_id");
+  gy += 400 * Math.floor(days / 146097);
+  days %= 146097;
 
-      router.replace(`/search?${params.toString()}`);
-      return;
+  if (days > 36524) {
+    gy += 100 * Math.floor(--days / 36524);
+    days %= 36524;
+    if (days >= 365) days++;
+  }
+
+  gy += 4 * Math.floor(days / 1461);
+  days %= 1461;
+
+  if (days > 365) {
+    gy += Math.floor((days - 1) / 365);
+    days = (days - 1) % 365;
+  }
+
+  const sal_a = [
+    0,
+    31,
+    (gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0 ? 29 : 28,
+    31,
+    30,
+    31,
+    30,
+    31,
+    31,
+    30,
+    31,
+    30,
+    31,
+  ];
+
+  let gm = 1;
+  while (gm <= 12 && days > sal_a[gm]) {
+    days -= sal_a[gm];
+    gm++;
+  }
+
+  const gd = days;
+  return { gy, gm, gd };
+}
+
+function parseJalaliToDate(jalali?: string | null) {
+  if (!jalali) return null;
+  const clean = String(jalali).replace(/-/g, "/").trim();
+  const [jy, jm, jd] = clean.split("/").map((x) => parseInt(x, 10));
+  if (!jy || !jm || !jd) return null;
+  const g = jalaliToGregorian(jy, jm, jd);
+  return new Date(g.gy, g.gm - 1, g.gd);
+}
+
+function calcRentDaysWithGrace(args: {
+  from: string | null;
+  to: string | null;
+  dt?: string | null;
+  rt?: string | null;
+  graceMinutes?: number;
+}) {
+  const fromDate = parseJalaliToDate(args.from);
+  const toDate = parseJalaliToDate(args.to);
+  if (!fromDate || !toDate) return null;
+
+  const deliveryTime = normalizeTime(args.dt || "10:00");
+  const returnTime = normalizeTime(args.rt || "10:00");
+  const graceMinutes =
+    typeof args.graceMinutes === "number" ? args.graceMinutes : 90;
+
+  const [dh, dm] = deliveryTime.split(":").map(Number);
+  const [rh, rm] = returnTime.split(":").map(Number);
+
+  const fromFull = new Date(fromDate);
+  fromFull.setHours(dh || 0, dm || 0, 0, 0);
+
+  const toFull = new Date(toDate);
+  toFull.setHours(rh || 0, rm || 0, 0, 0);
+
+  let totalMinutes = Math.floor(
+    (toFull.getTime() - fromFull.getTime()) / 60000,
+  );
+  if (!Number.isFinite(totalMinutes) || totalMinutes < 0) totalMinutes = 0;
+
+  const fullDays = Math.floor(totalMinutes / 1440);
+  const remainderMinutes = totalMinutes % 1440;
+
+  let days = fullDays;
+  if (remainderMinutes > graceMinutes) days += 1;
+  if (days < 1) days = 1;
+
+  return days;
+}
+
+function extractCarTitle(payload: any): string {
+  return String(
+    payload?.item?.title ??
+      payload?.item?.name ??
+      "",
+  ).trim();
+}
+
+async function getValidatedReserveInputs(
+  params: PageProps["params"],
+  searchParams: PageProps["searchParams"],
+) {
+  const { locale } = await params;
+  const sp = await searchParams;
+
+  const branchId = safePositiveInt(getSingle(sp.branch_id));
+  const carId = safePositiveInt(getSingle(sp.car_id));
+  const from = normalizeJalaliParam(getSingle(sp.from));
+  const to = normalizeJalaliParam(getSingle(sp.to));
+  const dt = normalizeTime(getSingle(sp.dt) || "10:00");
+  const rt = normalizeTime(getSingle(sp.rt) || "10:00");
+
+  return {
+    locale,
+    sp,
+    branchId,
+    carId,
+    from,
+    to,
+    dt,
+    rt,
+    isValid: Boolean(branchId && carId && from && to),
+  };
+}
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: PageProps): Promise<Metadata> {
+  const { locale, branchId, carId, from, to, dt, rt, isValid } =
+    await getValidatedReserveInputs(params, searchParams);
+
+  const t = await getTranslations({ locale, namespace: "InformationStep" });
+  const tBranchs = await getTranslations({ locale, namespace: "branchs" });
+
+  const branchName = getBranchNameByIdServer(
+    tBranchs,
+    branchId ? String(branchId) : "",
+    "",
+  );
+
+  const rentDays = calcRentDaysWithGrace({ from, to, dt, rt, graceMinutes: 90 });
+
+  let carTitle = "";
+
+  if (isValid) {
+    try {
+      const reserveData = await getReservePageDataServer({
+        carId: carId!,
+        locale,
+        branchId: branchId!,
+        from: from!,
+        to: to!,
+        dt,
+        rt,
+      });
+      carTitle = extractCarTitle(reserveData);
+    } catch (error) {
+      console.error("[generateMetadata] reserve data error:", error);
+      carTitle = "";
     }
+  }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setReady(false);
+  // ───── build title using i18n keys ─────
+  // key: "InformationStep.meta.title"
+  // value: "انتخاب محل تحویل{branch}{car}{days} | PalmRent"
+  // interpolation params are optional segments built from other keys
 
-    defer(() => {
-      const st: any = useSearchPageStore.getState();
+  const branchPart = branchName
+    ? t("meta.branchIn", { branch: branchName })   // " در {branch}"
+    : "";
 
-      if (typeof st?.setRoadMapStep === "function") st.setRoadMapStep(3);
-      if (typeof st?.setBranchId === "function") st.setBranchId(branchId!);
-      if (typeof st?.setSelectedCarId === "function") st.setSelectedCarId(carId!);
-      if (typeof st?.setCarDates === "function") st.setCarDates([from!, to!]);
-      if (typeof st?.setDeliveryTime === "function") st.setDeliveryTime(dt);
-      if (typeof st?.setReturnTime === "function") st.setReturnTime(rt);
+  const daysPart =
+    typeof rentDays === "number" && rentDays > 0
+      ? t("meta.forDays", { days: rentDays })       // " برای {days} روز"
+      : "";
 
-      setReady(true);
+  const carPart = carTitle
+    ? t("meta.carInParens", { car: carTitle })      // " ({car})"
+    : "";
+
+  const title = t("meta.title", {
+    branch: branchPart,
+    car: carPart,
+    days: daysPart,
+  });
+
+  const description = t("meta.desc", {
+    branchPart,
+    daysPart,
+    carPart,
+  });
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
+
+export default async function ReservePage({
+  params,
+  searchParams,
+}: PageProps) {
+  const { locale, sp, branchId, carId, from, to, dt, rt, isValid } =
+    await getValidatedReserveInputs(params, searchParams);
+
+  if (!isValid) {
+    const qs = new URLSearchParams();
+    Object.entries(sp).forEach(([key, value]) => {
+      if (key === "step" || key === "car_id") return;
+      const single = Array.isArray(value) ? value[0] : value;
+      if (single != null) qs.set(key, single);
     });
-  }, [hydrateKey, isValid, router, locale, searchParams, branchId, carId, from, to, dt, rt]);
+    redirect(`/${locale}/search?${qs.toString()}`);
+  }
 
-  if (!isValid) return null;
-  if (!ready) return null;
+  await checkReserveOr404({
+    carId: carId!,
+    locale,
+    branchId: branchId!,
+    from: from!,
+    to: to!,
+    dt,
+    rt,
+  });
+
+  let initialApiData: any = null;
+  try {
+    initialApiData = await getReservePageDataServer({
+      carId: carId!,
+      locale,
+      branchId: branchId!,
+      from: from!,
+      to: to!,
+      dt,
+      rt,
+    });
+  } catch (error) {
+    console.error("[ReservePage] initialApiData fetch failed:", error);
+    initialApiData = null;
+  }
+
+  const hydrateKey = [
+    branchId ?? "",
+    carId ?? "",
+    from ?? "",
+    to ?? "",
+    dt ?? "",
+    rt ?? "",
+  ].join("|");
 
   return (
     <>
@@ -102,24 +358,26 @@ function ReservePageContent() {
         <SearchHeader stepSecond isSticky stepSecondDesktopLikeSearch />
       </div>
 
-      <div className="sm:w-[90vw] max-w-334 m-auto relative my-4 px-0 sm:px-2">
+      <div className="relative m-auto my-4 max-w-334 px-0 sm:w-[90vw] sm:px-2">
         <StepRent step={3} />
       </div>
 
-      <div className="sm:w-[90vw] max-w-334 m-auto relative my-2 px-0 sm:px-2">
-        {/* ✅ key باعث میشه اگر query عوض شد، حتما remount */}
-        <ReserveInformation key={hydrateKey} />
+      <div className="relative m-auto my-2 max-w-334 px-0 sm:w-[90vw] sm:px-2">
+        <Suspense fallback={null}>
+          <ReservePageClient
+            key={hydrateKey}
+            branchId={branchId!}
+            carId={carId!}
+            from={from!}
+            to={to!}
+            dt={dt}
+            rt={rt}
+            initialApiData={initialApiData}
+          />
+        </Suspense>
       </div>
 
       <Footer />
     </>
-  );
-}
-
-export default function ReservePage() {
-  return (
-    <Suspense fallback={null}>
-      <ReservePageContent />
-    </Suspense>
   );
 }

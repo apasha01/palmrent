@@ -161,9 +161,8 @@ function logFormData(fd: FormData) {
   console.group("SUBMIT: FORMDATA");
   for (const [key, value] of fd.entries()) {
     if (value instanceof File) {
-      console.log(key, { name: value.name, type: value.type, size: value.size });
     } else {
-      console.log(key, value);
+
     }
   }
   console.groupEnd();

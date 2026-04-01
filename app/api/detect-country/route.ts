@@ -60,14 +60,6 @@ export async function GET() {
       cfConnectingIp?.trim() ||
       "";
 
-    console.log(`${logPrefix} request started`);
-    console.log(`${logPrefix} host:`, host);
-    console.log(`${logPrefix} referer:`, referer);
-    console.log(`${logPrefix} user-agent:`, userAgent);
-    console.log(`${logPrefix} x-forwarded-for:`, forwardedFor);
-    console.log(`${logPrefix} x-real-ip:`, realIp);
-    console.log(`${logPrefix} cf-connecting-ip:`, cfConnectingIp);
-    console.log(`${logPrefix} resolved ip:`, ip || "not-found");
 
     if (!ip) {
       console.warn(`${logPrefix} no ip found, fallback => us`);
@@ -84,8 +76,6 @@ export async function GET() {
 
     const lookupUrl = `https://ipwho.is/${ip}`;
 
-    console.log(`${logPrefix} calling provider:`, lookupUrl);
-
     const res = await fetch(lookupUrl, {
       method: "GET",
       cache: "no-store",
@@ -94,7 +84,6 @@ export async function GET() {
       },
     });
 
-    console.log(`${logPrefix} provider status:`, res.status, res.statusText);
 
     if (!res.ok) {
       console.error(`${logPrefix} provider request failed, fallback => us`);
@@ -111,13 +100,11 @@ export async function GET() {
 
     const data: IpWhoResponse = await res.json();
 
-    console.log(`${logPrefix} provider response:`, JSON.stringify(data, null, 2));
-
+ 
     if (data.success && data.country_code) {
       const country = data.country_code.toLowerCase();
 
-      console.log(`${logPrefix} detected country:`, country);
-
+  
       return NextResponse.json(
         {
           country,

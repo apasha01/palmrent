@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -46,10 +47,8 @@ export default function Header({ shadowLess = false }: { shadowLess?: boolean })
 
   const setIsHeaderClose = (st: boolean) => dispatch(changeIsHeaderClose(st));
 
-  // وقتی Sheet یا منو بازه، auto-hide خاموش
   const disableAutoHide = isAnySheetOpen || menuToggle;
 
-  // Smooth auto-hide logic — STALE STATE SAFE
   const lastYRef = useRef(0);
   const rafRef = useRef<number | null>(null);
 
@@ -61,7 +60,6 @@ export default function Header({ shadowLess = false }: { shadowLess?: boolean })
   const SHOW_AFTER_UP_PX = 8;
   const DEADZONE = 1;
 
-  // refs برای جلوگیری از stale closure
   const isHeaderCloseRef = useRef(isHeaderClose);
   const disableAutoHideRef = useRef(disableAutoHide);
 
@@ -73,10 +71,6 @@ export default function Header({ shadowLess = false }: { shadowLess?: boolean })
     disableAutoHideRef.current = disableAutoHide;
   }, [disableAutoHide]);
 
-  // هنگام تغییر صفحه:
-  // 1) هدر حتما باز شود
-  // 2) بدون انیمیشن باز شود
-  // 3) بعد از mount دوباره transition فعال شود
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -121,7 +115,6 @@ export default function Header({ shadowLess = false }: { shadowLess?: boolean })
     const update = () => {
       rafRef.current = null;
 
-      // اگر Sheet یا منو بازه، هدر همیشه باز
       if (disableAutoHideRef.current) {
         setHeader(false);
         downAccRef.current = 0;
@@ -133,13 +126,11 @@ export default function Header({ shadowLess = false }: { shadowLess?: boolean })
       const y = window.scrollY || 0;
       const dy = y - lastYRef.current;
 
-      // لرزش خیلی ریز
       if (Math.abs(dy) <= DEADZONE) {
         lastYRef.current = y;
         return;
       }
 
-      // تا قبل 100px اصلا مخفی نکن
       if (y < MIN_Y_BEFORE_HIDE) {
         setHeader(false);
         downAccRef.current = 0;
@@ -148,7 +139,6 @@ export default function Header({ shadowLess = false }: { shadowLess?: boolean })
         return;
       }
 
-      // رو به پایین
       if (dy > 0) {
         downAccRef.current += dy;
         upAccRef.current = 0;
@@ -157,9 +147,7 @@ export default function Header({ shadowLess = false }: { shadowLess?: boolean })
           setHeader(true);
           downAccRef.current = 0;
         }
-      }
-      // رو به بالا
-      else {
+      } else {
         upAccRef.current += Math.abs(dy);
         downAccRef.current = 0;
 
@@ -207,8 +195,8 @@ export default function Header({ shadowLess = false }: { shadowLess?: boolean })
         )}
         style={{ height: SITE_HEADER_HEIGHT }}
       >
-        <div className="p-4 px-3 2xl:px-6 text-xs text-muted-foreground">
-          <div className="lg:w-[90vw] md:w-[90vw] max-w-300 m-auto flex justify-between">
+        <div className="p-4 px-3 text-xs text-muted-foreground 2xl:px-6">
+          <div className="m-auto flex max-w-300 justify-between lg:w-[90vw] md:w-[90vw]">
             <div className="flex items-center gap-4">
               <Link
                 className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 sm:block lg:static lg:translate-x-0 lg:translate-y-0"
@@ -346,7 +334,6 @@ export function HeaderMenu({ closeMenu, locale }: HeaderMenuProps) {
   }, [branches]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDropMenuToggle([false, false, false, false]);
   }, [pathname]);
 
@@ -368,57 +355,73 @@ export function HeaderMenu({ closeMenu, locale }: HeaderMenuProps) {
         </Link>
       </li>
 
-      <li className="group relative flex cursor-pointer flex-wrap items-center underline decoration-transparent decoration-o underline-offset-8 lg:gap-2 lg:border-l lg:border-border lg:p-1 lg:px-2 2xl:px-3">
-        <button
-          id="branches-menu-button"
-          type="button"
-          aria-expanded={dropMenuToggle[0]}
-          aria-haspopup="menu"
-          aria-controls="branches-menu-dropdown"
-          onClick={() => toggleMenu(0)}
-          className="flex w-full items-center justify-between border-b border-border p-4 text-foreground transition-colors hover:text-foreground/80 lg:gap-2 lg:border-0 lg:p-0"
-        >
-          <span>{t("branches")}</span>
-          <ChevronDown className="h-4 w-4" aria-hidden="true" />
-        </button>
+  <li className="group relative flex cursor-pointer flex-wrap items-center underline decoration-transparent decoration-o underline-offset-8 lg:gap-2 lg:border-l lg:border-border lg:p-1 lg:px-2 2xl:px-3">
 
-        <DropDown
-          id="branches-menu-dropdown"
-          labelledBy="branches-menu-button"
-          isActive={dropMenuToggle[0]}
-        >
-          {isLoading && (
-            <li className="px-4 py-2 text-sm text-muted-foreground" role="status" aria-live="polite">
-              <div className="flex items-center justify-center">
-                <Spinner />
-              </div>
-            </li>
-          )}
+  <button
+    id="branches-menu-button"
+    type="button"
+    aria-expanded={dropMenuToggle[0]}
+    aria-haspopup="menu"
+    aria-controls="branches-menu-dropdown"
+    onClick={() => toggleMenu(0)}
+    className="flex w-full items-center justify-between border-b border-border p-4 text-foreground transition-colors hover:text-foreground/80 lg:hidden"
+  >
+    <span>{t("branches")}</span>
+    <ChevronDown className="h-4 w-4" aria-hidden="true" />
+  </button>
 
-          {!isLoading && isError && (
-            <li className="px-4 py-2 text-sm text-destructive" role="alert">
-              Failed to load
-            </li>
-          )}
+  {/* Desktop */}
+  <Link
+    href="/cars-rent"
+    onClick={closeMenu}
+    className="hidden items-center justify-between gap-2 text-foreground transition-colors hover:text-foreground/80 lg:flex"
+    aria-label={t("branches")}
+  >
+    <span>{t("branches")}</span>
+    <ChevronDown className="h-4 w-4" aria-hidden="true" />
+  </Link>
 
-          {!isLoading && !isError && sortedBranches.length === 0 && (
-            <li className="px-4 py-2 text-sm text-muted-foreground">
-              No branches
-            </li>
-          )}
-
-          {!isLoading &&
-            !isError &&
-            sortedBranches.map((b: any) => (
-              <DropDownItem
-                key={b.id}
-                text={b.title}
-                href={`/cars-rent/${b.slug}`}
-                closeMenu={closeMenu}
-              />
-            ))}
-        </DropDown>
+  <DropDown
+    id="branches-menu-dropdown"
+    labelledBy="branches-menu-button"
+    isActive={dropMenuToggle[0]}
+  >
+    {isLoading && (
+      <li
+        className="px-4 py-2 text-sm text-muted-foreground"
+        role="status"
+        aria-live="polite"
+      >
+        <div className="flex items-center justify-center">
+          <Spinner />
+        </div>
       </li>
+    )}
+
+    {!isLoading && isError && (
+      <li className="px-4 py-2 text-sm text-destructive" role="alert">
+        Failed to load
+      </li>
+    )}
+
+    {!isLoading && !isError && sortedBranches.length === 0 && (
+      <li className="px-4 py-2 text-sm text-muted-foreground">
+        No branches
+      </li>
+    )}
+
+    {!isLoading &&
+      !isError &&
+      sortedBranches.map((b: any) => (
+        <DropDownItem
+          key={b.id}
+          text={b.title}
+          href={`/cars-rent/${b.slug}`}
+          closeMenu={closeMenu}
+        />
+      ))}
+  </DropDown>
+</li>
 
       <li className="flex cursor-pointer items-center underline decoration-transparent decoration-o underline-offset-8 transition-colors lg:border-l lg:border-border lg:p-1 lg:px-2 lg:hover:decoration-foreground 2xl:px-3">
         <Link
@@ -449,8 +452,16 @@ export function HeaderMenu({ closeMenu, locale }: HeaderMenuProps) {
           labelledBy="contact-menu-button"
           isActive={dropMenuToggle[2]}
         >
-          <DropDownItem text={t("aboutUs")} href="/about-us" closeMenu={closeMenu} />
-          <DropDownItem text={t("contactUs")} href="/contact-us" closeMenu={closeMenu} />
+          <DropDownItem
+            text={t("aboutUs")}
+            href="/about-us"
+            closeMenu={closeMenu}
+          />
+          <DropDownItem
+            text={t("contactUs")}
+            href="/contact-us"
+            closeMenu={closeMenu}
+          />
         </DropDown>
       </li>
 
@@ -474,7 +485,6 @@ export function HeaderMenu({ closeMenu, locale }: HeaderMenuProps) {
           isActive={dropMenuToggle[3]}
         >
           <DropDownItem text={t("blog")} href="/blogs" closeMenu={closeMenu} />
-          <DropDownItem text={t("gallery")} href="/gallery" closeMenu={closeMenu} />
           <DropDownItem text={t("commonQ")} href="/faq" closeMenu={closeMenu} />
           <DropDownItem text={t("rules")} href="/rules" closeMenu={closeMenu} />
         </DropDown>
@@ -490,7 +500,6 @@ function ThemeSwitchSheetItem() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -530,9 +539,7 @@ export function DropDown({
   const isUnderLg = useMediaQuery("(max-width: 1023.9px)");
 
   return (
-    <div
-      className="bottom-0 left-1/2 w-full min-w-32 animate-fade-in lg:absolute lg:hidden lg:w-auto lg:-translate-x-1/2 lg:translate-y-full lg:pt-2 lg:group-hover:flex"
-    >
+    <div className="bottom-0 left-1/2 w-full min-w-32 animate-fade-in lg:absolute lg:hidden lg:w-auto lg:-translate-x-1/2 lg:translate-y-full lg:pt-2 lg:group-hover:flex">
       <ul
         id={id}
         aria-labelledby={labelledBy}

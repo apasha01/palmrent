@@ -12,7 +12,6 @@ const axios = Axios.create({
   },
 });
 
-// ✅ مسیرهایی که نباید اصلاً getSession صدا بخورن (public)
 const PUBLIC_ENDPOINTS = [
   "/auth/otp/request",
   "/auth/otp/verify",

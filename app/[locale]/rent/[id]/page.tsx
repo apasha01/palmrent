@@ -48,7 +48,6 @@ export default function RentPage({ params } : { params: { rentId: string } | any
 
   // اینجا بسته به response واقعی، مپ کن
   const item = data || data;
-  console.log(item);
 
   return (
     <div className="max-w-3xl mx-auto p-4">

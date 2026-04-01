@@ -2,7 +2,7 @@ interface Props {
   description?: string;
 }
 
-export default function HubFooter({ description }: Props) {
+export default function MoreDescription({ description }: Props) {
   return (
     <div className="px-2 sm:px-0">
 

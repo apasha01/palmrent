@@ -1,16 +1,18 @@
-import { Link } from "@/i18n/navigation";
+
 import { IconArrow } from "./Icons";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useSelector } from "react-redux";
 import { STORAGE_URL } from "@/lib/apiClient";
+import { Link } from "@/i18n/navigation";
+
 
 export function RecentBlogPosts(){
     const homeBlogs = useSelector((state)=>state.global.homeBlogs)
     const t = useTranslations();
     return(
         <section className='my-8 bg-[#F6F6F6] py-8 pb-24'>
-            <div className='xl:w-[85vw] w-[95vw] max-w-[1336px] m-auto'>
+            <div className='xl:w-[85vw] w-[95vw] max-w-334 m-auto'>
                 <div className='flex w-full mb-4 justify-between md:pb-6'>
                     <div className="md:text-right text-center md:text-xl sm:text-lg text-base font-bold text-[#3B82F6]">
                         {t('latestBlogs')}
@@ -26,7 +28,6 @@ export function RecentBlogPosts(){
                         {Array(3).fill(null).map((_,index)=>{
                             return(
                                 <div key={index} className="w-full animate-skeleton h-36 rounded-lg p-4">
-                                    {/* <SkeletonSingleBlogPost/> */}
                                 </div>
                             )
                         })}
@@ -68,7 +69,7 @@ export function SingleBlogPost({bigPost=false,smallFont=false,id,title='',descri
             <div className={`flex ${bigPost ? 'flex-col' : ''} gap-4 w-full`}>
                 <div className={`${bigPost ? 'w-full' : 'w-4/12 shrink-0'} relative`}>
                     <Image className="w-full h-full object-cover rounded-lg" src={`${STORAGE_URL}${photo}`} width={530} height={280} alt=""></Image>
-                    <span className={`absolute left-3 bottom-3 text-white bg-[#DF900A] py-0.5 px-2.5 rounded-4xl text-nowrap ${smallFont ? 'lg:text-sm md:text-xs text-xs' :'lg:text-sm md:text-xs text-xs'}`}>راننده شخصی</span>
+
                 </div>
                 <div className="flex flex-col text-justify gap-4">
                     <div className={`${smallFont ? 'lg:text-sm md:text-sm text-xs' : 'lg:text-lg md:text-base sm:text-sm text-xs'} font-bold`}>

@@ -49,3 +49,5 @@ export async function getBranches(locale: string): Promise<Branch[]> {
     photo: normalizeImageUrl(item.photo),
   }));
 }
+
+

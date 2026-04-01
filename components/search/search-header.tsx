@@ -12,8 +12,6 @@ import { cn } from "@/lib/utils"
 import { BranchById } from "@/helpers/BranchNameHelper"
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store"
 import { calcRentDaysWithGrace, normalizeTime } from "@/lib/rent-days"
-import { SheetClose } from "../ui/sheet"
-
 
 function normalizeJalaliString(s: string) {
   return (s).replace(/-/g, "/").trim()
@@ -30,7 +28,6 @@ function normalizeJalaliParam(input?: string | null) {
   if (!y || !m || !d) return null
   return `${y}/${pad2(m)}/${pad2(d)}`
 }
-
 
 
 function parseJalaliToDateNoon(s?: string | null) {
@@ -296,11 +293,6 @@ export default function SearchHeader({
     }
   }
 
-  const handleClear = () => {
-    setCarDates([null, null])
-    setDeliveryTime("10:00")
-    setReturnTime("10:00")
-  }
 
   const popoverKey = useMemo(() => {
     const f = normalizeJalaliParam(carDates?.[0] ?? "") ?? ""
@@ -321,7 +313,7 @@ export default function SearchHeader({
       defaultIsJalali={true}
       initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
       onConfirm={handleConfirm}
-      onClear={handleClear}
+
       trigger={
         <button
           type="button"
@@ -412,7 +404,7 @@ export default function SearchHeader({
                     defaultIsJalali={true}
                     initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
                     onConfirm={handleConfirm}
-                    onClear={handleClear}
+
                     trigger={searchButton}
                   />
                 </div>
@@ -427,7 +419,7 @@ export default function SearchHeader({
                       defaultIsJalali={true}
                       initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
                       onConfirm={handleConfirm}
-                      onClear={handleClear}
+            
                       trigger={searchButton}
                     />
 
@@ -508,7 +500,7 @@ export default function SearchHeader({
                     defaultIsJalali={true}
                     initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
                     onConfirm={handleConfirm}
-                    onClear={handleClear}
+        
                     trigger={searchButton}
                   />
 
@@ -549,7 +541,7 @@ export default function SearchHeader({
                     defaultIsJalali={true}
                     initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
                     onConfirm={handleConfirm}
-                    onClear={handleClear}
+ 
                     trigger={searchButton}
                   />
                 </div>
@@ -590,7 +582,7 @@ export default function SearchHeader({
                     defaultIsJalali={true}
                     initialTimes={{ deliveryTime: dtFallback, returnTime: rtFallback }}
                     onConfirm={handleConfirm}
-                    onClear={handleClear}
+
                     trigger={searchButton}
                   />
 

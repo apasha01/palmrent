@@ -1,8 +1,4 @@
-"use client";
-
-import React from "react";
 import { useTranslations } from "next-intl";
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import {
   Accordion,

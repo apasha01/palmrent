@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { Link } from "@/i18n/navigation";
 import React from "react";
-import { User, LogOut, Moon, Sun } from "lucide-react";
+import { Link } from "@/i18n/navigation";
+import { User, LogOut, Moon, Sun, type LucideIcon } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useTranslations } from "next-intl";
 
 import {
   Popover,
@@ -17,15 +18,20 @@ import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
 export default function UserAvatarPopover() {
+  const t = useTranslations("userAvatarPopover");
+
   const { isAuthenticated, user, logout } = useAuth();
   const { theme, resolvedTheme, setTheme } = useTheme();
 
   const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => setMounted(true), []);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!isAuthenticated) return null;
 
-  const avatarUrl = user?.avatar_url;
+  const avatarUrl = user?.avatar_url ?? undefined;
 
   const rawName = String(user?.name ?? "").trim();
   const hasName = rawName.length > 0;
@@ -41,10 +47,14 @@ export default function UserAvatarPopover() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button type="button" className="outline-none">
+        <button
+          type="button"
+          className="outline-none"
+          aria-label={t("openUserMenu")}
+        >
           <Avatar className="h-9 w-9">
-            <AvatarImage src={avatarUrl || undefined} alt={rawName || "User"} />
-            <AvatarFallback className="bg-muted text-sm font-bold flex items-center justify-center">
+            <AvatarImage src={avatarUrl} alt={rawName || t("userAlt")} />
+            <AvatarFallback className="flex items-center justify-center bg-muted text-sm font-bold">
               {hasName ? (
                 fallbackLetter
               ) : (
@@ -55,45 +65,43 @@ export default function UserAvatarPopover() {
         </button>
       </PopoverTrigger>
 
-      <PopoverContent align="end" className="w-56 p-3 rounded-xl shadow-md">
-        {/* نام */}
+      <PopoverContent align="end" className="w-56 rounded-xl p-3 shadow-md">
         {hasName && (
           <>
             <div className="mb-2">
               <p className="text-sm font-semibold text-foreground">{rawName}</p>
             </div>
-            <div className="h-px bg-border my-2" />
+            <div className="my-2 h-px bg-border" />
           </>
         )}
 
-        {/* پروفایل */}
-        <MenuLink href="/profile" icon={User} label="پروفایل" />
+        <MenuLink href="/profile" icon={User} label={t("profile")} />
 
-        {/* سوییچ تم (زیر پروفایل) */}
-        <div className="flex items-center justify-between h-9 px-2 rounded-lg hover:bg-muted/60 transition mt-1">
+        <div className="mt-1 flex h-9 items-center justify-between rounded-lg px-2 transition hover:bg-muted/60">
           <div className="flex items-center gap-2">
             {isDark ? (
               <Moon className="h-4 w-4 text-muted-foreground" />
             ) : (
               <Sun className="h-4 w-4 text-muted-foreground" />
             )}
+
             <span className="text-sm text-foreground/90">
-              {isDark ? "حالت شب" : "حالت روز"}
+              {isDark ? t("darkMode") : t("lightMode")}
             </span>
           </div>
 
           <Switch
             dir="ltr"
-            checked={!!isDark}
+            checked={Boolean(isDark)}
             onCheckedChange={toggleTheme}
             disabled={!mounted}
+            aria-label={t("themeSwitch")}
           />
         </div>
 
-        <div className="h-px bg-border my-2" />
+        <div className="my-2 h-px bg-border" />
 
-        {/* خروج (آخرین آیتم) */}
-        <MenuAction icon={LogOut} label="خروج" onClick={logout} />
+        <MenuAction icon={LogOut} label={t("logout")} onClick={logout} />
       </PopoverContent>
     </Popover>
   );
@@ -105,13 +113,13 @@ function MenuLink({
   label,
 }: {
   href: string;
-  icon: any;
+  icon: LucideIcon;
   label: string;
 }) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-2 h-9 px-2 rounded-lg hover:bg-muted/60 transition"
+      className="flex h-9 items-center gap-2 rounded-lg px-2 transition hover:bg-muted/60"
     >
       <Icon className="h-4 w-4 text-muted-foreground" />
       <span className="text-sm text-foreground/90">{label}</span>
@@ -124,7 +132,7 @@ function MenuAction({
   label,
   onClick,
 }: {
-  icon: any;
+  icon: LucideIcon;
   label: string;
   onClick: () => void;
 }) {
@@ -133,8 +141,8 @@ function MenuAction({
       type="button"
       onClick={onClick}
       className={cn(
-        "w-full flex items-center gap-2 h-9 px-2 rounded-lg",
-        "hover:bg-destructive/10 transition",
+        "flex h-9 w-full items-center gap-2 rounded-lg px-2",
+        "transition hover:bg-destructive/10",
       )}
     >
       <Icon className="h-4 w-4 text-destructive" />

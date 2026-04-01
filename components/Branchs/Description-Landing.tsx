@@ -10,7 +10,6 @@ type Props = {
 };
 
 export default function DescriptionLanding({
-  title,
   html = "",
   collapsedLines = 6,
 }: Props) {
@@ -29,7 +28,6 @@ export default function DescriptionLanding({
 
   return (
     <section className="w-full bg-transparent px-4 md:px-2 lg:px-0">
-      {title ? <h2 className="mb-2 text-right font-bold">{title}</h2> : null}
 
       <div
         id={contentId}

@@ -835,7 +835,7 @@ export default function BranchCarCard({
                   rt: v.returnTime,
                 });
               }}
-              onClear={clearSharedSelection}
+  
               trigger={
                 <button
                   type="button"
@@ -888,12 +888,12 @@ export default function BranchCarCard({
               target="_blank"
               onClick={(e) => e.stopPropagation()}
               className="flex w-fit cursor-pointer items-center justify-center gap-2 text-nowrap rounded-xl border border-[#10B98180] bg-[#10B9811A] px-2 py-1 text-[#10B981]"
-              aria-label={t("whatsapp")}
+              aria-label={t("carWhatsapp")}
             >
               <span aria-hidden="true">
                 <IconWhatsapp className="size-5" />
               </span>
-              {t("whatsapp")}
+              {t("carWhatsapp")}
             </Link>
           </footer>
         )}

@@ -61,7 +61,6 @@ function SelectContent({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
   const locale = useDIR();
-  console.log(locale)
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content

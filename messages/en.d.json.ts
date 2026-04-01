@@ -30,7 +30,8 @@ declare const messages: {
     "delivery": "Delivery",
     "return": "Return",
     "pick": "Select",
-    "confirmAndSearch": "Confirm & search"
+    "confirmAndSearch": "Confirm & search",
+    "days" : "Days"
   },
 
 
@@ -653,6 +654,152 @@ declare const messages: {
     }
   },
 
+   "profile": {
+    "pageTitle": "Profile",
+    "common": {
+      "user": "User"
+    },
+    "auth": {
+      "required": "Please sign in to view your profile."
+    },
+    "sidebar": {
+      "phone": "Phone: {value}",
+      "email": "Email: {value}"
+    },
+    "actions": {
+      "logout": "Sign out"
+    },
+    "menu": {
+      "me": "My details",
+      "documents": "Uploaded documents",
+      "cars": "My car history",
+      "transactions": "My transactions"
+    },
+    "cars": {
+      "title": "My car history",
+      "empty": "—"
+    },
+    "transactions": {
+      "title": "My transactions",
+      "empty": "—"
+    },
+    "meta": {
+      "title": "Profile | Palm Rent",
+      "description": "View your account details, uploaded documents, car history, and transactions in Palm Rent",
+      "keywords": {
+        "profile": "profile",
+        "account": "account",
+        "documents": "documents",
+        "transactions": "transactions",
+        "cars": "car history",
+        "brand": "Palm Rent",
+        "rental": "car rental"
+      }
+    },
+    "documents": {
+      "title": "Uploaded documents",
+      "subtitle": "Choose a file; upload will be done only after preview and confirmation.",
+      "loading": "Loading documents...",
+      "previewAlt": "Document preview",
+      "rejectionReason": "Rejection reason: {reason}",
+      "labels": {
+        "status": "Status: {value}"
+      },
+      "fileState": {
+        "uploaded": "Uploaded",
+        "notUploaded": "Not uploaded"
+      },
+      "status": {
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "pending": "Pending review"
+      },
+      "actions": {
+        "refresh": "Refresh",
+        "view": "View",
+        "upload": "Upload",
+        "replace": "Edit / Replace",
+        "uploading": "Uploading...",
+        "cancel": "Cancel",
+        "confirmAndUpdate": "Confirm and update",
+        "close": "Close"
+      },
+      "confirm": {
+        "title": "Confirm document update",
+        "description": "Are you sure you want to update {title}?\nUpload will happen only after confirmation.",
+        "currentDocument": "Current document",
+        "newDocument": "New document",
+        "currentAlt": "Current document",
+        "newAlt": "New document",
+        "noPreviousDocument": "No previous document",
+        "note": "Note: after updating, the review status may change back to pending."
+      },
+      "toasts": {
+        "fetchError": "Failed to load documents",
+        "invalidFormat": "File format must be jpg/png/webp",
+        "maxSize": "Maximum file size is 10MB",
+        "uploadSuccess": "Document updated successfully",
+        "uploadError": "Error uploading document"
+      },
+      "items": {
+        "identity": {
+          "title": "National ID card",
+          "hint": "A clear photo of the national ID card"
+        },
+        "driverLicenseFront": {
+          "title": "Driver's license (front)",
+          "hint": "Front side of the driver's license"
+        },
+        "driverLicenseBack": {
+          "title": "Driver's license (back)",
+          "hint": "Back side of the driver's license"
+        },
+        "internationalDriverLicenseFront": {
+          "title": "International driver's license (front)",
+          "hint": "Front side of the international driver's license"
+        },
+        "internationalDriverLicenseBack": {
+          "title": "International driver's license (back)",
+          "hint": "Back side of the international driver's license"
+        },
+        "visa": {
+          "title": "Visa",
+          "hint": "A clear image of the visa"
+        }
+      }
+    },
+    "me": {
+      "title": "Account details",
+      "avatarAlt": "User avatar",
+      "fields": {
+        "fullName": "Full name",
+        "phone": "Phone"
+      },
+      "actions": {
+        "save": "Update profile"
+      },
+      "toasts": {
+        "imageOnly": "The selected file must be an image",
+        "maxAvatarSize": "Avatar size must be less than 4 MB",
+        "nameRequired": "Please enter your full name",
+        "invalidServerResponse": "Invalid server response",
+        "success": "Profile updated successfully",
+        "updateError": "Error updating profile"
+      }
+    }
+  },
+
+        "userAvatarPopover": {
+    "openUserMenu": "Open user menu",
+    "userAlt": "User",
+    "profile": "Profile",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode",
+    "themeSwitch": "Toggle theme",
+    "logout": "Log out"
+  },
+
+
   "InformationStepLogic": {
     "errors": {
       "invalidBranch": "Invalid branch",
@@ -668,6 +815,79 @@ declare const messages: {
       "deliveryPrefix": "Pick-up location: {place}",
       "returnPrefix": "Return location: {place}"
     }
+  },
+
+    "downloadApp": {
+    "appName": "Palm Rent",
+    "subtitle": "Install the app, book faster, and track your order status in real time.",
+    "badges": {
+      "newVersion": "New Version",
+      "fasterExperience": "A faster and more colorful experience ✨"
+    },
+    "hero": {
+      "application": "Application",
+      "downloadTitle": "Download {appName}"
+    },
+    "info": {
+      "fastReservation": "Faster booking",
+      "orderStatusNotification": "Order status notifications",
+      "support247": "24/7 support"
+    },
+    "features": {
+      "easyInstall": {
+        "title": "Easy install",
+        "description": "Direct download or from app stores, hassle-free."
+      },
+      "secureReliable": {
+        "title": "Secure & reliable",
+        "description": "Official links + installation guide and support."
+      },
+      "betterExperience": {
+        "title": "Better experience",
+        "description": "Faster booking, order management, and special offers."
+      }
+    },
+    "actions": {
+      "enterWeb": "Open Web Version",
+      "downloadAndroid": "Download for Android",
+      "downloadIOS": "Download for iOS",
+      "webVersion": "Web Version"
+    },
+
+
+    "support": {
+      "installProblem": "Having trouble installing?",
+      "installationGuide": "Installation Guide / Support"
+    },
+    "floating": {
+      "quickBooking": "Quick booking",
+      "lessThanOneMinute": "Less than 1 minute",
+      "support247": "24/7 support",
+      "whatsappAndCall": "WhatsApp & Calls"
+    },
+    "bottom": {
+      "title": "Three quick ways to use it",
+      "description": "Install the app or use the web version without installation, with full features included.",
+      "android": "Android",
+      "ios": "iOS",
+      "web": "Web Version",
+      "footerNote": "By installing the app, you get special offers and faster booking."
+    }
+  },
+
+    "wishlist": "Wishlist",
+  "carWhatsapp": "WhatsApp",
+
+      "blogPage": {
+      "relatedPosts": "Related Posts"
+  },
+
+    "NotFoundPage": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist, may have been removed, or the address was entered incorrectly.",
+    "goHome": "Back to home",
+    "goBack": "Go back",
+    "hint": "Check the page address or continue from the homepage."
   },
 
     "carDetail": {
@@ -859,19 +1079,7 @@ declare const messages: {
     }
   },
 
-    "carDetail": {
-    "notFound": "Car not found",
-    "notFoundDesc": "The ID might be wrong or the car has been removed.",
-    "noDeposit": "No deposit",
-    "freeDelivery": "Free delivery",
-    "unlimitedKm": "Unlimited kilometers",
-    "insurance": "Insurance",
-    "share": "Share",
-    "addToWishlist": "Add to wishlist",
-    "persons": "persons",
-    "suitcases": "suitcases",
-    "aboutCar": "About {car} in {branch}"
-  },
+
 
   "NavSection": {
     "heroAlt": "Header image",
@@ -1264,19 +1472,28 @@ declare const messages: {
     "scrollPrev": "Scroll previous"
   },
 
-  "branchLanding": {
-    "heroTitle": "Car rental in <Branch></Branch> with no deposit",
-    "heroSubtitle1": "Fast delivery at the airport or hotel, plus free insurance",
-    "heroSubtitle2": "Quick online booking, pay on delivery, 24/7 support",
-   "carsListTitle": "Car list in <Branch></Branch>",
-    "noCarsFound": "No cars found",
-    "loadingMore": "Loading…",
-    "viewMore": "View more",
-
-
-    "noMoreResults": "No more results",
-    "fetchError": "Failed to fetch information"
+    "carDetailNotFoundPage": {
+    "meta": {
+      "title": "Car Not Found | Palm Rent",
+      "description": "The requested car could not be found. Explore other rental cars on Palm Rent."
+    },
+    "title": "Car not found",
+    "description": "The car you are looking for does not exist, has been removed, or the address is incorrect.",
+    "goHome": "Back to home"
   },
+
+"branchLanding": {
+  "heroTitle": "No-Deposit Car Rental in <Branch></Branch>",
+  "heroSubtitle1": "Rent a car in <Branch></Branch> with transparent pricing, online booking, and free airport delivery.",
+  "heroSubtitle2": "Explore Palm Rent’s available cars and book with no deposit, no guarantee, and no traffic fine deposit.",
+  "loadingMore": "Loading…",
+  "viewMore": "View more",
+  "noCarsFound": "No cars found",
+  "carsListTitle": "Car list in <Branch></Branch>",
+  "noMoreResults": "No more results",
+  "fetchError": "Failed to fetch information",
+  "clearAllFilters": "Clear all filters"
+},
 
     "RentCommon": {
     "free": "Free",

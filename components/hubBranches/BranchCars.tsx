@@ -13,14 +13,15 @@ import React, {
 import { useSelector } from "react-redux";
 import { Button } from "../ui/button";
 import { useLocale, useTranslations } from "next-intl";
-import { useHubCarsOnly } from "@/services/hub-cars/hub-cars.queries";
 import { Link } from "@/i18n/navigation";
 import BranchCarCard from "../card/CardCardBranch";
 import type { Range } from "@/components/custom/calender/date-range-picker";
 import { SITE_HEADER_HEIGHT } from "@/components/layouts/Header";
-import { useQueryClient } from "@tanstack/react-query";
-import { getHubCarsOnly } from "@/services/hub-cars/hub-cars.api";
 import useDIR from "@/hooks/use-rtl";
+import {
+  getHubCarsOnly,
+  type HubCarsResponseData,
+} from "@/services/hub-cars/hub-cars.api";
 
 type BranchItem = {
   id: number;
@@ -31,6 +32,8 @@ type BranchItem = {
 type BranchCarsProps = {
   branches?: BranchItem[];
   isLoading?: boolean;
+  initialBranchId?: number | string | null;
+  initialCarsData?: HubCarsResponseData | null;
 };
 
 const EMPTY_RANGE: Range = { start: null, end: null };
@@ -53,7 +56,7 @@ function BranchCarCardSkeleton() {
           <div className="h-4 animate-pulse rounded bg-gray-200" />
         </div>
 
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-3 flex flex-wrap gap-2">
           <div className="h-6 w-24 animate-pulse rounded-full bg-gray-200" />
           <div className="h-6 w-20 animate-pulse rounded-full bg-gray-200" />
           <div className="h-6 w-28 animate-pulse rounded-full bg-gray-200" />
@@ -87,7 +90,20 @@ function BranchCarCardSkeleton() {
   );
 }
 
-const BranchCars = ({ branches }: BranchCarsProps) => {
+const EMPTY_CARS_DATA: HubCarsResponseData = {
+  cars: [],
+  page: 1,
+  per_page: 9,
+  has_more: false,
+  currency: "",
+  rate_to_rial: null,
+};
+
+const BranchCars = ({
+  branches = [],
+  initialBranchId = null,
+  initialCarsData = null,
+}: BranchCarsProps) => {
   const locale = useLocale();
   const t = useTranslations("HubBranchCars");
   const { direction } = useDIR();
@@ -96,31 +112,41 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
   const tabsScrollRef = useRef<HTMLDivElement>(null);
   const afterNormalRef = useRef<HTMLDivElement | null>(null);
 
-  const queryClient = useQueryClient();
-
   const [activeCity, setActiveCity] = useState<string>("");
   const [stuck, setStuck] = useState(false);
   const [fadeSeq, setFadeSeq] = useState(0);
 
+  const [carsData, setCarsData] = useState<HubCarsResponseData>(
+    initialCarsData ?? EMPTY_CARS_DATA
+  );
+  const [loadingCars, setLoadingCars] = useState(false);
+
   const stuckRef = useRef(false);
+  const firstHydratedBranchIdRef = useRef<number | string | null>(initialBranchId);
 
   const isHeaderClose = useSelector((state: any) => state.global.isHeaderClose);
 
   useEffect(() => {
-    if (!activeCity && branches?.length) {
-      setActiveCity(branches[0].slug);
+    if (!branches?.length) return;
+
+    if (activeCity) return;
+
+    const initialBranch =
+      branches.find((b) => String(b.id) === String(initialBranchId)) ?? branches[0];
+
+    if (initialBranch?.slug) {
+      setActiveCity(initialBranch.slug);
     }
+  }, [branches, activeCity, initialBranchId]);
+
+  const activeBranch = useMemo(() => {
+    return branches?.find((b) => b.slug === activeCity) ?? null;
   }, [branches, activeCity]);
 
-  const activeBranchId = useMemo(() => {
-    return branches?.find((b) => b.slug === activeCity)?.id ?? "";
-  }, [branches, activeCity]);
+  const activeBranchId = activeBranch?.id ?? "";
 
-  const { data: carsData, isLoading, isFetching } = useHubCarsOnly(
-    activeBranchId,
-    locale,
-    { page: 1 },
-  );
+  const activeCityName = activeBranch?.title ?? "";
+  const viewAllHref = activeCity ? `/cars-rent/${activeCity}` : "/cars-rent";
 
   const cars = carsData?.cars ?? [];
   const currency = carsData?.currency ?? "";
@@ -136,43 +162,40 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
     setSharedCalendar(v);
   }, []);
 
-  const activeCityName =
-    branches?.find((c) => c.slug === activeCity)?.title ?? "";
+  const loadBranchCars = useCallback(
+    async (branchId: number | string) => {
+      if (!branchId) {
+        setCarsData(EMPTY_CARS_DATA);
+        return;
+      }
 
-  const showSkeleton = isLoading || isFetching;
-  const viewAllHref = `/cars-rent/${activeCity}`;
+      setLoadingCars(true);
+
+      try {
+        const data = await getHubCarsOnly(branchId, locale, { page: 1 });
+        setCarsData(data ?? EMPTY_CARS_DATA);
+      } catch {
+        setCarsData(EMPTY_CARS_DATA);
+      } finally {
+        setLoadingCars(false);
+      }
+    },
+    [locale]
+  );
 
   useEffect(() => {
-    if (!branches?.length) return;
+    if (!activeBranchId) return;
 
-    let index = 1;
-    let cancelled = false;
+    if (
+      firstHydratedBranchIdRef.current &&
+      String(firstHydratedBranchIdRef.current) === String(activeBranchId)
+    ) {
+      firstHydratedBranchIdRef.current = null;
+      return;
+    }
 
-    const runPrefetch = async () => {
-      while (index < branches.length && !cancelled) {
-        const branch = branches[index];
-
-        await queryClient.prefetchQuery({
-          queryKey: ["hubCars", branch.id, locale],
-          queryFn: () =>
-            getHubCarsOnly(branch.id, locale, {
-              page: 1,
-            }),
-          staleTime: Infinity,
-        });
-
-        index++;
-
-        await new Promise((r) => setTimeout(r, 900));
-      }
-    };
-
-    runPrefetch();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [branches, locale, queryClient]);
+    loadBranchCars(activeBranchId);
+  }, [activeBranchId, loadBranchCars]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -263,7 +286,7 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
     if (!tabsScrollRef.current || !activeCity) return;
 
     const buttons = tabsScrollRef.current.querySelectorAll<HTMLButtonElement>(
-      `[data-city-slug="${activeCity}"]`,
+      `[data-city-slug="${activeCity}"]`
     );
 
     buttons.forEach((activeButton) => {
@@ -278,7 +301,7 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
   const headerOffsetClass = isHeaderClose ? "translate-y-0" : "translate-y-16";
 
   const TabsContent = () => (
-    <div className="mx-auto max-w-7xl border-b border-gray-200 bg-white/95 py-2 shadow-sm backdrop-blur-sm dark:border-gray-800 dark:bg-gray-950/95">
+    <div className="mx-auto max-w-7xl bg-white/95 py-2  dark:border-gray-800 dark:bg-gray-950/95">
       <div className="flex items-center justify-between gap-3 px-2 sm:px-0">
         <div
           ref={tabsScrollRef}
@@ -309,7 +332,12 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
         </div>
 
         <div className="hidden gap-2 md:flex">
-          <Button variant="outline" size="icon" onClick={scrollRight} aria-label={t("scrollNext")}>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={scrollRight}
+            aria-label={t("scrollNext")}
+          >
             {direction ? (
               <ChevronLeft className="h-5 w-5" />
             ) : (
@@ -317,7 +345,12 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
             )}
           </Button>
 
-          <Button variant="outline" size="icon" onClick={scrollLeft} aria-label={t("scrollPrev")}>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={scrollLeft}
+            aria-label={t("scrollPrev")}
+          >
             {direction ? (
               <ChevronRight className="h-5 w-5" />
             ) : (
@@ -377,7 +410,7 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
                 }`}
               >
                 {stuck && (
-                  <div key={fadeSeq} className="branchCarsStickyFade ">
+                  <div key={fadeSeq} className="branchCarsStickyFade">
                     <div className="mx-auto w-full max-w-7xl sm:px-0">
                       <TabsContent />
                     </div>
@@ -390,10 +423,12 @@ const BranchCars = ({ branches }: BranchCarsProps) => {
 
         <div
           ref={sliderRef}
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
+          style={
+            { scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties
+          }
           className="mb-2 mt-4 flex w-screen snap-x snap-mandatory gap-3 overflow-x-scroll overflow-y-hidden pb-2 pl-4 sm:w-full sm:pl-0 [&::-webkit-scrollbar]:hidden"
         >
-          {showSkeleton ? (
+          {loadingCars ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}

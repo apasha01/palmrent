@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_STORAGE_URL: "https://cdn.palmrentcar.com/",
     NEXTAUTH_URL: "http://localhost:3000",
     NEXTAUTH_SECRET: "9c2a7f4e1d8b0a6f3c5e9d2b7a1f4c8e6d0a5b9c7f3e1d8b2a4c6",
+    NEXTFRONTEND_URL: "http://localhost:3000",
   },
 
   images: {

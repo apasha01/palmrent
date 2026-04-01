@@ -3,38 +3,60 @@
 
 import * as React from "react";
 import { CalendarGrid } from "./calendar-grid";
+import { NativeTimeSelect } from "./native-time-select";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Calendar, ChevronLeft, ChevronRight, X, Clock, ArrowRight } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  ArrowRight,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
-import { getJalaliParts, formatJalaliDate, formatGregorianDate } from "@/lib/date-utils";
+import {
+  getJalaliParts,
+  formatJalaliDate,
+  formatGregorianDate,
+  getRangeDaysCount,
+  weekDaysJalali,
+  weekDaysGregorian,
+} from "@/lib/date-utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocale, useTranslations } from "next-intl";
+import CalendarArrow from "./CalenderArrowIcon";
 
 export type Range = { start: Date | null; end: Date | null };
 
 type Props = {
   initialRange?: Range;
-
   defaultIsJalali?: boolean;
-
   initialTimes?: { deliveryTime?: string; returnTime?: string };
-  onConfirm?: (range: { start: Date; end: Date; deliveryTime: string; returnTime: string }) => void;
-  onClear?: () => void;
+  onConfirm?: (range: {
+    start: Date;
+    end: Date;
+    deliveryTime: string;
+    returnTime: string;
+  }) => void;
   trigger: React.ReactNode;
-
-
   noDefaultSelectionOnFirstOpen?: boolean;
+
+  /**
+   * دیفالت false
+   * یعنی روزهای گذشته غیرفعال هستند
+   */
+  allowPastDates?: boolean;
 };
 
 const EMPTY: Range = { start: null, end: null };
 
 const RTL_LOCALES = new Set(["fa", "ar"]);
-const JALALI_DEFAULT_LOCALES = new Set(["fa", "ar"]); // فقط fa/ar پیش‌فرض شمسی
 
-/** همیشه HH:mm */
+// ✅ فقط fa مجاز به استفاده از تقویم جلالی است
+const JALALI_ALLOWED_LOCALE = "fa";
+
 function normalizeTimeLocal(t?: string | null) {
   const s = String(t ?? "").trim();
   if (!s) return "10:00";
@@ -42,12 +64,15 @@ function normalizeTimeLocal(t?: string | null) {
   const m = s.match(/^(\d{1,2}):(\d{1,2})$/);
   if (!m) return "10:00";
 
-  const hh = String(Math.min(23, Math.max(0, Number(m[1])))).padStart(2, "0");
-  const mm = String(Math.min(59, Math.max(0, Number(m[2])))).padStart(2, "0");
-  return `${hh}:${mm}`;
+  const hh = Math.min(23, Math.max(0, Number(m[1])));
+  const mm = Math.min(59, Math.max(0, Number(m[2])));
+
+  const roundedMinutes = mm < 15 ? 0 : mm < 45 ? 30 : 0;
+  const adjustedHour = mm >= 45 ? Math.min(23, hh + 1) : hh;
+
+  return `${String(adjustedHour).padStart(2, "0")}:${String(roundedMinutes).padStart(2, "0")}`;
 }
 
-/** ضد DST/Timezone: تاریخ‌ها روی 12:00 قفل */
 const atNoon = (d: Date) => {
   const x = new Date(d);
   x.setHours(12, 0, 0, 0);
@@ -67,9 +92,9 @@ export function DateRangePickerPopover({
   defaultIsJalali,
   initialTimes,
   onConfirm,
-  onClear,
   trigger,
   noDefaultSelectionOnFirstOpen = false,
+  allowPastDates = false,
 }: Props) {
   const isMobile = useIsMobile();
 
@@ -78,29 +103,34 @@ export function DateRangePickerPopover({
 
   const dir: "rtl" | "ltr" = RTL_LOCALES.has(locale) ? "rtl" : "ltr";
 
+  // ✅ فقط locale === "fa" مجاز است — ar و بقیه میلادی می‌گیرند
+  const canUseJalali = locale === JALALI_ALLOWED_LOCALE;
+
   const computedDefaultIsJalali =
-    typeof defaultIsJalali === "boolean" ? defaultIsJalali : JALALI_DEFAULT_LOCALES.has(locale);
+    typeof defaultIsJalali === "boolean" ? defaultIsJalali : canUseJalali;
 
   const [isJalali, setIsJalali] = React.useState(computedDefaultIsJalali);
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const [range, setRange] = React.useState<Range>(() => normalizeRange(initialRange));
+  const [range, setRange] = React.useState<Range>(() =>
+    normalizeRange(initialRange),
+  );
 
   const [deliveryTime, setDeliveryTime] = React.useState<string>(
     normalizeTimeLocal(initialTimes?.deliveryTime),
   );
-  const [returnTime, setReturnTime] = React.useState<string>(normalizeTimeLocal(initialTimes?.returnTime));
+  const [returnTime, setReturnTime] = React.useState<string>(
+    normalizeTimeLocal(initialTimes?.returnTime),
+  );
 
-  // hover برای انتخاب end موقت
   const [hoverDate, setHoverDate] = React.useState<Date | null>(null);
 
-  // فقط بار اول خالی
   const firstOpenRef = React.useRef(true);
+  const mobileScrollRef = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {
     if (!isOpen) return;
 
-    // ✅ بار اول باز شدن: خالی
     if (noDefaultSelectionOnFirstOpen && firstOpenRef.current) {
       setRange(EMPTY);
       setDeliveryTime(normalizeTimeLocal(initialTimes?.deliveryTime));
@@ -111,7 +141,6 @@ export function DateRangePickerPopover({
       return;
     }
 
-    // دفعات بعد: از prop ها hydrate
     setRange(normalizeRange(initialRange ?? EMPTY));
     setDeliveryTime(normalizeTimeLocal(initialTimes?.deliveryTime));
     setReturnTime(normalizeTimeLocal(initialTimes?.returnTime));
@@ -127,15 +156,23 @@ export function DateRangePickerPopover({
     noDefaultSelectionOnFirstOpen,
   ]);
 
-  // view اولیه
   const jToday = getJalaliParts(new Date());
   const [viewDate, setViewDate] = React.useState(() => {
-    if (isJalali) return { year: jToday.year, month: jToday.month };
+    if (computedDefaultIsJalali)
+      return { year: jToday.year, month: jToday.month };
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
   });
 
   React.useEffect(() => {
+    if (!canUseJalali) {
+      // ✅ اگر locale جلالی مجاز نیست، مستقیم به میلادی برو
+      setIsJalali(false);
+      const now = new Date();
+      setViewDate({ year: now.getFullYear(), month: now.getMonth() });
+      return;
+    }
+
     if (isJalali) {
       const currentJalali = getJalaliParts(new Date());
       setViewDate({ year: currentJalali.year, month: currentJalali.month });
@@ -143,19 +180,18 @@ export function DateRangePickerPopover({
       const now = new Date();
       setViewDate({ year: now.getFullYear(), month: now.getMonth() });
     }
-  }, [isJalali]);
+  }, [isJalali, canUseJalali]);
 
-  // اگر زبان عوض شد و prop نداده بود => پیش‌فرض بر اساس locale
   React.useEffect(() => {
     if (typeof defaultIsJalali === "boolean") return;
-    setIsJalali(JALALI_DEFAULT_LOCALES.has(locale));
+    // ✅ وقتی locale عوض میشه، جلالی بودن رو بر اساس canUseJalali (فقط fa) تنظیم کن
+    setIsJalali(canUseJalali);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale]);
 
   const handleSelect = (date: Date) => {
     const d = atNoon(date);
 
-    // شروع جدید
     if (!range.start || range.end) {
       setRange({ start: d, end: null });
       setHoverDate(null);
@@ -164,8 +200,11 @@ export function DateRangePickerPopover({
 
     const s = atNoon(range.start);
 
-    // end باید بعد از start باشد
-    if (d.getTime() < s.getTime()) return;
+    if (d.getTime() < s.getTime()) {
+      setRange({ start: d, end: null });
+      setHoverDate(null);
+      return;
+    }
 
     setRange({ start: s, end: d });
     setHoverDate(null);
@@ -187,27 +226,34 @@ export function DateRangePickerPopover({
   };
 
   const goToToday = () => {
-    if (isJalali) {
+    if (isJalali && canUseJalali) {
       const currentJalali = getJalaliParts(new Date());
       setViewDate({ year: currentJalali.year, month: currentJalali.month });
     } else {
       const now = new Date();
       setViewDate({ year: now.getFullYear(), month: now.getMonth() });
     }
+
+    if (isMobile && mobileScrollRef.current) {
+      requestAnimationFrame(() => {
+        mobileScrollRef.current?.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      });
+    }
   };
 
-  const formatDate = (date: Date) => (isJalali ? formatJalaliDate(date) : formatGregorianDate(date));
+  const formatDate = (date: Date) =>
+    isJalali ? formatJalaliDate(date) : formatGregorianDate(date);
 
   const isComplete = Boolean(range.start && range.end);
-  const displayText = isComplete ? `${formatDate(range.start!)} | ${formatDate(range.end!)}` : "";
-
-  const clearRange = () => {
-    setRange({ start: null, end: null });
-    setDeliveryTime("10:00");
-    setReturnTime("10:00");
-    setHoverDate(null);
-    onClear?.();
-  };
+  const displayText = isComplete
+    ? `${formatDate(range.start!)} | ${formatDate(range.end!)}`
+    : "";
+  const daysCount = isComplete
+    ? getRangeDaysCount(range.start!, range.end!)
+    : 0;
 
   const confirm = () => {
     if (!range.start || !range.end) return;
@@ -225,44 +271,54 @@ export function DateRangePickerPopover({
     setIsOpen(false);
   };
 
-  const toggleCalendarType = () => setIsJalali((p) => !p);
+  const toggleCalendarType = () => {
+    if (!canUseJalali) return;
+    setIsJalali((p) => !p);
+  };
+
   const toggleLabel = isJalali ? t("switchToGregorian") : t("switchToJalali");
+
+  const confirmButtonText = isComplete
+    ? `${t("confirm")} (${daysCount} ${t("days")})`
+    : t("confirm");
+  const confirmAndSearchText = isComplete
+    ? `${t("confirmAndSearch")} (${daysCount} ${t("days")})`
+    : t("confirmAndSearch");
+
+  const mobileWeekDays = isJalali ? weekDaysJalali : weekDaysGregorian;
 
   const calendarContent = (
     <div
       className={cn(
         "overflow-hidden",
-        !isMobile && "rounded-2xl border border-gray-200 dark:border-white/10 shadow-2xl",
+        !isMobile &&
+          "rounded-2xl border border-gray-200 dark:border-white/10 shadow-2xl",
         "bg-white dark:bg-background",
       )}
       dir={dir}
     >
-      {/* Top controls */}
       <div className="flex items-center justify-between px-4 md:px-6 py-3 border-b border-gray-200 dark:border-white/10">
         <button
           type="button"
-          onClick={clearRange}
-          className="flex items-center gap-2 text-gray-500 dark:text-gray-300 text-sm font-semibold"
+          onClick={goToToday}
+          className="text-blue-600 dark:text-blue-400 text-sm font-semibold"
         >
-          <X className="h-4 w-4" />
-          {t("clear")}
-        </button>
-
-        <button
-          type="button"
-          onClick={toggleCalendarType}
-          className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm font-semibold"
-        >
-          <Calendar className="h-4 w-4" />
-          {toggleLabel}
-        </button>
-
-        <button type="button" onClick={goToToday} className="text-blue-600 dark:text-blue-400 text-sm font-semibold">
           {t("goToToday")}
         </button>
+
+        {/* ✅ دکمه تغییر تقویم فقط برای fa نشان داده میشه */}
+        {canUseJalali && (
+          <button
+            type="button"
+            onClick={toggleCalendarType}
+            className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm font-semibold"
+          >
+            <Calendar className="h-4 w-4" />
+            {toggleLabel}
+          </button>
+        )}
       </div>
 
-      {/* Calendar area */}
       <div className={cn("relative", isMobile ? "px-2 py-4" : "p-4 md:p-6")}>
         <button
           type="button"
@@ -282,7 +338,12 @@ export function DateRangePickerPopover({
           <ChevronLeft className="h-6 w-6" />
         </button>
 
-        <div className={cn("grid gap-8 md:gap-12 px-8", isMobile ? "grid-cols-1" : "grid-cols-2")}>
+        <div
+          className={cn(
+            "grid gap-4 px-8",
+            isMobile ? "grid-cols-1" : "grid-cols-2",
+          )}
+        >
           <CalendarGrid
             year={viewDate.year}
             month={viewDate.month}
@@ -291,6 +352,8 @@ export function DateRangePickerPopover({
             isJalali={isJalali}
             hoverDate={hoverDate}
             onHover={(d) => setHoverDate(d ? atNoon(d) : null)}
+            isMobile={isMobile}
+            allowPastDates={allowPastDates}
           />
 
           {!isMobile && (
@@ -302,40 +365,57 @@ export function DateRangePickerPopover({
               isJalali={isJalali}
               hoverDate={hoverDate}
               onHover={(d) => setHoverDate(d ? atNoon(d) : null)}
+              isMobile={isMobile}
+              allowPastDates={allowPastDates}
             />
           )}
         </div>
       </div>
 
-      {/* Footer */}
       <div className="border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-4">
-        <div className={cn("flex gap-3", isMobile ? "flex-col" : "flex-row items-center justify-between")}>
+        <div
+          className={cn(
+            "flex gap-3",
+            isMobile ? "flex-col" : "flex-row items-center justify-between",
+          )}
+        >
           <div className="text-sm">
             {isComplete ? (
-              <span className="font-semibold text-gray-800 dark:text-gray-100">{displayText}</span>
+              <div className="flex flex-col gap-1">
+                <span className="font-semibold text-gray-800 dark:text-gray-100">
+                  {displayText}
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-300">
+                  {daysCount} {t("days")}
+                </span>
+              </div>
             ) : range.start ? (
-              <span className="text-gray-500 dark:text-gray-300">{t("selectEnd")}</span>
+              <span className="text-gray-500 dark:text-gray-300">
+                {t("selectEnd")}
+              </span>
             ) : (
-              <span className="text-gray-500 dark:text-gray-300">{t("selectStart")}</span>
+              <span className="text-gray-500 dark:text-gray-300">
+                {t("selectStart")}
+              </span>
             )}
           </div>
 
-          <div className={cn("flex gap-2", isMobile ? "flex-col" : "flex-row items-center")}>
+          <div
+            className={cn(
+              "flex gap-2",
+              isMobile ? "flex-col" : "flex-row items-center",
+            )}
+          >
             <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
               <span className="inline-flex items-center gap-1 font-semibold">
                 <Clock className="h-4 w-4" />
                 {t("deliveryTime")}
               </span>
-              <input
-                type="time"
-                value={normalizeTimeLocal(deliveryTime)}
-                onChange={(e) => setDeliveryTime(normalizeTimeLocal(e.target.value))}
-                className={cn(
-                  "h-9 rounded-lg px-3",
-                  "border border-gray-200 dark:border-white/10",
-                  "bg-white dark:bg-background",
-                  "text-gray-900 dark:text-gray-100",
-                )}
+
+              <NativeTimeSelect
+                value={deliveryTime}
+                onChange={(value) => setDeliveryTime(normalizeTimeLocal(value))}
+                className={cn("h-9")}
               />
             </label>
 
@@ -344,21 +424,20 @@ export function DateRangePickerPopover({
                 <Clock className="h-4 w-4" />
                 {t("returnTime")}
               </span>
-              <input
-                type="time"
-                value={normalizeTimeLocal(returnTime)}
-                onChange={(e) => setReturnTime(normalizeTimeLocal(e.target.value))}
-                className={cn(
-                  "h-9 rounded-lg px-3",
-                  "border border-gray-200 dark:border-white/10",
-                  "bg-white dark:bg-background",
-                  "text-gray-900 dark:text-gray-100",
-                )}
+
+              <NativeTimeSelect
+                value={returnTime}
+                onChange={(value) => setReturnTime(normalizeTimeLocal(value))}
+                className={cn("h-9")}
               />
             </label>
 
-            <Button onClick={confirm} disabled={!isComplete} className={cn("h-9 px-5", isMobile && "w-full mt-2")}>
-              {t("confirm")}
+            <Button
+              onClick={confirm}
+              disabled={!isComplete}
+              className={cn("h-9 px-5", isMobile && "w-full mt-2")}
+            >
+              {confirmButtonText}
             </Button>
           </div>
         </div>
@@ -366,7 +445,6 @@ export function DateRangePickerPopover({
     </div>
   );
 
-  // موبایل: 6 ماه اسکرولی
   const generateScrollableMonths = () => {
     const months: React.ReactNode[] = [];
     let currentYear = viewDate.year;
@@ -383,6 +461,9 @@ export function DateRangePickerPopover({
           isJalali={isJalali}
           hoverDate={hoverDate}
           onHover={(d) => setHoverDate(d ? atNoon(d) : null)}
+          hideWeekDays
+          isMobile
+          allowPastDates={allowPastDates}
         />,
       );
 
@@ -400,81 +481,138 @@ export function DateRangePickerPopover({
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>{trigger as any}</SheetTrigger>
 
-        <SheetContent side="right" className="p-0 w-full h-full flex flex-col [&>button]:hidden">
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-white/10" dir={dir}>
+        <SheetContent
+          disableSpacingAndShadow
+          side="right"
+          className="p-0! w-full h-full flex flex-col bg-white text-black border-0 [&>button]:hidden"
+        >
+          <div
+            className="flex items-center justify-between px-4 py-4 border-b border-gray-200 bg-white"
+            dir={dir}
+          >
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="flex items-center gap-2 text-gray-800 dark:text-gray-100 font-semibold"
+              className="flex items-center gap-2 text-gray-800 font-semibold"
             >
               <ArrowRight className="h-5 w-5" />
               {t("mobileTitle")}
             </button>
 
-            <button
-              type="button"
-              onClick={toggleCalendarType}
-              className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm font-semibold"
-            >
-              <Calendar className="h-4 w-4" />
-              {toggleLabel}
-            </button>
+            <div className="flex items-center gap-3">
+              {/* ✅ دکمه تغییر تقویم فقط برای fa */}
+              {canUseJalali && (
+                <button
+                  type="button"
+                  onClick={toggleCalendarType}
+                  className="flex items-center gap-2 text-blue-600 text-sm font-semibold"
+                >
+                  <Calendar className="h-4 w-4" />
+                  {toggleLabel}
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Scrollable */}
-          <div className="flex-1 overflow-y-auto px-4 py-4" dir={dir}>
-            <div className="flex flex-col gap-8">{generateScrollableMonths()}</div>
-          </div>
-
-          {/* Footer */}
-          <div className="border-t border-gray-200 dark:border-white/10 bg-white dark:bg-background p-4" dir={dir}>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="flex flex-col gap-2">
-                <span className="text-xs text-gray-500 dark:text-gray-400">{t("delivery")}</span>
-                <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                  {range.start ? formatDate(range.start) : t("pick")}
-                </span>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-gray-400" />
-                  <input
-                    type="time"
-                    value={normalizeTimeLocal(deliveryTime)}
-                    onChange={(e) => setDeliveryTime(normalizeTimeLocal(e.target.value))}
-                    className={cn(
-                      "h-9 w-full rounded-lg px-3 text-sm",
-                      "border border-gray-200 dark:border-white/10",
-                      "bg-white dark:bg-background",
-                      "text-gray-900 dark:text-gray-100",
-                    )}
-                  />
+          <div className="px-4  pb-2 bg-gray-50" dir={dir}>
+            <div className="grid grid-cols-7 gap-y-1 text-center">
+              {mobileWeekDays.map((day) => (
+                <div
+                  key={day}
+                  className="text-xs text-muted-foreground py-2 font-medium"
+                >
+                  {day}
                 </div>
-              </div>
+              ))}
+            </div>
+          </div>
 
-              <div className="flex flex-col gap-2">
-                <span className="text-xs text-gray-500 dark:text-gray-400">{t("return")}</span>
-                <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                  {range.end ? formatDate(range.end) : t("pick")}
-                </span>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-gray-400" />
-                  <input
-                    type="time"
-                    value={normalizeTimeLocal(returnTime)}
-                    onChange={(e) => setReturnTime(normalizeTimeLocal(e.target.value))}
-                    className={cn(
-                      "h-9 w-full rounded-lg px-3 text-sm",
-                      "border border-gray-200 dark:border-white/10",
-                      "bg-white dark:bg-background",
-                      "text-gray-900 dark:text-gray-100",
-                    )}
-                  />
+          <div
+            ref={mobileScrollRef}
+            className="flex-1 overflow-y-auto px-4 mt-2 pb-4 bg-white"
+            dir={dir}
+          >
+            <div className="flex flex-col gap-4">
+              {generateScrollableMonths()}
+            </div>
+          </div>
+
+          <div className="border-t border-gray-200 bg-white p-4" dir={dir}>
+            <div className="rounded-lg border border-gray-200 bg-white py-2 mb-4 ">
+              <div className="grid grid-cols-2 divide-x divide-gray-200">
+                <div className="px-2">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-1 ">
+                      <CalendarArrow
+                        direction="left"
+                        className="text-gray-600 size-4"
+                      />
+                      <span className="text-xs font-semibold text-gray-600">
+                        {t("deliveryTime")}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-blue-600">
+                        {range.start ? formatDate(range.start) : t("pick")}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center  gap-3">
+                    <NativeTimeSelect
+                      value={deliveryTime}
+                      onChange={(value) =>
+                        setDeliveryTime(normalizeTimeLocal(value))
+                      }
+                      className="h-9 min-w-24 border-0 px-2 text-sm font-bold shadow-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="px-2">
+                   <div className="flex justify-between items-center">
+
+                  <div className="flex items-center gap-1">
+                    <CalendarArrow
+                      direction="right"
+                      className="text-gray-600 size-4"
+                    />
+                    <span className="text-xs font-semibold text-gray-600">
+                      {t("returnTime")}
+                    </span>
+                  </div>
+
+
+                    <div>
+
+                    <span className="text-xs font-semibold text-blue-600">
+                      {range.end ? formatDate(range.end) : t("pick")}
+                    </span>
+                    </div>
+
+                   </div>
+
+                  <div className="flex items-center justify-between gap-3">
+
+
+                    <NativeTimeSelect
+                      value={returnTime}
+                      onChange={(value) =>
+                        setReturnTime(normalizeTimeLocal(value))
+                      }
+                      className="h-9 min-w-24 border-0 px-2 text-sm font-bold shadow-none"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
 
-            <Button onClick={confirm} disabled={!isComplete} className="w-full h-12 text-base font-semibold rounded-xl">
-              {t("confirmAndSearch")}
+            <Button
+              onClick={confirm}
+              disabled={!isComplete}
+              className="w-full h-14 text-lg font-semibold rounded-lg"
+            >
+              {confirmAndSearchText}
             </Button>
           </div>
         </SheetContent>
@@ -482,24 +620,12 @@ export function DateRangePickerPopover({
     );
   }
 
-  // دسکتاپ
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>{trigger as any}</PopoverTrigger>
-      <PopoverContent
-        side="bottom"
-        align="center"
-        sideOffset={10}
-        className={cn(
-          "p-0 border-0 bg-transparent shadow-none w-auto max-w-none",
-          "data-[state=open]:animate-in data-[state=closed]:animate-out",
-          "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-          "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-          "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
-        )}
-      >
-        <div className="w-[92vw] max-w-205">{calendarContent}</div>
-      </PopoverContent>
-    </Popover>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>{trigger as any}</DialogTrigger>
+      <DialogContent showCloseButton={false} className={cn("p-0! min-w-210")}>
+        {calendarContent}
+      </DialogContent>
+    </Dialog>
   );
 }

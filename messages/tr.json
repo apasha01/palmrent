@@ -745,7 +745,8 @@
     "delivery": "Teslim",
     "return": "İade",
     "pick": "Seçin",
-    "confirmAndSearch": "Onayla ve ara"
+    "confirmAndSearch": "Onayla ve ara",
+    "days" : "günler"
   },
 
 
@@ -1284,6 +1285,153 @@
   "faq": {
     "title": "Sorularınız"
   },
+
+    "profile": {
+    "pageTitle": "Profil",
+    "common": {
+      "user": "Kullanıcı"
+    },
+    "auth": {
+      "required": "Profili görüntülemek için lütfen giriş yapın."
+    },
+    "sidebar": {
+      "phone": "Telefon: {value}",
+      "email": "E-posta: {value}"
+    },
+    "actions": {
+      "logout": "Çıkış yap"
+    },
+    "menu": {
+      "me": "Bilgilerim",
+      "documents": "Yüklenen belgeler",
+      "cars": "Araç geçmişim",
+      "transactions": "İşlemlerim"
+    },
+    "cars": {
+      "title": "Araç geçmişim",
+      "empty": "—"
+    },
+    "transactions": {
+      "title": "İşlemlerim",
+      "empty": "—"
+    },
+    "meta": {
+      "title": "Profil | Palm Rent",
+      "description": "Palm Rent üzerinde hesap bilgilerinizi, yüklenen belgeleri, araç geçmişinizi ve işlemlerinizi görüntüleyin",
+      "keywords": {
+        "profile": "profil",
+        "account": "hesap",
+        "documents": "belgeler",
+        "transactions": "işlemler",
+        "cars": "araç geçmişi",
+        "brand": "Palm Rent",
+        "rental": "araç kiralama"
+      }
+    },
+    "documents": {
+      "title": "Yüklenen belgeler",
+      "subtitle": "Dosyayı seçin; yükleme yalnızca önizleme ve onaydan sonra yapılır.",
+      "loading": "Belgeler yükleniyor...",
+      "previewAlt": "Belge önizlemesi",
+      "rejectionReason": "Red nedeni: {reason}",
+      "labels": {
+        "status": "Durum: {value}"
+      },
+      "fileState": {
+        "uploaded": "Yüklendi",
+        "notUploaded": "Yüklenmedi"
+      },
+      "status": {
+        "approved": "Onaylandı",
+        "rejected": "Reddedildi",
+        "pending": "İnceleme bekliyor"
+      },
+      "actions": {
+        "refresh": "Yenile",
+        "view": "Görüntüle",
+        "upload": "Yükle",
+        "replace": "Düzenle / Değiştir",
+        "uploading": "Yükleniyor...",
+        "cancel": "İptal",
+        "confirmAndUpdate": "Onayla ve güncelle",
+        "close": "Kapat"
+      },
+      "confirm": {
+        "title": "Belge güncellemesini onayla",
+        "description": "{title} belgesini güncellemek istediğinize emin misiniz?\nYükleme yalnızca onaydan sonra yapılacaktır.",
+        "currentDocument": "Mevcut belge",
+        "newDocument": "Yeni belge",
+        "currentAlt": "Mevcut belge",
+        "newAlt": "Yeni belge",
+        "noPreviousDocument": "Önceki belge yok",
+        "note": "Not: Güncellemeden sonra inceleme durumu tekrar “inceleme bekliyor” olabilir."
+      },
+      "toasts": {
+        "fetchError": "Belgeler alınırken hata oluştu",
+        "invalidFormat": "Dosya formatı jpg/png/webp olmalıdır",
+        "maxSize": "Maksimum dosya boyutu 10MB olmalıdır",
+        "uploadSuccess": "Belge başarıyla güncellendi",
+        "uploadError": "Belge yüklenirken hata oluştu"
+      },
+      "items": {
+        "identity": {
+          "title": "Kimlik kartı",
+          "hint": "Kimlik kartının net bir fotoğrafı"
+        },
+        "driverLicenseFront": {
+          "title": "Ehliyet (ön)",
+          "hint": "Ehliyetin ön yüzü"
+        },
+        "driverLicenseBack": {
+          "title": "Ehliyet (arka)",
+          "hint": "Ehliyetin arka yüzü"
+        },
+        "internationalDriverLicenseFront": {
+          "title": "Uluslararası ehliyet (ön)",
+          "hint": "Uluslararası ehliyetin ön yüzü"
+        },
+        "internationalDriverLicenseBack": {
+          "title": "Uluslararası ehliyet (arka)",
+          "hint": "Uluslararası ehliyetin arka yüzü"
+        },
+        "visa": {
+          "title": "Vize",
+          "hint": "Vizenin net bir görseli"
+        }
+      }
+    },
+    "me": {
+      "title": "Hesap bilgileri",
+      "avatarAlt": "Kullanıcı avatarı",
+      "fields": {
+        "fullName": "Ad soyad",
+        "phone": "Telefon"
+      },
+      "actions": {
+        "save": "Profili güncelle"
+      },
+      "toasts": {
+        "imageOnly": "Dosya bir görsel olmalıdır",
+        "maxAvatarSize": "Görsel boyutu 4 MB'dan küçük olmalıdır",
+        "nameRequired": "Lütfen ad soyad girin",
+        "invalidServerResponse": "Geçersiz sunucu yanıtı",
+        "success": "Profil başarıyla güncellendi",
+        "updateError": "Profil güncellenirken hata oluştu"
+      }
+    }
+  },
+
+      "userAvatarPopover": {
+    "openUserMenu": "Kullanıcı menüsünü aç",
+    "userAlt": "Kullanıcı",
+    "profile": "Profil",
+    "darkMode": "Karanlık mod",
+    "lightMode": "Aydınlık mod",
+    "themeSwitch": "Temayı değiştir",
+    "logout": "Çıkış yap"
+  },
+
+
   "requiredDocuments": {
     "title": "{branch} konumunda {car} kiralamak için gerekli belgeler",
     "iranResidents": "İran'da ikamet edenler için",
@@ -1341,34 +1489,101 @@
     "branchPart": " {branch} konumunda"
   },
 
-    "carDetail": {
-    "notFound": "Araç bulunamadı",
-    "notFoundDesc": "ID yanlış olabilir veya araç silinmiş olabilir.",
-    "noDeposit": "Depozito yok",
-    "freeDelivery": "Ücretsiz teslimat",
-    "unlimitedKm": "Sınırsız kilometre",
-    "insurance": "Sigorta",
-    "share": "Paylaş",
-    "addToWishlist": "Favorilere ekle",
-    "persons": "kişilik",
-    "suitcases": "bavul",
-    "aboutCar": "{branch} şubesinde {car} hakkında"
+    "wishlist": "Favoriler",
+  "carWhatsapp": "WhatsApp",
+
+
+      "blogPage": {
+  
+        "relatedPosts": "İlgili Yazılar"
+  },
+    "downloadApp": {
+    "appName": "Palm Rent",
+    "subtitle": "Uygulamayı yükleyin, daha hızlı rezervasyon yapın ve sipariş durumunu anlık olarak takip edin.",
+    "badges": {
+      "newVersion": "Yeni Sürüm",
+      "fasterExperience": "Daha hızlı ve daha renkli bir deneyim ✨"
+    },
+    "hero": {
+      "application": "Uygulama",
+      "downloadTitle": "{appName} uygulamasını indir"
+    },
+    "info": {
+      "fastReservation": "Daha hızlı rezervasyon",
+      "orderStatusNotification": "Sipariş durumu bildirimleri",
+      "support247": "7/24 destek"
+    },
+    "features": {
+      "easyInstall": {
+        "title": "Kolay kurulum",
+        "description": "Doğrudan indirme veya mağazalardan, zahmetsizce."
+      },
+      "secureReliable": {
+        "title": "Güvenli ve sağlam",
+        "description": "Resmî bağlantılar + kurulum rehberi ve destek."
+      },
+      "betterExperience": {
+        "title": "Daha iyi deneyim",
+        "description": "Daha hızlı rezervasyon, sipariş yönetimi ve özel teklifler."
+      }
+    },
+
+    "actions": {
+      "enterWeb": "Web Sürümüne Gir",
+      "downloadAndroid": "Android İndir",
+      "downloadIOS": "iOS İndir",
+      "webVersion": "Web Sürümü"
+    },
+    "support": {
+      "installProblem": "Kurulumda sorun mu yaşıyorsunuz?",
+      "installationGuide": "Kurulum Rehberi / Destek"
+    },
+    "floating": {
+      "quickBooking": "Hızlı rezervasyon",
+      "lessThanOneMinute": "1 dakikadan az",
+      "support247": "7/24 destek",
+      "whatsappAndCall": "WhatsApp ve arama"
+    },
+    "bottom": {
+      "title": "Kullanmak için üç hızlı yol",
+      "description": "Uygulamayı yükleyin veya yüklemeden web sürümünü tüm özelliklerle kullanın.",
+      "android": "Android",
+      "ios": "iOS",
+      "web": "Web Sürümü",
+      "footerNote": "Uygulamayı yükleyerek özel tekliflerden ve daha hızlı rezervasyondan yararlanırsınız."
+    }
   },
 
-
-  "branchLanding": {
-    "heroTitle": "<Branch></Branch> şehrinde depozitosuz araç kiralama",
-    "heroSubtitle1": "Havalimanı ve otelde anında teslimat, ücretsiz sigorta",
-    "heroSubtitle2": "Hızlı online rezervasyon, teslimde ödeme ve 7/24 destek",
-      "carsListTitle": "<Branch></Branch> araç listesi",
-
-    "loadingMore": "Yükleniyor…",
-    "viewMore": "Daha fazla göster",
-
-    "noCarsFound": "Araç bulunamadı",
-    "noMoreResults": "Başka sonuç yok",
-    "fetchError": "Veri alınırken hata oluştu"
+    "NotFoundPage": {
+    "title": "Sayfa bulunamadı",
+    "description": "Aradığınız sayfa mevcut değil, kaldırılmış olabilir ya da adres yanlış girilmiş olabilir.",
+    "goHome": "Ana sayfaya dön",
+    "goBack": "Geri dön",
+    "hint": "Sayfa adresini kontrol edin veya ana sayfadan devam edin."
   },
+
+    "carDetailNotFoundPage": {
+    "meta": {
+      "title": "Araç Bulunamadı | Palm Rent",
+      "description": "İstenen araç bulunamadı. Palm Rent üzerindeki diğer kiralık araçlara göz atın."
+    },
+    "title": "Araç bulunamadı",
+    "description": "Aradığınız araç mevcut değil, kaldırılmış olabilir veya adres yanlış girilmiş olabilir.",
+    "goHome": "Ana sayfaya dön"
+  },
+
+"branchLanding": {
+  "heroTitle": "<Branch></Branch> Depozitosuz Araç Kiralama",
+  "heroSubtitle1": "<Branch></Branch> şubesinde şeffaf fiyatlar, online rezervasyon ve ücretsiz havalimanı teslimatı ile araç kiralayın.",
+  "heroSubtitle2": "Palm Rent’teki mevcut araçları inceleyin; depozitosuz, teminatsız ve trafik cezası depozitosu olmadan rezervasyon yapın.",
+  "loadingMore": "Yükleniyor…",
+  "viewMore": "Daha fazla göster",
+  "noCarsFound": "Araç bulunamadı",
+  "carsListTitle": "<Branch></Branch> araç listesi",
+  "noMoreResults": "Daha fazla sonuç yok",
+  "fetchError": "Veriler alınırken hata oluştu",
+  "clearAllFilters": "Tüm filtreleri temizle"
+},
 
   "Home" : {
     "hero": {

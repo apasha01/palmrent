@@ -1,5 +1,3 @@
-"use client";
-
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -26,6 +24,7 @@ const QRApplication = () => {
                 width={130}
                 height={130}
                 alt={t("qrAlt")}
+                
                 src="/images/barcode.png"
               />
               <p className="font-bold text-xs text-gray-900 dark:text-gray-100">
