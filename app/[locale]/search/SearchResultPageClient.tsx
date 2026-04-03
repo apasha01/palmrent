@@ -29,7 +29,7 @@ import { useInfiniteCarFilter } from "@/services/car-filter/car-filter.hooks";
 import type { CarFilterParams } from "@/services/car-filter/car-filter.types";
 import { useSearchPageStore } from "@/zustand/stores/car-search/search-page.store";
 import { normalizeTime } from "@/lib/rent-days";
-// import { getBranchNameById } from "@/helpers/BranchNameHelper";
+import { getBranchNameById } from "@/helpers/BranchNameHelper";
 import { useMobileSheet } from "@/providers/mobile-sheet-provider";
 import { SheetClose } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";

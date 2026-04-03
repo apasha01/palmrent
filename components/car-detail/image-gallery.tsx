@@ -32,6 +32,7 @@ type MediaItem =
 
 export interface ImageGalleryProps {
   media?: Array<string | null | undefined>;
+  carTitle?: string;
 }
 
 function guessType(path: string): "image" | "video" {
@@ -42,8 +43,9 @@ function guessType(path: string): "image" | "video" {
     p.endsWith(".webm") ||
     p.endsWith(".m3u8") ||
     p.includes("video")
-  )
+  ) {
     return "video";
+  }
   return "image";
 }
 
@@ -63,7 +65,10 @@ function getMediaSrc(item: MediaItem | undefined | null): string {
   return normalized || "/placeholder.svg";
 }
 
-function getSafePoster(media: MediaItem[], videoItem?: MediaItem | null): string {
+function getSafePoster(
+  media: MediaItem[],
+  videoItem?: MediaItem | null,
+): string {
   return (
     (videoItem && videoItem.type === "video"
       ? normalizeMediaSrc(videoItem.poster)
@@ -81,7 +86,50 @@ function prefetchImage(src: string) {
   img.src = src;
 }
 
-export function ImageGallery({ media: mediaInput = [] }: ImageGalleryProps) {
+function buildImageAlt(
+  carTitle: string | undefined,
+  index: number,
+  total: number,
+): string {
+  const safeTitle = String(carTitle || "").trim();
+  if (safeTitle) {
+    return `${safeTitle} - image ${index} of ${total}`;
+  }
+  return `Gallery image ${index} of ${total}`;
+}
+
+function buildMainImageAlt(carTitle?: string): string {
+  const safeTitle = String(carTitle || "").trim();
+  if (safeTitle) {
+    return `${safeTitle} - main image`;
+  }
+  return "Main gallery image";
+}
+
+function buildVideoAlt(carTitle?: string): string {
+  const safeTitle = String(carTitle || "").trim();
+  if (safeTitle) {
+    return `${safeTitle} - video thumbnail`;
+  }
+  return "Video thumbnail";
+}
+
+function buildThumbAlt(
+  carTitle: string | undefined,
+  index: number,
+  total: number,
+): string {
+  const safeTitle = String(carTitle || "").trim();
+  if (safeTitle) {
+    return `${safeTitle} - thumbnail ${index} of ${total}`;
+  }
+  return `Thumbnail ${index} of ${total}`;
+}
+
+export function ImageGallery({
+  media: mediaInput = [],
+  carTitle,
+}: ImageGalleryProps) {
   const t = useTranslations("imageGallery");
 
   const media: MediaItem[] = useMemo(() => {
@@ -96,7 +144,10 @@ export function ImageGallery({ media: mediaInput = [] }: ImageGalleryProps) {
         : ({ type: "image", src } as MediaItem);
     });
 
-    return [...items.filter((m) => m.type === "video"), ...items.filter((m) => m.type === "image")];
+    return [
+      ...items.filter((m) => m.type === "video"),
+      ...items.filter((m) => m.type === "image"),
+    ];
   }, [mediaInput]);
 
   const heroIndex = 0;
@@ -110,14 +161,18 @@ export function ImageGallery({ media: mediaInput = [] }: ImageGalleryProps) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
+  const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(
+    null,
+  );
   const [isSliding, setIsSliding] = useState(false);
   const [viewerLoading, setViewerLoading] = useState(true);
   const thumbnailsRef = useRef<HTMLDivElement>(null);
 
   const openAt = useCallback(
     (index: number) => {
-      const safe = media.length ? Math.max(0, Math.min(index, media.length - 1)) : 0;
+      const safe = media.length
+        ? Math.max(0, Math.min(index, media.length - 1))
+        : 0;
       setActive(safe);
       setViewerLoading(true);
       setOpen(true);
@@ -162,8 +217,14 @@ export function ImageGallery({ media: mediaInput = [] }: ImageGalleryProps) {
   useEffect(() => {
     if (!open) return;
     if (thumbnailsRef.current) {
-      const activeThumb = thumbnailsRef.current.children[active] as HTMLElement | undefined;
-      activeThumb?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      const activeThumb = thumbnailsRef.current.children[active] as
+        | HTMLElement
+        | undefined;
+      activeThumb?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
     }
   }, [active, open]);
 
@@ -226,19 +287,31 @@ export function ImageGallery({ media: mediaInput = [] }: ImageGalleryProps) {
                     isFirst && "rounded-r-xl",
                     isLast && "rounded-l-xl",
                   )}
+                  aria-label={
+                    isVideo
+                      ? `${buildVideoAlt(carTitle)} ${idx + 1}`
+                      : buildImageAlt(carTitle, idx + 1, media.length)
+                  }
                 >
                   <Image
                     src={src}
-                    alt={t("mediaAlt", { index: idx + 1 })}
+                    alt={
+                      isVideo
+                        ? buildVideoAlt(carTitle)
+                        : buildImageAlt(carTitle, idx + 1, media.length)
+                    }
                     fill
                     className="object-cover"
                     sizes="90vw"
                     loading="lazy"
                   />
                   {isVideo && (
-                    <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
-                      <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
-                        <Play className="w-5 h-5 text-emerald-600 mr-[-2px]" fill="currentColor" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90">
+                        <Play
+                          className="mr-[-2px] h-5 w-5 text-emerald-600"
+                          fill="currentColor"
+                        />
                       </div>
                     </div>
                   )}
@@ -250,17 +323,22 @@ export function ImageGallery({ media: mediaInput = [] }: ImageGalleryProps) {
 
         {/* Desktop */}
         <div className="hidden md:block">
-          <div className="grid grid-cols-4 gap-1.5 h-[280px] sm:h-[340px] md:h-[400px]">
+          <div className="grid h-[280px] grid-cols-4 gap-1.5 sm:h-[340px] md:h-[400px]">
             <button
               type="button"
               onClick={() => openAt(heroIndex)}
-              className="relative col-span-2 overflow-hidden rounded cursor-pointer group"
+              className="group relative col-span-2 overflow-hidden rounded cursor-pointer"
+              aria-label={
+                hero?.type === "video"
+                  ? buildVideoAlt(carTitle)
+                  : buildMainImageAlt(carTitle)
+              }
             >
               {hero?.type === "video" ? (
                 <>
                   <Image
                     src={heroPoster}
-                    alt={t("videoLabel")}
+                    alt={buildVideoAlt(carTitle)}
                     fill
                     className="object-cover transition-all duration-500 group-hover:brightness-90"
                     sizes="(max-width: 768px) 100vw, 50vw"
@@ -269,9 +347,12 @@ export function ImageGallery({ media: mediaInput = [] }: ImageGalleryProps) {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="relative">
-                      <div className="absolute inset-0 rounded-full blur-xl scale-150 animate-pulse" />
-                      <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-2xl transition-transform duration-300 group-hover:scale-110">
-                        <Play className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600 mr-[-3px]" fill="currentColor" />
+                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full blur-xl" />
+                      <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-white/95 shadow-2xl backdrop-blur-sm transition-transform duration-300 group-hover:scale-110 sm:h-20 sm:w-20">
+                        <Play
+                          className="mr-[-3px] h-7 w-7 text-emerald-600 sm:h-8 sm:w-8"
+                          fill="currentColor"
+                        />
                       </div>
                     </div>
                   </div>
@@ -280,46 +361,61 @@ export function ImageGallery({ media: mediaInput = [] }: ImageGalleryProps) {
                 <>
                   <Image
                     src={getMediaSrc(hero)}
-                    alt={t("mainImageAlt")}
+                    alt={buildMainImageAlt(carTitle)}
                     fill
                     className="object-cover transition-all duration-500 group-hover:brightness-95"
                     sizes="(max-width: 768px) 100vw, 50vw"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                 </>
               )}
             </button>
 
             <div className="col-span-2 grid grid-cols-2 grid-rows-2 gap-1.5">
               {gridItems.map((item, idx) => {
-                const realIndex = media.findIndex((m) => m.src === item.src && m.type === item.type);
+                const realIndex = media.findIndex(
+                  (m) => m.src === item.src && m.type === item.type,
+                );
                 const safeIndex = realIndex >= 0 ? realIndex : 0;
-                const thumbSrc = item.type === "video" ? getSafePoster(media, item) : getMediaSrc(item);
+                const thumbSrc =
+                  item.type === "video" ? getSafePoster(media, item) : getMediaSrc(item);
 
                 return (
                   <button
                     key={`${item.type}-${idx}-${item.src}`}
                     type="button"
                     onClick={() => openAt(safeIndex)}
-                    className="relative overflow-hidden rounded cursor-pointer group"
+                    className="group relative overflow-hidden rounded cursor-pointer"
+                    aria-label={
+                      item.type === "video"
+                        ? buildVideoAlt(carTitle)
+                        : buildImageAlt(carTitle, safeIndex + 1, media.length)
+                    }
                   >
                     <Image
                       src={thumbSrc}
-                      alt={t("itemAlt", { index: idx + 1 })}
+                      alt={
+                        item.type === "video"
+                          ? buildVideoAlt(carTitle)
+                          : buildImageAlt(carTitle, safeIndex + 1, media.length)
+                      }
                       fill
                       className="object-cover transition-all duration-500 group-hover:brightness-90"
                       sizes="(max-width: 768px) 50vw, 25vw"
                       loading="lazy"
                     />
                     {item.type === "video" && (
-                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                        <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
-                          <Play className="w-4 h-4 text-emerald-600 mr-[-2px]" fill="currentColor" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90">
+                          <Play
+                            className="mr-[-2px] h-4 w-4 text-emerald-600"
+                            fill="currentColor"
+                          />
                         </div>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+                    <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/20" />
                   </button>
                 );
               })}
@@ -331,9 +427,10 @@ export function ImageGallery({ media: mediaInput = [] }: ImageGalleryProps) {
         <button
           type="button"
           onClick={() => openAt(0)}
-          className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm text-gray-800 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow-lg hover:bg-white transition-colors duration-200 cursor-pointer"
+          className="absolute bottom-4 left-4 flex cursor-pointer items-center gap-2 rounded-xl bg-white/95 px-4 py-2 text-sm font-medium text-gray-800 shadow-lg backdrop-blur-sm transition-colors duration-200 hover:bg-white"
+          aria-label={t("totalImages", { count: totalCount })}
         >
-          <Images className="w-4 h-4" />
+          <Images className="h-4 w-4" />
           <span>{t("totalImages", { count: totalCount })}</span>
         </button>
       </div>
@@ -352,16 +449,18 @@ export function ImageGallery({ media: mediaInput = [] }: ImageGalleryProps) {
             {/* Header */}
             <div className="relative z-20 flex items-center justify-between p-4 sm:p-6">
               <div className="flex items-center gap-3">
-                <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-                  <span className="text-white font-medium">
+                <div className="rounded-full bg-white/10 px-4 py-2 backdrop-blur-sm">
+                  <span className="font-medium text-white">
                     {t("counter", { current: active + 1, total: media.length })}
                   </span>
                 </div>
 
                 {media[active]?.type === "video" && (
-                  <div className="bg-emerald-500/20 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-2">
-                    <Play className="w-4 h-4 text-emerald-400" fill="currentColor" />
-                    <span className="text-emerald-400 text-sm font-medium">{t("videoLabel")}</span>
+                  <div className="flex items-center gap-2 rounded-full bg-emerald-500/20 px-3 py-1.5 backdrop-blur-sm">
+                    <Play className="h-4 w-4 text-emerald-400" fill="currentColor" />
+                    <span className="text-sm font-medium text-emerald-400">
+                      {t("videoLabel")}
+                    </span>
                   </div>
                 )}
               </div>
@@ -369,25 +468,29 @@ export function ImageGallery({ media: mediaInput = [] }: ImageGalleryProps) {
               <button
                 type="button"
                 onClick={close}
-                className="h-11 w-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-200 group"
+                className="group flex h-11 w-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm transition-all duration-200 hover:bg-white/20"
                 aria-label={t("close")}
               >
-                <X className="h-5 w-5 text-white group-hover:rotate-90 transition-transform duration-200" />
+                <X className="h-5 w-5 text-white transition-transform duration-200 group-hover:rotate-90" />
               </button>
             </div>
 
             {/* Viewer */}
-            <div className="flex-1 flex items-center justify-center px-4 sm:px-16 pb-4">
-              <div className="relative w-full max-w-6xl h-full max-h-[70vh]">
+            <div className="flex flex-1 items-center justify-center px-4 pb-4 sm:px-16">
+              <div className="relative h-full max-h-[70vh] w-full max-w-6xl">
                 {media[active]?.type === "video" ? (
                   <VideoPlayer src={getMediaSrc(media[active])} />
                 ) : (
                   <div
                     className={cn(
-                      "relative w-full h-full transition-all duration-300 ease-out",
-                      isSliding && slideDirection === "left" && "opacity-0 -translate-x-8 scale-95",
-                      isSliding && slideDirection === "right" && "opacity-0 translate-x-8 scale-95",
-                      !isSliding && "opacity-100 translate-x-0 scale-100",
+                      "relative h-full w-full transition-all duration-300 ease-out",
+                      isSliding &&
+                        slideDirection === "left" &&
+                        "opacity-0 -translate-x-8 scale-95",
+                      isSliding &&
+                        slideDirection === "right" &&
+                        "opacity-0 translate-x-8 scale-95",
+                      !isSliding && "translate-x-0 scale-100 opacity-100",
                     )}
                   >
                     {viewerLoading && (
@@ -396,7 +499,7 @@ export function ImageGallery({ media: mediaInput = [] }: ImageGalleryProps) {
                     <Image
                       key={getMediaSrc(media[active])}
                       src={getMediaSrc(media[active])}
-                      alt={t("imageAlt", { index: active + 1 })}
+                      alt={buildImageAlt(carTitle, active + 1, media.length)}
                       fill
                       className={cn(
                         "object-contain transition-opacity duration-200",
@@ -416,19 +519,19 @@ export function ImageGallery({ media: mediaInput = [] }: ImageGalleryProps) {
                     <button
                       type="button"
                       onClick={next}
-                      className="absolute top-1/2 -translate-y-1/2 right-2 sm:right-4 z-20 h-12 w-12 rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-sm flex items-center justify-center transition-all duration-200 group"
+                      className="group absolute right-2 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm transition-all duration-200 hover:bg-white/25 sm:right-4"
                       aria-label={t("prev")}
                     >
-                      <ChevronRight className="h-6 w-6 text-white group-hover:scale-110 transition-transform" />
+                      <ChevronRight className="h-6 w-6 text-white transition-transform group-hover:scale-110" />
                     </button>
 
                     <button
                       type="button"
                       onClick={prev}
-                      className="absolute top-1/2 -translate-y-1/2 left-2 sm:left-4 z-20 h-12 w-12 rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-sm flex items-center justify-center transition-all duration-200 group"
+                      className="group absolute left-2 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm transition-all duration-200 hover:bg-white/25 sm:left-4"
                       aria-label={t("next")}
                     >
-                      <ChevronLeft className="h-6 w-6 text-white group-hover:scale-110 transition-transform" />
+                      <ChevronLeft className="h-6 w-6 text-white transition-transform group-hover:scale-110" />
                     </button>
                   </>
                 )}
@@ -437,10 +540,10 @@ export function ImageGallery({ media: mediaInput = [] }: ImageGalleryProps) {
 
             {/* Thumbnails */}
             {media.length > 1 && (
-              <div className="relative z-20 pb-6 px-4">
-                <div className="max-w-5xl mx-auto">
-                  <div className="bg-white/5 backdrop-blur-md rounded-2xl p-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                    <div ref={thumbnailsRef} className="flex gap-2 justify-center">
+              <div className="relative z-20 px-4 pb-6">
+                <div className="mx-auto max-w-5xl">
+                  <div className="overflow-x-auto rounded-2xl bg-white/5 p-3 backdrop-blur-md [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    <div ref={thumbnailsRef} className="flex justify-center gap-2">
                       {media.map((m, i) => {
                         const isActive = i === active;
                         const thumbSrc =
@@ -463,24 +566,36 @@ export function ImageGallery({ media: mediaInput = [] }: ImageGalleryProps) {
                               }
                             }}
                             className={cn(
-                              "relative h-14 w-20 sm:h-16 sm:w-24 overflow-hidden rounded-xl shrink-0 transition-all duration-300",
+                              "relative h-14 w-20 shrink-0 overflow-hidden rounded-xl transition-all duration-300 sm:h-16 sm:w-24",
                               isActive
-                                ? "ring-2 ring-white shadow-lg shadow-white/20 scale-110"
-                                : "opacity-40 hover:opacity-70 hover:scale-105",
+                                ? "scale-110 ring-2 ring-white shadow-lg shadow-white/20"
+                                : "opacity-40 hover:scale-105 hover:opacity-70",
                             )}
+                            aria-label={
+                              m.type === "video"
+                                ? buildVideoAlt(carTitle)
+                                : buildThumbAlt(carTitle, i + 1, media.length)
+                            }
                           >
                             <Image
                               src={thumbSrc}
-                              alt={t("thumbnailAlt", { index: i + 1 })}
+                              alt={
+                                m.type === "video"
+                                  ? buildVideoAlt(carTitle)
+                                  : buildThumbAlt(carTitle, i + 1, media.length)
+                              }
                               fill
                               className="object-cover"
                               sizes="100px"
                               loading="lazy"
                             />
                             {m.type === "video" && (
-                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                <div className="h-6 w-6 rounded-full bg-white/90 flex items-center justify-center">
-                                  <Play className="h-3 w-3 text-emerald-600 mr-[-1px]" fill="currentColor" />
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/90">
+                                  <Play
+                                    className="mr-[-1px] h-3 w-3 text-emerald-600"
+                                    fill="currentColor"
+                                  />
                                 </div>
                               </div>
                             )}
@@ -557,13 +672,13 @@ function VideoPlayer({ src }: { src: string }) {
 
   return (
     <div
-      className="relative w-full h-full bg-black rounded-xl overflow-hidden group"
+      className="group relative h-full w-full overflow-hidden rounded-xl bg-black"
       onMouseMove={() => setShowControls(true)}
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
       <video
         ref={videoRef}
-        className="absolute inset-0 w-full h-full object-contain"
+        className="absolute inset-0 h-full w-full object-contain"
         src={src}
         muted={isMuted}
         onTimeUpdate={handleTimeUpdate}
@@ -576,9 +691,10 @@ function VideoPlayer({ src }: { src: string }) {
           <button
             type="button"
             onClick={togglePlay}
-            className="w-20 h-20 rounded-full bg-white/90 flex items-center justify-center shadow-2xl hover:scale-110 transition-transform"
+            className="flex h-20 w-20 items-center justify-center rounded-full bg-white/90 shadow-2xl transition-transform hover:scale-110"
+            aria-label="Play video"
           >
-            <Play className="w-8 h-8 text-emerald-600 mr-[-3px]" fill="currentColor" />
+            <Play className="mr-[-3px] h-8 w-8 text-emerald-600" fill="currentColor" />
           </button>
         </div>
       )}
@@ -590,11 +706,11 @@ function VideoPlayer({ src }: { src: string }) {
         )}
       >
         <div
-          className="h-1.5 bg-white/30 rounded-full mb-4 cursor-pointer overflow-hidden"
+          className="mb-4 h-1.5 cursor-pointer overflow-hidden rounded-full bg-white/30"
           onClick={handleSeek}
         >
           <div
-            className="h-full bg-emerald-500 rounded-full transition-all duration-100"
+            className="h-full rounded-full bg-emerald-500 transition-all duration-100"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -604,19 +720,21 @@ function VideoPlayer({ src }: { src: string }) {
             <button
               type="button"
               onClick={togglePlay}
-              className="h-10 w-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 transition-colors hover:bg-white/30"
+              aria-label={isPlaying ? "Pause video" : "Play video"}
             >
               {isPlaying ? (
                 <Pause className="h-5 w-5 text-white" fill="currentColor" />
               ) : (
-                <Play className="h-5 w-5 text-white mr-[-2px]" fill="currentColor" />
+                <Play className="mr-[-2px] h-5 w-5 text-white" fill="currentColor" />
               )}
             </button>
 
             <button
               type="button"
               onClick={toggleMute}
-              className="h-10 w-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 transition-colors hover:bg-white/30"
+              aria-label={isMuted ? "Unmute video" : "Mute video"}
             >
               {isMuted ? (
                 <VolumeX className="h-5 w-5 text-white" />
@@ -629,7 +747,8 @@ function VideoPlayer({ src }: { src: string }) {
           <button
             type="button"
             onClick={toggleFullscreen}
-            className="h-10 w-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 transition-colors hover:bg-white/30"
+            aria-label="Fullscreen video"
           >
             <Maximize2 className="h-5 w-5 text-white" />
           </button>

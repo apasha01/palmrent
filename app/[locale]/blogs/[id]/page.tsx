@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { cache } from "react";
 import { getData } from "@/lib/getData";
 import Image from "next/image";
 import type { Metadata } from "next";
@@ -15,26 +16,6 @@ import Footer from "@/components/Footer";
 export const dynamic = "force-dynamic";
 
 /* ---------------- helpers ---------------- */
-
-function stripHtml(html?: string | null) {
-  if (!html) return "";
-
-  return html
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&zwnj;/g, "‌")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function truncate(text: string, max = 160) {
-  if (!text) return "";
-  if (text.length <= max) return text;
-  return `${text.slice(0, max).trimEnd()}…`;
-}
 
 function getSiteUrl(): string {
   return (process.env.NEXTFRONTEND_URL || "http://localhost:3000").replace(
@@ -72,7 +53,9 @@ function normalizeKeywords(input: unknown): string[] {
   return [];
 }
 
-function parseRobotsValue(value?: string | null): Metadata["robots"] | undefined {
+function parseRobotsValue(
+  value?: string | null
+): Metadata["robots"] | undefined {
   if (!value) return undefined;
 
   const raw = value.toLowerCase();
@@ -117,7 +100,7 @@ function getOgLocale(locale: string) {
     case "fa":
       return "fa_IR";
     case "ar":
-      return "ar_AR";
+      return "ar_SA";
     case "tr":
       return "tr_TR";
     case "en":
@@ -126,11 +109,31 @@ function getOgLocale(locale: string) {
   }
 }
 
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, "").trim();
+}
+
+function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength).trim() + "...";
+}
+
+function buildCanonicalPath(locale: string, id: string): string {
+  const safeId = encodeURIComponent(id);
+  return `${locale === "fa" ? "" : `/${locale}`}/blogs/${safeId}`;
+}
+
+function toAbsoluteUrl(input: string, siteUrl: string): string {
+  if (/^https?:\/\//i.test(input)) return input;
+  return `${siteUrl}${input.startsWith("/") ? input : `/${input}`}`;
+}
+
 /* ---------------- types ---------------- */
 
 type BlogMeta = {
   titleSeo?: string;
   descriptionSeo?: string;
+  keywordsSeo?: string[] | string;
   schemaSeo?: string | null;
   imgSeo?: string;
   canonical?: string;
@@ -140,10 +143,9 @@ type BlogMeta = {
   siteName?: string;
   urlPage?: string;
   alternate?: Array<{
-    hreflang?: string;
-    href?: string;
+    lang?: string;
+    url?: string;
   }>;
-  keywordsSeo?: string[] | string;
 };
 
 type BlogItem = {
@@ -176,23 +178,9 @@ type BlogResponse = {
 
 /* ---------------- API ---------------- */
 
-async function getPostBySlug(
-  slug: string,
-  locale: string
-): Promise<BlogResponse | null> {
-  try {
-    if (!slug) return null;
-
-    const data = await getData(`${BASE_URL}/blog/${slug}/${locale}`);
-    return data ?? null;
-  } catch (error: any) {
-    const status =
-      error?.response?.status ||
-      error?.status ||
-      error?.cause?.status ||
-      500;
-
-    if (status === 404) {
+const getPostBySlug = cache(
+  async (slug: string, locale: string): Promise<BlogResponse> => {
+    if (!slug) {
       return {
         status: 404,
         data: {
@@ -203,10 +191,48 @@ async function getPostBySlug(
       };
     }
 
-    console.error("خطا در دریافت پست:", error);
-    return null;
+    try {
+      const safeSlug = encodeURIComponent(slug);
+      const safeLocale = encodeURIComponent(locale);
+
+      const data = await getData(`${BASE_URL}/blog/${safeSlug}/${safeLocale}`);
+
+      return (
+        data ?? {
+          status: 500,
+          data: {
+            item: undefined,
+            comments: [],
+            last_blogs: [],
+          },
+        }
+      );
+    } catch (error: any) {
+      const status =
+        error?.response?.status ||
+        error?.status ||
+        error?.cause?.status ||
+        500;
+
+      if (status === 404) {
+        return {
+          status: 404,
+          data: {
+            item: undefined,
+            comments: [],
+            last_blogs: [],
+          },
+        };
+      }
+
+      console.error("خطا در دریافت پست بلاگ:", error);
+
+      throw new Error(
+        `Failed to fetch blog post. status=${status}, slug=${slug}, locale=${locale}`
+      );
+    }
   }
-}
+);
 
 /* ---------------- SEO ---------------- */
 
@@ -222,17 +248,15 @@ export async function generateMetadata({
   const item = post?.data?.item;
 
   const siteUrl = getSiteUrl();
+  const fallbackCanonicalPath = buildCanonicalPath(locale, id);
 
-  if (!item || post?.status === 404) {
+  if (post?.status === 404) {
     return {
       metadataBase: new URL(siteUrl),
       title: "مقاله یافت نشد | پالم رنت",
       description: "این مقاله در حال حاضر در دسترس نیست.",
       alternates: {
-        canonical: `/${locale === "fa" ? "" : `${locale}/`}blogs/${id}`.replace(
-          /\/+/g,
-          "/"
-        ),
+        canonical: fallbackCanonicalPath,
       },
       robots: {
         index: false,
@@ -241,38 +265,36 @@ export async function generateMetadata({
     };
   }
 
-  const fallbackTitle = `${item.title || "مقاله"} | پالم رنت`;
+  const title = meta?.titleSeo?.trim() || item?.title || "";
 
-  const fallbackDescription =
-    truncate(stripHtml(item.text), 155) ||
-    `مطالعه مقاله ${item.title || ""} در پالم رنت`;
+  let description = meta?.descriptionSeo?.trim() || "";
+  if (!description && item?.text) {
+    const plainText = stripHtml(item.text);
+    description = truncateText(plainText, 160);
+  }
 
-  const title = meta?.titleSeo?.trim() || fallbackTitle;
-  const description = meta?.descriptionSeo?.trim() || fallbackDescription;
-
-  const image = buildImage(meta?.imgSeo || item.photo);
+  const image = buildImage(meta?.imgSeo || item?.photo);
 
   const parsedKeywords = normalizeKeywords(meta?.keywordsSeo);
   const keywords = parsedKeywords.length
     ? parsedKeywords
-    : [
-        "پالم رنت",
-        "اجاره خودرو",
-        "بلاگ خودرو",
-        item.title || "",
-        item.branch ? `اجاره خودرو در ${item.branch}` : "",
-      ].filter(Boolean);
+    : ["پالم رنت", "اجاره خودرو", "بلاگ خودرو"];
 
-  const canonical =
+  const rawCanonical =
     meta?.canonical?.trim() ||
     meta?.urlPage?.trim() ||
-    `${siteUrl}${locale === "fa" ? "" : `/${locale}`}/blogs/${id}`;
+    fallbackCanonicalPath;
+
+  const canonical = toAbsoluteUrl(rawCanonical, siteUrl);
 
   const alternateLanguages =
     Array.isArray(meta?.alternate) && meta.alternate.length > 0
-      ? meta.alternate.reduce<Record<string, string>>((acc, item) => {
-          if (item?.hreflang && item?.href) {
-            acc[item.hreflang] = item.href;
+      ? meta.alternate.reduce<Record<string, string>>((acc, alt) => {
+          if (alt?.lang && alt?.url) {
+            acc[alt.lang] = toAbsoluteUrl(
+              `${alt.lang === "fa" ? "" : `/${alt.lang}`}${alt.url}`,
+              siteUrl
+            );
           }
           return acc;
         }, {})
@@ -294,9 +316,9 @@ export async function generateMetadata({
 
   return {
     metadataBase: new URL(siteUrl),
-    title,
-    description,
-    keywords,
+    title: title || undefined,
+    description: description || undefined,
+    keywords: keywords.length ? keywords : undefined,
     alternates: {
       canonical,
       languages: alternateLanguages,
@@ -304,8 +326,8 @@ export async function generateMetadata({
     openGraph: {
       type: "article",
       url: canonical,
-      title,
-      description,
+      title: title || undefined,
+      description: description || undefined,
       siteName: meta?.siteName || "Palm Rent",
       locale: getOgLocale(locale),
       images: image
@@ -314,15 +336,15 @@ export async function generateMetadata({
               url: image,
               width: 1200,
               height: 630,
-              alt: item.title || "",
+              alt: item?.title || "",
             },
           ]
         : undefined,
     },
     twitter: {
       card: image ? "summary_large_image" : "summary",
-      title,
-      description,
+      title: title || undefined,
+      description: description || undefined,
       images: image ? [image] : undefined,
       creator: "@PalmRent",
     },
@@ -341,8 +363,17 @@ export default async function BlogPost({
 
   const post = await getPostBySlug(id, locale);
 
-  if (!post || post.status === 404 || !post.data?.item) {
+  // فقط وقتی واقعا 404 از API برگشته
+  if (post?.status === 404) {
     notFound();
+  }
+
+  // غیر از 404، نباید notFound بده
+  // اگر data خراب بود، خطای واقعی است نه 404
+  if (!post?.data?.item) {
+    throw new Error(
+      `Blog data is invalid. slug=${id}, locale=${locale}, status=${post?.status ?? "unknown"}`
+    );
   }
 
   const meta = post.meta;
@@ -356,7 +387,8 @@ export default async function BlogPost({
 
   return (
     <>
-    <Header shadowLess />
+      <Header shadowLess />
+
       {meta?.schemaSeo ? (
         <Script
           id="blog-schema-seo"
@@ -419,8 +451,10 @@ export default async function BlogPost({
               <div className="font-bold text-lg">{t("relatedPosts")}</div>
 
               {lastBlogs.map((b, index) => {
-                const relatedId = b?.id ?? b?.slug;
+                const relatedId = b?.slug ?? b?.id;
                 const relatedPhotoFinal = buildImage(b?.photo);
+
+                if (!relatedId) return null;
 
                 return (
                   <Link
@@ -453,7 +487,8 @@ export default async function BlogPost({
           </div>
         </div>
       </div>
-      <Footer  />
+
+      <Footer />
     </>
   );
 }

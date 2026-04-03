@@ -142,19 +142,12 @@ const getBranchLandingData = cache(
         next: { revalidate: 300 },
       });
 
-      if (res.status === 404) {
-        return null;
-      }
+      if (res.status === 404) return null;
 
       const data: BranchPageApiResponse = await res.json();
 
-      if (Number(data?.status) === 404) {
-        return null;
-      }
-
-      if (!data?.data?.branch?.id) {
-        return null;
-      }
+      if (Number(data?.status) === 404) return null;
+      if (!data?.data?.branch?.id) return null;
 
       return data;
     } catch {
@@ -241,6 +234,7 @@ export default async function Page({ params }: PageProps) {
   }
 
   const schemaSeo = response?.meta?.schemaSeo;
+  const branch = response?.data?.branch;
 
   return (
     <>
@@ -255,6 +249,8 @@ export default async function Page({ params }: PageProps) {
       <BranchLandingClient
         locale={resolvedLocale}
         cityName={cityName}
+        initialBranchId={branch?.id ?? null}
+        initialBranchTitle={branch?.title1 || branch?.title || ""}
       />
     </>
   );

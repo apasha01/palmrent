@@ -930,50 +930,52 @@
   },
 
   
-  "AppDrawer": {
-    "prices": {
-      "title": "Fiyat grupları",
-      "desc": "Fiyatlar günlük hesaplanır ve kiralama gün sayısına göre değişebilir.",
-      "empty": "Fiyatlar mevcut değil.",
-      "subOff": "Temel fiyat ve indirimli fiyat",
-      "subNormal": "Günlük fiyat"
-    },
-    "noDeposit": {
-      "title": "Depozitosuz",
-      "desc": "Bu araç için mevcut bilgilere göre güvence depozitosu/trafik cezası depozitosu alınmamaktadır.\n\n• Araç tesliminde sizden depozito alınmayacaktır.\n• Ancak sözleşme dışındaki cezalar, hasarlar veya masraflar şirket kurallarına göre kiracının sorumluluğundadır.\n• Sözleşme detayları için rezervasyonu tamamlamadan önce destek ile iletişime geçebilirsiniz."
-    },
-    "deposit": {
-      "title": "Trafik cezası depozitosu",
-      "desc": "Trafik cezası depozitosu, kiralama süresince oluşabilecek olası cezaları karşılamak için alınan bir tutardır.\n\n• Tutar: {amountText} {currency}\n• Genellikle cezalar kapatılıp durum kontrol edildikten sonra iade edilir.\n• İade süresi ve işlem şekli şirket/şube kurallarına göre değişebilir."
-    },
-    "delivery": {
-      "title": "Araç teslimatı",
-      "freeDesc": "Bu araç için teslimat ücretsizdir.\n\n• Teslimat ve iade, şube ile koordineli şekilde yapılır.\n• Bazı özel lokasyonlarda veya alışılmadık saatlerde ek koordinasyon gerekebilir.\n• Rezervasyonu tamamlamadan önce tam yer ve saat detaylarını destekten öğrenebilirsiniz.",
-      "paidDesc": "Bu araç için teslimat ücretsiz değildir.\n\n• Teslimat ve iade ücreti; konum, saat ve şube koşullarına göre değişebilir.\n• Rezervasyonu tamamlamadan önce tam teslimat ücretini destekten öğrenebilirsiniz."
-    },
-    "insurance": {
-      "title": "Araç sigortası",
-      "hasDesc": "Bu araç için ücretsiz temel sigorta sunulmuştur.\n\n• Temel sigorta, standart minimum kapsamı içerir.\n• Bazı durumlarda ek ücretle ilave teminatlar sunulabilir.\n• Kapsam limitleri ve istisnaları öğrenmek için rezervasyondan önce detayları incelemek daha iyidir.",
-      "noDesc": "Mevcut bilgilere göre bu araç için ücretsiz sigorta tanımlı değildir.\n\n• Temel veya ek sigorta ayrıca sunulabilir.\n• Tam sigorta koşullarını öğrenmek için rezervasyondan önce destekle iletişime geçin."
-    },
-    "km": {
-      "title": "Kilometre koşulları",
-      "unlimitedDesc": "Bu araç sınırsız kilometreye sahiptir.\n\n• Bu araç için günlük kilometre sınırı uygulanmaz.\n• Normal kullanım ve şirket kurallarına uyum yine de gereklidir.\n• Belirli rotalar veya kullanım türleri için özel koşullar varsa rezervasyon sırasında bildirilir.",
-      "limitedDesc": "Bu araç sınırlı kilometreye sahiptir.\n\n• Genellikle günlük veya toplam kilometre sınırı belirlenir.\n• Ek kilometre ücreti şirket kurallarına göre hesaplanır.\n• Tam kilometre sınırını öğrenmek için destekten bilgi alabilirsiniz."
-    },
-    "optionById": {
-      "2": "Çocuk koltuğu\n• Küçük çocuklar için uygundur\n• Kurulum ve teslim araç tesliminde yapılır\n• Uygun boyut ve model seçimi müşterinin sorumluluğundadır\n• Gerekirse rezervasyon öncesinde destek ile iletişime geçin",
-      "10": "Ek sürücü\n• Bu seçenek başka bir kişinin de sürücü olarak kaydedilmesini sağlar\n• Ek sürücü için geçerli kimlik ve ehliyet gereklidir\n• Araç kullanımı sözleşme kurallarına tabi olmaya devam eder"
-    },
-    "extraOption": {
-      "titleFallback": "Opsiyon detayları",
-      "descFallback": "Bu opsiyon için kayıtlı bir açıklama yok. Daha fazla bilgi için rezervasyon öncesinde destek ile iletişime geçebilirsiniz."
-    },
-    "insuranceComplete": {
-      "title": "Kapsamlı hasar paketi",
-      "desc": "Bu seçenek seçildiğinde, kiralama süresi boyunca hasarlar ve olası riskler için daha kapsamlı bir güvence etkinleşir."
-    }
+"AppDrawer": {
+  "prices": {
+    "title": "Fiyat grupları",
+    "desc": "Fiyatlar günlük olarak hesaplanır ve kiralama süresine göre değişebilir.",
+    "empty": "Fiyatlar mevcut değil.",
+    "subOff": "Temel fiyat ve indirimli fiyat",
+    "subNormal": "Günlük fiyat"
   },
+  "noDeposit": {
+    "title": "Depozitosuz araç kiralama ne anlama gelir?",
+    "desc": "Bu araç depozitosuz sunulmaktadır. Yani rezervasyon veya teslim sırasında depozito ya da ek bir güvence bedeli ödemeniz gerekmez. Sadece araç kiralama ücretini ödersiniz ve ek provizyon veya yüksek ön ödeme ile uğraşmadan aracınızı teslim alırsınız."
+  },
+  "deposit": {
+    "title": "Trafik cezası depozitosu",
+    "desc": "Trafik cezası depozitosu, kiralama süresi boyunca oluşabilecek olası ceza veya ihlalleri karşılamak için alınan bir tutardır.\n\n• Tutar: {amountText} {currency}\n• Genellikle cezalar netleştirilip durum incelendikten sonra iade edilir.\n• İade süresi ve süreç, şirketin veya şubenin politikasına göre değişebilir."
+  },
+  "delivery": {
+    "title": "Ücretsiz teslim ne anlama gelir?",
+    "freeDesc": "Bu araç, havalimanında veya ofiste ücretsiz teslim seçeneğiyle sunulmaktadır. Yani bu noktalarda aracı teslim alırken sizden ek bir teslimat ya da karşılama ücreti alınmaz. Böylece ekstra masraf ödemeden aracınızı kolayca teslim alabilir ve yolculuğunuza rahat bir başlangıç yapabilirsiniz.",
+    "paidDesc": "Bu araç için teslimat ücretsiz değildir.\n\n• Teslimat ve iade ücretleri konuma, saate ve şube koşullarına göre değişebilir.\n• Rezervasyonu tamamlamadan önce kesin teslimat ücretini destek ekibinden öğrenebilirsiniz."
+  },
+  "insurance": {
+    "title": "Ücretsiz sigorta ne anlama gelir?",
+    "hasDesc": "Bu araçta temel sigorta ek ücret olmadan sunulmaktadır; yani bu koruma için ayrıca ödeme yapmazsınız. Bu sayede aracı daha güvenle kiralayabilirsiniz, ancak teminatın kapsamı ve sorumluluk sınırları sigorta şartları ile kiralama sözleşmesine göre belirlenir.",
+    "noDesc": "Mevcut bilgilere göre bu araç için ücretsiz sigorta listelenmemiştir.\n\n• Temel veya ek sigorta ayrıca sunuluyor olabilir.\n• Kesin sigorta koşullarını öğrenmek için rezervasyondan önce destek ile iletişime geçin."
+  },
+  "km": {
+    "title": "Sınırsız kilometre ne anlama gelir?",
+    "unlimitedDesc": "Bu aracı kiraladığınızda kilometre sınırı yoktur. Yani kiralama süresi boyunca ne kadar yol yaptığınızı düşünmek zorunda kalmazsınız. Aracı gönül rahatlığıyla kullanabilir, daha fazla kilometre yaptığınız için ek ücret ödemezsiniz.",
+    "limitedDesc": "Bu araçta kilometre sınırı vardır.\n\n• Genellikle kiralama süresi için günlük ya da toplam kilometre limiti belirlenir.\n• Aşılan kilometreler için şirket kurallarına göre ek ücret hesaplanır.\n• Kesin kilometre sınırını öğrenmek için destek ile iletişime geçin."
+  },
+  "optionById": {
+    "2": "Çocuk koltuğu\n• Küçük çocuklar için uygundur\n• Kurulum ve teslim, araç teslim alınırken yapılır\n• Doğru boyut ve model seçimi müşterinin sorumluluğundadır\n• Gerekirse rezervasyondan önce destek ile iletişime geçin",
+    "10": "Ek sürücü\n• Bu seçenek, başka bir kişinin de sürücü olarak kaydedilmesini sağlar\n• Ek sürücü için geçerli kimlik ve ehliyet gereklidir\n• Araç kullanımı yine sözleşme şartları ve sorumluluklara tabidir"
+  },
+  "extraOption": {
+    "titleFallback": "Opsiyon detayları",
+    "descFallback": "Bu opsiyon için açıklama girilmemiştir. Daha fazla bilgi için rezervasyondan önce destek ile iletişime geçebilirsiniz."
+  },
+  "insuranceComplete": {
+    "title": "Kapsamlı hasar paketi",
+    "desc": "Bu seçenek seçildiğinde, kiralama süresi boyunca oluşabilecek hasarlar ve olası riskler için daha geniş kapsamlı bir koruma devreye girer."
+  }
+},
+
+
   "ReservationPage": {
     "continueReservationLogin": "Rezervasyona devam et, hesaba giriş yap",
     "uploadAndReviewDocuments": "Belgeleri yükle ve incele",
@@ -1182,9 +1184,9 @@
 
 
   "HubLandingPage": {
-    "heroTitle": "Palm Rent'in aktif şehirlerinde araç kiralama",
-    "heroSubtitle1": "Şehri ve tarihi seçin",
-    "heroSubtitle2": "Mevcut araçlar ve nihai fiyat gösterilsin."
+    "heroTitle": "Palm Rent Şubelerinde Araç Kiralama ve Rent A Car",
+    "heroSubtitle1": "Palm Rent şubelerini inceleyin ve yolculuğunuz için doğru destinasyonu seçin.",
+    "heroSubtitle2": "Online rezervasyon, şeffaf fiyatlar ve 7/24 destek ile her şube sayfasına kolayca geçin."
   },
   "HubBranchList": {
     "title": "Araç kiralama şehirleri",
@@ -1221,23 +1223,26 @@
     "profileAria": "Profil sayfasına git"
   },
 
-  
-  "carDetail": {
-    "notFound": {
-      "title": "Araç bulunamadı",
-      "description": "ID yanlış olabilir veya araç silinmiş olabilir."
-    },
-    "share": "Paylaş",
-    "favorite": "Favorilere ekle",
-    "persons": "{count} kişilik",
-    "baggages": "{count} bagaj",
-    "features": {
-      "noDeposit": "Depozito yok",
-      "freeDelivery": "Ücretsiz teslimat",
-      "unlimitedKm": "Sınırsız km",
-      "insurance": "Sigorta"
-    }
+"carDetail": {
+  "notFound": {
+    "title": "Araç bulunamadı",
+    "description": "ID yanlış olabilir veya araç kaldırılmış olabilir."
   },
+  "share": "Paylaş",
+  "favorite": "Favorilere ekle",
+  "persons": "{count} kişilik",
+  "baggages": "{count} bagaj",
+  "dynamicTitle": "{branch} konumunda {car} kirala",
+  "dynamicDescription": "{branch} konumunda {car} aracını Palm Rent ile en iyi fiyat ve koşullarla kiralayın.",
+  "features": {
+    "noDeposit": "Depozito yok",
+    "freeDelivery": "Ücretsiz teslimat",
+    "unlimitedKm": "Sınırsız kilometre",
+    "insurance": "Sigorta"
+  }
+},
+
+
   "imageGallery": {
     "totalImages": "{count} fotoğraf",
     "videoLabel": "Video",
@@ -1572,10 +1577,50 @@
     "goHome": "Ana sayfaya dön"
   },
 
+
+    "Footer": {
+    "brand": "Palm Rent",
+    "description": "Palm Rent; online rezervasyon, şeffaf fiyatlandırma ve 7/24 destek sunan güvenilir bir araç kiralama platformudur. Farklı araçları inceleyebilir ve çeşitli şubeler üzerinden size en uygun seçeneği seçebilirsiniz.",
+    "sections": {
+      "quickAccess": "Hızlı Erişim",
+      "importantBranches": "Önemli Şubeler",
+      "contactPalmRent": "Palm Rent ile İletişim",
+      "moreInfo": "Daha Fazla Bilgi"
+    },
+    "links": {
+      "home": "Ana Sayfa",
+      "carRent": "Araç Kiralama",
+      "faq": "Sıkça Sorulan Sorular",
+      "rentalRules": "Kiralama Kuralları",
+      "aboutUs": "Hakkımızda",
+      "contactUs": "Bize Ulaşın"
+    },
+    "branches": {
+      "dubai": "Dubai'de Araç Kiralama",
+      "istanbul": "İstanbul'da Araç Kiralama",
+      "oman": "Umman'da Araç Kiralama",
+  
+      "allBranches": "Tüm Şubeleri Gör"
+    },
+    "more": {
+      "aboutPalmRent": "Palm Rent Hakkında",
+      "gallery": "Galeri",
+      "faq": "Sıkça Sorulan Sorular",
+      "rentalRules": "Kiralama Kuralları"
+    },
+    "contact": {
+      "whatsapp": "WhatsApp",
+      "phone": "Telefon Araması",
+      "email": "E-posta",
+      "contactUs": "Bize Ulaşın"
+    },
+    "copyright": "Tüm hakları Palm Rent'e aittir."
+  },
+
 "branchLanding": {
-  "heroTitle": "<Branch></Branch> Depozitosuz Araç Kiralama",
-  "heroSubtitle1": "<Branch></Branch> şubesinde şeffaf fiyatlar, online rezervasyon ve ücretsiz havalimanı teslimatı ile araç kiralayın.",
-  "heroSubtitle2": "Palm Rent’teki mevcut araçları inceleyin; depozitosuz, teminatsız ve trafik cezası depozitosu olmadan rezervasyon yapın.",
+  "heroTitle": "{Branch}’ta Araç Kiralama",
+  "heroSubtitle1": "{Branch}’ta şeffaf fiyatlar ve online rezervasyon ile araç kiralayın.",
+  "heroSubtitle2": "Size uygun aracı Palm Rent’ten daha hızlı ve daha güvenli şekilde rezerve edin.",
   "loadingMore": "Yükleniyor…",
   "viewMore": "Daha fazla göster",
   "noCarsFound": "Araç bulunamadı",
@@ -1587,8 +1632,9 @@
 
   "Home" : {
     "hero": {
-  "title": "PalmRent | Şehirlerde online araç kiralama",
-  "subtitle": "Online rezervasyon, koordineli teslim, 7/24 destek"
+  "title": "Palm Rent | Araç Kiralama ve Rent A Car",
+  "subtitle": "Şeffaf fiyatlar ve 7/24 destek ile online araç rezervasyonu.",
+  "subtitle2": "Destinasyonunuzu seçmek ve aktif şubeleri görmek için araç kiralama bölümüne geçin."
 }
   },
 

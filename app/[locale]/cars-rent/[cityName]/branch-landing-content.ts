@@ -18,94 +18,63 @@ type BranchLandingContentMap = Record<string, BranchLandingLocaleMap>;
 const branchLandingStaticContent: BranchLandingContentMap = {
   dubai: {
     fa: {
-      heroTitle: "اجاره خودرو در دبی بدون دپوزیت",
+      heroTitle: "اجاره خودرو در دبی",
       heroSubtitle1:
-        "کرایه ماشین در دبی با قیمت شفاف، رزرو آنلاین و تحویل رایگان فرودگاهی.",
+        "کرایه ماشین در دبی با قیمت شفاف و تحویل رایگان فرودگاهی.",
       heroSubtitle2:
-        "خودروهای موجود پالم رنت را ببینید و بدون ودیعه، بدون ضمانت و بدون ودیعه خلافی رزرو کنید.",
+        "خودروهای پالم رنت را ببینید و بدون ودیعه و ضمانت رزرو کنید.",
     },
     en: {
-      heroTitle: "No-Deposit Car Rental in Dubai",
+      heroTitle: "Car Rental in Dubai",
       heroSubtitle1:
-        "Rent a car in Dubai with transparent pricing, online booking, and free airport delivery.",
+        "Dubai car hire with transparent pricing and free airport delivery.",
       heroSubtitle2:
-        "Explore Palm Rent’s available cars and book with no deposit, no guarantee, and no traffic fine deposit.",
+        "Book Palm Rent cars with no deposit and no extra guarantee.",
     },
     ar: {
-      heroTitle: "تأجير سيارات في دبي بدون تأمين",
+      heroTitle: "تأجير سيارات في دبي",
       heroSubtitle1:
-        "استأجر سيارة في دبي مع أسعار واضحة، حجز أونلاين، وتسليم مجاني في المطار.",
+        "كراء سيارات في دبي بأسعار واضحة وتسليم مجاني في المطار.",
       heroSubtitle2:
-        "تعرّف على السيارات المتاحة لدى Palm Rent واحجز بدون تأمين، بدون ضمان، وبدون وديعة مخالفات.",
+        "احجز سيارات Palm Rent بدون وديعة تأمين وبدون ضمان إضافي.",
     },
     tr: {
-      heroTitle: "Dubai’de Depozitosuz Araç Kiralama",
+      heroTitle: "Dubai’de Araç Kiralama",
       heroSubtitle1:
-        "Dubai’de şeffaf fiyatlar, online rezervasyon ve ücretsiz havalimanı teslimatı ile araç kiralayın.",
+        "Dubai’de şeffaf fiyatlarla ve ücretsiz havalimanı teslimatıyla araç kiralayın.",
       heroSubtitle2:
-        "Palm Rent’teki mevcut araçları inceleyin; depozitosuz, teminatsız ve trafik cezası depozitosu olmadan rezervasyon yapın.",
+        "Palm Rent araçlarını depozitosuz ve ek teminatsız rezerve edin.",
     },
   },
 
   turkey: {
     fa: {
-      heroTitle: "اجاره خودرو در استانبول بدون دپوزیت",
+      heroTitle: "اجاره خودرو در استانبول",
       heroSubtitle1:
         "کرایه ماشین در استانبول با قیمت شفاف، رزرو آنلاین و تحویل رایگان فرودگاهی.",
       heroSubtitle2:
-        "خودروهای موجود پالم رنت را ببینید و بدون ودیعه، بدون ضمانت و با کیلومتر نامحدود رزرو کنید.",
+        "بدون ودیعه، بدون ضمانت و با کیلومتر نامحدود از خودروهای پالم رنت رزرو کنید.",
     },
     en: {
-      heroTitle: "No-Deposit Car Rental in Istanbul",
+      heroTitle: "Car Rental in Istanbul",
       heroSubtitle1:
-        "Rent a car in Istanbul with transparent pricing, online booking, and free airport delivery.",
+        "Car hire in Istanbul with transparent pricing, online booking, and free airport delivery.",
       heroSubtitle2:
-        "Explore Palm Rent’s available cars and book with no deposit, no guarantee, and unlimited mileage.",
+        "Book from Palm Rent’s available cars with no deposit, no extra guarantee, and unlimited mileage.",
     },
     ar: {
-      heroTitle: "تأجير سيارات في إسطنبول بدون تأمين",
+      heroTitle: "تأجير سيارات في إسطنبول",
       heroSubtitle1:
-        "استأجر سيارة في إسطنبول مع أسعار واضحة، حجز أونلاين، وتسليم مجاني في المطار.",
+        "كراء سيارات في إسطنبول مع أسعار واضحة، حجز أونلاين، وتسليم مجاني في المطار.",
       heroSubtitle2:
-        "شاهد السيارات المتاحة لدى Palm Rent واحجز بدون تأمين، بدون ضمان، ومع كيلومترات غير محدودة.",
+        "احجز من سيارات Palm Rent المتاحة بدون وديعة تأمين، بدون ضمان إضافي، ومع كيلومترات غير محدودة.",
     },
     tr: {
-      heroTitle: "İstanbul’da Depozitosuz Araç Kiralama",
+      heroTitle: "İstanbul’da Araç Kiralama",
       heroSubtitle1:
         "İstanbul’da şeffaf fiyatlar, online rezervasyon ve ücretsiz havalimanı teslimatı ile araç kiralayın.",
       heroSubtitle2:
-        "Palm Rent’teki mevcut araçları inceleyin; depozitosuz, teminatsız ve sınırsız kilometre ile rezervasyon yapın.",
-    },
-  },
-
-  oman: {
-    fa: {
-      heroTitle: "اجاره خودرو در مسقط عمان",
-      heroSubtitle1:
-        "کرایه ماشین در عمان با قیمت شفاف، رزرو آنلاین و تحویل فرودگاهی.",
-      heroSubtitle2:
-        "خودروهای موجود پالم رنت را ببینید و شرایط کامل اجاره خودرو در مسقط را بررسی کنید.",
-    },
-    en: {
-      heroTitle: "Car Rental in Muscat, Oman",
-      heroSubtitle1:
-        "Rent a car in Oman with transparent pricing, online booking, and airport delivery.",
-      heroSubtitle2:
-        "Explore Palm Rent’s available cars and review the full rental conditions for Muscat.",
-    },
-    ar: {
-      heroTitle: "تأجير سيارات في مسقط عُمان",
-      heroSubtitle1:
-        "استأجر سيارة في عُمان مع أسعار واضحة، حجز أونلاين، وتسليم في المطار.",
-      heroSubtitle2:
-        "شاهد السيارات المتاحة لدى Palm Rent واطّلع على الشروط الكاملة لتأجير السيارات في مسقط.",
-    },
-    tr: {
-      heroTitle: "Umman Maskat’ta Araç Kiralama",
-      heroSubtitle1:
-        "Umman’da şeffaf fiyatlar, online rezervasyon ve havalimanı teslimatı ile araç kiralayın.",
-      heroSubtitle2:
-        "Palm Rent’teki mevcut araçları inceleyin ve Maskat için tüm kiralama koşullarını görün.",
+        "Palm Rent’teki mevcut araçlardan depozitosuz, ek teminatsız ve sınırsız kilometre ile rezervasyon yapın.",
     },
   },
 };
@@ -145,7 +114,8 @@ export const getBranchLandingContent = ({
   const normalizedLocale = normalizeLocale(locale);
   const normalizedSlug = normalizeSlug(slug);
 
-  const staticContent = branchLandingStaticContent[normalizedSlug]?.[normalizedLocale];
+  const staticContent =
+    branchLandingStaticContent[normalizedSlug]?.[normalizedLocale];
 
   if (staticContent) {
     return {

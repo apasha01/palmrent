@@ -890,22 +890,24 @@ declare const messages: {
     "hint": "Check the page address or continue from the homepage."
   },
 
-    "carDetail": {
-    "notFound": {
-      "title": "Car not found",
-      "description": "The ID might be wrong or the car has been removed."
-    },
-    "share": "Share",
-    "favorite": "Add to favorites",
-    "persons": "{count} passengers",
-    "baggages": "{count} luggage",
-    "features": {
-      "noDeposit": "No deposit",
-      "freeDelivery": "Free delivery",
-      "unlimitedKm": "Unlimited km",
-      "insurance": "Insurance"
-    }
+"carDetail": {
+  "notFound": {
+    "title": "Car Not Found",
+    "description": "The ID may be incorrect or the car may have been removed."
   },
+  "share": "Share",
+  "favorite": "Add to favorites",
+  "persons": "{count}-seater",
+  "baggages": "{count} baggage",
+  "dynamicTitle": "Rent {car} in {branch}",
+  "dynamicDescription": "Rent {car} in {branch} with the best price and conditions from Palm Rent.",
+  "features": {
+    "noDeposit": "No deposit",
+    "freeDelivery": "Free delivery",
+    "unlimitedKm": "Unlimited km",
+    "insurance": "Insurance"
+  }
+},
   "imageGallery": {
     "totalImages": "{count} photos",
     "videoLabel": "Video",
@@ -1025,8 +1027,9 @@ declare const messages: {
   ,
   "Home": {
     "hero": {
-      "title": "PalmRent | Online car rental booking in cities",
-      "subtitle": "Online booking, coordinated delivery, 24/7 support"
+      "title": "Palm Rent | Car Rental & Car Hire",
+      "subtitle": "Online car booking with transparent pricing and 24/7 support.",
+      "subtitle2": "To choose your destination and view active branches, enter the car rental section."
     }
   },
   "ActiveRentCities": {
@@ -1184,51 +1187,50 @@ declare const messages: {
   },
 
   
-  "AppDrawer": {
-    "prices": {
-      "title": "Price groups",
-      "desc": "Prices are calculated per day and may change depending on the rental duration.",
-      "empty": "Prices are not available.",
-      "subOff": "Base price and discounted price",
-      "subNormal": "Daily price"
-    },
-    "noDeposit": {
-      "title": "No deposit",
-      "desc": "For this car, no security deposit/traffic fine deposit is required based on the current information.\n\n• No deposit amount will be collected at the time of delivery.\n• However, fines, damages, or costs outside the contract remain the renter’s responsibility according to company rules.\n• For exact contract details, you can coordinate with support before finalizing the booking."
-    },
-    "deposit": {
-      "title": "Traffic fine deposit",
-      "desc": "The traffic fine deposit is an amount collected to cover potential fines or violations during the rental period.\n\n• Amount: {amountText} {currency}\n• It is usually refunded after fines are settled and the case is reviewed.\n• The refund timing and settlement process may vary depending on the company/branch policy."
-    },
-    "delivery": {
-      "title": "Car delivery",
-      "freeDesc": "Delivery for this car is free.\n\n• Delivery and return are handled in coordination with the branch.\n• In some specific locations or unusual hours, separate coordination may be required.\n• Before finalizing the booking, you can ask support for the exact delivery place and time details.",
-      "paidDesc": "Delivery for this car is not free.\n\n• Delivery and return costs may vary depending on location, time, and branch conditions.\n• Before finalizing the booking, you can check the exact delivery fee with support."
-    },
-    "insurance": {
-      "title": "Car insurance",
-      "hasDesc": "A free basic insurance plan is included for this car.\n\n• Basic insurance includes the minimum standard coverage.\n• In some cases, additional coverage may be available for an extra fee.\n• To know the coverage limits and exclusions, it is better to review the details before booking.",
-      "noDesc": "According to the current information, no free insurance is listed for this car.\n\n• Basic or additional insurance may still be offered separately.\n• To know the exact insurance conditions, please coordinate with support before booking."
-    },
-    "km": {
-      "title": "Mileage terms",
-      "unlimitedDesc": "This car has unlimited mileage.\n\n• No daily mileage limit applies to this car.\n• Normal use and compliance with company rules are still required.\n• If there are special conditions for certain routes or usage types, they will be announced during booking.",
-      "limitedDesc": "This car has limited mileage.\n\n• Usually, a daily or total mileage cap is defined for the rental period.\n• Extra mileage charges will be calculated according to company rules.\n• To know the exact mileage limit, please ask support."
-    },
-    "optionById": {
-      "2": "Child seat\n• Suitable for young children\n• Installation and handover are done when receiving the car\n• Choosing the correct size and model is the customer’s responsibility\n• If needed, please coordinate with support before booking",
-      "10": "Additional driver\n• This option allows another person to be registered as a driver as well\n• Valid ID and driving license are required for the additional driver\n• Vehicle usage remains subject to contract terms and responsibilities"
-    },
-    "extraOption": {
-      "titleFallback": "Option details",
-      "descFallback": "No description has been registered for this option. For more information, you can contact support before booking."
-    },
-    "insuranceComplete": {
-      "title": "Comprehensive damage package",
-      "desc": "By selecting this option, broader coverage for damages and potential risks during the rental period will be activated."
-    }
+"AppDrawer": {
+  "prices": {
+    "title": "Price groups",
+    "desc": "Prices are calculated per day and may change depending on the rental duration.",
+    "empty": "Prices are not available.",
+    "subOff": "Base price and discounted price",
+    "subNormal": "Daily price"
   },
-
+  "noDeposit": {
+    "title": "What does No Deposit mean?",
+    "desc": "This car is offered with no deposit, which means you do not need to pay a security deposit or leave any extra amount as a guarantee at the time of booking or pickup. You simply pay the rental cost and take delivery of the car without being tied up in additional upfront charges."
+  },
+  "deposit": {
+    "title": "Traffic fine deposit",
+    "desc": "The traffic fine deposit is an amount collected to cover potential fines or violations during the rental period.\n\n• Amount: {amountText} {currency}\n• It is usually refunded after fines are settled and the case is reviewed.\n• The refund timing and settlement process may vary depending on the company/branch policy."
+  },
+  "delivery": {
+    "title": "What does Free Delivery mean?",
+    "freeDesc": "This car comes with free delivery at the airport and office locations, which means you will not be charged any extra pickup or delivery fee at these points. You can receive the car at the selected location more conveniently and start your trip without additional service charges.",
+    "paidDesc": "Delivery for this car is not free.\n\n• Delivery and return costs may vary depending on location, time, and branch conditions.\n• Before finalizing the booking, you can check the exact delivery fee with support."
+  },
+  "insurance": {
+    "title": "What does Free Insurance mean?",
+    "hasDesc": "This car comes with basic insurance included at no extra cost, so you do not pay a separate fee for this coverage. It gives you added peace of mind when renting the car, while the exact coverage and liability remain subject to the rental agreement and insurance terms.",
+    "noDesc": "According to the current information, no free insurance is listed for this car.\n\n• Basic or additional insurance may still be offered separately.\n• To know the exact insurance conditions, please coordinate with support before booking."
+  },
+  "km": {
+    "title": "What does Unlimited Mileage mean?",
+    "unlimitedDesc": "There is no mileage limit for renting this car. This means you do not have to worry about how far you drive during your rental period. You can use the car with complete peace of mind, and you will not pay any extra charge for driving more.",
+    "limitedDesc": "This car has limited mileage.\n\n• Usually, a daily or total mileage cap is defined for the rental period.\n• Extra mileage charges will be calculated according to company rules.\n• To know the exact mileage limit, please ask support."
+  },
+  "optionById": {
+    "2": "Child seat\n• Suitable for young children\n• Installation and handover are done when receiving the car\n• Choosing the correct size and model is the customer’s responsibility\n• If needed, please coordinate with support before booking",
+    "10": "Additional driver\n• This option allows another person to be registered as a driver as well\n• Valid ID and driving license are required for the additional driver\n• Vehicle usage remains subject to contract terms and responsibilities"
+  },
+  "extraOption": {
+    "titleFallback": "Option details",
+    "descFallback": "No description has been registered for this option. For more information, you can contact support before booking."
+  },
+  "insuranceComplete": {
+    "title": "Comprehensive damage package",
+    "desc": "By selecting this option, broader coverage for damages and potential risks during the rental period will be activated."
+  }
+},
   
   "PaymentSuccessCard": {
     "common": {
@@ -1452,9 +1454,9 @@ declare const messages: {
 
 
   "HubLandingPage": {
-    "heroTitle": "Car rental in Palm Rent active cities",
-    "heroSubtitle1": "Select the city and date",
-    "heroSubtitle2": "to view available cars and the final price."
+    "heroTitle": "Car Rental & Car Hire Across Palm Rent Branches",
+    "heroSubtitle1": "Browse Palm Rent branches and choose the right destination for your trip.",
+    "heroSubtitle2": "With online booking, transparent pricing, and 24/7 support, enter each branch page easily."
   },
   "HubBranchList": {
     "title": "Car rental cities",
@@ -1472,6 +1474,45 @@ declare const messages: {
     "scrollPrev": "Scroll previous"
   },
 
+    "Footer": {
+    "brand": "Palm Rent",
+    "description": "Palm Rent is a trusted car rental platform with online booking, transparent pricing, and 24/7 support. You can explore a wide range of cars and choose the best option through different branches.",
+    "sections": {
+      "quickAccess": "Quick Access",
+      "importantBranches": "Important Branches",
+      "contactPalmRent": "Contact Palm Rent",
+      "moreInfo": "More Information"
+    },
+    "links": {
+      "home": "Home",
+      "carRent": "Car Rental",
+      "faq": "FAQ",
+      "rentalRules": "Rental Rules",
+      "aboutUs": "About Us",
+      "contactUs": "Contact Us"
+    },
+    "branches": {
+      "dubai": "Car Rental in Dubai",
+      "istanbul": "Car Rental in Istanbul",
+      "oman": "Car Rental in Oman",
+
+      "allBranches": "View All Branches"
+    },
+    "more": {
+      "aboutPalmRent": "About Palm Rent",
+      "gallery": "Gallery",
+      "faq": "FAQ",
+      "rentalRules": "Rental Rules"
+    },
+    "contact": {
+      "whatsapp": "WhatsApp",
+      "phone": "Phone Call",
+      "email": "Email",
+      "contactUs": "Contact Us"
+    },
+    "copyright": "All rights reserved for Palm Rent."
+  },
+
     "carDetailNotFoundPage": {
     "meta": {
       "title": "Car Not Found | Palm Rent",
@@ -1483,10 +1524,10 @@ declare const messages: {
   },
 
 "branchLanding": {
-  "heroTitle": "No-Deposit Car Rental in <Branch></Branch>",
-  "heroSubtitle1": "Rent a car in <Branch></Branch> with transparent pricing, online booking, and free airport delivery.",
-  "heroSubtitle2": "Explore Palm Rent’s available cars and book with no deposit, no guarantee, and no traffic fine deposit.",
-  "loadingMore": "Loading…",
+  "heroTitle": "Car Rental in {Branch}",
+  "heroSubtitle1": "Car hire in {Branch} with transparent pricing and online booking.",
+  "heroSubtitle2": "Reserve the right car from Palm Rent faster and with more confidence.",
+ "loadingMore": "Loading…",
   "viewMore": "View more",
   "noCarsFound": "No cars found",
   "carsListTitle": "Car list in <Branch></Branch>",

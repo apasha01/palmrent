@@ -28,7 +28,6 @@ import { useBranchSupport } from "@/services/branches/branch-support.queries";
 import BranchFaq from "@/components/Branchs/BranchFaq";
 import { getBranchLandingContent } from "@/app/[locale]/cars-rent/[cityName]/branch-landing-content";
 
-
 type PickerRange = { start: Date | null; end: Date | null };
 
 export type SharedCalendar = {
@@ -40,6 +39,8 @@ export type SharedCalendar = {
 type BranchLandingClientProps = {
   locale: string;
   cityName: string;
+  initialBranchId?: string | number | null;
+  initialBranchTitle?: string;
 };
 
 const EMPTY_RANGE: PickerRange = { start: null, end: null };
@@ -142,20 +143,17 @@ const normalizeStringArray = (values: unknown): string[] | null => {
 export default function BranchLandingClient({
   locale,
   cityName,
+  initialBranchId = null,
+  initialBranchTitle = "",
 }: BranchLandingClientProps) {
   const t = useTranslations("branchLanding");
 
   const resolvedLocale = String(locale || "fa");
   const slug = String(cityName || "");
 
-  const branchHeroContent = useMemo(() => {
-    return getBranchLandingContent({
-      slug,
-      locale: resolvedLocale,
-      t: (key, values) => t.rich(key, values as any),
-      Branch: () => <BranchName />,
-    });
-  }, [slug, resolvedLocale, t]);
+  const [page, setPage] = useState(1);
+  const [cars, setCars] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
 
   const filterSort = useSearchPageStore((s) => s.sort);
   const setSort = useSearchPageStore((s) => s.setSort);
@@ -302,10 +300,6 @@ export default function BranchLandingClient({
     } catch {}
   }, [sharedCalendar, calendarHydrated, calendarStorageKey, visitToken]);
 
-  const [page, setPage] = useState(1);
-  const [cars, setCars] = useState<any[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-
   const manualGatePage = 3;
   const [manualUnlocked, setManualUnlocked] = useState(false);
   const [pendingFilter, setPendingFilter] = useState(false);
@@ -439,16 +433,46 @@ export default function BranchLandingClient({
   const currency = String(query.data?.currency || "");
   const rateToRial = query.data?.rate_to_rial ?? null;
 
-  const branchId: number | null = query.data?.branch?.id
+  const liveBranchId: number | null = query.data?.branch?.id
     ? Number(query.data.branch.id)
     : null;
 
-  const supportQuery = useBranchSupport(resolvedLocale, branchId);
+  const effectiveBranchId = liveBranchId ?? toNumberOrNull(initialBranchId);
+
+  const liveBranchTitle =
+    String(
+      query.data?.branch?.title1 ||
+        query.data?.branch?.title ||
+        initialBranchTitle ||
+        "",
+    ).trim();
+
+  const branchDisplayNode = useMemo(() => {
+    return (
+      <BranchName
+        slug={slug}
+        branchId={effectiveBranchId}
+        fallback={liveBranchTitle}
+      />
+    );
+  }, [slug, effectiveBranchId, liveBranchTitle]);
+
+  const branchHeroContent = useMemo(() => {
+    return getBranchLandingContent({
+      slug,
+      locale: resolvedLocale,
+      t: (key, values) => t.rich(key, values as any),
+      Branch: () => branchDisplayNode,
+    });
+  }, [slug, resolvedLocale, t, branchDisplayNode]);
+
+  const supportQuery = useBranchSupport(resolvedLocale, effectiveBranchId);
 
   const branchSupportDescription = String(supportQuery.data?.branch?.description_1 || "");
   const branchSupportCategories = supportQuery.data?.categories || [];
 
-  const supportLoading = branchId === null || supportQuery.isLoading || supportQuery.isFetching;
+  const supportLoading =
+    effectiveBranchId === null || supportQuery.isLoading || supportQuery.isFetching;
 
   useEffect(() => {
     if (!query.data) return;
@@ -694,7 +718,7 @@ export default function BranchLandingClient({
 
         <div className="mx-auto max-w-7xl">
           <div>
-            <TinyInformation />
+            <TinyInformation locale={resolvedLocale} cityName={slug} />
           </div>
 
           <div className="mt-6">
@@ -716,7 +740,9 @@ export default function BranchLandingClient({
           <div id={SEARCH_SECTION_SCROLL_ID} className="h-px w-full" />
 
           <h2 className="mt-4 px-2 text-center font-bold md:text-start">
-            {t.rich("carsListTitle", { Branch: () => <BranchName /> })}
+            {t.rich("carsListTitle", {
+              Branch: () => branchDisplayNode,
+            })}
           </h2>
 
           <div
@@ -733,7 +759,7 @@ export default function BranchLandingClient({
               ) : (
                 <SerarchSection
                   redirectToSearchOnDateConfirm
-                  redirectbranch_id={branchId !== null ? String(branchId) : ""}
+                  redirectbranch_id={effectiveBranchId !== null ? String(effectiveBranchId) : ""}
                   searchDisable={query.isFetching}
                   scrollTargetId={SEARCH_SECTION_SCROLL_ID}
                   scrollOffset={topOffset}
@@ -786,7 +812,7 @@ export default function BranchLandingClient({
                             currency={currency}
                             rateToRial={rateToRial}
                             accordionPriceList
-                            branchId={branchId ?? 0}
+                            branchId={effectiveBranchId ?? 0}
                             sharedCalendar={sharedCalendar}
                             onSharedCalendarChange={setSharedCalendar}
                             badgesOnImage

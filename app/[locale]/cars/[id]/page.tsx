@@ -56,9 +56,7 @@ function normalizeKeywords(input: any): string[] {
   if (!input) return [];
 
   if (Array.isArray(input)) {
-    return input
-      .map((item) => String(item ?? "").trim())
-      .filter(Boolean);
+    return input.map((item) => String(item ?? "").trim()).filter(Boolean);
   }
 
   if (typeof input === "string") {
@@ -71,7 +69,9 @@ function normalizeKeywords(input: any): string[] {
   return [];
 }
 
-function parseRobotsValue(value?: string | null): Metadata["robots"] | undefined {
+function parseRobotsValue(
+  value?: string | null,
+): Metadata["robots"] | undefined {
   if (!value) return undefined;
 
   const raw = value.toLowerCase();
@@ -81,7 +81,7 @@ function parseRobotsValue(value?: string | null): Metadata["robots"] | undefined
 
   const maxSnippetMatch = raw.match(/max-snippet:([-\d]+)/);
   const maxImagePreviewMatch = raw.match(
-    /max-image-preview:(none|standard|large)/
+    /max-image-preview:(none|standard|large)/,
   );
   const maxVideoPreviewMatch = raw.match(/max-video-preview:([-\d]+)/);
 
@@ -126,7 +126,7 @@ function parseRobotsValue(value?: string | null): Metadata["robots"] | undefined
 
 function buildFeaturesFromApi(
   car: any,
-  t: Awaited<ReturnType<typeof getTranslations>>
+  t: Awaited<ReturnType<typeof getTranslations>>,
 ): FeatureChip[] {
   const depositNum = Number(car?.deposit ?? 0);
 
@@ -150,6 +150,24 @@ function buildFeaturesFromApi(
   ];
 }
 
+function buildCarDisplayTitle(
+  car: any,
+  locale: string,
+  t: Awaited<ReturnType<typeof getTranslations>>,
+) {
+  const carName = String(car?.title ?? "").trim();
+  const branchName = String(car?.branch ?? "").trim();
+
+  if (!carName && !branchName) return "";
+  if (!branchName) return carName;
+  if (!carName) return branchName;
+
+  return t("carDetail.dynamicTitle", {
+    car: carName,
+    branch: branchName,
+  });
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -157,14 +175,15 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const locale = await getLocale();
-  const t = await getTranslations("carDetailNotFoundPage.meta");
+  const notFoundT = await getTranslations("carDetailNotFoundPage.meta");
+  const carDetailT = await getTranslations();
 
   const result = await getCarDetail(id, locale);
 
   if (!result.ok && result.notFound) {
     return {
-      title: t("title"),
-      description: t("description"),
+      title: notFoundT("title"),
+      description: notFoundT("description"),
       robots: {
         index: false,
         follow: false,
@@ -194,14 +213,21 @@ export async function generateMetadata({
   const siteUrl = getSiteUrl();
   const storageUrl = getStorageUrl();
 
-  const title = meta?.titleSeo?.trim();
-  const description = meta?.descriptionSeo?.trim();
+  const dynamicTitle = buildCarDisplayTitle(car, locale, carDetailT);
+
+  const title = meta?.titleSeo?.trim() || dynamicTitle;
+  const description =
+    meta?.descriptionSeo?.trim() ||
+    carDetailT("carDetail.dynamicDescription", {
+      car: String(car?.title ?? "").trim(),
+      branch: String(car?.branch ?? "").trim(),
+    });
+
   const normalizedMetaKeywords = normalizeKeywords((meta as any)?.keywordsSeo);
 
-  const image =
-    meta?.imgSeo
-      ? joinUrl(storageUrl, meta.imgSeo)
-      : Array.isArray(car?.photos) && car.photos.length > 0
+  const image = meta?.imgSeo
+    ? joinUrl(storageUrl, meta.imgSeo)
+    : Array.isArray(car?.photos) && car.photos.length > 0
       ? joinUrl(storageUrl, car.photos[0])
       : "";
 
@@ -235,7 +261,9 @@ export async function generateMetadata({
   return {
     title,
     description,
-    ...(normalizedMetaKeywords.length > 0 ? { keywords: normalizedMetaKeywords } : {}),
+    ...(normalizedMetaKeywords.length > 0
+      ? { keywords: normalizedMetaKeywords }
+      : {}),
     alternates: {
       canonical,
       languages: alternatesLanguages,
@@ -254,7 +282,7 @@ export async function generateMetadata({
                 url: image,
                 width: 1200,
                 height: 630,
-                alt: car?.title || "",
+                alt: dynamicTitle || car?.title || "",
               },
             ],
           }
@@ -298,6 +326,7 @@ export default async function CarRentalPage({
   }
 
   const features = buildFeaturesFromApi(car, t).filter((f) => f.active);
+  const displayTitle = buildCarDisplayTitle(car, locale, t);
 
   return (
     <div className="bg-white">
@@ -351,25 +380,88 @@ export default async function CarRentalPage({
       `}</Script>
 
       <main className="mx-auto mt-2 max-w-7xl px-2 md:px-0">
-        <ImageGallery media={[car.video, ...(car.photos ?? [])]} />
+<ImageGallery media={[car.video, ...(car.photos ?? [])]} carTitle={displayTitle} />
 
-        <div className="grid grid-cols-1 gap-6 md:mt-4 lg:grid-cols-3">
-          <div className="order-1 lg:order-2 lg:col-span-1">
-            <div
-              className="sticky z-10 hidden self-start transition-[top] duration-300 ease-out lg:block"
-              style={{ top: "var(--pricing-top, 4px)" }}
-            >
-              <PricingCard
-                car={car}
-                dailyPrice={car.daily_price}
-                deposit={car.deposit}
-                currency={car.currency}
-                offPercent={car.off_percent}
-                whatsapp={car.whatsapp}
-              />
+        <div className="mt-2 rounded-xl px-4 py-2 md:hidden">
+          <div className="mb-4 flex items-center justify-between">
+            <h1 className="text-xl font-bold text-gray-900">{displayTitle}</h1>
+
+            <div className="flex items-center gap-4">
+              <button className="flex items-center gap-1 text-sm text-blue-600 transition-colors hover:text-blue-700">
+                <Share2 className="h-4 w-4 text-accent-foreground md:text-blue-600" />
+                <span className="hidden md:block">{t("carDetail.share")}</span>
+              </button>
+
+              <button className="flex items-center gap-1 text-sm text-blue-600 transition-colors hover:text-blue-700">
+                <Heart className="h-4 w-4 text-accent-foreground md:text-blue-600" />
+                <span className="hidden md:block">
+                  {t("carDetail.favorite")}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col justify-between gap-2 md:flex-row">
+            <div className="flex flex-wrap items-center gap-4 pb-4 text-sm text-gray-600">
+              <div className="flex items-center gap-1">
+                <Car className="h-4 w-4" />
+                <span>{car.gearbox}</span>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <Fuel className="h-4 w-4" />
+                <span>{car.fuel}</span>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                <span>
+                  {t("carDetail.persons", {
+                    count: Number(car.person ?? 0),
+                  })}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <Briefcase className="h-4 w-4" />
+                <span>
+                  {t("carDetail.baggages", {
+                    count: Number(car.baggage ?? 0),
+                  })}
+                </span>
+              </div>
             </div>
 
-            <div id="mobile-pricing-card" className="lg:hidden">
+            <div className="mb-6 flex flex-wrap gap-2">
+              {features.map((feature, index) => (
+                <span
+                  key={index}
+                  className="rounded-full bg-green-100 px-2 py-1 text-sm text-green-800"
+                >
+                  {feature.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 lg:hidden">
+          <PricingCard
+            car={car}
+            dailyPrice={car.daily_price}
+            deposit={car.deposit}
+            currency={car.currency}
+            offPercent={car.off_percent}
+            whatsapp={car.whatsapp}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 md:mt-4 lg:grid-cols-3">
+          <div className="order-1 hidden lg:order-2 lg:col-span-1 lg:block">
+            <div
+              className="sticky z-10 self-start transition-[top] duration-300 ease-out"
+              style={{ top: "var(--pricing-top, 4px)" }}
+            >
               <PricingCard
                 car={car}
                 dailyPrice={car.daily_price}
@@ -382,16 +474,16 @@ export default async function CarRentalPage({
           </div>
 
           <div className="order-2 space-y-2 lg:order-1 lg:col-span-2">
-            <div className="rounded-xl p-4">
+            <div className="hidden rounded-xl px-4 py-2 md:block">
               <div className="mb-4 flex items-center justify-between">
-                <h1 className="text-xl font-bold text-gray-900">{car.title}</h1>
+                <div className="text-xl font-bold text-gray-900">
+                  {displayTitle}
+                </div>
 
                 <div className="flex items-center gap-4">
                   <button className="flex items-center gap-1 text-sm text-blue-600 transition-colors hover:text-blue-700">
                     <Share2 className="h-4 w-4 text-accent-foreground md:text-blue-600" />
-                    <span className="hidden md:block">
-                      {t("carDetail.share")}
-                    </span>
+                    <span className="hidden md:block">{t("carDetail.share")}</span>
                   </button>
 
                   <button className="flex items-center gap-1 text-sm text-blue-600 transition-colors hover:text-blue-700">
@@ -445,10 +537,9 @@ export default async function CarRentalPage({
                   ))}
                 </div>
               </div>
-
-              <RequiredDocuments branch={car.branch} />
             </div>
 
+            <RequiredDocuments branch={car.branch} />
             <TechnicalSpecs car={car} />
             <CarFeatures car={car} />
 
@@ -459,8 +550,7 @@ export default async function CarRentalPage({
             ) : null}
 
             <SimilarCars items={car.similar_cars} currency={car.currency} />
-
-            <CarDescription html={car.text} title={car.title} />
+            <CarDescription html={car.text} />
           </div>
         </div>
       </main>

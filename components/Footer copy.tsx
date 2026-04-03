@@ -183,7 +183,7 @@ export default function Footer() {
               <img
                 src="/images/logo.png"
                 alt={t("brand")}
-                className="h-5 w-15 filter-[invert(1)] dark:filter-none"
+                className="h-5 w-15 dark:filter-none"
               />
             </div>
 
@@ -239,116 +239,34 @@ export default function Footer() {
         </div>
       </div>
 
-{/* Mobile - Balanced Clean Design */}
-<div className="lg:hidden px-4 py-5 space-y-6">
+      {/* Mobile */}
+      <div className="lg:hidden">
+        <AccordionSection title={t("sections.quickAccess")}>
+          <div className="px-6">
+            <FooterLinkList items={mobileQuickLinks} />
+          </div>
+        </AccordionSection>
 
-  {/* Brand */}
-  <div className="space-y-2">
-    <div className="flex items-center gap-2">
-      <span className="text-lg font-extrabold tracking-tight">
-        {t("brand")}
-      </span>
-      <img
-        src="/images/logo.png"
-        alt={t("brand")}
-        className="h-6 w-auto filter-[invert(1)] dark:filter-none"
-      />
-    </div>
+        <AccordionSection title={t("sections.importantBranches")}>
+          <div className="px-6">
+            <FooterLinkList items={mobileBranchLinks} />
+          </div>
+        </AccordionSection>
 
-    <p className="text-sm leading-6 text-muted-foreground ">
-      {t("description")}
-    </p>
-  </div>
+        <AccordionSection title={t("sections.contactPalmRent")}>
+          <div className="px-6">
+            <FooterContactList items={contactLinks} />
+          </div>
+        </AccordionSection>
 
-  {/* Quick Links */}
-  <div className="space-y-3">
-    <h3 className="text-sm font-semibold text-foreground">
-      {t("sections.quickAccess")}
-    </h3>
+        <AccordionSection title={t("sections.moreInfo")}>
+          <div className="px-6">
+            <FooterLinkList items={mobileMoreLinks} />
+          </div>
+        </AccordionSection>
+      </div>
 
-    {/* 👇 فقط این وسط‌چین شده */}
-    <div className="flex flex-wrap justify-center gap-2">
-      {mobileQuickLinks.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className="rounded-full text-center border px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition"
-        >
-          {item.label}
-        </Link>
-      ))}
-    </div>
-  </div>
-
-  {/* Branches */}
-  <div className="space-y-3">
-    <h3 className="text-sm font-semibold text-foreground">
-      {t("sections.importantBranches")}
-    </h3>
-
-    {/* 👇 فقط دکمه‌ها وسط */}
-    <div className="flex flex-wrap justify-center gap-2">
-      {mobileBranchLinks.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className="rounded-full border px-4 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition"
-        >
-          {item.label}
-        </Link>
-      ))}
-    </div>
-  </div>
-
-  {/* Contact */}
-  <div className="space-y-3">
-    <h3 className="text-sm font-semibold text-foreground">
-      {t("sections.contactPalmRent")}
-    </h3>
-
-    {/* 👇 فقط بلاک وسط */}
-    <div className="flex justify-center gap-3">
-      {contactLinks.map((item) => {
-        const Icon = item.icon;
-
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition w-[80px]"
-          >
-            <Icon className="h-5 w-5" />
-            <span className="text-[11px] leading-tight text-center ">
-              {item.label}
-            </span>
-          </Link>
-        );
-      })}
-    </div>
-  </div>
-
-  {/* More */}
-  <div className="space-y-2">
-    <h3 className="text-sm font-semibold text-foreground">
-      {t("sections.moreInfo")}
-    </h3>
-
-    {/* 👇 اینو دیگه وسط نکردم */}
-    <div className="flex flex-col gap-2">
-      {mobileMoreLinks.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className="text-sm text-muted-foreground hover:text-foreground transition"
-        >
-          {item.label}
-        </Link>
-      ))}
-    </div>
-  </div>
-
-</div>
-      <div className="mb-4 border-t py-2  text-xs text-muted-foreground lg:mb-0">
+      <div className="mb-4 border-t py-2 text-center text-xs text-muted-foreground lg:mb-0">
         {t("copyright")}
       </div>
     </footer>

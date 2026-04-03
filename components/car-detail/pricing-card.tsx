@@ -287,7 +287,7 @@ export function PricingCard({
   const TopContent = (
     <div className="p-4">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-gray-700 font-medium text-base">{titleText}</h2>
+        <p className="text-gray-700 font-medium text-base">{titleText}</p>
         {hasOff && (
           <span className="bg-amber-400 text-white px-4 py-1.5 rounded-full text-sm font-medium">
             {t("discountBadge", { off: String(off) })}
@@ -458,7 +458,7 @@ export function PricingCard({
 
   const ReserveContent = (
     <div className="p-2">
-      <h3 className="text-md font-medium mb-2 md:mb-0">{t("reserveTitle")}</h3>
+      <p className="text-md font-medium mb-2 md:mb-0">{t("reserveTitle")}</p>
 
       <div id="reserve-card" className="p-4 border md:border-none rounded-lg">
         <div className="text-xs text-gray-400 mb-1">{t("rentOnlineLabel")}</div>

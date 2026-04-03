@@ -72,6 +72,8 @@ const HomePage = async () => {
           image="/images/head-list-branch.jpg"
           title={t("hero.title")}
           subtitle1={t("hero.subtitle")}
+          subtitle2={t("hero.subtitle2")}
+
         />
 
         <div className="mx-auto max-w-7xl px-4">

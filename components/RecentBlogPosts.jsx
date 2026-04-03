@@ -65,7 +65,7 @@ export function RecentBlogPosts(){
 export function SingleBlogPost({bigPost=false,smallFont=false,id,title='',description='',photo=''}){
     const t = useTranslations();
     return(
-        <Link href={`../../../blogs/${id}`} className="flex w-full cursor-pointer">
+        <Link href={`/blogs/${id}`} className="flex w-full cursor-pointer">
             <div className={`flex ${bigPost ? 'flex-col' : ''} gap-4 w-full`}>
                 <div className={`${bigPost ? 'w-full' : 'w-4/12 shrink-0'} relative`}>
                     <Image className="w-full h-full object-cover rounded-lg" src={`${STORAGE_URL}${photo}`} width={530} height={280} alt=""></Image>

@@ -243,7 +243,7 @@ function useIsDesktop(breakpointPx = 768) {
   return isDesktop;
 }
 
-const NavSectionSearchClient = () => {
+const NavSectionSearchClient = ({ mobileInline = false }: { mobileInline?: boolean }) => {
   useDIR();
 
   const t = useTranslations("SearchHeader");
@@ -400,7 +400,7 @@ const NavSectionSearchClient = () => {
   return (
     <>
       {/* MOBILE */}
-      <div className="absolute inset-x-0 bottom-3 px-4 z-10 md:hidden">
+      <div className={mobileInline ? "w-full md:hidden" : "absolute inset-x-0 bottom-3 px-4 z-10 md:hidden"}>
         <form
           role="search"
           aria-label="Car rental search mobile"

@@ -5,10 +5,6 @@ import { usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 
-/**
- * ✅ کلیدهای مشترک ترجمه‌ی شعبه‌ها
- * هرجا branch لازم بود => از t(`branches.${key}`) استفاده می‌کنیم
- */
 export type BranchKey =
   | "dubai"
   | "istanbul"
@@ -21,14 +17,15 @@ export type BranchKey =
   | "kayseri"
   | "georgia";
 
-/**
- * ✅ از slug آخر مسیر (مثلاً /fa/branches/dubai) => key ترجمه
- */
 const BRANCH_KEY_BY_SLUG: Record<string, BranchKey> = {
   dubai: "dubai",
-  turkey: "istanbul", // ✅ اگر slug شما turkey هست ولی اسمش استانبوله
+
+  turkey: "istanbul",
   istanbul: "istanbul",
+
   oman: "oman",
+  muscat: "oman",
+
   kish: "kish",
   izmir: "izmir",
   ankara: "ankara",
@@ -36,12 +33,9 @@ const BRANCH_KEY_BY_SLUG: Record<string, BranchKey> = {
   samsun: "samsun",
   kayseri: "kayseri",
   georgia: "georgia",
+  tbilisi: "georgia",
 };
 
-/**
- * ✅ از branch_id توی query => key ترجمه
- * (قبلاً متن فارسی داشتی؛ الان فقط key نگه می‌داریم)
- */
 export const BRANCH_KEY_BY_ID: Record<string, BranchKey> = {
   "1": "dubai",
   "2": "istanbul",
@@ -55,69 +49,80 @@ export const BRANCH_KEY_BY_ID: Record<string, BranchKey> = {
   "13": "georgia",
 };
 
-/**
- * ✅ Helper برای جاهایی که JSX نمی‌خوان و string لازم دارن
- * مثل meta/title builder
- *
- * استفاده:
- * const t = useTranslations("branches")
- * const name = getBranchNameById(t, branchId, "")
- */
+const normalizeSlug = (slug?: string | null) => {
+  return String(slug || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^\/+|\/+$/g, "")
+    .replace(/\s+/g, "-");
+};
+
 export function getBranchNameById(
   tBranches: (key: string) => string,
-  branchId: string | null | undefined,
+  branchId: string | number | null | undefined,
   fallback = "",
 ) {
-  if (!branchId) return fallback;
+  if (branchId === null || branchId === undefined || branchId === "") {
+    return fallback;
+  }
+
   const key = BRANCH_KEY_BY_ID[String(branchId)];
   if (!key) return fallback;
+
   return tBranches(key);
 }
 
-/**
- * ✅ Helper برای slug (اگر لازم شد بیرون کامپوننت)
- */
 export function getBranchNameBySlug(
   tBranches: (key: string) => string,
   slug: string | null | undefined,
   fallback = "",
 ) {
-  if (!slug) return fallback;
-  const key = BRANCH_KEY_BY_SLUG[String(slug)];
+  const normalizedSlug = normalizeSlug(slug);
+  if (!normalizedSlug) return fallback;
+
+  const key = BRANCH_KEY_BY_SLUG[normalizedSlug];
   if (!key) return fallback;
+
   return tBranches(key);
 }
 
-/**
- * ✅ کامپوننت: اسم شعبه از آخر مسیر (slug)
- * مثال: /fa/branches/dubai => branches.dubai
- */
-export default function BranchName({ fallback = "" }: { fallback?: string }) {
+type BranchNameProps = {
+  slug?: string | null;
+  branchId?: string | number | null;
+  fallback?: string;
+};
+
+export default function BranchName({
+  slug,
+  branchId,
+  fallback = "",
+}: BranchNameProps) {
   const pathname = usePathname();
   const tBranches = useTranslations("branchs");
 
-  if (!pathname) return <>{fallback}</>;
+  const directNameBySlug = getBranchNameBySlug(tBranches, slug, "");
+  if (directNameBySlug) return <>{directNameBySlug}</>;
 
-  const slug = pathname.split("/").filter(Boolean).at(-1);
-  if (!slug) return <>{fallback}</>;
+  const directNameById = getBranchNameById(tBranches, branchId, "");
+  if (directNameById) return <>{directNameById}</>;
 
-  const name = getBranchNameBySlug(tBranches, slug, "");
-  if (!name) return <>{fallback}</>;
+  const pathSlug = pathname?.split("/").filter(Boolean).at(-1);
+  const pathName = getBranchNameBySlug(tBranches, pathSlug, "");
+  if (pathName) return <>{pathName}</>;
 
-  return <>{name}</>;
+  return <>{fallback}</>;
 }
 
-/**
- * ✅ کامپوننت: اسم شعبه از branch_id توی query
- * مثال: ?branch_id=2 => branches.istanbul
- */
-export function BranchById({ fallback = "" }: { fallback?: string }) {
+export function BranchById({
+  fallback = "",
+}: {
+  fallback?: string;
+}) {
   const searchParams = useSearchParams();
   const tBranches = useTranslations("branchs");
 
   const branchId = searchParams.get("branch_id");
-  const name = getBranchNameById(tBranches, branchId, "");
+  const name = getBranchNameById(tBranches, branchId, fallback);
 
-  if (!name) return <>{fallback}</>;
   return <>{name}</>;
 }
